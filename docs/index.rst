@@ -9,7 +9,14 @@ Welcome to HDDM's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
+    
+    abstract
+    intro
+        Drift Models
+        Hierarchical Bayesian Models
+    tutorial
+    manual
 
 Indices and tables
 ==================
@@ -17,4 +24,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 

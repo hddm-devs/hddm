@@ -1,0 +1,4 @@
+Manual
+======
+.. automodule:: hddm
+	:members:
