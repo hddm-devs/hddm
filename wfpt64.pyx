@@ -29,9 +29,9 @@ cdef extern from "math.h":
 
 # Define data type
 DTYPE = np.double
-ctypedef np.double_t DTYPE_t
+ctypedef double DTYPE_t
 
-cpdef pdf(double t, double v, double a, double z, double err, int logp=0):
+cpdef double pdf(double t, double v, double a, double z, double err, unsigned int logp=0):
     """Compute the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
@@ -66,15 +66,15 @@ cpdef pdf(double t, double v, double a, double z, double err, int logp=0):
     # compute f(tt|0,1,w)
     p=0 #initialize density
     if ks<kl: # if small t is better (i.e., lambda<0)
-        K=int(ceil(ks)) # round to smallest integer meeting error
-        lower = int(-floor((K-1)/2.))
-        upper = int(ceil((K-1)/2.))
+        K=<int>(ceil(ks)) # round to smallest integer meeting error
+        lower = <int>(-floor((K-1)/2.))
+        upper = <int>(ceil((K-1)/2.))
         for k from lower <= k <= upper: # loop over k
             p=p+(w+2*k)*exp(-(pow((w+2*k),2))/2/tt) # increment sum
         p=p/sqrt(2*PI*pow(tt,3)) # add constant term
   
     else: # if large t is better...
-        K=int(ceil(kl)) # round to smallest integer meeting error
+        K=<int>(ceil(kl)) # round to smallest integer meeting error
         for k from 1 <= k <= K:
             p=p+k*exp(-(pow(k,2))*(PIs)*tt/2)*sin(k*PI*w) # increment sum
         p=p*PI # add constant term
@@ -83,11 +83,9 @@ cpdef pdf(double t, double v, double a, double z, double err, int logp=0):
     if logp == 0:
         return p*exp(-v*a*w -(pow(v,2))*t/2.)/(pow(a,2))
     else:
-        #return log(p*exp(-v*a*w -(pow(v,2))*t/2.)/(pow(a,2)))
         return log(p) + (-v*a*w -(pow(v,2))*t/2.) - 2*log(a)
 
-
-cpdef pdf_sign(double t, double v, double a, double z, double ter, double err, int logp=0):
+cpdef double pdf_sign(double t, double v, double a, double z, double ter, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
     if a<z or z<=0 or z<0 or a<0:
@@ -101,8 +99,8 @@ cpdef pdf_sign(double t, double v, double a, double z, double ter, double err, i
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double ter, double err, int logp=0):
-    cdef int size = x.shape[0]
-    cdef int i
+    cdef unsigned int size = x.shape[0]
+    cdef unsigned int i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
     for i from 0 <= i < size:
         y[i] = pdf_sign(x[i], v, a, z, ter, err, logp)
@@ -110,8 +108,8 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int logp=0, multi=None):
-    cdef int size = x.shape[0]
-    cdef int i
+    cdef unsigned int size = x.shape[0]
+    cdef unsigned int i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
 
     if multi is None:
@@ -128,9 +126,9 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int
         return y
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] t, double v, double sv, z, double sz, double ter, double ster, a, double err=.0001, int logp=0, int reps=10, a_is_multi=False):
-    cdef int num_resps = t.shape[0]
-    cdef int rep, i
+def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] t, double v, double sv, z, double sz, double ter, double ster, a, double err=.0001, int logp=0, unsigned int reps=10, a_is_multi=False):
+    cdef unsigned int num_resps = t.shape[0]
+    cdef unsigned int rep, i
 
     if logp == 1:
         zero_prob = -np.Inf
@@ -149,7 +147,7 @@ def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] t, double v, double sv, z, 
                 a_val = a[i]
             else:
                 a_val = a
-            if (abs(t[i])-ter_samples[rep,i]) < 0:
+            if (fabs(t[i])-ter_samples[rep,i]) < 0:
                 probs[rep,i] = zero_prob
             elif a_val <= z_samples[rep,i]:
                 probs[rep,i] = zero_prob

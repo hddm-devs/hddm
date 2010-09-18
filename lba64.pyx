@@ -127,7 +127,7 @@ def lba_single(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, cnp.ndarray[D
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] resps, double z, double a, double ter, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, unsigned int logp=0):
     # Rescale parameters so as to fit in the same range as the DDM
-    cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter) *1000
+    cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = value.shape[0]
     cdef unsigned int i
     cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
@@ -139,11 +139,11 @@ def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] re
     #print "z: %f, a: %f, ter: %i, v: %f, sv: %f" % (z, a, ter, v[0], sv)
     for i from 0 <= i < nresp:
         if resps[i] == 1:
-            probs[i] = (1-fptcdf_single(rt[i], z*1000, a*1000, drift[1], sv)) * \
-                       fptpdf_single(rt[i], z*1000, a*1000, drift[0], sv)
+            probs[i] = (1-fptcdf_single(rt[i], z, a, drift[1], sv)) * \
+                       fptpdf_single(rt[i], z, a, drift[0], sv)
         else:
-            probs[i] = (1-fptcdf_single(rt[i], z*1000, a*1000, drift[0], sv)) * \
-                       fptpdf_single(rt[i], z*1000, a*1000, drift[1], sv)
+            probs[i] = (1-fptcdf_single(rt[i], z, a, drift[0], sv)) * \
+                       fptpdf_single(rt[i], z, a, drift[1], sv)
 
     if logp == 1:
         return np.sum(np.log(probs))

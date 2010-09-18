@@ -244,11 +244,12 @@ class HDDM_base(object):
                 else:
                     param_inst.trace = mcmc_model.trace(param_name)
             except AttributeError: # param_inst is an array
-                for i, subj_param in enumerate(param_inst):
-                    if add:
-                        subj_param.trace._trace[0] = np.concatenate((subj_param.trace._trace[0], mcmc_model.trace('%s_%i'%(param_name,i))()))
-                    else:
-                        subj_param.trace = mcmc_model.trace('%s_%i'%(param_name,i))
+                if self.trace_subjs:
+                    for i, subj_param in enumerate(param_inst):
+                        if add:
+                            subj_param.trace._trace[0] = np.concatenate((subj_param.trace._trace[0], mcmc_model.trace('%s_%i'%(param_name,i))()))
+                        else:
+                            subj_param.trace = mcmc_model.trace('%s_%i'%(param_name,i))
 
     def mcmc_load_from_db(self, dbname):
         """Load samples from a database created by an earlier model
@@ -361,13 +362,16 @@ class HDDM_multi(HDDM_base):
         # For each global param, create n subj_params
         self.subj_params = {}
         self.group_params_tau = {}
+
+        # Initialize
+        for param_name, param_inst in self.group_params.iteritems():
+            self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
+            
         for param_name, param_inst in self.group_params.iteritems():
             # Create tau parameter for global param
             param_inst_tau = self._get_group_param_tau(param_name)
             self.group_params_tau[param_name] = param_inst_tau
-
             # Create num_subjs individual subject ddm parameter
-            self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object) # init
             for subj_idx,subj in enumerate(self.subjs):
                 self.subj_params[param_name][subj_idx] = self._get_subj_param(param_name, param_inst, param_inst_tau, int(subj))
                 
@@ -391,7 +395,7 @@ class HDDM_multi(HDDM_base):
             if self.no_bias:
                 return None
             else:
-                return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower'], upper=self.param_ranges['z_lower'])
+                return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower'], upper=self.param_ranges['z_upper'])
         elif param == 'Z':
             return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
         elif param == 't':
@@ -399,7 +403,7 @@ class HDDM_multi(HDDM_base):
         elif param == 'T':
             return pm.Uniform("T%s"%tag, lower=0, upper=1)
         elif param == 'e':
-            return pm.Uniform("e%s"%tag, lower=-.5, upper=.5)
+            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7)
         else:
             raise ValueError("Param %s not recognized" % param)
 
@@ -643,8 +647,8 @@ class HDDM_multi_lba(HDDM_multi):
 
         self._models = {'lba': self._get_lba}
 
-        self.param_ranges = {'a_lower_lba': .1,
-                             'a_upper_lba': 3.,
+        self.param_ranges = {'a_lower_lba': 1.,
+                             'a_upper_lba': 4.,
                              'v_lower_lba': 0.1,
                              'v_upper_lba': 3.,
                              'z_lower_lba': .1,
@@ -653,6 +657,9 @@ class HDDM_multi_lba(HDDM_multi):
                              't_upper': 2.,
                              'V_lower_lba': .2,
                              'V_upper_lba': 2.}
+        if self.normalize_v:
+            self.param_ranges['v_lower_lba'] = 0.
+            self.param_ranges['v_upper_lba'] = 1.
 
     def _get_group_param(self, param, tag=None):
         """Create and return a prior distribution for [param]. [tag] is
@@ -662,15 +669,16 @@ class HDDM_multi_lba(HDDM_multi):
             tag = ''
         else:
             tag = '_' + tag
+            
         if param == 'a':
             return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower_lba'], upper=self.param_ranges['a_upper_lba'])
         elif param.startswith('v'):
             if self.normalize_v:
                 # Normalize the sum of the drifts to 1.
-                if param.endswith('0'):
-                    return pm.Uniform("%s%s"%(param, tag), lower=0., upper=1.)
+                if param.startswith('v0'):
+                    return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower_lba'], upper=self.param_ranges['v_upper_lba'])
                 else:
-                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.group_params['v0']: 1-x)
+                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.group_params['v0%s'%tag]: 1-x)
             else:
                 return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower_lba'], upper=self.param_ranges['v_upper_lba'])
         elif param == 'V':
@@ -689,7 +697,7 @@ class HDDM_multi_lba(HDDM_multi):
         elif param == 'T':
             return pm.Uniform("T%s"%tag, lower=0, upper=1)
         elif param == 'e':
-            return pm.Uniform("e%s"%tag, lower=-.5, upper=.5)
+            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7, value=0)
         else:
             raise ValueError("Param %s not recognized" % param)
 
@@ -704,16 +712,26 @@ class HDDM_multi_lba(HDDM_multi):
             tag = '_' + str(subj_idx)
 
         if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag, a=.1, b=2, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param.startswith('v'):
+            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower_lba'], b=self.param_ranges['a_upper_lba'],
+                                      mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+        elif param == 'v':
             if self.normalize_v:
                 # Normalize the sum of the drifts to 1.
-                if tag.startswith('0'):
-                    return pm.TruncatedNormal("%s%s"%(param,tag), a=0, b=1, mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
+                # Determine if v0 or v1 has been set before (dict is not ordered, so we can't know)
+                if param_name.startswith('v0'):
+                    other_param = 'v1'
                 else:
-                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.subj_params['v0'][subj_idx]: 1-x, plot=False, trace=self.trace_subjs)
+                    other_param = 'v0'
+                other_param_complete = '%s%s'%(other_param, param_name[2:])
+
+                if self.subj_params[other_param_complete][subj_idx] is not None:
+                    # Other parameter has already been set.
+                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.subj_params[other_param_complete][subj_idx]: 1-x, plot=False, trace=self.trace_subjs)
+                else:
+                    # Create new v parameter
+                    return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower_lba'], b=self.param_ranges['v_upper_lba'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
             else: 
-                return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower_lba'], b=self.param_ranges['v_lower_lba'], mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
+                return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower_lba'], b=self.param_ranges['v_upper_lba'], mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
         elif param == 'V':
             if self.fix_sv is None:
                 return pm.TruncatedNormal("V%s"%tag, a=self.param_ranges['V_lower_lba'], b=self.param_ranges['V_upper_lba'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
@@ -767,7 +785,7 @@ class HDDM_multi_gpu(HDDM_multi):
 
         #for param in params.itervalues():
         #    param = np.empty(self.data.shape, dtype=object)
-            
+
         self.idx = 0 # DDM counter
         params_out = {}
         for param in self.group_param_names:
@@ -893,7 +911,7 @@ class HDDM_multi_effect(HDDM_multi):
                                                                                     e_inter_dist=self.subj_params['e_%s_inter'%(param_name[0])][i])
                             else:
                                 raise NotImplementedError('Only 2 effects per parameter are currently supported')
-                                
+                            
                     params[param_name[0]] = self.subj_params[effect_name]
 
                 else:

@@ -205,52 +205,52 @@ def get_avg_likelihood(x, params):
 # Linear Ballistic Accumulator #
 ################################
 
-def LBA_like2(value, resps, a, z, ter, v, sv, logp=True):
+def LBA_like(value, resps, a, z, ter, v, sv, logp=True):
     """Linear Ballistic Accumulator PDF
     """
     if z is None:
         z = a/2.
+
     #print a, z, ter, v, sv
     prob = lba.lba_like(np.asarray(value, dtype=np.double), np.asarray(resps, dtype=np.double),
                         z, a, ter, np.asarray(v, dtype=np.double), sv, int(logp))
     return prob
     
-def LBA_like(value, resps, a, z, ter, v, sv, logp=True):
+def LBA_like_multi(value, resps, a, z, ter, v, sv, multi, logp=True):
     """Linear Ballistic Accumulator PDF
     """
-    # Rescale parameters so as to fit in the same range as the DDM
-    rt = np.array((np.abs(value) - ter) * 1000)
-    
-    if a <= z:
-        #print "Starting point larger than threshold!"
-        return -np.Inf
-
-    uniq_resps = np.unique(resps)
-    nresp = len(v)
-    probs = np.empty_like(rt)
-    #print "z: %f, a: %f, ter: %i, v: %f, sv: %f" % (z, a, ter, v[0], sv)
-    for uniq_resp in uniq_resps:
-        # Select RTs of the specific response i
-        idx = (resps==uniq_resp)
-        # Create ordering list for drift processes
-        drift_idx = range(nresp)
-        drift_idx.insert(0,uniq_resp)
-        del drift_idx[int(uniq_resp)+1]
-
-        # Calculated Probabilities via n1PDF
-        drifts = np.asarray(v, dtype=np.float)[drift_idx]
-        #probs[idx] = np.array(robjects.r.n1PDF(t=rt[idx], x0max=np.float(z)*1000, chi=np.float(a)*1000, drift=drifts, sdI=np.float(sv)))
-        probs[idx] = np.array(lba.lba_single(t=rt[idx], z=np.float(z)*1000, a=np.float(a)*1000, drift=drifts, sv=np.float(sv)))
-    if logp:
-        return np.sum(np.log(probs))
+    size = value.shape[0]
+    y = np.empty(size, dtype=np.float)
+    if multi is None:
+        return lba.lba_like(np.asarray(value, dtype=np.double), np.asarray(resps, dtype=np.double),
+                            z, a, ter, np.asarray(v, dtype=np.double), sv, int(logp))
     else:
-        return probs
+        params = {'v':v, 'z':z, 'ter':ter, 'a':a, 'sv':sv}
+        params_iter = copy(params) # Here we set the individual values
 
+        for i in range(size):
+            for param in multi:
+                params_iter[param] = params[param][i]
+            y[i] = lba.lba_like(np.asarray([value[i]], dtype=np.double),
+                                np.asarray([resps[i]], dtype=np.double),
+                                np.double(params_iter['z']),
+                                np.double(params_iter['a']),
+                                np.double(params_iter['ter']),
+                                np.asarray(params_iter['v'], dtype=np.double),
+                                np.double(params_iter['sv']), logp=int(logp))
+        prob = np.sum(y)
+        return prob
+    
 LBA = pm.stochastic_from_dist(name='LBA likelihood',
-                              logp=LBA_like2,
+                              logp=LBA_like,
                               dtype=np.float,
                               mv=True)
 
+
+LBA_multi = pm.stochastic_from_dist(name='LBA likelihood',
+                              logp=LBA_like_multi,
+                              dtype=np.float,
+                              mv=True)
 
 ################################################
 # GPU Wiener likelihood functions EXPERIMENTAL #

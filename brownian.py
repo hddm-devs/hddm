@@ -382,7 +382,7 @@ class DDMPlot(HasTraits):
         return wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
 
     def _get_lba_upper(self):
-        return ddm_likelihoods.LBA_like2(self.x_analytical,
+        return ddm_likelihoods.LBA_like(self.x_analytical,
                                         resps=np.ones_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
@@ -390,7 +390,7 @@ class DDMPlot(HasTraits):
                                         ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
 
     def _get_lba_lower(self):
-        return ddm_likelihoods.LBA_like2(self.x_analytical,
+        return ddm_likelihoods.LBA_like(self.x_analytical,
                                         resps=np.zeros_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,

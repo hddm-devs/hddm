@@ -127,18 +127,17 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                 else:
                     stims = self.stims # Effect should depend on individual stimuli.
                 for stim in stims:
-                    self.group_params['e_theta_%s_%s'%(effect,stim)] = pm.Uniform('e_theta_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
+                    self.group_params['e_theta_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='theta_%s_%s'%(effect, stim))
                     if not self.ignore_dbs:
-                        self.group_params['e_inter_%s_%s'%(effect,stim)] = pm.Uniform('e_inter_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
+                        self.group_params['e_inter_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='inter_%s_%s'%(effect, stim))
                         if not self.dbs_global:
-                            self.group_params['e_dbs_%s_%s'%(effect,stim)] = pm.Uniform('e_dbs_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
+                            self.group_params['e_dbs_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
                         else:
-                            self.group_params['e_dbs_%s'%(effect)] = pm.Uniform('e_dbs_%s'%(effect), lower=-.7, upper=.7, value=0)
+                            self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
 
 
             # Set parameter distribution classes depending on data
             for depend in self.depend_on:
-                del self.group_params[depend]
                 if self.single_effect: # Effect should not depend on stimuli.
                     stims = ('',)
                 elif depend in self.HL_on:
@@ -146,22 +145,15 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                 else:
                     stims = self.stims # param depends on individual stimuli
                 for stim in stims:
-                    if depend == 'v':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
-                    elif depend == 'ter':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=0., upper=1.)
-                    elif depend == 'a':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=1., upper=4.)
-                    else:
-                        raise NotImplementedError, '%s not supported. Only v, ter, and a supported thus far'%depend
+                    self.group_params['%s_%s'%(depend, stim)] = self._get_group_param(depend, tag=stim) #pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
 
             self.param_names = self.group_params.keys()
 
             return self
 
-        def _set_subj_params(self, group_params=None, group_params_tau=None):
+        def _set_subj_params(self):
             """Set subject distributions that depend on group distributions."""
-            super(HDDM_regress_multi, self)._set_subj_params(group_params=group_params, group_params_tau=group_params_tau)
+            super(HDDM_regress_multi, self)._set_subj_params()
 
             for effect in self.effect_on:
                 if self.single_effect: # If effects should not depend on stimuli
@@ -170,29 +162,23 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                     stims = self.stims_HL
                 else: # if effects should depend on individual stimuli
                     stims = self.stims
-                    
-                for i in range(self.num_subjs):
-                    for stim in stims:
-                        self.subj_params['e_theta_%s_%s'%(effect,stim)][i] = pm.Normal('e_theta_%s_%s_%i'%(effect,stim,i),
-                                                                          mu=self.group_params['e_theta_%s_%s'%(effect,stim)],
-                                                                          tau=self.group_params_tau['e_theta_%s_%s'%(effect,stim)],
-                                                                          plot=False, trace=self.trace_subjs, value=0)
-                        if not self.ignore_dbs: # Create dbs effect distributions?
-                            self.subj_params['e_inter_%s_%s'%(effect,stim)][i] = pm.Normal('e_inter_%s_%s_%i'%(effect,stim,i),
-                                                                              mu=self.group_params['e_inter_%s_%s'%(effect,stim)],
-                                                                              tau=self.group_params_tau['e_inter_%s_%s'%(effect,stim)],
-                                                                              plot=False, trace=self.trace_subjs, value=0)
-                            if not self.dbs_global: # Should dbs effect distributions depend on stimuli?
-                                self.subj_params['e_dbs_%s_%s'%(effect,stim)][i] = pm.Normal('e_dbs_%s_%s_%i'%(effect,stim,i),
-                                                                                             mu=self.group_params['e_dbs_%s_%s'%(effect,stim)],
-                                                                                             tau=self.group_params_tau['e_dbs_%s_%s'%(effect,stim)],
-                                                                                             plot=False, trace=self.trace_subjs, value=0)
-                            else:
-                                self.subj_params['e_dbs_%s'%(effect)][i] = pm.Normal('e_dbs_%s_%i'%(effect,i),
-                                                                                     mu=self.group_params['e_dbs_%s'%(effect)],
-                                                                                     tau=self.group_params_tau['e_dbs_%s'%(effect)],
-                                                                                     plot=False, trace=self.trace_subjs, value=0)
 
+                for i in range(self.num_subjs):
+                    param_names = []
+                    for stim in stims:
+                        param_names.append('e_theta_%s_%s'%(effect,stim))
+                        if not self.ignore_dbs: # Create dbs effect distributions?
+                            param_names.append('e_inter_%s_%s'%(effect,stim))
+                            if not self.dbs_global: # Should dbs effect distributions depend on stimuli?
+                                param_names.append('e_dbs_%s_%s'%(effect,stim))
+                            else:
+                                param_names.append('e_dbs_%s'%(effect))
+
+                    for param_name in param_names:
+                        self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
+                                                                               self.group_params_tau[param_name], subj_idx=i)
+
+            
             for depend in self.depend_on:
                 if self.single_effect: # Effect should not depend on stimuli.
                     stims = ('',)
@@ -202,24 +188,13 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                     stims = self.stims
 
                 for stim in stims:
-                    for i in range(self.num_subjs):
-                        if depend[0] == 'v':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.Normal('%s_%s_%i'%(depend,stim,i),
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
-                        elif depend[0:3] == 'ter':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.TruncatedNormal('%s_%s_%i'%(depend,stim,i), a=0, b=1,
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
+                    param_name = '%s_%s'%(depend,stim)
+                    # Reinit parameters as this can conflict with _get_subj_param().
+                    self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
 
-                        elif depend[0] == 'a':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.TruncatedNormal('%s_%s_%i'%(depend,stim,i), a=0, b=4,
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
-                            if self.no_bias:
-                                self.subj_params['z'][i] = None #pm.Lambda('z_%i'%i, lambda a=self.subj_params['%s_%s'%(depend,stim)][i]: a/2., plot=False, trace=self.trace_subjs)
-                        else:
-                            raise NotImplementedError, 'depend_on not supported for %s, only supported for v, ter and a'%depend
+                    for i in range(self.num_subjs):
+                        self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
+                                                                                self.group_params_tau[param_name], subj_idx=i)
 
         def _set_model(self):
             """Generate the HDDM."""
@@ -345,14 +320,14 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                             depend_stim = stim_HL
                         else:
                             depend_stim = stim
-                        params['z'] = None #self.subj_params['a_%s'%(depend_stim)][i]/2.
+                        #params['z'] = None #self.subj_params['a_%s'%(depend_stim)][i]/2.
 
                     # Overwrite effect distribution
                     for effect in self.effect_on:
                         params[effect] = effect_inst[i][j][effect]
 
-                    if 'a' in self.effect_on:
-                        params['z'] = None #effect_inst[i][j][effect]/2.
+                    if 'a' in self.effect_on and self.no_bias:
+                        #params['z'] = None #effect_inst[i][j][effect]/2.
                         multi = list(self.effect_on)+['z']
                     else:
                         #params['z'] = params['a']/2.
@@ -375,7 +350,7 @@ def get_HDDM_regress_multi(base=HDDM_multi):
             return WienerSimpleMulti(name,
                                      value=data,
                                      v=params['v'],
-                                     ter=params['ter'], 
+                                     ter=params['t'],
                                      a=params['a'],
                                      z=params['z'],
                                      multi=multi,
@@ -384,126 +359,20 @@ def get_HDDM_regress_multi(base=HDDM_multi):
 
     return HDDM_regress_multi
 
-class HDDM_regress_multi_lba(get_HDDM_regress_multi()):
+class HDDM_regress_multi_lba(get_HDDM_regress_multi(base=HDDM_multi_lba)):
     def _get_ddm(self, name, data, params, multi):
-        return LBA(name,
-                   value=data[self.col_names['rt']].flatten(),
-                   resps=data[self.col_names['response']].flatten(),
-                   a=params['a'],
-                   z=params['z'],
-                   ter=params['t'],
-                   v=np.array([params['v%i'%i] for i in self.resps]).flatten(),
-                   sv=params['V'],
-                   observed=True)                       
-
-        def _set_group_params(self):
-            """Set effect and group level parameters."""
-            super(HDDM_regress_multi, self)._set_group_params()
-
-            # Set effect distributions
-            for effect in self.effect_on:
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif effect in self.HL_on: # Effect should depend on low and high conflict.
-                    stims = self.stims_HL
-                else:
-                    stims = self.stims # Effect should depend on individual stimuli.
-                for stim in stims:
-                    self.group_params['e_theta_%s_%s'%(effect,stim)] = pm.Uniform('e_theta_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
-                    if not self.ignore_dbs:
-                        self.group_params['e_inter_%s_%s'%(effect,stim)] = pm.Uniform('e_inter_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
-                        if not self.dbs_global:
-                            self.group_params['e_dbs_%s_%s'%(effect,stim)] = pm.Uniform('e_dbs_%s_%s'%(effect,stim), lower=-.7, upper=.7, value=0)
-                        else:
-                            self.group_params['e_dbs_%s'%(effect)] = pm.Uniform('e_dbs_%s'%(effect), lower=-.7, upper=.7, value=0)
-
-
-            # Set parameter distribution classes depending on data
-            for depend in self.depend_on:
-                del self.group_params[depend]
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif depend in self.HL_on:
-                    stims = self.stims_HL # param depends on high/low conflict stimuli
-                else:
-                    stims = self.stims # param depends on individual stimuli
-                for stim in stims:
-                    if depend == 'v':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
-                    elif depend == 'ter':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=0., upper=1.)
-                    elif depend == 'a':
-                        self.group_params['%s_%s'%(depend, stim)] = pm.Uniform('%s_%s'%(depend, stim), lower=1., upper=4.)
-                    else:
-                        raise NotImplementedError, '%s not supported. Only v, ter, and a supported thus far'%depend
-
-            self.param_names = self.group_params.keys()
-
-            return self
-
-        def _set_subj_params(self, group_params=None, group_params_tau=None):
-            """Set subject distributions that depend on group distributions."""
-            super(HDDM_regress_multi, self)._set_subj_params(group_params=group_params, group_params_tau=group_params_tau)
-
-            for effect in self.effect_on:
-                if self.single_effect: # If effects should not depend on stimuli
-                    stims = ('',)
-                elif effect in self.HL_on: # If effects should depend on low and high conflict
-                    stims = self.stims_HL
-                else: # if effects should depend on individual stimuli
-                    stims = self.stims
-                    
-                for i in range(self.num_subjs):
-                    for stim in stims:
-                        self.subj_params['e_theta_%s_%s'%(effect,stim)][i] = pm.Normal('e_theta_%s_%s_%i'%(effect,stim,i),
-                                                                          mu=self.group_params['e_theta_%s_%s'%(effect,stim)],
-                                                                          tau=self.group_params_tau['e_theta_%s_%s'%(effect,stim)],
-                                                                          plot=False, trace=self.trace_subjs, value=0)
-                        if not self.ignore_dbs: # Create dbs effect distributions?
-                            self.subj_params['e_inter_%s_%s'%(effect,stim)][i] = pm.Normal('e_inter_%s_%s_%i'%(effect,stim,i),
-                                                                              mu=self.group_params['e_inter_%s_%s'%(effect,stim)],
-                                                                              tau=self.group_params_tau['e_inter_%s_%s'%(effect,stim)],
-                                                                              plot=False, trace=self.trace_subjs, value=0)
-                            if not self.dbs_global: # Should dbs effect distributions depend on stimuli?
-                                self.subj_params['e_dbs_%s_%s'%(effect,stim)][i] = pm.Normal('e_dbs_%s_%s_%i'%(effect,stim,i),
-                                                                                             mu=self.group_params['e_dbs_%s_%s'%(effect,stim)],
-                                                                                             tau=self.group_params_tau['e_dbs_%s_%s'%(effect,stim)],
-                                                                                             plot=False, trace=self.trace_subjs, value=0)
-                            else:
-                                self.subj_params['e_dbs_%s'%(effect)][i] = pm.Normal('e_dbs_%s_%i'%(effect,i),
-                                                                                     mu=self.group_params['e_dbs_%s'%(effect)],
-                                                                                     tau=self.group_params_tau['e_dbs_%s'%(effect)],
-                                                                                     plot=False, trace=self.trace_subjs, value=0)
-
-            for depend in self.depend_on:
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif depend in self.HL_on:
-                    stims = self.stims_HL
-                else:
-                    stims = self.stims
-
-                for stim in stims:
-                    for i in range(self.num_subjs):
-                        if depend[0] == 'v':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.Normal('%s_%s_%i'%(depend,stim,i),
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
-                        elif depend[0:3] == 'ter':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.TruncatedNormal('%s_%s_%i'%(depend,stim,i), a=0, b=1,
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
-
-                        elif depend[0] == 'a':
-                            self.subj_params['%s_%s'%(depend,stim)][i] = pm.TruncatedNormal('%s_%s_%i'%(depend,stim,i), a=0, b=4,
-                                                                                           mu = self.group_params['%s_%s'%(depend,stim)],
-                                                                                           tau = self.group_params_tau['%s_%s'%(depend,stim)], plot=False, trace=self.trace_subjs)
-                            if self.no_bias:
-                                self.subj_params['z'][i] = None #pm.Lambda('z_%i'%i, lambda a=self.subj_params['%s_%s'%(depend,stim)][i]: a/2., plot=False, trace=self.trace_subjs)
-                        else:
-                            raise NotImplementedError, 'depend_on not supported for %s, only supported for v, ter and a'%depend
-
-
+        resps = np.double(data > 0)
+        data = np.double(np.abs(data))
+        return LBA_multi(name,
+                         value=data,
+                         resps=resps,
+                         a=params['a'],
+                         z=params['z'],
+                         ter=params['t'],
+                         v=np.array([params['v%i'%i] for i in self.resps]).flatten(),
+                         sv=params['V'],
+                         multi=multi,
+                         observed=True)         
                         
 HDDM_regress_multi = get_HDDM_regress_multi()
 class HDDM_regress_multi_avg(get_HDDM_regress_multi(base=HDDM_full_avg_subj)):
