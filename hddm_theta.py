@@ -133,7 +133,7 @@ def get_HDDM_regress_multi(base=HDDM_multi):
                         if not self.dbs_global:
                             self.group_params['e_dbs_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
                         else:
-                            self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
+                            self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s'%(effect))
 
 
             # Set parameter distribution classes depending on data
