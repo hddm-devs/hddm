@@ -102,9 +102,10 @@ class DDM(HasTraits):
     # Time step size
     dt = Property(Float, depends_on=['T', 'N'])
     # Number of realizations to generate.
-    num_samples = Int(10000)
+    num_samples = Int(1000)
     # Number of drifts to plot
     iter_plot = Int(30)
+    # Number of histogram bins
     bins = Int(100)
     dt_bins = Property(Float, depends_on=['T', 'bins'])
     no_bias = Bool(True)
@@ -165,15 +166,22 @@ class DDM(HasTraits):
 	for line_x, line_mask in zip(self.drifts, self.mask):
             # Check if upper bound was reached, and where
 	    thresh_upper = np.where((line_x > self.a))[0]
+            upper = np.Inf
+            lower = np.Inf
 	    if thresh_upper.shape != (0,):
                 # This provides the RT, append
-		rts_upper.append(thresh_upper[0])
+                upper = thresh_upper[0]
+		
             # Check if lower bound was reached, and where
 	    thresh_lower = np.where((line_x < 0))[0]
 	    if thresh_lower.shape != (0,):
                 # Lower RT
-		rts_lower.append(thresh_lower[0])
-
+		lower = thresh_lower[0]
+            
+            if upper < lower:
+                rts_upper.append(upper)
+            else:
+                rts_lower.append(lower)
             # For plotting, we want to cut off the diffusion processes
             # after they reached the threshold. So get all thresholds,
             # and create a mask with Trues if below threshold. Mask is used
@@ -477,71 +485,6 @@ class DDMPlot(HasTraits):
             plt.setp(ax.get_yticklabels(), visible=False)
         self.ax3.set_xlabel('time (secs)')
 
-def plot_cavanagh_model(m):
-    # Find average min and max values of theta
-    theta_min = np.mean([np.min(m.data['theta'][m.data['subj_idx'] == i]) for i in range(m.num_subjs)])
-    theta_max = np.mean([np.max(m.data['theta'][m.data['subj_idx'] == i]) for i in range(m.num_subjs)])
-    
-    a = m.params_est['a']
-    effect = m.params_est['e_theta_a_HC']
-
-    a_low = a + effect*theta_min
-    a_high = a + effect*theta_max
-
-    plot_cavanagh(a_low=a_low, a_high=a_high, v=m.params_est['v_LL'], ter=m.params_est['ter'], tag='v_high')
-    plot_cavanagh(a_low=a_low, a_high=a_high, v=m.params_est['v_WL'], ter=m.params_est['ter'], tag='v_low')
-    
-def plot_cavanagh(a_low=1.5, a_high=3, v=.5, ter=0.3, tag=None, plot_dual=True, plot_ontop=False):
-    if tag is None:
-        tag = ''
-    x = np.linspace(-5.,5.,1000)
-    
-    y_low = wfpt.pdf_array(x=x, a=a_low, z=a_low/2., v=v, ter=ter, err=.000001)
-    y_high = wfpt.pdf_array(x=x, a=a_high, z=a_high/2., v=v, ter=ter, err=.000001)
-
-    y_low_scaled, y_high_scaled = scale_multi(y_low, y_high)
-    # plt.figure()
-    # plt.plot(x, y_low, lw=2., label='low threshold')
-    # plt.plot(x, y_high, lw=2., label='high threshold')
-
-    # plt.legend(loc=0)
-    # plt.xlabel('time (s)')
-    # plt.ylabel('likelihood')
-    # plt.title('Drift diffusion model reaction time distribution')
-    # plt.savefig('rt_dist_mirrored%s.png'%tag)
-
-    if plot_dual:
-        plt.figure()
-        plt.subplot(211)
-        plt.title('Low threshold')
-        plt.plot(x[x>0], y_low[x>0], 'g', label='correct', lw=2)
-        plt.plot(-x[x<0], y_low[x<0], 'r', label='errors', lw=2)
-        plt.legend(loc=0)
-        plt.ylim(0, np.max(np.abs(y_low))+.2)
-        plt.subplot(212)
-        plt.title('High threshold')
-        plt.plot(x[x>0], y_high[x>0], 'g', label='correct', lw=2)
-        plt.plot(-x[x<0], y_high[x<0], 'r', label='errors', lw=2)
-        plt.legend(loc=0)
-        plt.ylim(0, np.max(np.abs(y_low))+.2)
-        plt.savefig('rt_dual%s.png'%tag)
-        plt.savefig('rt_dual%s.pdf'%tag)
-
-
-    if plot_ontop:
-        plt.figure()
-        plt.title('Drift diffusion model reaction time distribution')
-        plt.plot(x[x>0], y_low[x>0], 'g--', label='low threshold correct', lw=2)
-        plt.plot(-x[x<0], y_low[x<0], 'r--', label='low threshold error', lw=2)
-        plt.plot(x[x>0], y_high[x>0], 'g', label='high threshold correct', lw=2)
-        plt.plot(-x[x<0], y_high[x<0], 'r', label='high threshold error', lw=2)
-        plt.legend(loc=0)
-        plt.xlabel('time (s)')
-        plt.ylabel('likelihood')
-        plt.savefig('rt_dist%s.png'%tag)
-        plt.savefig('rt_dist%s.pdf'%tag)
-
-    
 if __name__ == "__main__":
     ddm = DDMPlot()
     ddm.configure_traits()

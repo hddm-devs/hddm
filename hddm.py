@@ -29,7 +29,7 @@ def scale(x):
 class HDDM_base(object):
     """Base class for the hierarchical bayesian drift diffusion
     model."""
-    def __init__(self, data, load=None, no_bias=False, trace_subjs=False, col_names=None, debug=False):
+    def __init__(self, data, load=None, no_bias=False, trace_subjs=False, col_names=None, save_to=None, debug=False):
         self.col_names = {'subj_idx':'subj_idx', 'rt': 'rt', 'response': 'response'}
         # Overwrite user suppplied column names
         if col_names is not None:
@@ -47,6 +47,7 @@ class HDDM_base(object):
         self.no_bias = no_bias
 	self.colors = ('r','b','g','y','c')
         self.trace_subjs = trace_subjs
+        self.save_to = save_to
         self.debug = debug
             
         #if load:
@@ -268,6 +269,12 @@ class HDDM_base(object):
             self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
             self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
 
+        # Save stats to output file
+        if self.save_to is not None:
+            with open(self.save_to) as fd:
+                for name, value in self.params_est.iteritems():
+                    fd.writeline('%s: %f'%(name, value))
+                    
         return self
 
 class HDDM_multi(HDDM_base):
@@ -426,7 +433,7 @@ class HDDM_multi(HDDM_base):
             tag = '_' + str(subj_idx)
 
         if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag, a=.1, b=2, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower'], b=self.param_ranges['a_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
         elif param.startswith('v'):
             return pm.Normal("%s%s"%(param,tag), mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
         elif param == 'V':
@@ -1575,6 +1582,82 @@ def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
                              data=(cond1,cond2,cond_class,contains_A,contains_B), dtypes=['S1','S1','S2','B1','B1'], usemask=False)
 
     return data[include]
+
+def parse_config_file(fname):
+    import ConfigParser
     
+    config = ConfigParser.ConfigParser()
+    config.read(fname)
+    
+    #####################################################
+    # Parse config file
+    load = config.get('data', 'load')
+    save = config.get('data', 'save')
+    #format_ = config.get('data', 'format')
+
+    data = np.recfromcsv(load)
+    
+    try:
+        model_type = config.get('model', 'type')
+    except ConfigParser.NoOptionError:
+        model_type = 'simple'
+
+    try:
+        is_subj_model = config.get('model', 'is_subj_model')
+    except ConfigParser.NoOptionError:
+        is_subj_model = True
+
+    try:
+        no_bias = config.get('model', 'no_bias')
+    except ConfigParser.NoOptionError:
+        no_bias = True
+
+    try:
+        debug = config.get('model', 'debug')
+    except ConfigParser.NoOptionError:
+        debug = False
+
+    try:
+        dbname = config.get('model', 'dbname')
+    except ConfigParser.NoOptionError:
+        dbname = None
+
+    if model_type == 'simple' or model_type == 'simple_gpu':
+        group_param_names = ['a', 'v', 'z', 't']
+    elif model_type == 'full_avg' or model_type == 'full':
+        group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
+    elif model_type == 'lba':
+        group_param_names = ['a', 'v', 'z', 't', 'V']
+    else:
+        raise NotImplementedError('Model type %s not implemented'%model_type)
+
+    # Get depends
+    depends = {}
+    for param_name in group_param_names:
+        try:
+            depend[param_name] = config.get('depends', param_name)
+        except ConfigParser.NoOptionError:
+            pass
+
+    # MCMC values
+    try:
+        samples = config.get('mcmc', 'samples')
+    except ConfigParser.NoOptionError:
+        samples = None
+    try:
+        burn = config.get('mcmc', 'burn')
+    except ConfigParser.NoOptionError:
+        burn = None
+
+    print "Creating model..."
+    if model_type != 'lba':
+        m = HDDM_multi(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+    else:
+        m = HDDM_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+    debug_here()
+    print "Sampling... (this can take some time)"
+    m.mcmc(samples=samples, burn=burn, dbname=dbname)
+
 if __name__=='__main__':
-    pass
+    import sys
+    parse_config_file(sys.argv[1])

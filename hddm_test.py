@@ -14,6 +14,8 @@ import subprocess
 import pymc as pm
 
 from ddm_likelihoods import *
+from generate import *
+
 import hddm
 
 try:
@@ -271,127 +273,6 @@ def analyze_regress(posterior_trace, x_range=(-.5, .5), bins=100, plot=True):
     plt.plot(x, posterior_inter, label='posterior')
 
     return sav_dick
-
-
-
-################################################################
-# Functions to generate RT distributions with known parameters #
-################################################################
-def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, num_samples=500, fname=None, structured=True):
-    """Generate simulated RTs with fixed parameters."""
-    if fname is None:
-        fname = 'example_DDM.txt'
-    subprocess.call([sampler_exec, '-v', str(v), '-V', str(sv), '-z', str(z), '-Z', str(sz), '-a', str(a), '-t', str(ter), '-T', str(ster), '-n', str(num_samples), '-o', fname])
-    data = np.loadtxt(fname)
-    if structured:
-        data.dtype = np.dtype([('response', np.float), ('rt', np.float)])
-
-    return data
-
-def _gen_rts_params(params, num_samples=500, fname=None, structured=True):
-    """Generate simulated RTs with fixed parameters."""
-    return gen_ddm_rts(v=params['v'],
-                        sv=params['sv'],
-                        z=params['z'],
-                        sz=params['sz'],
-                        a=params['a'],
-                        ter=params['ter'],
-                        ster=params['ster'],
-                        size=num_samples,
-                        structured=structured)
-
-def gen_rand_data(num_samples=500, params=None, gen_data=True, no_var=False, tag=None):
-    """Generate simulated RTs with random parameters."""
-    #z = np.random.normal(loc=1, scale=2)
-    #ster = np.random.uniform(loc=0, scale=.5)
-    #params_true = {'v': np.random.normal(loc=-2, scale=4), 'sv': np.random.normal(loc=0, scale=.5), 'z': z, 'sz': np.random.normal(loc=0, scale=.5), 'ter': np.random.normal(loc=ster/2., scale=ster/2.), 'ster': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
-    if params is None:
-        if not no_var:
-            params = {'v': .5, 'sv': 0.3, 'z': 1., 'sz': 0.25, 'ter': .3, 'ster': 0.1, 'a': 2}
-        else:
-            params = {'v': .5, 'sv': 0., 'z': 1., 'sz': 0., 'ter': .3, 'ster': 0., 'a': 2}
-
-    if gen_data:
-        # Create RT data
-        data = _gen_rts_params(params, num_samples=num_samples, fname='test_data.txt', structured=True)
-
-    if tag is None:
-        tag = ''
-    if gen_data:
-        np.save('data_%s'%tag, data)
-    else:
-        data = np.load('data_%s.npy'%tag)  
-
-    return (data, params)
-
-def gen_rand_correlation_data(v=.5, corr=.1):
-    params = {'v': v,
-              'sv': .001,
-              'ter': .3,
-              'ster': 0.,
-              'sz':0}
-
-    all_data = []
-    a_offset = 2
-    for i in np.linspace(-1,1,10):
-        params['a'] = a_offset + i*corr
-        params['z'] = (a_offset + i*corr)/2.
-        data = gen_rand_subj_data(num_subjs=1, params=params, num_samples=20, add_noise=False)[0]
-        theta = np.ones(data.shape) * i
-        theta.dtype = dtype=np.dtype([('theta', np.float)])
-        stim = np.tile('test', data.shape)
-        stim.dtype = np.dtype([('stim', 'S4')])
-        
-        data = rec.append_fields(data, names=['theta', 'stim'],
-                                 data=[theta, stim],
-                                 usemask=False)
-        all_data.append(data)
-
-    return np.concatenate(all_data)
-    
-def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True, add_noise=True, tag=None):
-    """Generate simulated RTs of multiple subjects with fixed parameters."""
-    # Set global parameters
-    #z = rnd(loc=1, scale=2)
-    #ster = rnd(loc=0, scale=.5)
-    #self.params_true = {'v': rnd(loc=-2, scale=4), 'sv': rnd(loc=0, scale=.5), 'z': z, 'sz': rnd(loc=0, scale=.5), 'ter': rnd(loc=ster/2., scale=ster/2.), 'ster': ster, 'a': z+rnd(loc=.5, scale=3)}
-    if params is None:
-        params = {'v': .5, 'sv': 0.1, 'z': 1., 'sz': 0.1, 'ter': 1., 'ster': 0.1, 'a': 2}
-
-    params_subjs = []
-    data = np.empty((num_samples*num_subjs, 3), dtype=np.float)
-    # Derive individual parameters
-    for i in range(num_subjs):
-        params_subj = copy(params)
-        # Add noise to all values
-        if add_noise:
-            for param, value in params_subj.iteritems():
-                if param == 'ter' or param == 'ster' or param == 'z':
-                    continue
-                elif param[0] == 's':
-                    params_subj[param] = np.abs(value + np.random.randn()*.01)
-                else:
-                    params_subj[param] = np.abs(value + np.random.randn()*.05)
-        params_subj['z'] = params_subj['a']/2.
-        params_subjs.append(params_subj)
-
-        if gen_data:
-            # Create RT data
-            data_gen = _gen_rts_params(params_subj, num_samples=num_samples, fname='test_data.txt', structured=False)
-
-            # Put data in data array
-            data[i*num_samples:(i+1)*num_samples,2] = i
-            data[i*num_samples:(i+1)*num_samples,0:2] = data_gen
-
-    if tag is None:
-        tag = ''
-    if gen_data:
-        data.dtype = np.dtype([('response',np.float), ('rt', np.float), ('subj_idx', np.float)])
-        np.save('data_%s'%tag, data)
-    else:
-        data = np.load('data_%s.npy'%tag)
-
-    return (data, params)
 
 class TestHDDM(unittest.TestCase):
     def __init__(self, *args, **kwargs):

@@ -24,36 +24,6 @@ try:
 except:
     pass
 
-def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structured=False):
-    import brownian
-
-    ddm = brownian.DDM()
-    ddm.v = v
-    ddm.sv = sv
-    ddm.z_bias = z
-    ddm.sz = sz
-    ddm.a = a
-    ddm.ter = ter
-    ddm.ster = ster
-    ddm.num_samples = size
-
-    rts_upper, rts_lower = ddm.rts
-    rts_upper = np.array(rts_upper)/ddm.dt
-    rts_lower = np.array(rts_lower)/ddm.dt
-    num_upper_resps = rts_upper.shape[0]
-    num_lower_resps = rts_lower.shape[0]
-    if structured:
-        data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float)]))
-        data['response'][:num_upper_resps] = 1.
-        data['response'][num_upper_resps:] = 0.
-        data['rt'][:num_upper_resps] = rts_upper
-        data['rt'][num_upper_resps:] = rts_lower
-    else:
-        data = np.empty((num_upper_resps + num_lower_resps))
-        data[:num_upper_resps] = rts_upper
-        data[num_upper_resps:] = -rts_lower
-        
-    return data
 
 def wiener_like_simple(value, v, z, ter, a):
     """Log-likelihood for the simple DDM"""
