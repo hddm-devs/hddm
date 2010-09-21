@@ -643,3 +643,88 @@ def plot_cavanagh(a_low=1.5, a_high=3, v=.5, ter=0.3, tag=None, plot_dual=True, 
         plt.savefig('rt_dual_error%s.pdf'%tag)
         plt.xlabel('time (secs)')
         plt.ylabel('likelihood')
+
+
+def parse_config_file(fname, load=False):
+    import ConfigParser
+    
+    config = ConfigParser.ConfigParser()
+    config.read(fname)
+    
+    #####################################################
+    # Parse config file
+    load = config.get('data', 'load')
+    save = config.get('data', 'save')
+    #format_ = config.get('data', 'format')
+
+    data = np.recfromcsv(load)
+    
+    try:
+        model_type = config.get('model', 'type')
+    except ConfigParser.NoOptionError:
+        model_type = 'simple'
+
+    try:
+        is_subj_model = config.get('model', 'is_subj_model')
+    except ConfigParser.NoOptionError:
+        is_subj_model = True
+
+    try:
+        no_bias = config.get('model', 'no_bias')
+    except ConfigParser.NoOptionError:
+        no_bias = True
+
+    try:
+        debug = config.get('model', 'debug')
+    except ConfigParser.NoOptionError:
+        debug = False
+
+    try:
+        dbname = config.get('model', 'dbname')
+    except ConfigParser.NoOptionError:
+        dbname = None
+
+    if model_type == 'simple' or model_type == 'simple_gpu':
+        group_param_names = ['a', 'v', 'z', 't']
+    elif model_type == 'full_avg' or model_type == 'full':
+        group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
+    elif model_type == 'lba':
+        group_param_names = ['a', 'v', 'z', 't', 'V']
+    else:
+        raise NotImplementedError('Model type %s not implemented'%model_type)
+
+    # Get depends
+    depends = {}
+    for param_name in group_param_names:
+        try:
+            depend[param_name] = config.get('depends', param_name)
+        except ConfigParser.NoOptionError:
+            pass
+
+    # MCMC values
+    try:
+        samples = config.get('mcmc', 'samples')
+    except ConfigParser.NoOptionError:
+        samples = None
+    try:
+        burn = config.get('mcmc', 'burn')
+    except ConfigParser.NoOptionError:
+        burn = None
+
+    print "Creating model..."
+    if model_type != 'lba':
+        m = HDDM_regress_multi(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+    else:
+        m = HDDM_regress_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+
+    if not load:
+        print "Sampling... (this can take some time)"
+        m.mcmc(samples=samples, burn=burn, dbname=dbname)
+    else:
+        m.mcmc_load_from_db(dbname=dbname)
+
+    return m
+
+if __name__=='__main__':
+    import sys
+    parse_config_file(sys.argv[1])

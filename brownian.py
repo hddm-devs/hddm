@@ -6,7 +6,9 @@ import wx
 
 import matplotlib
 # We want matplotlib to use a wxPython backend
-matplotlib.use('WXAgg')
+if __name__ == "__main__":
+    matplotlib.use('WXAgg')
+
 import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -177,7 +179,12 @@ class DDM(HasTraits):
 	    if thresh_lower.shape != (0,):
                 # Lower RT
 		lower = thresh_lower[0]
+
+            if upper == lower == np.Inf:
+                # Threshold not crossed
+                continue
             
+            # Determine which one hit the threshold before
             if upper < lower:
                 rts_upper.append(upper)
             else:

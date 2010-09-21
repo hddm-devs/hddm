@@ -29,7 +29,7 @@ def scale(x):
 class HDDM_base(object):
     """Base class for the hierarchical bayesian drift diffusion
     model."""
-    def __init__(self, data, load=None, no_bias=False, trace_subjs=False, col_names=None, save_to=None, debug=False):
+    def __init__(self, data, load=None, no_bias=False, trace_subjs=False, col_names=None, save_stats_to=None, debug=False):
         self.col_names = {'subj_idx':'subj_idx', 'rt': 'rt', 'response': 'response'}
         # Overwrite user suppplied column names
         if col_names is not None:
@@ -47,7 +47,7 @@ class HDDM_base(object):
         self.no_bias = no_bias
 	self.colors = ('r','b','g','y','c')
         self.trace_subjs = trace_subjs
-        self.save_to = save_to
+        self.save_stats_to = save_stats_to
         self.debug = debug
             
         #if load:
@@ -270,10 +270,11 @@ class HDDM_base(object):
             self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
 
         # Save stats to output file
-        if self.save_to is not None:
-            with open(self.save_to) as fd:
+        if self.save_stats_to is not None:
+            print "Saving stats to %s" % self.save_stats_to
+            with open(self.save_stats_to, 'w') as fd:
                 for name, value in self.params_est.iteritems():
-                    fd.writeline('%s: %f'%(name, value))
+                    fd.write('%s: %f\n'%(name, value))
                     
         return self
 
@@ -286,8 +287,8 @@ class HDDM_multi(HDDM_base):
     - subject param DDM (each subject get's it's own param, see EJ's book 8.3)
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
-    def __init__(self, data, depends_on=None, stats_on=None, model_type=None, is_subj_model=True, load=None, col_names=None, debug=False, no_bias=True):
-        super(HDDM_multi, self).__init__(data, col_names=col_names, debug=debug, no_bias=no_bias)
+    def __init__(self, data, depends_on=None, stats_on=None, model_type=None, is_subj_model=True, trace_subjs=None, load=None, col_names=None, save_stats_to=None, debug=False, no_bias=True):
+        super(HDDM_multi, self).__init__(data, col_names=col_names, save_stats_to=save_stats_to, trace_subjs=trace_subjs, debug=debug, no_bias=no_bias)
 
         # Initialize
         if depends_on is None:
@@ -619,15 +620,6 @@ class HDDM_multi(HDDM_base):
         
         return ddm
 
-    def _gen_stats(self):
-        for param_name, param_inst in self.group_params.iteritems():
-            #self.params_est[param_name] = np.mean(param_inst.trace())
-            if param_name == 'z' and self.no_bias:
-                continue
-            self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
-            self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
-
-        return self
 
 class HDDM_multi_lba(HDDM_multi):
     def __init__(self, *args, **kwargs):
@@ -1583,7 +1575,25 @@ def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
 
     return data[include]
 
-def parse_config_file(fname):
+def rec2csv(data, fname, sep=None):
+    """Save record array to fname as csv.
+    """
+    if sep is None:
+        sep = ','
+    with open(fname, 'w') as fd:
+        # Write header
+        fd.write(sep.join(data.dtype.names))
+        fd.write('\n')
+        # Write data
+        for line in data:
+            line_str = [str(i) for i in line]
+            fd.write(sep.join(line_str))
+            fd.write('\n')
+
+def csv2rec(fname):
+    return np.lib.io.recfromcsv(fname)
+
+def parse_config_file(fname, load_model=False):
     import ConfigParser
     
     config = ConfigParser.ConfigParser()
@@ -1603,17 +1613,17 @@ def parse_config_file(fname):
         model_type = 'simple'
 
     try:
-        is_subj_model = config.get('model', 'is_subj_model')
+        is_subj_model = config.getboolean('model', 'is_subj_model')
     except ConfigParser.NoOptionError:
         is_subj_model = True
 
     try:
-        no_bias = config.get('model', 'no_bias')
+        no_bias = config.getboolean('model', 'no_bias')
     except ConfigParser.NoOptionError:
         no_bias = True
 
     try:
-        debug = config.get('model', 'debug')
+        debug = config.getboolean('model', 'debug')
     except ConfigParser.NoOptionError:
         debug = False
 
@@ -1641,22 +1651,35 @@ def parse_config_file(fname):
 
     # MCMC values
     try:
-        samples = config.get('mcmc', 'samples')
+        samples = config.getint('mcmc', 'samples')
     except ConfigParser.NoOptionError:
-        samples = None
+        samples = 10000
     try:
-        burn = config.get('mcmc', 'burn')
+        burn = config.getint('mcmc', 'burn')
     except ConfigParser.NoOptionError:
-        burn = None
+        burn = 5000
+    try:
+        thin = config.getint('mcmc', 'thin')
+    except ConfigParser.NoOptionError:
+        thin = 3
+    try:
+        verbose = config.getint('mcmc', 'verbose')
+    except ConfigParser.NoOptionError:
+        verbose = 0
 
     print "Creating model..."
     if model_type != 'lba':
-        m = HDDM_multi(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+        m = HDDM_multi(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
     else:
-        m = HDDM_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
-    debug_here()
-    print "Sampling... (this can take some time)"
-    m.mcmc(samples=samples, burn=burn, dbname=dbname)
+        m = HDDM_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
+
+    if not load_model:
+        print "Sampling... (this can take some time)"
+        m.mcmc(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
+    else:
+        m.mcmc_load_from_db(dbname=dbname)
+
+    return m
 
 if __name__=='__main__':
     import sys

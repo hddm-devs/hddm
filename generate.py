@@ -1,5 +1,12 @@
 import numpy as np
 import numpy.lib.recfunctions as rec
+from copy import copy
+
+try:
+    from IPython.Debugger import Tracer; debug_here = Tracer()
+except:
+    pass
+
 
 ################################################################
 # Functions to generate RT distributions with known parameters #
@@ -15,7 +22,7 @@ def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, num_samples=50
 
     return data
 
-def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structured=False):
+def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structured=False, subj_idx=None):
     import brownian
 
     ddm = brownian.DDM()
@@ -35,7 +42,11 @@ def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structure
     num_lower_resps = rts_lower.shape[0]
 
     if structured:
-        data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float)]))
+        if subj_idx is None:
+            data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float)]))
+        else:
+            data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
+            data['subj_idx'] = subj_idx
         data['response'][:num_upper_resps] = 1.
         data['response'][num_upper_resps:] = 0.
         data['rt'][:num_upper_resps] = rts_upper
@@ -47,17 +58,18 @@ def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structure
         
     return data
 
-def _gen_rts_params(params, num_samples=500, fname=None, structured=True):
+def _gen_rts_params(params, num_samples=500, fname=None, structured=True, subj_idx=None):
     """Generate simulated RTs with fixed parameters."""
     return gen_ddm_rts(v=params['v'],
-                        sv=params['sv'],
-                        z=params['z'],
-                        sz=params['sz'],
-                        a=params['a'],
-                        ter=params['ter'],
-                        ster=params['ster'],
-                        size=num_samples,
-                        structured=structured)
+                       sv=params['sv'],
+                       z=params['z'],
+                       sz=params['sz'],
+                       a=params['a'],
+                       ter=params['ter'],
+                       ster=params['ster'],
+                       size=num_samples,
+                       structured=structured,
+                       subj_idx=subj_idx)
 
 def gen_rand_data(num_samples=500, params=None, gen_data=True, no_var=False, tag=None):
     """Generate simulated RTs with random parameters."""
@@ -118,7 +130,11 @@ def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True
         params = {'v': .5, 'sv': 0.1, 'z': 1., 'sz': 0.1, 'ter': 1., 'ster': 0.1, 'a': 2}
 
     params_subjs = []
-    data = np.empty((num_samples*num_subjs, 3), dtype=np.float)
+    #data = np.empty((num_samples*num_subjs, 3), dtype=np.float)
+    resps = []
+    rts = []
+    subj_idx = []
+    data_gens = []
     # Derive individual parameters
     for i in range(num_subjs):
         params_subj = copy(params)
@@ -136,24 +152,20 @@ def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True
 
         if gen_data:
             # Create RT data
-            data_gen = _gen_rts_params(params_subj, num_samples=num_samples, fname='test_data.txt', structured=False)
-
-            # Put data in data array
-            data[i*num_samples:(i+1)*num_samples,0] = data_gen > 0
-            data[i*num_samples:(i+1)*num_samples,1] = np.abs(data_gen)
-            data[i*num_samples:(i+1)*num_samples,2] = i
-
+            data_gen = _gen_rts_params(params_subj, num_samples=num_samples, fname='test_data.txt', structured=True, subj_idx=i)
+            data_gens.append(data_gen)
+    
     if tag is None:
         tag = ''
     if gen_data:
-        data.dtype = np.dtype([('response',np.float), ('rt', np.float), ('subj_idx', np.float)])
+        data = np.concatenate(data_gens)
         np.save('data_%s'%tag, data)
     else:
         data = np.load('data_%s.npy'%tag)
 
     return (data, params)
 
-def save_recarray_to(fname, data, sep=None):
+def rec2csv(data, fname, sep=None):
     """Save record array to fname as csv.
     """
     if sep is None:
@@ -164,6 +176,6 @@ def save_recarray_to(fname, data, sep=None):
         fd.write('\n')
         # Write data
         for line in data:
-            line_str = [str(i) for i in line[0]]
+            line_str = [str(i) for i in line]
             fd.write(sep.join(line_str))
             fd.write('\n')
