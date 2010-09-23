@@ -488,9 +488,9 @@ class HDDM_multi(HDDM_base):
                 data_dep = data[data[depends_on_col] == depend_element]
                 # Set the appropriate param
                 if self.is_subj_model:
-                    params[param_name[0]] = self.subj_params[param_name[0]+'_'+str(depend_element)]
+                    params[param_name] = self.subj_params[param_name+'_'+str(depend_element)]
                 else:
-                    params[param_name[0]] = self.group_params[param_name[0]+'_'+str(depend_element)]
+                    params[param_name] = self.group_params[param_name+'_'+str(depend_element)]
                 # Recursive call with one less dependency and the sliced data.
                 ddm = self._set_model_rec(data_dep, depends_on=depends_on, params=params)
                 ddm_list += ddm
@@ -620,6 +620,22 @@ class HDDM_multi(HDDM_base):
         
         return ddm
 
+
+    def _gen_stats(self):
+        for param_name in self.group_params.iterkeys():
+            if param_name == 'z' and self.no_bias:
+                continue
+            self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
+            self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
+
+        # Save stats to output file
+        if self.save_stats_to is not None:
+            print "Saving stats to %s" % self.save_stats_to
+            with open(self.save_stats_to, 'w') as fd:
+                for name, value in self.params_est.iteritems():
+                    fd.write('%s: %f\n'%(name, value))
+                    
+        return self
 
 class HDDM_multi_lba(HDDM_multi):
     def __init__(self, *args, **kwargs):

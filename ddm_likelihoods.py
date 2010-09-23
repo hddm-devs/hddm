@@ -1,8 +1,10 @@
 from __future__ import division
+from copy import copy
 import platform
 import pymc as pm
 import numpy as np
-from copy import copy
+np.seterr(divide='ignore')
+
 
 if platform.architecture()[0] == '64bit':
     import wfpt64 as wfpt
