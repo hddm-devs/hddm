@@ -30,7 +30,7 @@ def scale(x):
 class HDDM_base(object):
     """Base class for the hierarchical bayesian drift diffusion
     model."""
-    def __init__(self, data, load=None, no_bias=False, trace_subjs=False, col_names=None, save_stats_to=None, debug=False):
+    def __init__(self, data, load=None, no_bias=False, trace_subjs=True, col_names=None, save_stats_to=None, debug=False):
         self.col_names = {'subj_idx':'subj_idx', 'rt': 'rt', 'response': 'response'}
         # Overwrite user suppplied column names
         if col_names is not None:
