@@ -15,13 +15,6 @@ else:
     import lba
     sampler_exec = 'construct-samples'
 try:
-    import rpy2.robjects as robjects
-    import rpy2.robjects.numpy2ri
-    robjects.r.source('lba-math.r')
-except:
-    print "Could not load r-wrapper for linear ballistic accumulator"
-
-try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
     pass
@@ -174,8 +167,7 @@ def get_avg_likelihood(x, params):
 
 
 ################################
-# Linear Ballistic Accumulator #
-################################
+# Linear Ballistic Accumulator
 
 def LBA_like(value, resps, a, z, ter, v, sv, logp=True):
     """Linear Ballistic Accumulator PDF

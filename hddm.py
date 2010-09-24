@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from __future__ import division
 import numpy as np
 import numpy.lib.recfunctions as rec
@@ -44,6 +45,7 @@ class HDDM_base(object):
         self.map_model = None
         self.params_est = {}
         self.params_est_std = {}
+        self.stats = {}
         self.no_bias = no_bias
 	self.colors = ('r','b','g','y','c')
         self.trace_subjs = trace_subjs
@@ -333,12 +335,14 @@ class HDDM_multi(HDDM_base):
         self.param_names = copy(self.group_param_names)
         self.group_params = {}
 
-        self.param_ranges = {'a_lower': 1.5,
+        self.param_ranges = {'a_lower': 1.,
                              'a_upper': 3.,
                              'z_lower': .1,
                              'z_upper': 2.,
                              't_lower': .1,
-                             't_upper': 1.}
+                             't_upper': 1.,
+                             'v_lower': -3.,
+                             'v_upper': 3.}
         if load:
             self.mcmc_load_from_db(dbname=load)
 
@@ -396,7 +400,7 @@ class HDDM_multi(HDDM_base):
         if param == 'a':
             return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower'], upper=self.param_ranges['a_upper'])
         elif param.startswith('v'):
-            return pm.Uniform("%s%s"%(param, tag), lower=-2, upper=2, value=np.random.rand()*4-2, observed=False)
+            return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'], observed=False)
         elif param == 'V':
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
         elif param == 'z':
@@ -628,13 +632,22 @@ class HDDM_multi(HDDM_base):
             self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
             self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
 
+        self.stats['logp'] = self.mcmc_model.logp
+        self.stats['dic'] = self.mcmc_model.dic
+        
         # Save stats to output file
         if self.save_stats_to is not None:
             print "Saving stats to %s" % self.save_stats_to
             with open(self.save_stats_to, 'w') as fd:
+                fd.write('Mean group estimates:\n')
                 for name, value in self.params_est.iteritems():
                     fd.write('%s: %f\n'%(name, value))
-                    
+                fd.write('\nStandard deviations of group parameters:\n')
+                for name, value in self.params_est_std.iteritems():
+                    fd.write('%s: %f\n'%(name, value))
+                fd.write('\nGeneral model stats:\n')
+                for name, value in self.stats.iteritems():
+                    fd.write('%s: %f\n'%(name, value))
         return self
 
 class HDDM_multi_lba(HDDM_multi):
@@ -655,26 +668,26 @@ class HDDM_multi_lba(HDDM_multi):
         super(HDDM_multi_lba, self).__init__(*args, **kwargs)
 
         self.model_type = 'lba'
-
+        self.no_bias = False # Does not make sense for LBA
         self.resps = np.unique(self.data['response'])
         self.nresps = self.resps.shape[0]
         self.group_param_names = ['a', 'V', 'z', 't'] + ['v%i'%i for i in self.resps]
 
         self._models = {'lba': self._get_lba}
 
-        self.param_ranges = {'a_lower_lba': 1.,
-                             'a_upper_lba': 4.,
-                             'v_lower_lba': 0.1,
-                             'v_upper_lba': 3.,
-                             'z_lower_lba': .1,
-                             'z_upper_lba': 2.,
-                             't_lower': .1,
+        self.param_ranges = {'a_lower': .2,
+                             'a_upper': 4.,
+                             'v_lower': 0.1,
+                             'v_upper': 3.,
+                             'z_lower': .0,
+                             'z_upper': 2.,
+                             't_lower': .05,
                              't_upper': 2.,
-                             'V_lower_lba': .2,
-                             'V_upper_lba': 2.}
+                             'V_lower': .2,
+                             'V_upper': 2.}
         if self.normalize_v:
-            self.param_ranges['v_lower_lba'] = 0.
-            self.param_ranges['v_upper_lba'] = 1.
+            self.param_ranges['v_lower'] = 0.
+            self.param_ranges['v_upper'] = 1.
 
     def _get_group_param(self, param, tag=None):
         """Create and return a prior distribution for [param]. [tag] is
@@ -686,25 +699,25 @@ class HDDM_multi_lba(HDDM_multi):
             tag = '_' + tag
             
         if param == 'a':
-            return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower_lba'], upper=self.param_ranges['a_upper_lba'])
+            return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower'], upper=self.param_ranges['a_upper'])
         elif param.startswith('v'):
             if self.normalize_v:
                 # Normalize the sum of the drifts to 1.
                 if param.startswith('v0'):
-                    return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower_lba'], upper=self.param_ranges['v_upper_lba'])
+                    return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'])
                 else:
                     return pm.Lambda("%s%s"%(param, tag), lambda x=self.group_params['v0%s'%tag]: 1-x)
             else:
-                return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower_lba'], upper=self.param_ranges['v_upper_lba'])
+                return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'])
         elif param == 'V':
             if self.fix_sv is None:
-                return pm.Uniform("V%s"%tag, lower=self.param_ranges['V_lower_lba'], upper=self.param_ranges['V_upper_lba'])
+                return pm.Uniform("V%s"%tag, lower=self.param_ranges['V_lower'], upper=self.param_ranges['V_upper'])
             else:
                 return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
         elif param == 'z':
             if self.no_bias:
                 return None
-            return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower_lba'], upper=self.param_ranges['z_upper_lba'])
+            return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower'], upper=self.param_ranges['z_upper'])
         elif param == 'Z':
             return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
         elif param == 't':
@@ -727,7 +740,7 @@ class HDDM_multi_lba(HDDM_multi):
             tag = '_' + str(subj_idx)
 
         if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower_lba'], b=self.param_ranges['a_upper_lba'],
+            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower'], b=self.param_ranges['a_upper'],
                                       mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
         elif param == 'v':
             if self.normalize_v:
@@ -744,19 +757,19 @@ class HDDM_multi_lba(HDDM_multi):
                     return pm.Lambda("%s%s"%(param, tag), lambda x=self.subj_params[other_param_complete][subj_idx]: 1-x, plot=False, trace=self.trace_subjs)
                 else:
                     # Create new v parameter
-                    return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower_lba'], b=self.param_ranges['v_upper_lba'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
+                    return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower'], b=self.param_ranges['v_upper'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
             else: 
-                return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower_lba'], b=self.param_ranges['v_upper_lba'], mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
+                return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower'], b=self.param_ranges['v_upper'], mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
         elif param == 'V':
             if self.fix_sv is None:
-                return pm.TruncatedNormal("V%s"%tag, a=self.param_ranges['V_lower_lba'], b=self.param_ranges['V_upper_lba'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+                return pm.TruncatedNormal("V%s"%tag, a=self.param_ranges['V_lower'], b=self.param_ranges['V_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
             else:
                 return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean, plot=False, trace=self.trace_subjs)
         elif param == 'z':
             if self.no_bias:
                 return None
             else:
-                return pm.TruncatedNormal('z%s'%tag, a=self.param_ranges['z_lower_lba'], b=self.param_ranges['z_upper_lba'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+                return pm.TruncatedNormal('z%s'%tag, a=self.param_ranges['z_lower'], b=self.param_ranges['z_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
         elif param == 'Z':
             return pm.TruncatedNormal("Z%s"%tag, a=0, b=1., mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
         elif param == 't':
@@ -1661,7 +1674,8 @@ def parse_config_file(fname, load_model=False):
     depends = {}
     for param_name in group_param_names:
         try:
-            depend[param_name] = config.get('depends', param_name)
+            # Multiple depends can be listed (separated by a comma)
+            depends[param_name] = config.get('depends', param_name).split(',')
         except ConfigParser.NoOptionError:
             pass
 
