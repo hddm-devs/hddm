@@ -289,7 +289,7 @@ class HDDM_multi(HDDM_base):
     - subject param DDM (each subject get's it's own param, see EJ's book 8.3)
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
-    def __init__(self, data, depends_on=None, stats_on=None, model_type=None, is_subj_model=True, trace_subjs=None, load=None, col_names=None, save_stats_to=None, debug=False, no_bias=True):
+    def __init__(self, data, depends_on=None, stats_on=None, model_type=None, is_subj_model=True, trace_subjs=True, load=None, col_names=None, save_stats_to=None, debug=False, no_bias=True):
         super(HDDM_multi, self).__init__(data, col_names=col_names, save_stats_to=save_stats_to, trace_subjs=trace_subjs, debug=debug, no_bias=no_bias)
 
         # Initialize
