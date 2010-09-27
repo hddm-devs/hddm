@@ -11,7 +11,7 @@ reproducing the full shape of reaction times in simple decision making
 tasks.
 
 Hierarchical bayesian estimation methods are quickly gaining
-popularity in cognitive sciences. While traditionally, models where
+popularity in cognitive sciences. Traditionally, models where
 either fit separately to individual subjects (thus not taking
 similarities of subjects into account) or to the whole group (thus not
 taking differences of subjects into account). Hierarchical bayesian
@@ -35,6 +35,7 @@ different parameter combinations.
 ----------------
 Diffusion Models
 ----------------
+
 
 Ratcliff Drift Diffusion Model
 ------------------------------
