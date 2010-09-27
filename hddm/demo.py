@@ -1,7 +1,6 @@
 """
 brownian() implements one dimensional Brownian motion (i.e. the Wiener process).
 """
-from __future__ import division
 import wx
 
 import matplotlib
@@ -37,10 +36,7 @@ try:
 except:
     pass
 
-from fastdm_cdf import cdf
-import wfpt
-import ddm_likelihoods
-
+import hddm
 
 def scale(x, max=None, min=None):
     #x = np.array(x, dtype=np.float)
@@ -91,12 +87,6 @@ class DDM(HasTraits):
     histo_lower = Property(Array, depends_on=['params'])
     histo_upper = Property(Array, depends_on=['params'])
 
-    x_analytical_cdf = Property(Array, depends_on=['N'])
-
-    # Functions to compute the Cummulative Density Function
-    analytical_cdf = Property(Array, depends_on=['params', 'N'])
-    empirical_cdf = Property(Array, depends_on=['histo_lower', 'histo_upper'])
-    
     # Total time.
     T = Float(5.0)
     # Number of steps.
@@ -216,66 +206,10 @@ class DDM(HasTraits):
     def _get_histo_lower(self):
         return np.histogram(self.rts_lower, bins=self.bins, range=(0,self.N))[0]
         
-    @cached_property    
-    def _get_x_analytical_cdf(self):
-        #return np.linspace((-self.N)/self.dt, (self.N)/self.dt, 2*self.N + 1)
-	return np.linspace(-self.T, self.T, 2*self.N)
     
     def _get_params(self):
         return np.array([self.a, self.v, self.t0, self.sz, self.sv, self.st0])
 
-    @cached_property
-    def _get_analytical_cdf(self):
-        """Compute the response time cumulative distribution analytically using the fast-dm algorithm."""
-        x = cdf(self.params, z=self.z, N=self.N, time=self.T)
-	# Normalize. For some reason, fast-dm treats non-finished trials in a weird way.
-	x = (x-x.min())/(x.max()-x.min())
-	return x
-
-    def _get_empirical_cdf(self):
-        """Compute the response time cumulative distribution of the simulated data."""
-        histo = np.concatenate((self.histo_lower[::-1], self.histo_upper))
-        cumulative = np.cumsum(histo)
-        normalizer = cumulative[-1]
-        return np.array(cumulative, dtype='float')/normalizer
-        
-
-class CDFPlot(HasTraits):
-    from MPLTraits import MPLFigureEditor
-
-    cdf = Instance(DDM, ())
-    figure = Instance(Figure, ())
-    axes = Instance(Axes)
-    line = Instance(Line2D, depends_on=['cdf'])
-    
-    view = View(Item('figure', editor=MPLFigureEditor(),
-		     show_label=False),
-                Item('cdf'),
-		style='custom',
-		width=800,
-		height=600,
-		resizable=True)
-
-    def __init__(self):
-        super(CDFPlot, self).__init__()
-        self.axes = self.figure.add_subplot(111)
-        self.canvas = self.figure.axes[0].figure.canvas
-        self.line = self.axes.plot(self.cdf.x_analytical_cdf, self.cdf.analytical_cdf)[0]
-
-    def _get_axes(self):
-        return 
-
-    def _get_line(self):
-        return self.axes.plot(self.cdf.x, self.cdf.analytical_cdf)[0]
-        
-    @on_trait_change('cdf.analytical_cdf')
-    def line_change(self):
-        #self.figure.axes[0].lines[0].set_ydata(self.cdf.analytical_cdf)
-        #self.figure.axes[0].draw_animated()
-        self.line.set_ydata(self.cdf.analytical_cdf)
-        self.axes.draw_artist(self.line)
-	self.axes.set_ylim((0,1))
-        wx.CallAfter(self.figure.canvas.draw)
     
 class DDMPlot(HasTraits):
     from MPLTraits import MPLFigureEditor
@@ -285,7 +219,6 @@ class DDMPlot(HasTraits):
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
     plot_full_avg = Bool(False)
-    plot_CDF = Bool(False)
     plot_lba = Bool(True)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
@@ -309,7 +242,6 @@ class DDMPlot(HasTraits):
                 Item('plot_histogram'),
                 Item('plot_simple'),
                 Item('plot_full_avg'),
-                Item('plot_CDF'),
                 Item('plot_lba'),
                 Item('plot_data'),
 		Item('go'),
@@ -322,16 +254,11 @@ class DDMPlot(HasTraits):
 	super(DDMPlot, self).__init__()
 
         # Create plot    
-        if self.plot_CDF:
-            self.num_axes = 4
-        else:
-            self.num_axes = 3
+        self.num_axes = 3
 	self.ax1 = self.figure.add_subplot(411)
 	self.ax2 = self.figure.add_subplot(412, sharex=self.ax1)
 	self.ax3 = self.figure.add_subplot(413, sharex=self.ax1)
 
-        if self.plot_CDF:
-            self.ax4 = self.figure.add_subplot(414)
         self.set_figure()
         #self.update_plot()
 
@@ -387,17 +314,17 @@ class DDMPlot(HasTraits):
         return np.linspace(0, self.ddm.N/self.ddm.dt, 1000)
     
     def _get_full_avg_upper(self):
-        return wfpt.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
+        return hddm.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
     def _get_full_avg_lower(self):
         return wfpt.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
 
     def _get_simple_upper(self):
-        return wfpt.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
     def _get_simple_lower(self):
-        return wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
 
     def _get_lba_upper(self):
-        return ddm_likelihoods.LBA_like(self.x_analytical,
+        return hddm.LBA_like(self.x_analytical,
                                         resps=np.ones_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
@@ -405,7 +332,7 @@ class DDMPlot(HasTraits):
                                         ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
 
     def _get_lba_lower(self):
-        return ddm_likelihoods.LBA_like(self.x_analytical,
+        return hddm.LBA_like(self.x_analytical,
                                         resps=np.zeros_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
@@ -478,11 +405,6 @@ class DDMPlot(HasTraits):
         self.figure.axes[0].set_xlim((0,self.ddm.T))
         self.figure.axes[2].set_xlim((0, self.ddm.T))
         self.figure.axes[1].set_ylim((0, self.ddm.a))
-        if self.plot_CDF:
-            self.figure.axes[3].plot(np.linspace(-self.ddm.N/self.ddm.dt,self.ddm.N/self.ddm.dt,2*self.ddm.bins), self.ddm.empirical_cdf)
-            self.figure.axes[3].plot(self.ddm.x_analytical_cdf, self.ddm.analytical_cdf)
-            self.figure.axes[3].set_xlim((-self.ddm.T,self.ddm.T))
-            plt.setp(self.ax4.get_yticklabels(), visible=False)
 
         self.figure.subplots_adjust(hspace=0)
         for ax in self.ax1, self.ax2:

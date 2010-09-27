@@ -13,7 +13,7 @@ from ddm_likelihoods import *
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
-    pass
+    def debug_here(): pass
 
 if platform.architecture()[0] == '64bit':
     import wfpt64 as wfpt
@@ -193,6 +193,7 @@ class HDDM_base(object):
         else:
             # Open database
             db = pm.database.pickle.load(dbname)
+            #db = pm.database.sqlite.load(dbname)
         
             # Create mcmc instance reading from the opened database
             self.mcmc_model = pm.MCMC(self.model, db=db, verbose=verbose)
@@ -200,8 +201,9 @@ class HDDM_base(object):
             # Take the traces from the database and feed them into our
             # distribution variables (needed for _gen_stats())
             self._set_traces(self.group_params)
-            self._set_traces(self.group_params_tau)
+            
             if self.is_subj_model:
+                self._set_traces(self.group_params_tau)
                 self._set_traces(self.subj_params)
 
             self._gen_stats()
@@ -1622,7 +1624,7 @@ def rec2csv(data, fname, sep=None):
 def csv2rec(fname):
     return np.lib.io.recfromcsv(fname)
 
-def parse_config_file(fname, load_model=False):
+def parse_config_file(fname, load=False):
     import ConfigParser
     
     config = ConfigParser.ConfigParser()
@@ -1630,11 +1632,11 @@ def parse_config_file(fname, load_model=False):
     
     #####################################################
     # Parse config file
-    load = config.get('data', 'load')
+    data_fname = config.get('data', 'load')
     save = config.get('data', 'save')
     #format_ = config.get('data', 'format')
 
-    data = np.recfromcsv(load)
+    data = np.recfromcsv(data_fname)
     
     try:
         model_type = config.get('model', 'type')
@@ -1657,7 +1659,7 @@ def parse_config_file(fname, load_model=False):
         debug = False
 
     try:
-        dbname = config.get('model', 'dbname')
+        dbname = config.get('mcmc', 'dbname')
     except ConfigParser.NoOptionError:
         dbname = None
 
@@ -1703,7 +1705,7 @@ def parse_config_file(fname, load_model=False):
     else:
         m = HDDM_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
 
-    if not load_model:
+    if not load:
         print "Sampling... (this can take some time)"
         m.mcmc(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
     else:
