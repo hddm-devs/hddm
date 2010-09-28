@@ -19,13 +19,7 @@ def scale(x):
 class Base(object):
     """Base class for the hierarchical bayesian drift diffusion
     model."""
-    def __init__(self, data, load=None, no_bias=False, trace_subjs=True, col_names=None, save_stats_to=None, debug=False):
-        self.col_names = {'subj_idx':'subj_idx', 'rt': 'rt', 'response': 'response'}
-        # Overwrite user suppplied column names
-        if col_names is not None:
-            for key, val in col_names.iteritems():
-                self.col_names[key] = val
-
+    def __init__(self, data, load=None, no_bias=False, trace_subjs=True, save_stats_to=None, debug=False):
         # Flip sign for lower boundary RTs
         self._prepare_data(data)
 
@@ -49,8 +43,8 @@ class Base(object):
         # Copy data
         self.data = np.array(data)
         # Flip sign for lower boundary responses
-        idx = self.data[self.col_names['response']] == 0
-        self.data[self.col_names['rt']][idx] = -self.data[self.col_names['rt']][idx]
+        idx = self.data['response'] == 0
+        self.data['rt'][idx] = -self.data['rt'][idx]
 
         return self
 
@@ -73,8 +67,8 @@ class Base(object):
     def plot_global(self, params_true=None, params=None):
         """Plot real and estimated RT model"""
         # Separate upper and lower boundary responses
-        resps_upper = self.data[self.col_names['rt']][self.data[self.col_names['response']]==1]
-        resps_lower = np.abs(self.data[self.col_names['rt']][self.data[self.col_names['response']]==0])
+        resps_upper = self.data['rt'][self.data['response']==1]
+        resps_lower = np.abs(self.data['rt'][self.data['response']==0])
 
         self._plot(resps_upper, resps_lower, params_true=params_true, params=params)
 
@@ -288,13 +282,11 @@ class Multi(Base):
     """
     def __init__(self, data,
                  depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
-                 trace_subjs=True, load=None, col_names=None, save_stats_to=None,
+                 trace_subjs=True, load=None, save_stats_to=None,
                  debug=False, no_bias=True, normalize_v=True):
 
-        super(Multi, self).__init__(data, col_names=col_names,
-                                         save_stats_to=save_stats_to,
-                                         trace_subjs=trace_subjs,
-                                         debug=debug, no_bias=no_bias)
+        super(Multi, self).__init__(data, save_stats_to=save_stats_to, trace_subjs=trace_subjs,
+                                    debug=debug, no_bias=no_bias)
 
         if model_type is None:
             self.model_type = 'simple'
@@ -315,7 +307,7 @@ class Multi(Base):
         self.is_subj_model = is_subj_model
 
         if self.is_subj_model:
-            self.subjs = np.unique(self.data[self.col_names['subj_idx']])
+            self.subjs = np.unique(self.data['subj_idx'])
             self.num_subjs = self.subjs.shape[0]
 
         # Define parameters for the simple and full averaged ddm.
@@ -435,7 +427,7 @@ class Multi(Base):
         if self.is_subj_model:
             ddm = np.empty(self.num_subjs, dtype=object)
             for i,subj in enumerate(self.subjs):
-                data_subj = data[data[self.col_names['subj_idx']] == subj] # Select data belong to subj
+                data_subj = data[data['subj_idx'] == subj] # Select data belong to subj
 
                 ddm = self.param_factory.get_model("ddm_%i_%i"%(self.idx, i), data_subj, params, idx=i)
         else: # Do not use subj params, but group ones
