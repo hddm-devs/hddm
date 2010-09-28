@@ -19,6 +19,7 @@ import subprocess
 import models
 import likelihoods
 import demo
+import generate
 
 from models import *
 

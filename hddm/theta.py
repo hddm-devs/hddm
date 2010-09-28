@@ -12,354 +12,354 @@ try:
 except:
     pass
 
-#def get_HDDM_regress_multi(base=HDDM_simple_subjs)
-def get_HDDM_regress_multi(base=HDDM_multi):
-    class HDDM_regress_multi(base):
-        def __init__(self, *args, **kwargs):
-            """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
+class HDDM_regress_multi(hddm.models.hddm_multi):
+    def __init__(self, *args, **kwargs):
+        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
-            Arguments:
-            ==========
-            data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-            
-            Keyword Arguments:
-            ==================
-            effect_on <list>: theta and dbs effect these DDM parameters.
-            depend_on <list>: separate stimulus distributions for these parameters.
-            dbs_global <bool>: True: Only one global effect distribution for dbs.
-                               False: One dbs effect distribution for each stimulus.
-            effect_coding <bool>: True: effects coding (default)
-                          False: dummy coding
-            HL_on <list>: Instead of individual stimuli, these paramaters depend on conflict type (WinWin, WinLose, LoseLose).
-            theta_col <string>: Name of the column used for the values of theta (default: 'theta')
-            single_effect <bool>: True: effects do not depend on stimuli
-                                  False: only one effect distribution for all stimuli (but separate for dbs, theta and interaction) (default)
+        Arguments:
+        ==========
+        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
 
-            Example:
-            ========
-            The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-            there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-            
-            model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-            model.mcmc()
-            """
-            # Fish out keyword arguments that should not get passed on
-            # to the parent.
-            if kwargs.has_key('effect_on'):
-                self.effect_on = kwargs['effect_on']
-                del kwargs['effect_on']
+        Keyword Arguments:
+        ==================
+        effect_on <list>: theta and dbs effect these DDM parameters.
+        depend_on <list>: separate stimulus distributions for these parameters.
+        dbs_global <bool>: True: Only one global effect distribution for dbs.
+                           False: One dbs effect distribution for each stimulus.
+        effect_coding <bool>: True: effects coding (default)
+                      False: dummy coding
+        HL_on <list>: Instead of individual stimuli, these paramaters depend on conflict type (WinWin, WinLose, LoseLose).
+        theta_col <string>: Name of the column used for the values of theta (default: 'theta')
+        single_effect <bool>: True: effects do not depend on stimuli
+                              False: only one effect distribution for all stimuli (but separate for dbs, theta and interaction) (default)
+
+        Example:
+        ========
+        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
+        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
+
+        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model.mcmc()
+        """
+        # Fish out keyword arguments that should not get passed on
+        # to the parent.
+        if kwargs.has_key('effect_on'):
+            self.effect_on = kwargs['effect_on']
+            del kwargs['effect_on']
+        else:
+            self.effect_on = ['a']
+
+        if kwargs.has_key('dbs_global'):
+            self.dbs_global = kwargs['dbs_global']
+            del kwargs['dbs_global']
+        else:
+            self.dbs_global = False
+
+        if kwargs.has_key('depend_on'):
+            self.depend_on = kwargs['depend_on']
+            del kwargs['depend_on']
+        else:
+            self.depend_on = ['v']
+
+        if kwargs.has_key('effect_coding'):
+            self.effect_coding = kwargs['effect_coding']
+            del kwargs['effect_coding']
+        else:
+            self.effect_coding = True
+
+        if kwargs.has_key('on_as_1'):
+            self.on_as_1 = kwargs['on_as_1']
+            del kwargs['on_as_1']
+        else:
+            self.on_as_1 = False
+
+        if kwargs.has_key('HL_on'):
+            self.HL_on = kwargs['HL_on']
+            del kwargs['HL_on']
+        else:
+            self.HL_on = ()
+
+        if kwargs.has_key('theta_col'):
+            self.theta_col = kwargs['theta_col']
+            del kwargs['theta_col']
+        else:
+            self.theta_col = 'theta'
+
+        if kwargs.has_key('single_effect'):
+            self.single_effect = kwargs['single_effect']
+            del kwargs['single_effect']
+        else:
+            self.single_effect = False
+
+        # Call parent's init.
+        kwargs['model_type'] = 'simple'
+        super(HDDM_regress_multi, self).__init__(*args, **kwargs)
+
+        if not self.single_effect:
+            self.stims = np.unique(self.data['stim'])
+        else:
+            self.stims = ('',)
+        self.subjs = np.unique(self.data['subj_idx'])
+
+        self.stims_HL = ('HC', 'LC')
+
+        if 'dbs' not in self.data.dtype.names:
+            self.ignore_dbs = True
+        else:
+            if np.unique(self.data['dbs']).shape[0] != 1:
+                self.ignore_dbs = False
+                self.dbs = np.unique(self.data['dbs'])
             else:
-                self.effect_on = ['a']
-
-            if kwargs.has_key('dbs_global'):
-                self.dbs_global = kwargs['dbs_global']
-                del kwargs['dbs_global']
-            else:
-                self.dbs_global = False
-
-            if kwargs.has_key('depend_on'):
-                self.depend_on = kwargs['depend_on']
-                del kwargs['depend_on']
-            else:
-                self.depend_on = ['v']
-
-            if kwargs.has_key('effect_coding'):
-                self.effect_coding = kwargs['effect_coding']
-                del kwargs['effect_coding']
-            else:
-                self.effect_coding = True
-
-            if kwargs.has_key('on_as_1'):
-                self.on_as_1 = kwargs['on_as_1']
-                del kwargs['on_as_1']
-            else:
-                self.on_as_1 = False
-
-            if kwargs.has_key('HL_on'):
-                self.HL_on = kwargs['HL_on']
-                del kwargs['HL_on']
-            else:
-                self.HL_on = ()
-
-            if kwargs.has_key('theta_col'):
-                self.theta_col = kwargs['theta_col']
-                del kwargs['theta_col']
-            else:
-                self.theta_col = 'theta'
-
-            if kwargs.has_key('single_effect'):
-                self.single_effect = kwargs['single_effect']
-                del kwargs['single_effect']
-            else:
-                self.single_effect = False
-            
-            # Call parent's init.
-            kwargs['model_type'] = 'simple'
-            super(HDDM_regress_multi, self).__init__(*args, **kwargs)
-
-            if not self.single_effect:
-                self.stims = np.unique(self.data['stim'])
-            else:
-                self.stims = ('',)
-            self.subjs = np.unique(self.data['subj_idx'])
-
-            self.stims_HL = ('HC', 'LC')
-
-            if 'dbs' not in self.data.dtype.names:
                 self.ignore_dbs = True
+
+    def _set_group_params(self):
+        """Set effect and group level parameters."""
+        super(HDDM_regress_multi, self)._set_group_params()
+
+        # Set effect distributions
+        for effect in self.effect_on:
+            if self.single_effect: # Effect should not depend on stimuli.
+                stims = ('',)
+            elif effect in self.HL_on: # Effect should depend on low and high conflict.
+                stims = self.stims_HL
             else:
-                if np.unique(self.data['dbs']).shape[0] != 1:
-                    self.ignore_dbs = False
-                    self.dbs = np.unique(self.data['dbs'])
-                else:
-                    self.ignore_dbs = True
+                stims = self.stims # Effect should depend on individual stimuli.
+            for stim in stims:
+                self.group_params['e_theta_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='theta_%s_%s'%(effect, stim))
+                if not self.ignore_dbs:
+                    self.group_params['e_inter_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='inter_%s_%s'%(effect, stim))
+                    if not self.dbs_global:
+                        self.group_params['e_dbs_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
+                    else:
+                        self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s'%(effect))
 
-        def _set_group_params(self):
-            """Set effect and group level parameters."""
-            super(HDDM_regress_multi, self)._set_group_params()
 
-            # Set effect distributions
-            for effect in self.effect_on:
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif effect in self.HL_on: # Effect should depend on low and high conflict.
-                    stims = self.stims_HL
-                else:
-                    stims = self.stims # Effect should depend on individual stimuli.
+        # Set parameter distribution classes depending on data
+        for depend in self.depend_on:
+            if self.single_effect: # Effect should not depend on stimuli.
+                stims = ('',)
+            elif depend in self.HL_on:
+                stims = self.stims_HL # param depends on high/low conflict stimuli
+            else:
+                stims = self.stims # param depends on individual stimuli
+            for stim in stims:
+                self.group_params['%s_%s'%(depend, stim)] = self._get_group_param(depend, tag=stim) #pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
+
+        self.param_names = self.group_params.keys()
+
+        return self
+
+    def _set_subj_params(self):
+        """Set subject distributions that depend on group distributions."""
+        super(HDDM_regress_multi, self)._set_subj_params()
+
+        for effect in self.effect_on:
+            if self.single_effect: # If effects should not depend on stimuli
+                stims = ('',)
+            elif effect in self.HL_on: # If effects should depend on low and high conflict
+                stims = self.stims_HL
+            else: # if effects should depend on individual stimuli
+                stims = self.stims
+
+            for i in range(self.num_subjs):
+                param_names = []
                 for stim in stims:
-                    self.group_params['e_theta_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='theta_%s_%s'%(effect, stim))
-                    if not self.ignore_dbs:
-                        self.group_params['e_inter_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='inter_%s_%s'%(effect, stim))
-                        if not self.dbs_global:
-                            self.group_params['e_dbs_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
+                    param_names.append('e_theta_%s_%s'%(effect,stim))
+                    if not self.ignore_dbs: # Create dbs effect distributions?
+                        param_names.append('e_inter_%s_%s'%(effect,stim))
+                        if not self.dbs_global: # Should dbs effect distributions depend on stimuli?
+                            param_names.append('e_dbs_%s_%s'%(effect,stim))
                         else:
-                            self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s'%(effect))
+                            param_names.append('e_dbs_%s'%(effect))
+
+                for param_name in param_names:
+                    self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
+                                                                           self.group_params_tau[param_name], subj_idx=i)
 
 
-            # Set parameter distribution classes depending on data
-            for depend in self.depend_on:
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif depend in self.HL_on:
-                    stims = self.stims_HL # param depends on high/low conflict stimuli
-                else:
-                    stims = self.stims # param depends on individual stimuli
-                for stim in stims:
-                    self.group_params['%s_%s'%(depend, stim)] = self._get_group_param(depend, tag=stim) #pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
+        for depend in self.depend_on:
+            if self.single_effect: # Effect should not depend on stimuli.
+                stims = ('',)
+            elif depend in self.HL_on:
+                stims = self.stims_HL
+            else:
+                stims = self.stims
 
-            self.param_names = self.group_params.keys()
-
-            return self
-
-        def _set_subj_params(self):
-            """Set subject distributions that depend on group distributions."""
-            super(HDDM_regress_multi, self)._set_subj_params()
-
-            for effect in self.effect_on:
-                if self.single_effect: # If effects should not depend on stimuli
-                    stims = ('',)
-                elif effect in self.HL_on: # If effects should depend on low and high conflict
-                    stims = self.stims_HL
-                else: # if effects should depend on individual stimuli
-                    stims = self.stims
+            for stim in stims:
+                param_name = '%s_%s'%(depend,stim)
+                # Reinit parameters as this can conflict with _get_subj_param().
+                self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
 
                 for i in range(self.num_subjs):
-                    param_names = []
-                    for stim in stims:
-                        param_names.append('e_theta_%s_%s'%(effect,stim))
-                        if not self.ignore_dbs: # Create dbs effect distributions?
-                            param_names.append('e_inter_%s_%s'%(effect,stim))
-                            if not self.dbs_global: # Should dbs effect distributions depend on stimuli?
-                                param_names.append('e_dbs_%s_%s'%(effect,stim))
-                            else:
-                                param_names.append('e_dbs_%s'%(effect))
+                    self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
+                                                                            self.group_params_tau[param_name], subj_idx=i)
 
-                    for param_name in param_names:
-                        self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
-                                                                               self.group_params_tau[param_name], subj_idx=i)
+    def _set_model(self):
+        """Generate the HDDM."""
+        idx_trl = 0
+        params_all = []
 
-            
-            for depend in self.depend_on:
-                if self.single_effect: # Effect should not depend on stimuli.
-                    stims = ('',)
-                elif depend in self.HL_on:
-                    stims = self.stims_HL
+        # Initialize arrays
+        ddm_subjs = np.empty(self.num_subjs, dtype=object)
+        effect_inst = np.empty(self.num_subjs, dtype=object)
+        theta_vals = np.empty(self.num_subjs, dtype=object)
+        dbs_vals = np.empty(self.num_subjs, dtype=object)
+
+        for i in range(self.num_subjs):
+            data_subj = self.data[self.data['subj_idx'] == i]
+            ddm_subjs[i] = np.empty(len(self.stims), dtype=object)
+            effect_inst[i] = np.empty(len(self.stims), dtype=object)
+            theta_vals[i] = np.empty(len(self.stims), dtype=object)
+            dbs_vals[i] = np.empty(len(self.stims), dtype=object)
+
+            for j,stim in enumerate(self.stims):
+                data_stim = data_subj[data_subj['stim'] == stim]
+
+                # Determine if stimulus is high or low conflict
+                if (stim == 'WW') | (stim == 'LL'):
+                    stim_HL = 'HC'
                 else:
-                    stims = self.stims
+                    stim_HL = 'LC'
 
-                for stim in stims:
-                    param_name = '%s_%s'%(depend,stim)
-                    # Reinit parameters as this can conflict with _get_subj_param().
-                    self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
+                # Construct Theta values
+                theta = data_stim[self.theta_col]
+                theta_vals[i][j] = np.empty(theta.shape, dtype=float)                    
+                trials = data_stim.shape[0]
+                effect_inst[i][j] = {}
 
-                    for i in range(self.num_subjs):
-                        self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
-                                                                                self.group_params_tau[param_name], subj_idx=i)
-
-        def _set_model(self):
-            """Generate the HDDM."""
-            idx_trl = 0
-            params_all = []
-
-            # Initialize arrays
-            ddm_subjs = np.empty(self.num_subjs, dtype=object)
-            effect_inst = np.empty(self.num_subjs, dtype=object)
-            theta_vals = np.empty(self.num_subjs, dtype=object)
-            dbs_vals = np.empty(self.num_subjs, dtype=object)
-            
-            for i in range(self.num_subjs):
-                data_subj = self.data[self.data['subj_idx'] == i]
-                ddm_subjs[i] = np.empty(len(self.stims), dtype=object)
-                effect_inst[i] = np.empty(len(self.stims), dtype=object)
-                theta_vals[i] = np.empty(len(self.stims), dtype=object)
-                dbs_vals[i] = np.empty(len(self.stims), dtype=object)
-
-                for j,stim in enumerate(self.stims):
-                    data_stim = data_subj[data_subj['stim'] == stim]
-
-                    # Determine if stimulus is high or low conflict
-                    if (stim == 'WW') | (stim == 'LL'):
-                        stim_HL = 'HC'
+                if self.effect_coding:
+                    if theta.dtype != np.float:
+                        theta_vals[i][j][theta == 'low'] = -1.
+                        theta_vals[i][j][theta == 'high'] = 1.
                     else:
-                        stim_HL = 'LC'
+                        theta_vals[i][j] = theta
 
-                    # Construct Theta values
-                    theta = data_stim[self.theta_col]
-                    theta_vals[i][j] = np.empty(theta.shape, dtype=float)                    
-                    trials = data_stim.shape[0]
-                    effect_inst[i][j] = {}
+                else:
+                    if theta.dtype != np.float:
+                        theta_vals[i][j][theta == 'low'] = 0.
+                        theta_vals[i][j][theta == 'high'] = 1.
+                    else:
+                        theta_vals[i][j] = theta
 
+                if not self.ignore_dbs:
+                    # Construct DBS values
+                    dbs = data_stim['dbs']
+                    dbs_vals[i][j] = np.empty(dbs.shape, dtype=float)
                     if self.effect_coding:
-                        if theta.dtype != np.float:
-                            theta_vals[i][j][theta == 'low'] = -1.
-                            theta_vals[i][j][theta == 'high'] = 1.
+                        if self.on_as_1:
+                            dbs_vals[i][j][dbs == 'on'] = 1.
+                            dbs_vals[i][j][dbs == 'off'] = -1.
                         else:
-                            theta_vals[i][j] = theta
-                            
+                            dbs_vals[i][j][dbs == 'on'] = -1.
+                            dbs_vals[i][j][dbs == 'off'] = 1.
+
                     else:
-                        if theta.dtype != np.float:
-                            theta_vals[i][j][theta == 'low'] = 0.
-                            theta_vals[i][j][theta == 'high'] = 1.
+                        if self.on_as_1:
+                            dbs_vals[i][j][dbs == 'on'] = 1.
+                            dbs_vals[i][j][dbs == 'off'] = 0.
                         else:
-                            theta_vals[i][j] = theta
+                            dbs_vals[i][j][dbs == 'on'] = 0.
+                            dbs_vals[i][j][dbs == 'off'] = 1.                                
+
+                # Create deterministic distributions that
+                # calculate the parameter values affected by
+                # theta/dbs and the effect sizes
+                for effect in self.effect_on:
+                    if self.single_effect:
+                        effect_stim = ''
+                    elif effect in self.HL_on:
+                        effect_stim = stim_HL
+                    else:
+                        effect_stim = stim
+                    if effect in self.depend_on:
+                        base_effect = self.subj_params['%s_%s'%(effect, effect_stim)][i]
+                    else:
+                        base_effect = self.subj_params[effect][i]
 
                     if not self.ignore_dbs:
-                        # Construct DBS values
-                        dbs = data_stim['dbs']
-                        dbs_vals[i][j] = np.empty(dbs.shape, dtype=float)
-                        if self.effect_coding:
-                            if self.on_as_1:
-                                dbs_vals[i][j][dbs == 'on'] = 1.
-                                dbs_vals[i][j][dbs == 'off'] = -1.
-                            else:
-                                dbs_vals[i][j][dbs == 'on'] = -1.
-                                dbs_vals[i][j][dbs == 'off'] = 1.
-                                
+                        if not self.dbs_global:
+                            e_dbs = self.subj_params['e_dbs_%s_%s'%(effect,effect_stim)][i]
                         else:
-                            if self.on_as_1:
-                                dbs_vals[i][j][dbs == 'on'] = 1.
-                                dbs_vals[i][j][dbs == 'off'] = 0.
-                            else:
-                                dbs_vals[i][j][dbs == 'on'] = 0.
-                                dbs_vals[i][j][dbs == 'off'] = 1.                                
+                            e_dbs = self.subj_params['e_dbs_%s'%(effect)][i]
 
-                    # Create deterministic distributions that
-                    # calculate the parameter values affected by
-                    # theta/dbs and the effect sizes
-                    for effect in self.effect_on:
-                        if self.single_effect:
-                            effect_stim = ''
-                        elif effect in self.HL_on:
-                            effect_stim = stim_HL
-                        else:
-                            effect_stim = stim
-                        if effect in self.depend_on:
-                            base_effect = self.subj_params['%s_%s'%(effect, effect_stim)][i]
-                        else:
-                            base_effect = self.subj_params[effect][i]
-
-                        if not self.ignore_dbs:
-                            if not self.dbs_global:
-                                e_dbs = self.subj_params['e_dbs_%s_%s'%(effect,effect_stim)][i]
-                            else:
-                                e_dbs = self.subj_params['e_dbs_%s'%(effect)][i]
-
-                            effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
-                                                              lambda e_base = base_effect,
-                                                              theta_val = theta_vals[i][j],
-                                                              dbs_val = dbs_vals[i][j],
-                                                              e_dbs=e_dbs,
-                                                              e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i],
-                                                              e_inter=self.subj_params['e_inter_%s_%s'%(effect,effect_stim)][i]:
-                                                              e_base + theta_val*e_theta + dbs_val*e_dbs  + theta_val*dbs_val*e_inter,
-                                                              trace=False)
-                        else:
-                            effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
+                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
                                                           lambda e_base = base_effect,
                                                           theta_val = theta_vals[i][j],
-                                                          e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i]:
-                                                          e_base + theta_val*e_theta,
+                                                          dbs_val = dbs_vals[i][j],
+                                                          e_dbs=e_dbs,
+                                                          e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i],
+                                                          e_inter=self.subj_params['e_inter_%s_%s'%(effect,effect_stim)][i]:
+                                                          e_base + theta_val*e_theta + dbs_val*e_dbs  + theta_val*dbs_val*e_inter,
                                                           trace=False)
-
-
-                    # Construct parameter set for this ddm.
-                    params = {}
-                    for name, param in self.subj_params.iteritems():
-                        params[name] = param[i]
-
-                    # Overwrite depend on distribution
-                    for depend in self.depend_on:
-                        if depend in self.HL_on:
-                            depend_stim = stim_HL
-                        else:
-                            depend_stim = stim
-                        params[depend] = self.subj_params['%s_%s'%(depend, depend_stim)][i]
-
-                    if 'a' in self.depend_on:
-                        if 'a' in self.HL_on:
-                            depend_stim = stim_HL
-                        else:
-                            depend_stim = stim
-                        #params['z'] = None #self.subj_params['a_%s'%(depend_stim)][i]/2.
-
-                    # Overwrite effect distribution
-                    for effect in self.effect_on:
-                        params[effect] = effect_inst[i][j][effect]
-
-                    if 'a' in self.effect_on and self.no_bias:
-                        #params['z'] = None #effect_inst[i][j][effect]/2.
-                        multi = list(self.effect_on)+['z']
                     else:
-                        #params['z'] = params['a']/2.
-                        multi = self.effect_on
-
-                    # Create the wiener likelihood distribution.
-                    
-                    ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(i,j), data_stim['rt'], params, multi)
-                    
-
-                    idx_trl+=1
-                    params_all.append(params)
-
-            # Combine all parameters
-            self.model = self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + [ddm_subjs] + params_all
-
-            return self
-
-        def _get_ddm(self, name, data, params, multi):
-            return WienerSimpleMulti(name,
-                                     value=data,
-                                     v=params['v'],
-                                     ter=params['t'],
-                                     a=params['a'],
-                                     z=params['z'],
-                                     multi=multi,
-                                     observed=True, trace=False)
+                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
+                                                      lambda e_base = base_effect,
+                                                      theta_val = theta_vals[i][j],
+                                                      e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i]:
+                                                      e_base + theta_val*e_theta,
+                                                      trace=False)
 
 
-    return HDDM_regress_multi
+                # Construct parameter set for this ddm.
+                params = {}
+                for name, param in self.subj_params.iteritems():
+                    params[name] = param[i]
 
-class HDDM_regress_multi_lba(get_HDDM_regress_multi(base=HDDM_multi_lba)):
+                # Overwrite depend on distribution
+                for depend in self.depend_on:
+                    if depend in self.HL_on:
+                        depend_stim = stim_HL
+                    else:
+                        depend_stim = stim
+                    params[depend] = self.subj_params['%s_%s'%(depend, depend_stim)][i]
+
+                if 'a' in self.depend_on:
+                    if 'a' in self.HL_on:
+                        depend_stim = stim_HL
+                    else:
+                        depend_stim = stim
+                    #params['z'] = None #self.subj_params['a_%s'%(depend_stim)][i]/2.
+
+                # Overwrite effect distribution
+                for effect in self.effect_on:
+                    params[effect] = effect_inst[i][j][effect]
+
+                if 'a' in self.effect_on and self.no_bias:
+                    #params['z'] = None #effect_inst[i][j][effect]/2.
+                    multi = list(self.effect_on)+['z']
+                else:
+                    #params['z'] = params['a']/2.
+                    multi = self.effect_on
+
+                # Create the wiener likelihood distribution.
+
+                ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(i,j), data_stim['rt'], params, multi)
+
+
+                idx_trl+=1
+                params_all.append(params)
+
+        # Combine all parameters
+        self.model = self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + [ddm_subjs] + params_all
+
+        return self
+
+    def _get_ddm(self, name, data, params, multi):
+        return WienerSimpleMulti(name,
+                                 value=data,
+                                 v=params['v'],
+                                 ter=params['t'],
+                                 a=params['a'],
+                                 z=params['z'],
+                                 multi=multi,
+                                 observed=True, trace=False)
+
+
+class HDDM_regress_multi_lba(HDDM_regress_multi):
+    def __init__(self, *args, **kwargs):
+        kwargs['model_type'] = 'lba'
+        super(HDDM_regress_multi_lba, self).__init__(*args, **kwargs)
+        
     def _get_ddm(self, name, data, params, multi):
         resps = np.double(data > 0)
         data = np.double(np.abs(data))
@@ -374,22 +374,6 @@ class HDDM_regress_multi_lba(get_HDDM_regress_multi(base=HDDM_multi_lba)):
                          multi=multi,
                          observed=True)         
                         
-HDDM_regress_multi = get_HDDM_regress_multi()
-class HDDM_regress_multi_avg(get_HDDM_regress_multi(base=HDDM_full_avg_subj)):
-    def _get_ddm(self, name, data, params, multi):
-        return WienerFullAvgMulti(name,
-                                  value=data,
-                                  v=params['v'],
-                                  ter=params['ter'], 
-                                  a=params['a'],
-                                  z=params['z'],
-                                  ster=params['ster'],
-                                  sv=params['sv'],
-                                  sz=params['sz'],
-                                  multi=multi,
-                                  observed=True, trace=False)
-
-    
 def load_scalp_data(high_conf=False, continuous=False, remove_outliers=.4, shift_theta=False):
     subjs = range(1,15)
     if continuous:

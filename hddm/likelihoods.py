@@ -5,19 +5,14 @@ import pymc as pm
 import numpy as np
 np.seterr(divide='ignore')
 
-
-try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    pass
-
+import hddm
 
 def wiener_like_simple(value, v, z, ter, a):
     """Log-likelihood for the simple DDM"""
     if z is None:
         z = a/2.
-    return np.sum(wfpt.pdf_array(value, v=v, a=a, z=z, ter=ter, err=.0001, logp=1))
-    #return wfpt.wiener_like_simple(value, v=v, z=z, ter=ter, a=a, err=.0001)
+    return np.sum(hddm.wfpt.pdf_array(value, v=v, a=a, z=z, ter=ter, err=.0001, logp=1))
+    #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, ter=ter, a=a, err=.0001)
 
 @pm.randomwrap
 def wiener_simple(v, z, ter, a, size=1):
@@ -35,21 +30,21 @@ def pdf_array_multi_py(x, v, a, z, ter, multi=None, err=0.0001, logp=1):
     size = x.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
-        return wfpt.pdf_array(x, v=v, a=a, z=z, ter=ter, err=err, logp=logp)
+        return hddm.wfpt.pdf_array(x, v=v, a=a, z=z, ter=ter, err=err, logp=logp)
     else:
         params = {'v':v, 'z':z, 'ter':ter, 'a':a}
         params_iter = copy(params)
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
-            y[i] = wfpt.pdf_sign(t=x[i], v=params_iter['v'], a=params_iter['a'], z=params_iter['z'], ter=params_iter['ter'], err=err, logp=logp)
+            y[i] = hddm.wfpt.pdf_sign(t=x[i], v=params_iter['v'], a=params_iter['a'], z=params_iter['z'], ter=params_iter['ter'], err=err, logp=logp)
         return y
 
 def wiener_like_simple_multi(value, v, z, ter, a, multi=None):
     """Log-likelihood for the simple DDM"""
     if z is None:
         z = a/2.
-    return np.sum(wfpt.pdf_array_multi(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
+    return np.sum(hddm.wfpt.pdf_array_multi(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
     #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
             
 WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -71,7 +66,7 @@ def wiener_like_full_avg_multi(value, v, z, ter, a, sz, ster, sv, multi=None):
     sz = 0.01
     sv = 0.01
     ster = 0.01
-    return np.sum(wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.001, logp=1, reps=30, a_is_multi=True))
+    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.001, logp=1, reps=30, a_is_multi=True))
     #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
             
 WienerFullAvgMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -82,7 +77,7 @@ WienerFullAvgMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Proce
 
 def wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(wfpt.wiener_like_full_avg(t=value, v=v, sv=sv, z=z, sz=sz, ter=ter, ster=ster, a=a, err=.0001, reps=10))
+    return np.sum(hddm.wfpt.wiener_like_full_avg(t=value, v=v, sv=sv, z=z, sz=sz, ter=ter, ster=ster, a=a, err=.0001, reps=10))
  
 WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     logp=wiener_like_full_avg,
@@ -94,7 +89,7 @@ WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
 #     """Log-likelihood of the DDM for one RT point."""
 #     if a<z or z<=0:
 #         return -np.Inf
-#     prob = wfpt.pdf(t=value-ter, v=v, a=a, z=z, err=.001, logp=1)
+#     prob = hddm.wfpt.pdf(t=value-ter, v=v, a=a, z=z, err=.001, logp=1)
 #     if prob == -np.Inf:
 #         print value, ter, v, a, z
 #     return prob
@@ -106,7 +101,7 @@ WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
 
 def wiener_like2(value, v, a, z, ter):
     """Log-likelihood of the DDM for one RT point."""
-    prob = wfpt.pdf_sign(t=value, v=v, a=a, z=z, ter=ter, err=0.0001, logp=1)
+    prob = hddm.wfpt.pdf_sign(t=value, v=v, a=a, z=z, ter=ter, err=0.0001, logp=1)
     
     #if prob == -np.Inf:
     #    print value, ter, v, a, z
@@ -135,7 +130,7 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
 
 
 def get_avg_likelihood(x, params):
-    pdf_upper = np.mean(wfpt.wiener_like_mult(t=x,
+    pdf_upper = np.mean(hddm.wfpt.wiener_like_mult(t=x,
                                               v=-params['v'],
                                               sv=params['sv'],
                                               z=params['a']-params['z'],
@@ -143,7 +138,7 @@ def get_avg_likelihood(x, params):
                                               ster=params['ster'],
                                               a=params['a'],
                                               err=.0001, reps=100), axis=0)
-    pdf_lower = np.mean(wfpt.wiener_like_mult(t=x,
+    pdf_lower = np.mean(hddm.wfpt.wiener_like_mult(t=x,
                                               v=params['v'],
                                               sv=params['sv'],
                                               z=params['z'],
@@ -168,7 +163,7 @@ def LBA_like(value, a, z, ter, sv, v0, v1=0., logp=True, normalize_v=False):
         z = a/2.
 
     #print a, z, ter, v, sv
-    prob = lba.lba_like(np.asarray(value, dtype=np.double), z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
+    prob = hddm.lba.lba_like(np.asarray(value, dtype=np.double), z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
     return prob
     
 def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, normalize_v=False):
@@ -177,7 +172,7 @@ def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, norma
     size = value.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
-        return lba.lba_like(np.asarray(value, dtype=np.double),
+        return hddm.lba.lba_like(np.asarray(value, dtype=np.double),
                             z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
     else:
         params = {'v0':v0, 'v1':v1, 'z':z, 'ter':ter, 'a':a, 'sv':sv}
@@ -186,14 +181,14 @@ def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, norma
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
-            y[i] = lba.lba_like(np.asarray([value[i]], dtype=np.double),
+            y[i] = hddm.lba.lba_like(np.asarray([value[i]], dtype=np.double),
                                 np.double(params_iter['z']),
                                 np.double(params_iter['a']),
                                 np.double(params_iter['ter']),
                                 np.double(params_iter['sv']),
                                 np.double(params_iter['v0']),
                                 np.double(params_iter['v1']),
-                                logp=int(logp), int(normalize_v))
+                                logp=int(logp), normalize_v=int(normalize_v))
         prob = np.sum(y)
         return prob
     
@@ -214,7 +209,7 @@ LBA_multi = pm.stochastic_from_dist(name='LBA likelihood',
 try:
     import pycuda.driver as cuda
     import pycuda.gpuarray as gpuarray
-    import wfpt_gpu
+    import hddm.wfpt_gpu
     from pycuda.tools import DeviceMemoryPool, PageLockedMemoryPool
     input_gpu = None
     output_gpu = None
@@ -249,7 +244,7 @@ def wiener_like_gpu_single(value, a, z, v, ter, debug=False):
     out_gpu = gpuarray.empty_like(input)
     #ut_gpu = gpuarray.empty(input.shape, allocator=dev_pool_output.allocate)
     
-    wfpt_gpu.pdf_func(input,
+    hddm.wfpt_gpu.pdf_func(input,
                       np.float32(a),
                       np.float32(z),
                       np.float32(v),
@@ -274,7 +269,7 @@ def wiener_like_cpu(value, a, z, v, ter, debug=False):
 
     out = np.empty_like(value)
     for i, val in enumerate(value):
-        out[i] = wfpt.pdf_sign(val, v[i], a[i], z[i], ter[i], 0.001, 1)
+        out[i] = hddm.wfpt.pdf_sign(val, v[i], a[i], z[i], ter[i], 0.001, 1)
 
     if not debug:
         return np.sum(out)
@@ -307,7 +302,7 @@ def wiener_like_gpu(value, a, z, v, ter, debug=False):
     out = np.empty_like(tt)
     out_buf = cuda.Out(out)
 
-    wfpt_gpu.pdf_func_complete(cuda.In(tt),
+    hddm.wfpt_gpu.pdf_func_complete(cuda.In(tt),
                                cuda.In(a_array),
                                cuda.In(z_array),                                   
                                cuda.In(v_array),
@@ -381,7 +376,7 @@ def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
     v_gpu = gpuarray.to_gpu(v_array, allocator=dev_pool_v.allocate)
     ter_gpu = gpuarray.to_gpu(ter_array, allocator=dev_pool_ter.allocate)
     
-    wfpt_gpu.pdf_func_ter(input_gpu,
+    hddm.wfpt_gpu.pdf_func_ter(input_gpu,
                           a_gpu,
                           z_gpu, 
                           v_gpu,
@@ -436,7 +431,7 @@ def wiener_like_gpu_opt(value, a, z, v, ter, debug=False):
     out_buf = cuda.Out(out)
 
     if no_bias:
-        wfpt_gpu.pdf_func_opt(cuda.In(np.abs(tt)),
+        hddm.wfpt_gpu.pdf_func_opt(cuda.In(np.abs(tt)),
                               cuda.In(a_array),
                               cuda.In(np.array([],dtype=np.float32)),
                               cuda.In(v_array),
@@ -445,7 +440,7 @@ def wiener_like_gpu_opt(value, a, z, v, ter, debug=False):
                               block=(mem, 1, 1),
                               grid=(int(np.ceil(tt.shape[0]/mem)), 1))
     else:
-        wfpt_gpu.pdf_func_opt(cuda.In(np.abs(tt)),
+        hddm.wfpt_gpu.pdf_func_opt(cuda.In(np.abs(tt)),
                               cuda.In(a_array),
                               cuda.In(z_array),
                               cuda.In(v_array),

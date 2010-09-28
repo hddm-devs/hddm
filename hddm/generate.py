@@ -23,9 +23,9 @@ def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, num_samples=50
     return data
 
 def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structured=False, subj_idx=None):
-    import brownian
-
-    ddm = brownian.DDM()
+    import hddm.demo
+    
+    ddm = hddm.demo.DDM()
     ddm.num_samples = size
     ddm.v = v
     ddm.sv = sv

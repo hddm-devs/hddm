@@ -13,22 +13,9 @@ import subprocess
 
 import pymc as pm
 
-from ddm_likelihoods import *
-from generate import *
-
 import hddm
-
-try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    pass
-
-if platform.architecture()[0] == '64bit':
-    import wfpt64 as wfpt
-    sampler_exec = 'construct-samples64'
-else:
-    import wfpt
-    sampler_exec = 'construct-samples'
+from hddm.likelihoods import *
+from hddm.generate import *
 
 def scale(x):
     return (x-np.min(x))/(np.max(x)-np.min(x))
@@ -62,12 +49,12 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         return params
 
     def test_GPU(self):
-        logp = wiener_like_gpu(value=self.params_multi_multi['x'],
+        logp = hddm.likelihoods.wiener_like_gpu(value=self.params_multi_multi['x'],
                                a=self.params_multi_multi['a'],
                                z=self.params_multi_multi['z'],
                                v=self.params_multi_multi['v'],
                                ter=self.params_multi_multi['ter'], debug=True)
-        logp_single = wiener_like_gpu_single(value=self.params_multi32['x'],
+        logp_single = hddm.likelihoods.wiener_like_gpu_single(value=self.params_multi32['x'],
                                        a=self.params_multi32['a'],
                                        z=self.params_multi32['z'],
                                        v=self.params_multi32['v'],
@@ -84,7 +71,7 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
                                    np.float32(0.0001), np.int16(1), cuda.Out(out),
                                    block = (self.params_multi_multi['x'].shape[0], 1, 1))
 
-        probs = wfpt.pdf_array(-self.params_multi['x'],
+        probs = hddm.wfpt.pdf_array(-self.params_multi['x'],
                                self.params_multi['v'],
                                self.params_multi['a'],
                                self.params_multi['z'],
@@ -95,7 +82,7 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         np.testing.assert_array_almost_equal(out,probs,4)
 
     def test_simple(self):
-        logp = wiener_like_simple(value=self.params_multi['x'],
+        logp = hddm.likelihoods.wiener_like_simple(value=self.params_multi['x'],
                                   a=self.params_multi['a'],
                                   z=self.params_multi['z'],
                                   v=self.params_multi['v'],
@@ -104,7 +91,7 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         #t=timeit.Timer("""wiener_like_simple(value=-self.params_multi['x'], a=self.params_multi['a'], z=self.params_multi['z'], v=self.params_multi['v'], ter=self.params_multi['ter'])""", setup="from ddm_likelihood import *")
         #print t.timeit()
 
-        logp_gpu = wiener_like_gpu(value=self.params_multi_multi['x'],
+        logp_gpu = hddm.likelihoods.wiener_like_gpu(value=self.params_multi_multi['x'],
                                a=self.params_multi_multi['a'],
                                z=self.params_multi_multi['z'],
                                v=self.params_multi_multi['v'],
@@ -113,13 +100,13 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         self.assertAlmostEqual(np.float32(logp), logp_gpu, 4)
 
     def test_gpu_global(self):
-        logp_gpu_global = wiener_like_gpu_global(value=self.params_multi_multi['x'],
+        logp_gpu_global = hddm.likelihoods.wiener_like_gpu_global(value=self.params_multi_multi['x'],
                                                  a=self.params_multi_multi['a'],
                                                  z=self.params_multi_multi['z'],
                                                  v=self.params_multi_multi['v'],
                                                  ter=self.params_multi_multi['ter'], debug=True)
 
-        logp_cpu = wiener_like_cpu(value=self.params_multi_multi['x'],
+        logp_cpu = hddm.likelihoods.wiener_like_cpu(value=self.params_multi_multi['x'],
                                    a=self.params_multi_multi['a'],
                                    z=self.params_multi_multi['z'],
                                    v=self.params_multi_multi['v'],
@@ -130,19 +117,19 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         free_gpu()
         
     def benchmark(self):
-        logp_gpu = wiener_like_gpu(value=-self.params_multi_multi['x'],
+        logp_gpu = hddm.likelihoods.wiener_like_gpu(value=-self.params_multi_multi['x'],
                                    a=self.params_multi_multi['a'],
                                    z=self.params_multi_multi['z'],
                                    v=self.params_multi_multi['v'],
                                    ter=self.params_multi_multi['ter'], debug=True)
 
-        logp_gpu_opt = wiener_like_gpu_opt(value=-self.params_multi_multi['x'],
+        logp_gpu_opt = hddm.likelihoods.wiener_like_gpu_opt(value=-self.params_multi_multi['x'],
                                    a=self.params_multi_multi['a'],
                                    z=self.params_multi_multi['z'],
                                    v=self.params_multi_multi['v'],
                                    ter=self.params_multi_multi['ter'], debug=True)
 
-        logp_cpu = wiener_like_cpu(value=-self.params_multi_multi['x'],
+        logp_cpu = hddm.likelihoods.wiener_like_cpu(value=-self.params_multi_multi['x'],
                                    a=self.params_multi_multi['a'],
                                    z=self.params_multi_multi['z'],
                                    v=self.params_multi_multi['v'],
@@ -153,13 +140,13 @@ class TestLikelihoodFuncsGPU(unittest.TestCase):
         #print logp_cpu, logp_gpu
 
     def benchmark_global(self):
-        logp_gpu_global = wiener_like_gpu_global(value=-self.params_multi_multi['x'],
+        logp_gpu_global = hddm.likelihoods.wiener_like_gpu_global(value=-self.params_multi_multi['x'],
                                                  a=self.params_multi_multi['a'],
                                                  z=self.params_multi_multi['z'],
                                                  v=self.params_multi_multi['v'],
                                                  ter=self.params_multi_multi['ter'], debug=False)
 
-        logp_cpu = wiener_like_cpu(value=-self.params_multi_multi['x'],
+        logp_cpu = hddm.likelihoods.wiener_like_cpu(value=-self.params_multi_multi['x'],
                                    a=self.params_multi_multi['a'],
                                    z=self.params_multi_multi['z'],
                                    v=self.params_multi_multi['v'],
@@ -175,7 +162,6 @@ class TestLikelihoodFuncsLBA(unittest.TestCase):
         #self.setUp()
     
     def setUp(self, size=20):
-        import lba
         import rpy2.robjects as robjects
         import rpy2.robjects.numpy2ri
         robjects.r.source('lba-math.r')
@@ -188,45 +174,28 @@ class TestLikelihoodFuncsLBA(unittest.TestCase):
         self.v_multi = np.random.rand(5)
         self.sv = np.random.rand(1)
 
-    def test_fptcdf(self):
-        cython = lba.fptcdf(self.x, self.z, self.a, self.v[0], self.sv)
-        r = np.array(robjects.r.fptcdf(z=self.x, x0max=np.float(self.z), chi=np.float(self.a), driftrate=np.float(self.v[0]), sddrift=np.float(self.sv)))
-
-        np.testing.assert_array_almost_equal(cython, r)
-
-    def test_fptpdf(self):
-        cython = lba.fptpdf(self.x, self.z, self.a, self.v[0], self.sv)
-        r = np.array(robjects.r.fptpdf(z=self.x, x0max=np.float(self.z), chi=np.float(self.a), driftrate=np.float(self.v[0]), sddrift=np.float(self.sv)))
-
-        np.testing.assert_array_almost_equal(cython, r)
-
     def test_lba_single(self):
-        like_cython = lba.lba(self.x, self.z, self.a, self.v, self.sv)
+        like_cython = hddm.lba.lba_like(self.x, self.z, self.a, self.sv, self.v[0], self.v[1])
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.sv)))
 
         np.testing.assert_array_almost_equal(like_cython, like_r)
 
     def test_lba_single2(self):
-        like_cython = lba.lba_single(self.x, self.z, self.a, self.v, self.sv)
+        return
+        like_cython = hddm.lba.lba_single(self.x, self.z, self.a, self.sv, self.v[0], self.v[1])
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.sv)))
 
         np.testing.assert_array_almost_equal(like_cython, like_r)
 
     def call_cython(self):
-        return lba.lba(self.x, self.z, self.a, self.v, self.sv)
+        return hddm.lba.lba(self.x, self.z, self.a, self.sv, self.v[0], self.v[1])
 
-    def call_cython2(self, out=False):
-        if out:
-            return lba.lba_single(self.x, self.z, self.a, self.v, self.sv, out=self.out)
-        else:
-            return lba.lba_single(self.x, self.z, self.a, self.v, self.sv)
-    
     def call_r(self):
         return np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.sv)))
         
     def test_lba_multi(self):
-        import lba
-        like_cython = lba.lba(self.x, self.z, self.a, self.v_multi, self.sv)
+        return
+        like_cython = hdmd.lba.lba(self.x, self.z, self.a, self.sv, selv.v_multi[0])
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v_multi, sdI=np.float(self.sv)))
 
         np.testing.assert_array_almost_equal(like_cython, like_r)        
@@ -310,24 +279,24 @@ class TestHDDM(unittest.TestCase):
         pass
 
     def test_basic(self):
-        model = hddm.HDDM_simple(self.data_basic, no_bias=True)
+        model = hddm.models.Multi(self.data_basic, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_basic_no_s)
         
     def test_full_avg(self):
-        model = hddm.HDDM_full_avg(self.data, no_bias=False)
+        model = hddm.models.Multi(self.data, model_type='full_avg', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_lba(self):
-        model = hddm.HDDM_multi_lba(self.data, is_subj_model=False, no_bias=False, normalize_v=True, debug=True)
+        model = hddm.models.Multi(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
         model.mcmc(samples=self.samples, burn=self.burn)
         #self.check_model(model, self.params_true_lba)
         print model.params_est
         return model
 
     def test_lba_subj(self):
-        model = hddm.HDDM_multi_lba(self.data_subj, is_subj_model=True, no_bias=False, normalize_v=True)
+        model = hddm.models.Multi(self.data_subj, is_subj_model=True, normalize_v=True, model_type='lba')
         model.mcmc(samples=self.samples, burn=self.burn)
         #self.check_model(model, self.params_true_lba)
         print model.params_est
@@ -335,29 +304,29 @@ class TestHDDM(unittest.TestCase):
 
     def test_full(self):
         return
-        model = hddm.HDDM_full(self.data, no_bias=False)
+        model = hddm.models.Multi(self.data, model_type='full', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_full_subj(self):
         return
-        model = hddm.HDDM_full_subj(self.data_subj, no_bias=False)
+        model = hddm.models.Multi(self.data_subj, model_type='full', is_subj_model=True, no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_subj)
 
     def test_subjs_fixed_z(self):
-        model = hddm.HDDM_full_avg_subj(self.data_subj, no_bias=False)
+        model = hddm.models.Multi(self.data_subj, model_type='simple', is_subj_model=True, no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_simple(self):
-        model = hddm.HDDM_simple(self.data, no_bias=True)
+        model = hddm.models.Multi(self.data, model_type='simple', no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_no_s)
         return model
     
     def test_simple_subjs(self):
-        model = hddm.HDDM_simple_subjs(self.data_subj, no_bias=True)
+        model = hddm.models.Multi(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_subj_no_s)
         return model
@@ -365,7 +334,7 @@ class TestHDDM(unittest.TestCase):
     def test_simple_diff(self):
         return
         # Fit first model
-        model = hddm.HDDM_simple(data, no_bias=True)
+        model = hddm.models.HDDM_simple(data, no_bias=True)
         model.mcmc()
 
         # Fit second model
@@ -374,7 +343,7 @@ class TestHDDM(unittest.TestCase):
         del params_true2['sv']
         del params_true2['sz']
         del params_true2['ster']
-        model2 = hddm.HDDM_simple(data2, no_bias=True)
+        model2 = hddm.models.HDDM_simple(data2, no_bias=True)
         model2.mcmc()
 
         self.check_model(model, params_true, assert_=True)
@@ -386,7 +355,7 @@ class TestHDDM(unittest.TestCase):
 
     def test_chains(self):
         return
-        models = run_parallel_chains(hddm.HDDM_simple, [data, data], ['test1', 'test2'])
+        models = run_parallel_chains(hddm.models.Multi, [data, data], ['test1', 'test2'])
         return models
 
     def check_model(self, model, params_true):

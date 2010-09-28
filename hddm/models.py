@@ -16,7 +16,7 @@ def scale(x):
 
 
 # Model classes
-class HDDM_base(object):
+class Base(object):
     """Base class for the hierarchical bayesian drift diffusion
     model."""
     def __init__(self, data, load=None, no_bias=False, trace_subjs=True, col_names=None, save_stats_to=None, debug=False):
@@ -277,7 +277,7 @@ class HDDM_base(object):
                     
         return self
 
-class HDDM_multi(HDDM_base):
+class Multi(Base):
     """Hierarchical Drift-Diffusion Model.
 
     This class can generate different hddms:
@@ -291,7 +291,7 @@ class HDDM_multi(HDDM_base):
                  trace_subjs=True, load=None, col_names=None, save_stats_to=None,
                  debug=False, no_bias=True, normalize_v=True):
 
-        super(HDDM_multi, self).__init__(data, col_names=col_names,
+        super(Multi, self).__init__(data, col_names=col_names,
                                          save_stats_to=save_stats_to,
                                          trace_subjs=trace_subjs,
                                          debug=debug, no_bias=no_bias)
@@ -301,7 +301,10 @@ class HDDM_multi(HDDM_base):
         else:
             self.model_type = model_type
 
-        self.param_factory = ParamFactory(self.model_type, trace_subjs=trace_subjs, normalize_v=normalize_v)
+        self.param_factory = ParamFactory(self.model_type,
+                                          trace_subjs=trace_subjs,
+                                          normalize_v=normalize_v,
+                                          no_bias=no_bias)
         
         # Initialize
         if depends_on is None:
@@ -475,9 +478,11 @@ class HDDM_multi(HDDM_base):
         return pdf
 
 class ParamFactory(object):
-    def __init__(self, model_type, trace_subjs=True, normalize_v=True):
+    def __init__(self, model_type, trace_subjs=True, normalize_v=True, no_bias=True):
         self.trace_subjs = trace_subjs
         self.model_type = model_type
+        self.no_bias = no_bias
+        
         # Set function map
         self._models = {'simple': self._get_simple,
                         'simple_gpu': self._get_simple_gpu,
@@ -771,6 +776,7 @@ class ParamFactory(object):
                                         v0=params['v0'],
                                         v1=params['v1'],
                                         sv=params['V'],
+                                        normalize_v=self.normalize_v,
                                         observed=True)
         else:
             return hddm.likelihoods.LBA(name,
@@ -781,13 +787,10 @@ class ParamFactory(object):
                                         v0=params['v0'][idx],
                                         v1=params['v1'][idx],
                                         sv=params['V'][idx],
+                                        normalize_v=self.normalize_v,
                                         observed=True)    
 
-
-
-
-
-class HDDM_multi_gpu(HDDM_multi):
+class MultiGpu(Multi):
     def _set_model(self):
         """Create and set up the complete DDM."""
         #if self.is_subj_model:
@@ -808,7 +811,7 @@ class HDDM_multi_gpu(HDDM_multi):
         params_out = self._set_model_rec(depends_on=depends_on, params_out=params_out)
 
         # Set and return all distributions belonging to the DDM.
-        ddm = WienerGPUGlobal('ddm',
+        ddm = hddm.likelihoods.WienerGPUGlobal('ddm',
                               value=self.data['rt'].flatten(),
                               a=params_out['a'],
                               z=params_out['z'],
@@ -854,7 +857,7 @@ class HDDM_multi_gpu(HDDM_multi):
         return params_out
 
     
-class HDDM_multi_effect(HDDM_multi):
+class MultiEffect(Multi):
     true_vals = {'theta': 'high', 'dbs':'on'}
     dual_effect = False
     def _set_group_params(self):
@@ -970,410 +973,6 @@ class HDDM_multi_effect(HDDM_multi):
         else:
             raise ValueError('Combination %s and %s not valid'%(dbs, theta))
 
-    
-# Model classes
-class HDDM_full_avg(HDDM_base):
-    """Basic hierarchical bayesian drift diffusion model. Estimates
-    posterior parameter model for one subject. To calculate
-    the likelihood, the wiener PDF from Navarro & Fuss 2009 is used."""
-    def __init__(self, *args, **kwargs):
-        super(HDDM_full_avg, self).__init__(*args, **kwargs)
-
-        self.model_type = 'full_avg'
-
-    def _set_group_params(self):
-        """Define standard param model"""
-        v = pm.Uniform("v", lower=-2, upper=2)
-        sv = pm.Uniform("sv", lower=0.001, upper=1.)
-        ster = pm.Uniform("ster", lower=0, upper=1)
-        ter = pm.Uniform("ter", lower=0, upper=1)
-        a = pm.Uniform("a", lower=1, upper=3)
-        sz = pm.Uniform("sz", lower=0, upper=1.)
-        if self.no_bias:
-            z = pm.Lambda('z', lambda x=a: x/2.)
-        else:
-            z = pm.Uniform("z", lower=sz/2., upper=a-sz/2.)
-
-        self.group_params = {'v':v, 'sv': sv, 'ter': ter, 'ster': ster, 
-                              'z': z, 'sz': sz, 'a': a}
-
-        self.param_names = self.group_params.keys()
-        
-        return self
-
-    def _set_model(self):
-        """Generate model for the whole DDM."""
-        # Define Param Model
-        self.model = copy(self.group_params)
-        # Define wiener DDM distribution
-        ddm = WienerAvg("ddm", value=self.data['rt'].flatten(), 
-                        v=self.model['v'], 
-                        sv=self.model['sv'], 
-                        ter=self.model['ter'], 
-                        ster=self.model['ster'], 
-                        a=self.model['a'], 
-                        z=self.model['z'], 
-                        sz=self.model['sz'], 
-                        observed=True)
-
-        self.model['ddm'] = ddm
-        return self
-
-class HDDM_simple(HDDM_base):
-    """Simple hierarchical bayesian drift diffusion model. Estimates
-    posterior parameter model for one subject. To calculate
-    the likelihood, the wiener likelihood from Navarro & Fuss 2009 is used."""
-    def _set_group_params(self):
-        """Define standard param model"""
-        self.group_params = {}
-        self.group_params['v'] = pm.Uniform("v", lower=-2, upper=2)
-        self.group_params['ter'] = pm.Uniform("ter", lower=0, upper=1)
-        self.group_params['a'] = pm.Uniform("a", lower=1, upper=4)
-        if self.no_bias:
-            self.group_params['z'] = None # pm.Lambda('z', lambda x=self.group_params['a']: x/2.)
-            #pass
-        else:
-            self.group_params['z'] = pm.Uniform("z", lower=0, upper=self.group_params['a'])
-
-        self.param_names = self.group_params.keys()
-
-        self.model_type = 'simple'
-        
-        return self
-
-    def _set_model(self):
-        """Generate model for the whole DDM."""
-        # Define Param Model
-        self._set_group_params()
-        self.model = copy(self.group_params)
-        # Define wiener DDM distribution
-        ddm = WienerSimple("ddm", value=self.data['rt'].flatten(), 
-                           v=self.model['v'], 
-                           ter=self.model['ter'], 
-                           a=self.model['a'], 
-                           z=self.model['z'], 
-                           observed=True)
-
-        self.model['ddm'] = ddm
-
-        return self
-
-class HDDM_lba(HDDM_base):
-    """Simple hierarchical bayesian drift diffusion model. Estimates
-    posterior parameter model for one subject. To calculate
-    the likelihood, the wiener likelihood from Navarro & Fuss 2009 is used."""
-    def _set_group_params(self):
-        """Define standard param model"""
-        self.group_params = {}
-        self.group_params['v0'] = pm.Uniform("v0", lower=-2, upper=2)
-        self.group_params['v1'] = pm.Uniform("v1", lower=-2, upper=2)
-        self.group_params['ter'] = pm.Uniform("ter", lower=0, upper=1)
-        self.group_params['a'] = pm.Uniform("a", lower=1, upper=4)
-        if self.no_bias:
-            self.group_params['z'] = None # pm.Lambda('z', lambda x=self.group_params['a']: x/2.)
-            #pass
-        else:
-            self.group_params['z'] = pm.Uniform("z", lower=0, upper=self.group_params['a'])
-
-        self.param_names = self.group_params.keys()
-
-        self.model_type = 'simple'
-        
-        return self
-
-    def _set_model(self):
-        """Generate model for the whole DDM."""
-        # Define Param Model
-        self._set_group_params()
-        self.model = copy(self.group_params)
-        # Define wiener DDM distribution
-        ddm = WienerSimple("ddm", value=self.data['rt'].flatten(), 
-                           v=self.model['v'], 
-                           ter=self.model['ter'], 
-                           a=self.model['a'], 
-                           z=self.model['z'], 
-                           observed=True)
-
-        self.model['ddm'] = ddm
-
-        return self
-
-
-
-class HDDM_full(HDDM_base):
-    def _set_group_params(self):
-        """Define standard param model"""
-        v = pm.Uniform("v", lower=-2, upper=2)
-        sv = pm.Uniform("sv", lower=0, upper=800.)
-        ster = pm.Uniform("ster", lower=0, upper=.3) #pm.Beta("ster", alpha=1, beta=1)
-        ter = pm.Uniform("ter", lower=0.01, upper=1)
-        sz = pm.Uniform("sz", lower=0.01, upper=3.)
-        a = pm.Uniform("a", lower=1, upper=4)#, value=5, observed=False)
-
-        z = pm.Uniform("z", lower=.5, upper=2)# , value=.5, observed=False)
-
-        self.group_params = {'sv': sv, 'ster': ster, 'sz': sz, 'a': a, 'v': v, 
-                              'ter': ter, 'z': z}
-        self.param_names = self.group_params.keys()
-        self.model_type = 'full'
-        
-        return self
-
-    def _set_model(self):
-        """Generate model for the whole DDM."""
-        # Define Param Model
-        self.model = copy(self.group_params)
-        # Define wiener DDM distribution
-        z_center = self.group_params['z']
-        sz = self.group_params['sz']
-        v_center = self.group_params['v']
-        sv = self.group_params['sv']
-        ter_center = self.group_params['ter']
-        ster = self.group_params['ster']
-
-        trials = self.data.shape[0]
-        print trials
-        ddm = np.empty(trials, dtype=object)
-        z_trial = np.empty(trials, dtype=object)
-        v_trial = np.empty(trials, dtype=object)
-        ter_trial = np.empty(trials, dtype=object)
-        for i in range(trials):
-            print i
-            debug_here()
-            #z_trial[i] = CenterUniform("z_%i"%i, center=z_center, width=sz, plot=False, observed=False, trace=False)
-            #v_trial[i] = pm.Normal("v_%i"%i, mu=v_center, tau=sv, plot=False, observed=False, trace=False)
-            #ter_trial[i] = CenterUniform("ter_%i"%i, center=ter_center, width=ster, plot=False, observed=False, trace=False)
-            ddm[i] = Wiener2("ddm_%i"%i,
-                             value=self.data['rt'][i],
-                             v=self.model['v'], #v_trial[i],
-                             ter=self.model['ter'],#ter_trial[i], 
-                             a=self.model['a'],
-                             z=self.model['z'], #z_trial[i],
-                             observed=True, trace=False)
-
-        self.model['z_trial'] = z_trial
-        self.model['ter_trial'] = ter_trial
-        self.model['v_trial'] = v_trial
-        self.model['ddm'] = ddm
-        return self
-
-def get_subj_hddm(base=HDDM_simple):
-    class HDDM_subjs(base):
-        """Hierarchical bayesian drift-diffusion model for multiple
-        subjects. In essence, individual subject parameters are itself
-        samples from global parameter model."""
-        def __init__(self, *args, **kwargs):
-            super(HDDM_subjs, self).__init__(*args, **kwargs)
-            self.is_subj_model = True
-            self.num_subjs = np.unique(self.data['subj_idx']).shape[0]
-            for i in range(self.num_subjs):
-                idx = self.data['subj_idx'] == i
-
-        def _set_group_params_tau(self, group_params=None):
-            """Generate corresponding variance (tau) model for every global param distribution."""
-            if group_params is None:
-                group_params = self.group_params
-
-            self.group_params_tau = {}
-            for param_name, param in self.group_params.iteritems():
-                if param_name[0] == 's': # if param is for variance
-                    self.group_params_tau[param_name] = pm.Uniform(param_name+'_tau',
-                                                                    lower=10,
-                                                                    upper=600, plot=False)
-                else:
-                    self.group_params_tau[param_name] = pm.Uniform(param_name+'_tau',
-                                                                    lower=0,
-                                                                    upper=600, plot=False)
-            return self
-
-        def _set_subj_params(self, group_params=None, group_params_tau=None):
-            """Generate param model for each parameter for each individual subject."""
-            if group_params is None:
-                group_params = self.group_params
-            if group_params_tau is None:
-                group_params_tau = self.group_params_tau
-
-            self.subj_params = {}
-            # Define individual subject param model
-            for param_name, param in group_params.iteritems():
-                self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
-
-            for i in range(self.num_subjs):
-                # Define variance params
-                for param_name, param in group_params.iteritems():
-                    if param_name[0] == 's': # if variance param, use truncated normal (values can't be negative)
-                        self.subj_params[param_name][i] = pm.TruncatedNormal('%s_%i'%(param_name,i), a=0, b=1.,
-                                                                             mu=param,
-                                                                             tau=group_params_tau[param_name],
-                                                                             plot=False, trace=self.trace_subjs)
-
-                # Set custom params for v, ter, a and z
-                try:
-                    self.subj_params['v'][i] = pm.Normal('v_%i'%i,
-                                                         mu = group_params['v'],
-                                                         tau = group_params_tau['v'], plot=False, trace=self.trace_subjs)
-                except KeyError:
-                    pass
-                
-                try:
-                    self.subj_params['ter'][i] = pm.TruncatedNormal('ter_%i'%i,
-                                                                    mu = group_params['ter'],
-                                                                    tau = group_params_tau['ter'],
-                                                                    a = 0,
-                                                                    b = 1, plot=False, trace=self.trace_subjs)
-                except KeyError:
-                    pass
-
-                try:
-                    self.subj_params['a'][i] = pm.TruncatedNormal('a_%i'%i, a=1, b=4,
-                                                                  mu=group_params['a'],
-                                                                  tau=group_params_tau['a'],
-                                                                  plot=False, trace=self.trace_subjs)
-                except KeyError:
-                    pass
-
-                try:
-                    if not self.no_bias:
-                        self.subj_params['z'][i] = pm.TruncatedNormal('z_%i'%i, a=0,
-                                                                     b=self.subj_params['a'][i],
-                                                                     mu=group_params['z'],
-                                                                     tau=group_params_tau['z'], plot=False, trace=self.trace_subjs)
-                    else:
-                        self.subj_params['z'][i] = None #pm.Lambda('z_%i'%i, lambda x=self.subj_params['a'][i]: x/2., plot=False, trace=self.trace_subjs)
-                except KeyError:
-                    pass
-
-        def _set_all_params(self):
-            self._set_group_params()
-            self._set_group_params_tau()
-
-            # Set individual params
-            self._set_subj_params()
-            return self
-        
-        def plot_subjs(self):
-            """Plot real and estimated RT model for each subject."""
-            size = np.ceil(np.sqrt(self.num_subjs))
-            for subj in range(self.num_subjs):
-                # Get subj parameters
-                subj_params = self.params_est_ind[subj]
-                # Get response times for subj
-                idx = (self.data['subj_idx'] == subj) & (self.data['response']==1)
-                resps_upper = self.data['rt'][idx]
-                idx = (self.data['subj_idx'] == subj) & (self.data['response']==0)
-                resps_lower = np.abs(self.data['rt'][idx])
-
-                plt.subplot(size, size, subj+1)
-                self._plot(resps_upper, resps_lower, params=subj_params)
-
-            return self
-
-        def _gen_stats(self):
-            super(HDDM_subjs, self)._gen_stats()
-
-            self.params_est_ind = []
-            # Set individual subject parameters
-            params_est_subj = {}
-            for subj in range(self.num_subjs):
-                # Get parameters from model stats
-                for param_name in self.param_names:
-                    if param_name == 'z' and self.no_bias:
-                        continue
-                    params_est_subj[param_name] = np.mean(self.mcmc_model.trace(param_name+'_'+str(subj))())
-
-                self.params_est_ind.append(copy(params_est_subj))
-
-            return self
-        
-    return HDDM_subjs
-
-class HDDM_full_subj(get_subj_hddm(base=HDDM_full)):
-    def _set_model(self):
-        """Generate model for the whole DDM."""
-        # Define Param Model
-        self.model = copy(self.group_params)
-
-        # Init arrays
-        z_trial = np.empty(self.num_subjs, dtype=object)
-        v_trial = np.empty(self.num_subjs, dtype=object)
-        ter_trial = np.empty(self.num_subjs, dtype=object)
-        ddm = np.empty(self.num_subjs, dtype=object)
-        for i in range(self.num_subjs):
-            # Relable for conviency
-            z_center = self.subj_params['z'][i]
-            sz = self.subj_params['sz'][i]
-            v_center = self.subj_params['v'][i]
-            sv = self.subj_params['sv'][i]
-            ter_center = self.subj_params['ter'][i]
-            ster = self.subj_params['ster'][i]
-
-            # Init arrays
-            trials = self.data[self.data['subj_idx']==i].shape[0]
-            ddm[i] = np.empty(trials, dtype=object)
-            z_trial[i] = np.empty(trials, dtype=object)
-            v_trial[i] = np.empty(trials, dtype=object)
-            ter_trial[i] = np.empty(trials, dtype=object)
-
-            for j in range(trials):
-                z_trial[i][j] = CenterUniform("z_%i_%i"%(i,j), center=z_center, width=sz, plot=False, observed=False, trace=False)
-                v_trial[i][j] = pm.Normal("v_%i_%i"%(i,j), mu=v_center, tau=sv, plot=False, observed=False, trace=False)
-                ter_trial[i][j] = CenterUniform("ter_%i_%i"%(i,j), center=ter_center, width=ster, plot=False, observed=False, trace=False)
-                ddm[i][j] = Wiener2("ddm_%i_%i"%(i,j),
-                                    value=self.data[self.data['subj_idx']==i]['rt'].flatten()[j],
-                                    v=v_trial[i][j],
-                                    ter=ter_trial[i][j], 
-                                    a=self.model['a'],
-                                    z=z_trial[i][j],
-                                    observed=True)
-
-        self.model['z_trial'] = z_trial
-        self.model['ter_trial'] = ter_trial
-        self.model['v_trial'] = v_trial
-        self.model['ddm'] = ddm
-
-        return self
-
-    
-class HDDM_full_avg_subj(get_subj_hddm(base=HDDM_full_avg)):
-    def _set_model(self):
-        """Generate model for the HDDM."""
-        # Define DDM likelihood model for each subject
-        ddm_subjs = np.empty(self.num_subjs, dtype=object)
-        for i in range(self.num_subjs):
-            data_subj = self.data['rt'][self.data['subj_idx'] == i]
-            ddm_subjs[i] = WienerAvg("ddm%i" % i,
-                                     value = data_subj,
-                                     v = self.subj_params['v'][i],
-                                     sv = self.subj_params['sv'][i],
-                                     z = self.subj_params['z'][i],
-                                     sz = self.subj_params['sz'][i],
-                                     ter = self.subj_params['ter'][i],
-                                     ster = self.subj_params['ster'][i],
-                                     a = self.subj_params['a'][i],
-                                     observed=True)
-
-        # Combine all model
-        self.model = self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + [ddm_subjs]
-        return self
-
-class HDDM_simple_subjs(get_subj_hddm(base=HDDM_simple)):
-    def _set_model(self):
-        """Generate model for the HDDM."""
-        # Define DDM likelihood model for each subject
-        ddm_subjs = np.empty(self.num_subjs, dtype=object)
-        for i in range(self.num_subjs):
-            data_subj = self.data['rt'][self.data['subj_idx'] == i]
-            ddm_subjs[i] = WienerSimple("ddm%i" % i,
-                                        value = data_subj,
-                                        v = self.subj_params['v'][i],
-                                        z = self.subj_params['z'][i],
-                                        ter = self.subj_params['ter'][i],
-                                        a = self.subj_params['a'][i], 
-                                        observed=True)
-
-        # Combine all model
-        self.model = self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + [ddm_subjs]
-        return self
 
 def difference_prior(delta):
     # See Wagenmakers et al 2010, equation 14
@@ -1682,10 +1281,7 @@ def parse_config_file(fname, load=False):
         verbose = 0
 
     print "Creating model..."
-    if model_type != 'lba':
-        m = HDDM_multi(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
-    else:
-        m = HDDM_multi_lba(data, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
+    m = Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
 
     if not load:
         print "Sampling... (this can take some time)"

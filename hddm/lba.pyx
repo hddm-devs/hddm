@@ -80,8 +80,8 @@ def lba_single(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, cnp.ndarray[D
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, unsigned int logp=0, unsigned int normalize_v=0):
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
-    cdef unsigned int nresp = value.shape[0]
-    cdef unsigned int i
+    cdef unsigned int nresp = <unsigned int> value.shape[0]
+    cdef unsigned int i = 0
     cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
 
     if normalize_v == 1:
