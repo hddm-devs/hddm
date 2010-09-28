@@ -314,17 +314,17 @@ class DDMPlot(HasTraits):
         return np.linspace(0, self.ddm.N/self.ddm.dt, 1000)
     
     def _get_full_avg_upper(self):
-        return hddm.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
+        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
     def _get_full_avg_lower(self):
-        return wfpt.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
+        return hddm.likelihoods.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
 
     def _get_simple_upper(self):
-        return hddm.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.wfpt.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
     def _get_simple_lower(self):
-        return hddm.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
 
     def _get_lba_upper(self):
-        return hddm.LBA_like(self.x_analytical,
+        return hddm.likelihoods.LBA_like(self.x_analytical,
                                         resps=np.ones_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
@@ -332,7 +332,7 @@ class DDMPlot(HasTraits):
                                         ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
 
     def _get_lba_lower(self):
-        return hddm.LBA_like(self.x_analytical,
+        return hddm.likelihoods.LBA_like(self.x_analytical,
                                         resps=np.zeros_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,

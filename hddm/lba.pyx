@@ -36,54 +36,7 @@ cdef extern from "math.h":
     double floor(double)
     double fabs(double)
     double erf(double)
-    
 
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def fptcdf(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, double driftrate, double sddrift):
-    cdef cnp.ndarray[DTYPE_t, ndim=1] zs=t*sddrift
-    cdef cnp.ndarray[DTYPE_t, ndim=1] zu=t*driftrate
-    cdef cnp.ndarray[DTYPE_t, ndim=1] aminuszu=a-zu
-    cdef cnp.ndarray[DTYPE_t, ndim=1] xx=aminuszu-z
-    cdef cnp.ndarray[DTYPE_t, ndim=1] azu=aminuszu/zs
-    cdef cnp.ndarray[DTYPE_t, ndim=1] azumax=xx/zs
-    cdef cnp.ndarray[DTYPE_t, ndim=1] tmp1=zs*(norm.pdf(azumax)-norm.pdf(azu))
-    cdef cnp.ndarray[DTYPE_t, ndim=1] tmp2=xx*norm.cdf(azumax)-aminuszu*norm.cdf(azu)
-    return 1+(tmp1+tmp2)/z
-
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def fptpdf(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, double driftrate, double sddrift):
-    cdef cnp.ndarray[DTYPE_t, ndim=1] zs=t*sddrift
-    cdef cnp.ndarray[DTYPE_t, ndim=1] zu=t*driftrate
-    cdef cnp.ndarray[DTYPE_t, ndim=1] aminuszu=a-zu
-    cdef cnp.ndarray[DTYPE_t, ndim=1] azu=aminuszu/zs
-    cdef cnp.ndarray[DTYPE_t, ndim=1] azumax=(aminuszu-z)/zs
-    
-    return (driftrate*(norm.cdf(azu)-norm.cdf(azumax)) + sddrift*(norm.pdf(azumax)-norm.pdf(azu)))/z
-
-def fptpdf2(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, double driftrate, double sddrift):
-    return driftrate*(norm.cdf((a-(t*driftrate))/(t*sddrift))-norm.cdf(a-(t*driftrate)-z/(t*sddrift))) + \
-           sddrift*(norm.pdf(a-(t*driftrate)-z/(t*sddrift))-norm.pdf(a-((t*driftrate)/(t*sddrift))))/z
-
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def lba(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv):
-    # Generates defective PDF for responses on node #1.
-    cdef int i=0
-    cdef int N=drift.shape[0] # Number of responses.
-    #cdef np.ndarray[DTYPE_t, ndim=1] G = np.empty_like(t)
-    #cdef np.ndarray[DTYPE_t, ndim=2] tmp = np.empty((t.shape[0], N-1), dtype=DTYPE)
-    cdef cnp.ndarray[DTYPE_t, ndim=1] G=1-fptcdf(t=t,z=z,a=a,driftrate=drift[1],sddrift=sv)
-    #if (N>2):
-        #for i from 1 <= i <= N:
-            #tmp[:,i]=fptcdf(t=t,z=z,a=a,driftrate=drift[i],sddrift=sv)
-        #G=apply(1-tmp,1,prod)
-        #np.prod(1-tmp, axis=0, out=G)
-    #    print ''
-    #else:
-    #    cdef np.ndarray[DTYPE_t, ndim=1] G=1-fptcdf(t=t,z=z,a=a,driftrate=drift[1],sddrift=sv)
-        
-    return G*fptpdf(t=t,z=z,a=a,driftrate=drift[0],sddrift=sv)
-
-# Second approach
 cdef inline double norm_pdf(double x): return 0.3989422804014327 * exp(-(x**2/2))
 cdef inline double norm_cdf(double x): return .5 * (1 + erf((x)/1.4142135623730951))
 
@@ -125,7 +78,37 @@ def lba_single(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, cnp.ndarray[D
     return out
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] resps, double z, double a, double ter, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, unsigned int logp=0):
+def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, unsigned int logp=0, unsigned int normalize_v=0):
+    cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
+    cdef unsigned int nresp = value.shape[0]
+    cdef unsigned int i
+    cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
+
+    if normalize_v == 1:
+        v1 = 1 - v0
+        
+    if a <= z:
+        #print "Starting point larger than threshold!"
+        return -np.Inf
+
+    #print "z: %f, a: %f, ter: %i, v: %f, sv: %f" % (z, a, ter, v[0], sv)
+    for i from 0 <= i < nresp:
+        if value[i] > 0:
+            probs[i] = (1-fptcdf_single(rt[i], z, a, v1, sv)) * \
+                       fptpdf_single(rt[i], z, a, v0, sv)
+        else:
+            probs[i] = (1-fptcdf_single(rt[i], z, a, v0, sv)) * \
+                       fptpdf_single(rt[i], z, a, v1, sv)
+
+    if logp == 1:
+        return np.sum(np.log(probs))
+    else:
+        return probs
+
+
+# Backed up if in the future multiple responses are to be supported
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def lba_like_old(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] resps, double z, double a, double ter, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, unsigned int logp=0):
     # Rescale parameters so as to fit in the same range as the DDM
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = value.shape[0]

@@ -2,7 +2,9 @@ import wx
 
 import matplotlib
 # We want matplotlib to use a wxPython backend
-matplotlib.use('WXAgg')
+if __name__ == "__main__":
+    matplotlib.use('WXAgg')
+
 import matplotlib.pyplot
 import pylab as pl
 

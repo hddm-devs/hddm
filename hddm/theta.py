@@ -1,11 +1,11 @@
-from __future__ import division
+ from __future__ import division
 import numpy as np
 import pymc as pm
 import matplotlib.pyplot as plt
 from copy import copy
 import matplotlib.pyplot as plt
-from ddm_likelihoods import *
-from hddm import *
+
+import hddm
 
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
@@ -573,8 +573,8 @@ def plot_cavanagh(a_low=1.5, a_high=3, v=.5, ter=0.3, tag=None, plot_dual=True, 
         tag = ''
     x = np.linspace(-5.,5.,1000)
     
-    y_low = wfpt.pdf_array(x=x, a=a_low, z=a_low/2., v=v, ter=ter, err=.000001)
-    y_high = wfpt.pdf_array(x=x, a=a_high, z=a_high/2., v=v, ter=ter, err=.000001)
+    y_low = hddm.pdf_array(x=x, a=a_low, z=a_low/2., v=v, ter=ter, err=.000001)
+    y_high = hddm.pdf_array(x=x, a=a_high, z=a_high/2., v=v, ter=ter, err=.000001)
 
     y_low_scaled = y_low
     y_high_scaled = y_high

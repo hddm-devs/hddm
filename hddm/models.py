@@ -8,19 +8,8 @@ import platform
 from copy import copy
 import matplotlib.pyplot as plt
 import subprocess
-from ddm_likelihoods import *
 
-try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    def debug_here(): pass
-
-if platform.architecture()[0] == '64bit':
-    import wfpt64 as wfpt
-    sampler_exec = 'construct-samples64'
-else:
-    import wfpt
-    sampler_exec = 'construct-samples'
+import hddm
 
 def scale(x):
     return (x-np.min(x))/(np.max(x)-np.min(x))
@@ -74,9 +63,9 @@ class HDDM_base(object):
     def _set_all_params(self):
         self._set_group_params()
 
-    def plot_brownian(self):
-        import brownian
-        ddmplot = brownian.DDMPlot()
+    def plot_demo(self):
+        from hddm import demo
+        ddmplot = demo.DDMPlot()
         ddmplot.data = self.data['rt'].flatten()
         ddmplot.external_params = self.params_est
         ddmplot.configure_traits()
@@ -89,9 +78,17 @@ class HDDM_base(object):
 
         self._plot(resps_upper, resps_lower, params_true=params_true, params=params)
 
+    def _get_analytical(self, x, params):
+        pdf_upper = hddm.wfpt.pdf_array(x=x, v=params['v'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
+        pdf_lower = hddm.wfpt.pdf_array(x=-x, v=params['v'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
+        pdf = np.concatenate((pdf_lower[::-1], pdf_upper)) # Reverse pdf_lower and concatenate
+
+        return pdf
+
     def _plot(self, resps_upper, resps_lower, bins=40, hrange=(0,4), params=None, params_true=None, reps=100, title=None, label=None, c1=None, c2=None, plot_estimated=True, interpolate=False, k=2):
         """Plot real and estimated RT model. A set of parameters (params) may be provided."""
         import scipy.interpolate
+        from scipy.interpolate import InterpolatedUnivariateSpline
         
         if params is None:
             params = self.params_est
@@ -108,8 +105,8 @@ class HDDM_base(object):
         xs_br = np.linspace(-hrange[1], hrange[1], bins*20)
 
         if interpolate:
-            histo_upper = scipy.interpolate.InterpolatedUnivariateSpline(x, np.histogram(resps_upper, bins=bins, range=hrange)[0], k=k)(xs)
-            histo_lower = scipy.interpolate.InterpolatedUnivariateSpline(x, np.histogram(resps_lower, bins=bins, range=hrange)[0], k=k)(xs)
+            histo_upper = InterpolatedUnivariateSpline(x, np.histogram(resps_upper, bins=bins, range=hrange)[0], k=k)(xs)
+            histo_lower = InterpolatedUnivariateSpline(x, np.histogram(resps_lower, bins=bins, range=hrange)[0], k=k)(xs)
         else:
             histo_upper = np.histogram(resps_upper, bins=bins, range=hrange)[0]
             histo_lower = np.histogram(resps_lower, bins=bins, range=hrange)[0]
@@ -123,21 +120,17 @@ class HDDM_base(object):
         if plot_estimated:
             # Calculate wiener PDFs for both boundaries.
             if self.model_type == 'simple':
-                pdf_upper = wfpt.pdf_array(x=xs, v=params['v'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
-                pdf_lower = wfpt.pdf_array(x=-xs, v=params['v'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
-                pdf = np.concatenate((pdf_lower[::-1], pdf_upper))
+                pdf = self._get_analytical(params, xs)
             else:
-                pdf = get_avg_likelihood(xs, params)
+                pdf = hddm.likelihoods.get_avg_likelihood(xs, params)
 
             plt.plot(xs_br, scale(pdf), label="analytical %s"%label, color=c2)
 
         if params_true: # Calculate likelihood for known params
             if self.model_type == 'simple':
-                pdf_upper_true = wfpt.pdf_array(x=xs, v=params_true['v'], a=params_true['a'], z=params_true['z'], ter=params_true['t'], err=.0001)
-                pdf_lower_true = wfpt.pdf_array(x=-xs, v=params_true['v'], a=params_true['a'], z=params_true['z'], ter=params_true['t'], err=.0001)
-                pdf_true = np.concatenate((pdf_lower_true[::-1], pdf_upper_true))
+                pdf = self._get_analytical(params_true, xs)
             else:
-                pdf_true = get_avg_likelihood(xs, params_true)
+                pdf_true = hddm.likelihoods.get_avg_likelihood(xs, params_true)
 
             plt.plot(xs_br, scale(pdf_true), label="true %s"%label, color='g')
             
@@ -245,14 +238,16 @@ class HDDM_base(object):
                 continue
             try:
                 if add:
-                    param_inst.trace._trace[0] = np.concatenate((param_inst.trace._trace[0], mcmc_model.trace(param_name)()))
+                    param_inst.trace._trace[0] = np.concatenate((param_inst.trace._trace[0],
+                                                                 mcmc_model.trace(param_name)()))
                 else:
                     param_inst.trace = mcmc_model.trace(param_name)
             except AttributeError: # param_inst is an array
                 if self.trace_subjs:
                     for i, subj_param in enumerate(param_inst):
                         if add:
-                            subj_param.trace._trace[0] = np.concatenate((subj_param.trace._trace[0], mcmc_model.trace('%s_%i'%(param_name,i))()))
+                            subj_param.trace._trace[0] = np.concatenate((subj_param.trace._trace[0],
+                                                                         mcmc_model.trace('%s_%i'%(param_name,i))()))
                         else:
                             subj_param.trace = mcmc_model.trace('%s_%i'%(param_name,i))
 
@@ -291,24 +286,28 @@ class HDDM_multi(HDDM_base):
     - subject param DDM (each subject get's it's own param, see EJ's book 8.3)
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
-    def __init__(self, data, depends_on=None, stats_on=None, model_type=None, is_subj_model=True, trace_subjs=True, load=None, col_names=None, save_stats_to=None, debug=False, no_bias=True):
-        super(HDDM_multi, self).__init__(data, col_names=col_names, save_stats_to=save_stats_to, trace_subjs=trace_subjs, debug=debug, no_bias=no_bias)
+    def __init__(self, data,
+                 depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
+                 trace_subjs=True, load=None, col_names=None, save_stats_to=None,
+                 debug=False, no_bias=True, normalize_v=True):
 
+        super(HDDM_multi, self).__init__(data, col_names=col_names,
+                                         save_stats_to=save_stats_to,
+                                         trace_subjs=trace_subjs,
+                                         debug=debug, no_bias=no_bias)
+
+        if model_type is None:
+            self.model_type = 'simple'
+        else:
+            self.model_type = model_type
+
+        self.param_factory = ParamFactory(self.model_type, trace_subjs=trace_subjs, normalize_v=normalize_v)
+        
         # Initialize
         if depends_on is None:
             self.depends_on = {}
         else:
             self.depends_on = copy(depends_on)
-            
-        #if stats_on is None:
-        #    self.stats_on = []
-        #else:
-        #    self.stats_on = stats_on
-            
-        if model_type is None:
-            self.model_type = 'simple'
-        else:
-            self.model_type = model_type
 
         self.is_subj_model = is_subj_model
 
@@ -321,30 +320,14 @@ class HDDM_multi(HDDM_base):
             self.group_param_names = ['a', 'v', 'z', 't']
         elif self.model_type == 'full_avg' or self.model_type == 'full':
             self.group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
+        elif self.model_type == 'lba':
+            self.group_param_names = ['a', 'z', 't', 'V', 'v0', 'v1']
         else:
             raise ValueError('Model %s not recognized' % self.model_type)
-
-        #if self.no_bias:
-        #    self.group_param_names.remove('z')
-
-        # Set function pointers
-        self._models = {'simple': self._get_simple,
-                        'simple_gpu': self._get_simple_gpu,
-                        'full_avg': self._get_full_avg,
-                        'full': self._get_full}
-
 
         self.param_names = copy(self.group_param_names)
         self.group_params = {}
 
-        self.param_ranges = {'a_lower': 1.,
-                             'a_upper': 3.,
-                             'z_lower': .1,
-                             'z_upper': 2.,
-                             't_lower': .1,
-                             't_upper': 1.,
-                             'v_lower': -3.,
-                             'v_upper': 3.}
         if load:
             self.mcmc_load_from_db(dbname=load)
 
@@ -357,15 +340,18 @@ class HDDM_multi(HDDM_base):
     
     def _set_group_params(self):
         """Set group level distributions. One distribution for each DDM parameter."""
-        for group_param_name in self.group_param_names: # Loop through param names
-            if group_param_name in self.depends_on.keys(): # Parameter depends on data
-                depends_on = self.depends_on[group_param_name]
+        for param in self.group_param_names: # Loop through param names
+            if param in self.depends_on.keys():
+                # Parameter depends on data
+                depends_on = self.depends_on[param]
                 uniq_data_dep = np.unique(self.data[depends_on])
                 for uniq_date in uniq_data_dep:
                     tag = str(uniq_date)
-                    self.group_params[group_param_name + '_' + tag] = self._get_group_param(group_param_name, tag=tag)
-            else: # Parameter does not depend on data
-                self.group_params[group_param_name] = self._get_group_param(group_param_name)
+                    param_tag = '%s_%s'%(param, tag)
+                    self.group_params[param_tag] = self.param_factory.get_group_param(param, tag=tag)
+            else:
+                # Parameter does not depend on data
+                self.group_params[param] = self.param_factory.get_group_param(param)
         
         return self
 
@@ -383,84 +369,15 @@ class HDDM_multi(HDDM_base):
             
         for param_name, param_inst in self.group_params.iteritems():
             # Create tau parameter for global param
-            param_inst_tau = self._get_group_param_tau(param_name)
+            param_inst_tau = self.param_factory.get_group_param_tau(param_name)
             self.group_params_tau[param_name] = param_inst_tau
             # Create num_subjs individual subject ddm parameter
             for subj_idx,subj in enumerate(self.subjs):
-                self.subj_params[param_name][subj_idx] = self._get_subj_param(param_name, param_inst, param_inst_tau, int(subj))
-                
+                self.subj_params[param_name][subj_idx] = self.param_factory.get_subj_param(param_name,
+                                                                                           param_inst,
+                                                                                           param_inst_tau,
+                                                                                           int(subj))
         return self
-
-    def _get_group_param(self, param, tag=None):
-        """Create and return a prior distribution for [param]. [tag] is
-        used in case of dependent parameters.
-        """
-        if tag is None:
-            tag = ''
-        else:
-            tag = '_' + tag
-        if param == 'a':
-            return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower'], upper=self.param_ranges['a_upper'])
-        elif param.startswith('v'):
-            return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'], observed=False)
-        elif param == 'V':
-            return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
-        elif param == 'z':
-            if self.no_bias:
-                return None
-            else:
-                return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower'], upper=self.param_ranges['z_upper'])
-        elif param == 'Z':
-            return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
-        elif param == 't':
-            return pm.Uniform("t%s"%tag, lower=self.param_ranges['t_lower'], upper=self.param_ranges['t_upper'], value=.2, observed=False)
-        elif param == 'T':
-            return pm.Uniform("T%s"%tag, lower=0, upper=1)
-        elif param == 'e':
-            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7)
-        else:
-            raise ValueError("Param %s not recognized" % param)
-
-        return self
-
-    def _get_group_param_tau(self, param, tag=None):
-        if tag is None:
-            tag = '_tau'
-        else:
-            tag = tag + '_tau'
-
-        return pm.Uniform(param + tag, lower=0, upper=800, plot=False)
-
-    def _get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx):
-        if len(param_name) != 1: # if there is a tag attached to the param
-            param = param_name[0]
-            tag = param_name[1:] + '_' + str(subj_idx) # create new name for the subj parameter
-        else:
-            param = param_name
-            tag = '_' + str(subj_idx)
-
-        if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower'], b=self.param_ranges['a_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param.startswith('v'):
-            return pm.Normal("%s%s"%(param,tag), mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
-        elif param == 'V':
-            return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean, plot=False, trace=self.trace_subjs)
-        elif param == 'z':
-            if self.no_bias:
-                return None
-            else:
-                return pm.TruncatedNormal('z%s'%tag, a=self.param_ranges['z_lower'], b=self.param_ranges['z_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param == 'Z':
-            return pm.TruncatedNormal("Z%s"%tag, a=0, b=1., mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param == 't':
-            return pm.TruncatedNormal("t%s"%tag, a=self.param_ranges['t_lower'], b=self.param_ranges['t_upper'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
-        elif param == 'T':
-            return pm.TruncatedNormal("T%s"%tag, a=0, b=1, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param == 'e':
-            return pm.Normal("e%s"%tag, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        else:
-            raise ValueError("Param %s not recognized" % param)
-        
     
     def _set_model(self):
         """Create and set up the complete DDM."""
@@ -506,109 +423,8 @@ class HDDM_multi(HDDM_base):
             ddm = self._create_ddm(data, params)
             return [ddm]
 
-    def _get_simple(self, name, data, params, idx=None):
-        if idx is None:
-            return WienerSimple(name,
-                                value=data[self.col_names['rt']].flatten(), 
-                                v=params['v'], 
-                                ter=params['t'], 
-                                a=params['a'], 
-                                z=params['z'],
-                                observed=True)
-        else:
-            return WienerSimple(name,
-                                value=data[self.col_names['rt']].flatten(), 
-                                v=params['v'][idx], 
-                                ter=params['t'][idx], 
-                                a=params['a'][idx], 
-                                z=params['z'][idx],
-                                observed=True)
-
-
-    def _get_simple_gpu(self, name, data, params, idx=None):
-        if idx is None:
-            return WienerGPUSingle(name,
-                                   value=data[self.col_names['rt']].flatten(), 
-                                   v=params['v'], 
-                                   ter=params['t'], 
-                                   a=params['a'], 
-                                   z=params['z'],
-                                   observed=True)
-        else:
-            return WienerGPUSingle(name,
-                                   value=data[self.col_names['rt']].flatten(), 
-                                   v=params['v'][idx], 
-                                   ter=params['t'][idx], 
-                                   a=params['a'][idx],
-                                   z=params['z'][idx],
-                                   observed=True)
-
-    def _get_full_avg(self, name, data, params, idx=None):
-        if idx is None:
-            return WienerAvg(name,
-                             value=data[self.col_names['rt']].flatten(), 
-                             v=params['v'], 
-                             sv=params['V'],
-                             ter=params['t'],
-                             ster=params['T'], 
-                             a=params['a'],
-                             z=params['a']/2.,
-                             sz=params['Z'],
-                             observed=True)
-
-        else:
-            return WienerAvg(name,
-                             value=data[self.col_names['rt']].flatten(), 
-                             v=params['v'][idx], 
-                             sv=params['V'][idx],
-                             ter=params['t'][idx],
-                             ster=params['T'][idx], 
-                             a=params['a'][idx],
-                             z=params['z'][idx],
-                             sz=params['Z'][idx],
-                             observed=True)
-
-
-    def _get_full(self, name, data, params, idx=None):
-        if idx is None:
-            trials = data.shape[0]
-            ddm[i] = np.empty(trials, dtype=object)
-            z_trial = np.empty(trials, dtype=object)
-            v_trial = np.empty(trials, dtype=object)
-            ter_trial = np.empty(trials, dtype=object)
-            for trl in range(trials):
-                z_trial[trl] = CenterUniform("z_%i"%trl, center=params['z'], width=params['sz'], plot=False, observed=False, trace=False)
-                v_trial[trl] = pm.Normal("v_%i"%trl, mu=params['v'], tau=1/(params['sv']**2), plot=False, observed=False, trace=False)
-                ter_trial[trl] = CenterUniform("ter_%i"%trl, center=params['ter'], width=params['ster'], plot=False, observed=False, trace=False)
-                ddm[i][trl] = Wiener2("ddm_%i_%i"%(trl, i),
-                                      value=self.data[self.col_names['rt']].flatten()[trl],
-                                      v=v_trial[trl],
-                                      ter=ter_trial[trl], 
-                                      a=param['a'],
-                                      z=z_trial[trl],
-                                      observed=True, trace=False)
-
-            return ddm
-
-        else:
-            trials = data.shape[0]
-            ddm = np.empty(trials, dtype=object)
-            z_trial = np.empty(trials, dtype=object)
-            v_trial = np.empty(trials, dtype=object)
-            ter_trial = np.empty(trials, dtype=object)
-            for trl in range(trials):
-                z_trial[trl] = CenterUniform("z_%i"%trl, center=params['z'], width=params['sz'], plot=False, observed=False)
-                v_trial[trl] = pm.Normal("v_%i"%trl, mu=params['v'], tau=1/(params['sv']**2), plot=False, observed=False)
-                ter_trial[trl] = CenterUniform("ter_%i"%trl, center=params['ter'], width=params['ster'], plot=False, observed=False)
-                ddm[trl] = Wiener2("ddm_%i"%trl,
-                                   value=self.data[self.col_names['rt']].flatten()[trl],
-                                   v=v_trial[trl],
-                                   ter=ter_trial[trl], 
-                                   a=param['a'],
-                                   z=z_trial[trl],
-                                   observed=True)
-
-            return ddm
+    def _plot(self):
+        raise NotImplementedError("TODO")
 
     def _create_ddm(self, data, params):
         """Create and return a DDM on [data] with [params].
@@ -618,14 +434,13 @@ class HDDM_multi(HDDM_base):
             for i,subj in enumerate(self.subjs):
                 data_subj = data[data[self.col_names['subj_idx']] == subj] # Select data belong to subj
 
-                ddm = self._models[self.model_type]("ddm_%i_%i"%(self.idx, i), data_subj, params, idx=i)
+                ddm = self.param_factory.get_model("ddm_%i_%i"%(self.idx, i), data_subj, params, idx=i)
         else: # Do not use subj params, but group ones
-            ddm = self._models[self.model_type]("ddm_%i"%self.idx, data, params)
+            ddm = self.param_factory.get_model("ddm_%i"%self.idx, data, params)
 
         self.idx+=1
         
         return ddm
-
 
     def _gen_stats(self):
         for param_name in self.group_params.iterkeys():
@@ -652,46 +467,56 @@ class HDDM_multi(HDDM_base):
                     fd.write('%s: %f\n'%(name, value))
         return self
 
-class HDDM_multi_lba(HDDM_multi):
-    def __init__(self, *args, **kwargs):
-        # Fetch out lba specific parameters
-        if kwargs.has_key('fix_sv'):
-            self.fix_sv = kwargs['fix_sv']
-            del kwargs['fix_sv']
+    def _get_analytical_lba(self, params, x):
+        pdf_upper = hddm.likelihoods.LBA_like(value=x, v0=params['v0'], v1=params['v1'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
+        pdf_lower = hddm.likelihoods.LBA_like(value=-x, v0=params['v0'], v1=params['v1'], a=params['a'], z=params['z'], ter=params['t'], err=.0001)
+        pdf = np.concatenate((pdf_lower[::-1], pdf_upper)) # Reverse lower pdf and concatenate
+
+        return pdf
+
+class ParamFactory(object):
+    def __init__(self, model_type, trace_subjs=True, normalize_v=True):
+        self.trace_subjs = trace_subjs
+        self.model_type = model_type
+        # Set function map
+        self._models = {'simple': self._get_simple,
+                        'simple_gpu': self._get_simple_gpu,
+                        'full_avg': self._get_full_avg,
+                        'full': self._get_full,
+                        'lba':self._get_lba}
+
+        if self.model_type != 'lba':
+            self.param_ranges = {'a_lower': 1.,
+                                 'a_upper': 3.,
+                                 'z_lower': .1,
+                                 'z_upper': 2.,
+                                 't_lower': .1,
+                                 't_upper': 1.,
+                                 'v_lower': -3.,
+                                 'v_upper': 3.}
         else:
-            self.fix_sv = None
+            self.normalize_v = normalize_v
+
+            self.param_ranges = {'a_lower': .2,
+                                 'a_upper': 4.,
+                                 'v_lower': 0.1,
+                                 'v_upper': 3.,
+                                 'z_lower': .0,
+                                 'z_upper': 2.,
+                                 't_lower': .05,
+                                 't_upper': 2.,
+                                 'V_lower': .2,
+                                 'V_upper': 2.}
+            
+            if self.normalize_v:
+                self.param_ranges['v_lower'] = 0.
+                self.param_ranges['v_upper'] = 1.
+
         
-        if kwargs.has_key('normalize_v'):
-            self.normalize_v = kwargs['normalize_v']
-            del kwargs['normalize_v']
-        else:
-            self.normalize_v = True
-
-        super(HDDM_multi_lba, self).__init__(*args, **kwargs)
-
-        self.model_type = 'lba'
-        self.no_bias = False # Does not make sense for LBA
-        self.resps = np.unique(self.data['response'])
-        self.nresps = self.resps.shape[0]
-        self.group_param_names = ['a', 'V', 'z', 't'] + ['v%i'%i for i in self.resps]
-
-        self._models = {'lba': self._get_lba}
-
-        self.param_ranges = {'a_lower': .2,
-                             'a_upper': 4.,
-                             'v_lower': 0.1,
-                             'v_upper': 3.,
-                             'z_lower': .0,
-                             'z_upper': 2.,
-                             't_lower': .05,
-                             't_upper': 2.,
-                             'V_lower': .2,
-                             'V_upper': 2.}
-        if self.normalize_v:
-            self.param_ranges['v_lower'] = 0.
-            self.param_ranges['v_upper'] = 1.
-
-    def _get_group_param(self, param, tag=None):
+    def get_model(self, *args, **kwargs):
+        return self._models[self.model_type](*args, **kwargs)
+    
+    def get_group_param(self, param, tag=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -699,41 +524,55 @@ class HDDM_multi_lba(HDDM_multi):
             tag = ''
         else:
             tag = '_' + tag
-            
-        if param == 'a':
-            return pm.Uniform("a%s"%tag, lower=self.param_ranges['a_lower'], upper=self.param_ranges['a_upper'])
-        elif param.startswith('v'):
-            if self.normalize_v:
-                # Normalize the sum of the drifts to 1.
-                if param.startswith('v0'):
-                    return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'])
-                else:
-                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.group_params['v0%s'%tag]: 1-x)
-            else:
-                return pm.Uniform("%s%s"%(param, tag), lower=self.param_ranges['v_lower'], upper=self.param_ranges['v_upper'])
-        elif param == 'V':
-            if self.fix_sv is None:
-                return pm.Uniform("V%s"%tag, lower=self.param_ranges['V_lower'], upper=self.param_ranges['V_upper'])
-            else:
-                return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
-        elif param == 'z':
+        if param == 'a': # threshold
+            return pm.Uniform("a%s"%tag,
+                              lower=self.param_ranges['a_lower'],
+                              upper=self.param_ranges['a_upper'])
+
+        elif param.startswith('v'): # drift-rate
+            return pm.Uniform("%s%s"%(param, tag),
+                              lower=self.param_ranges['v_lower'],
+                              upper=self.param_ranges['v_upper'], observed=False)
+        
+        elif param == 'V': # drift rate variability
+            return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
+
+        elif param == 'z': # starting point position (bias)
             if self.no_bias:
-                return None
-            return pm.Uniform('z%s'%tag, lower=self.param_ranges['z_lower'], upper=self.param_ranges['z_upper'])
-        elif param == 'Z':
+                return None # z = a/2.
+            else:
+                return pm.Uniform('z%s'%tag,
+                                  lower=self.param_ranges['z_lower'],
+                                  upper=self.param_ranges['z_upper'])
+        
+        elif param == 'Z': # starting point variability
             return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
-        elif param == 't':
-            return pm.Uniform("t%s"%tag, lower=self.param_ranges['t_lower'], upper=self.param_ranges['t_upper'], value=.2, observed=False)
-        elif param == 'T':
+
+        elif param == 't': # ter, non-decision time
+            return pm.Uniform("t%s"%tag,
+                              lower=self.param_ranges['t_lower'],
+                              upper=self.param_ranges['t_upper'],
+                              value=.2, observed=False)
+
+        elif param == 'T': # non-decision time variability
             return pm.Uniform("T%s"%tag, lower=0, upper=1)
-        elif param == 'e':
-            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7, value=0)
+
+        elif param == 'e': # effect on other parameter
+            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7)
         else:
             raise ValueError("Param %s not recognized" % param)
 
         return self
 
-    def _get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx):
+    def get_group_param_tau(self, param, tag=None):
+        if tag is None:
+            tag = '_tau'
+        else:
+            tag = tag + '_tau'
+
+        return pm.Uniform(param + tag, lower=0, upper=800, plot=False)
+
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx):
         if len(param_name) != 1: # if there is a tag attached to the param
             param = param_name[0]
             tag = param_name[1:] + '_' + str(subj_idx) # create new name for the subj parameter
@@ -742,68 +581,211 @@ class HDDM_multi_lba(HDDM_multi):
             tag = '_' + str(subj_idx)
 
         if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag, a=self.param_ranges['a_lower'], b=self.param_ranges['a_upper'],
-                                      mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-        elif param == 'v':
-            if self.normalize_v:
-                # Normalize the sum of the drifts to 1.
-                # Determine if v0 or v1 has been set before (dict is not ordered, so we can't know)
-                if param_name.startswith('v0'):
-                    other_param = 'v1'
-                else:
-                    other_param = 'v0'
-                other_param_complete = '%s%s'%(other_param, param_name[2:])
+            return pm.TruncatedNormal("a%s"%tag,
+                                      a=self.param_ranges['a_lower'],
+                                      b=self.param_ranges['a_upper'],
+                                      mu=parent_mean, tau=parent_tau,
+                                      plot=False, trace=self.trace_subjs)
 
-                if self.subj_params[other_param_complete][subj_idx] is not None:
-                    # Other parameter has already been set.
-                    return pm.Lambda("%s%s"%(param, tag), lambda x=self.subj_params[other_param_complete][subj_idx]: 1-x, plot=False, trace=self.trace_subjs)
-                else:
-                    # Create new v parameter
-                    return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower'], b=self.param_ranges['v_upper'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
-            else: 
-                return pm.TruncatedNormal("%s%s"%(param,tag), a=self.param_ranges['v_lower'], b=self.param_ranges['v_upper'], mu=parent_mean, tau=parent_tau, value=.5, observed=False, plot=False, trace=self.trace_subjs)
+        elif param.startswith('v'):
+            return pm.Normal("%s%s"%(param,tag),
+                             mu=parent_mean,
+                             tau=parent_tau, value=.5,
+                             observed=False, plot=False, trace=self.trace_subjs)
+
         elif param == 'V':
-            if self.fix_sv is None:
-                return pm.TruncatedNormal("V%s"%tag, a=self.param_ranges['V_lower'], b=self.param_ranges['V_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
-            else:
-                return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean, plot=False, trace=self.trace_subjs)
+            return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
+                             plot=False, trace=self.trace_subjs)
+
         elif param == 'z':
             if self.no_bias:
                 return None
             else:
-                return pm.TruncatedNormal('z%s'%tag, a=self.param_ranges['z_lower'], b=self.param_ranges['z_upper'], mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+                return pm.TruncatedNormal('z%s'%tag,
+                                          a=self.param_ranges['z_lower'],
+                                          b=self.param_ranges['z_upper'],
+                                          mu=parent_mean, tau=parent_tau,
+                                          plot=False, trace=self.trace_subjs)
+
         elif param == 'Z':
-            return pm.TruncatedNormal("Z%s"%tag, a=0, b=1., mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+            return pm.TruncatedNormal("Z%s"%tag,
+                                      a=0, b=1.,
+                                      mu=parent_mean,
+                                      tau=parent_tau,
+                                      plot=False, trace=self.trace_subjs)
+
         elif param == 't':
-            return pm.TruncatedNormal("t%s"%tag, a=self.param_ranges['t_lower'], b=self.param_ranges['t_upper'], mu=parent_mean, tau=parent_tau, observed=False, plot=False, trace=self.trace_subjs)
+            return pm.TruncatedNormal("t%s"%tag,
+                                      a=self.param_ranges['t_lower'],
+                                      b=self.param_ranges['t_upper'],
+                                      mu=parent_mean, tau=parent_tau,
+                                      observed=False, plot=False, trace=self.trace_subjs)
+
         elif param == 'T':
-            return pm.TruncatedNormal("T%s"%tag, a=0, b=1, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+            return pm.TruncatedNormal("T%s"%tag,
+                                      a=0, b=1,
+                                      mu=parent_mean,
+                                      tau=parent_tau,
+                                      plot=False, trace=self.trace_subjs)
+
         elif param == 'e':
-            return pm.Normal("e%s"%tag, mu=parent_mean, tau=parent_tau, plot=False, trace=self.trace_subjs)
+            return pm.Normal("e%s"%tag,
+                             mu=parent_mean,
+                             tau=parent_tau,
+                             plot=False, trace=self.trace_subjs)
+
         else:
             raise ValueError("Param %s not recognized" % param)
 
+
+
+    def _get_simple(self, name, data, params, idx=None):
+        if idx is None:
+            return hddm.likelihoods.WienerSimple(name,
+                                                value=data['rt'].flatten(), 
+                                                v=params['v'], 
+                                                ter=params['t'], 
+                                                a=params['a'], 
+                                                z=params['z'],
+                                                observed=True)
+        else:
+            return hddm.likelihoods.WienerSimple(name,
+                                value=data['rt'].flatten(), 
+                                v=params['v'][idx], 
+                                ter=params['t'][idx], 
+                                a=params['a'][idx], 
+                                z=params['z'][idx],
+                                observed=True)
+
+
+    def _get_simple_gpu(self, name, data, params, idx=None):
+        if idx is None:
+            return hddm.likelihoods.WienerGPUSingle(name,
+                                   value=data['rt'].flatten(), 
+                                   v=params['v'], 
+                                   ter=params['t'], 
+                                   a=params['a'], 
+                                   z=params['z'],
+                                   observed=True)
+        else:
+            return hddm.likelihoods.WienerGPUSingle(name,
+                                   value=data['rt'].flatten(), 
+                                   v=params['v'][idx], 
+                                   ter=params['t'][idx], 
+                                   a=params['a'][idx],
+                                   z=params['z'][idx],
+                                   observed=True)
+
+    def _get_full_avg(self, name, data, params, idx=None):
+        if idx is None:
+            return hddm.likelihoods.WienerAvg(name,
+                             value=data['rt'].flatten(), 
+                             v=params['v'], 
+                             sv=params['V'],
+                             ter=params['t'],
+                             ster=params['T'], 
+                             a=params['a'],
+                             z=params['a']/2.,
+                             sz=params['Z'],
+                             observed=True)
+
+        else:
+            return hddm.likelihoods.WienerAvg(name,
+                             value=data['rt'].flatten(), 
+                             v=params['v'][idx], 
+                             sv=params['V'][idx],
+                             ter=params['t'][idx],
+                             ster=params['T'][idx], 
+                             a=params['a'][idx],
+                             z=params['z'][idx],
+                             sz=params['Z'][idx],
+                             observed=True)
+
+
+    def _get_full(self, name, data, params, idx=None):
+        if idx is None:
+            trials = data.shape[0]
+            ddm[i] = np.empty(trials, dtype=object)
+            z_trial = np.empty(trials, dtype=object)
+            v_trial = np.empty(trials, dtype=object)
+            ter_trial = np.empty(trials, dtype=object)
+            for trl in range(trials):
+                z_trial[trl] = hddm.likelihoods.CenterUniform("z_%i"%trl,
+                                             center=params['z'],
+                                             width=params['sz'],
+                                             plot=False, observed=False, trace=False)
+                v_trial[trl] = pm.Normal("v_%i"%trl,
+                                         mu=params['v'],
+                                         tau=1/(params['sv']**2),
+                                         plot=False, observed=False, trace=False)
+                ter_trial[trl] = hddm.likelihoods.CenterUniform("ter_%i"%trl,
+                                               center=params['ter'],
+                                               width=params['ster'],
+                                               plot=False, observed=False, trace=False)
+                ddm[i][trl] = hddm.likelihoods.Wiener2("ddm_%i_%i"%(trl, i),
+                                      value=data['rt'].flatten()[trl],
+                                      v=v_trial[trl],
+                                      ter=ter_trial[trl], 
+                                      a=param['a'],
+                                      z=z_trial[trl],
+                                      observed=True, trace=False)
+
+            return ddm
+
+        else:
+            trials = data.shape[0]
+            ddm = np.empty(trials, dtype=object)
+            z_trial = np.empty(trials, dtype=object)
+            v_trial = np.empty(trials, dtype=object)
+            ter_trial = np.empty(trials, dtype=object)
+            for trl in range(trials):
+                z_trial[trl] = hddm.likelihoods.CenterUniform("z_%i"%trl,
+                                             center=params['z'],
+                                             width=params['sz'],
+                                             plot=False, observed=False)
+                v_trial[trl] = pm.Normal("v_%i"%trl,
+                                         mu=params['v'],
+                                         tau=1/(params['sv']**2),
+                                         plot=False, observed=False)
+                ter_trial[trl] = hddm.likelihoods.CenterUniform("ter_%i"%trl,
+                                               center=params['ter'],
+                                               width=params['ster'],
+                                               plot=False, observed=False)
+                ddm[trl] = hddm.likelihoods.Wiener2("ddm_%i"%trl,
+                                   value=data['rt'].flatten()[trl],
+                                   v=v_trial[trl],
+                                   ter=ter_trial[trl], 
+                                   a=param['a'],
+                                   z=z_trial[trl],
+                                   observed=True)
+
+            return ddm
+
     def _get_lba(self, name, data, params, idx=None):
         if idx is None:
-            return LBA(name,
-                       value=data[self.col_names['rt']].flatten(),
-                       resps=data[self.col_names['response']].flatten(),
-                       a=params['a'],
-                       z=params['z'],
-                       ter=params['t'],
-                       v=np.array([params['v%i'%i] for i in self.resps]).flatten(),
-                       sv=params['V'],
-                       observed=True)
+            return hddm.likelihoods.LBA(name,
+                                        value=data['rt'].flatten(),
+                                        a=params['a'],
+                                        z=params['z'],
+                                        ter=params['t'],
+                                        v0=params['v0'],
+                                        v1=params['v1'],
+                                        sv=params['V'],
+                                        observed=True)
         else:
-            return LBA(name,
-                       value=data[self.col_names['rt']].flatten(),
-                       resps=data[self.col_names['response']].flatten(),
-                       a=params['a'][idx],
-                       z=params['z'][idx],
-                       ter=params['t'][idx],
-                       v=np.array([params['v%i'%i][idx] for i in self.resps]).flatten(),
-                       sv=params['V'][idx],
-                       observed=True)                       
+            return hddm.likelihoods.LBA(name,
+                                        value=data['rt'].flatten(),
+                                        a=params['a'][idx],
+                                        z=params['z'][idx],
+                                        ter=params['t'][idx],
+                                        v0=params['v0'][idx],
+                                        v1=params['v1'][idx],
+                                        sv=params['V'][idx],
+                                        observed=True)    
+
+
+
+
 
 class HDDM_multi_gpu(HDDM_multi):
     def _set_model(self):

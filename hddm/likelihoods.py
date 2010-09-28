@@ -6,14 +6,6 @@ import numpy as np
 np.seterr(divide='ignore')
 
 
-if platform.architecture()[0] == '64bit':
-    import wfpt64 as wfpt
-    import lba64 as lba
-    sampler_exec = 'construct-samples64'
-else:
-    import wfpt
-    import lba
-    sampler_exec = 'construct-samples'
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
@@ -169,39 +161,39 @@ def get_avg_likelihood(x, params):
 ################################
 # Linear Ballistic Accumulator
 
-def LBA_like(value, resps, a, z, ter, v, sv, logp=True):
+def LBA_like(value, a, z, ter, sv, v0, v1=0., logp=True, normalize_v=False):
     """Linear Ballistic Accumulator PDF
     """
     if z is None:
         z = a/2.
 
     #print a, z, ter, v, sv
-    prob = lba.lba_like(np.asarray(value, dtype=np.double), np.asarray(resps, dtype=np.double),
-                        z, a, ter, np.asarray(v, dtype=np.double), sv, int(logp))
+    prob = lba.lba_like(np.asarray(value, dtype=np.double), z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
     return prob
     
-def LBA_like_multi(value, resps, a, z, ter, v, sv, multi, logp=True):
+def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, normalize_v=False):
     """Linear Ballistic Accumulator PDF
     """
     size = value.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
-        return lba.lba_like(np.asarray(value, dtype=np.double), np.asarray(resps, dtype=np.double),
-                            z, a, ter, np.asarray(v, dtype=np.double), sv, int(logp))
+        return lba.lba_like(np.asarray(value, dtype=np.double),
+                            z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
     else:
-        params = {'v':v, 'z':z, 'ter':ter, 'a':a, 'sv':sv}
+        params = {'v0':v0, 'v1':v1, 'z':z, 'ter':ter, 'a':a, 'sv':sv}
         params_iter = copy(params) # Here we set the individual values
 
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
             y[i] = lba.lba_like(np.asarray([value[i]], dtype=np.double),
-                                np.asarray([resps[i]], dtype=np.double),
                                 np.double(params_iter['z']),
                                 np.double(params_iter['a']),
                                 np.double(params_iter['ter']),
-                                np.asarray(params_iter['v'], dtype=np.double),
-                                np.double(params_iter['sv']), logp=int(logp))
+                                np.double(params_iter['sv']),
+                                np.double(params_iter['v0']),
+                                np.double(params_iter['v1']),
+                                logp=int(logp), int(normalize_v))
         prob = np.sum(y)
         return prob
     
