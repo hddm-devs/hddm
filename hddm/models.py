@@ -4,10 +4,7 @@ import numpy as np
 import numpy.lib.recfunctions as rec
 import pymc as pm
 import matplotlib.pyplot as plt
-import platform
 from copy import copy
-import matplotlib.pyplot as plt
-import subprocess
 
 import hddm
 
