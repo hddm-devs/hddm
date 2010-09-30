@@ -1,4 +1,2 @@
 #!/bin/bash
 python setup.py --command-packages=stdeb.command bdist_deb
-cd deb_dist/HDDM-0.1
-dpkg-buildpackage -rfakeroot -uc -us

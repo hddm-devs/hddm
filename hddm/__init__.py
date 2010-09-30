@@ -20,6 +20,7 @@ import models
 import likelihoods
 import demo
 import generate
+import utils
 
 from models import *
 
