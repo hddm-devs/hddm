@@ -325,18 +325,18 @@ class DDMPlot(HasTraits):
 
     def _get_lba_upper(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
-                                        resps=np.ones_like(self.x_analytical),
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
-                                        v=[self.ddm.v, self.ddm.sz],
+                                        v0=self.ddm.v, 
+					v1=self.ddm.sz,
                                         ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
 
     def _get_lba_lower(self):
-        return hddm.likelihoods.LBA_like(self.x_analytical,
-                                        resps=np.zeros_like(self.x_analytical),
+        return hddm.likelihoods.LBA_like(-self.x_analytical,
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
-                                        v=[self.ddm.v, self.ddm.sz],
+                                        v0=self.ddm.v, 
+					v1=self.ddm.sz,
                                         ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
 
     def _go_fired(self):
