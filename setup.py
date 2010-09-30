@@ -13,7 +13,8 @@ setup(
     package_data={"hddm":["examples/*"]},
     scripts=["hddm.py"],
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
-    requires=['NumPy (>=1.3.0)', 'PyMC (>=2.0)', 'Cython'],
+    install_requires=['NumPy >=1.3.0', 'PyMC >=2.0'],
+    setup_requires=['NumPy >=1.3.0', 'PyMC >=2.0', 'cython'],
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("wfpt", ["src/wfpt.pyx"]),
                    Extension("lba", ["src/lba.pyx"])]
