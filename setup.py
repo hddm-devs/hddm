@@ -10,6 +10,7 @@ setup(
     author_email="thomas_wiecki@brown.edu",
     url="http://code.google.com/p/hddm",
     packages=["hddm", "hddm.tests"],
+    package_data={"hddm":["examples/*"]},
     scripts=["hddm.py"],
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     requires=['NumPy (>=1.3.0)', 'PyMC (>=2.0)', 'Cython'],
