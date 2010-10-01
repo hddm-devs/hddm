@@ -1,11 +1,10 @@
 #!/usr/bin/python
 from __future__ import division
-import wx
 
-import matplotlib
-# We want matplotlib to use a wxPython backend
-if __name__ == "__main__":
-    matplotlib.use('WXAgg')
+try:
+    import demo
+except ImportError, err:
+    print "Demo applet could not be importet: " + str(err)
 
 import numpy as np
 import numpy.lib.recfunctions as rec
@@ -18,22 +17,15 @@ import subprocess
 
 import models
 import likelihoods
-import demo
 import generate
 import utils
 
 from models import *
 
+import wfpt
+import lba
+
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
     def debug_here(): pass
-
-if platform.architecture()[0] == '64bit':
-    import wfpt64 as wfpt
-    import lba64 as lba
-    sampler_exec = 'construct-samples64'
-else:
-    import wfpt
-    import lba
-    sampler_exec = 'construct-samples'
