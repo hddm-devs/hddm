@@ -344,7 +344,7 @@ def parse_config_file(fname, load=False):
         verbose = 0
 
     print "Creating model..."
-    m = Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
+    m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
 
     if not load:
         print "Sampling... (this can take some time)"
@@ -383,53 +383,3 @@ def check_geweke(model, assert_=True):
 
     return True
 
-def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
-    pos_stims = ('A', 'C', 'E')
-    neg_stims = ('B', 'D', 'F')
-    fname = 'data/gene/Gene_tst1_RT.csv'
-    data = np.recfromcsv(fname)
-    data['subj_idx'] = data['subj_idx']-1 # Offset subj_idx to start at 0
-
-    data['rt'] = data['rt']/1000. # Time in seconds
-    # Remove outliers
-    data = data[data['rt'] > .25]
-
-    # Exclude subjects for which there is no particular gene.
-    if exclude_missing is not None:
-        if isinstance(exclude_missing, (tuple, list)):
-            for exclude in exclude_missing:
-                data = data[data[exclude] != '']
-        else:
-            data = data[data[exclude_missing] != '']
-
-    # Add convenience columns
-    # First stim and second stim
-    cond1 = np.empty(data.shape, dtype=np.dtype([('cond1','S1')]))
-    cond2 = np.empty(data.shape, dtype=np.dtype([('cond2','S1')]))
-    cond_class = np.empty(data.shape, dtype=np.dtype([('conf','S2')]))
-    contains_A = np.empty(data.shape, dtype=np.dtype([('contains_A',np.bool)]))
-    contains_B = np.empty(data.shape, dtype=np.dtype([('contains_B',np.bool)]))
-    include = np.empty(data.shape, dtype=np.bool)
-    
-    for i,cond in enumerate(data['cond']):
-        cond1[i] = cond[0]
-        cond2[i] = cond[1]
-        # Condition contains A or B, with AB trials excluded
-        contains_A[i] = (((cond[0] == 'A') or (cond[1] == 'A')) and not ((cond[0] == 'B') or (cond[1] == 'B')),)
-        contains_B[i] = (((cond[0] == 'B') or (cond[1] == 'B')) and not ((cond[0] == 'A') or (cond[1] == 'A')),)
-
-        if cond[0] in pos_stims and cond[1] in pos_stims:
-            cond_class[i] = 'WW'
-        elif cond[0] in neg_stims and cond[1] in neg_stims:
-            cond_class[i] = 'LL'
-        else:
-            cond_class[i] = 'WL'
-
-        # Exclude instructed stims
-        include[i] = cond.find(data['instructed1'][i])
-        
-    # Append rows to data
-    data = rec.append_fields(data, names=['cond1','cond2','conf', 'contains_A', 'contains_B'],
-                             data=(cond1,cond2,cond_class,contains_A,contains_B), dtypes=['S1','S1','S2','B1','B1'], usemask=False)
-
-    return data[include]

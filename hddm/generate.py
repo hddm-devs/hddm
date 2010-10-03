@@ -171,6 +171,18 @@ def gen_rand_correlation_data(v=.5, corr=.1):
 
     return np.concatenate(all_data)
     
+def _add_noise(params_subj):
+    """Add individual noise to each parameter."""
+    for param, value in params_subj.iteritems():
+        if param == 'ter' or param == 'ster' or param == 'z':
+            continue
+        elif param[0] == 's':
+            params_subj[param] = np.abs(value + np.random.randn()*.01)
+        else:
+            params_subj[param] = np.abs(value + np.random.randn()*.05)
+
+    return params_subj
+
 def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, add_noise=True, tag=None):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
     # Set global parameters
@@ -189,15 +201,9 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
     # Derive individual parameters
     for i in range(num_subjs):
         params_subj = copy(params)
-        # Add noise to all values
         if add_noise:
-            for param, value in params_subj.iteritems():
-                if param == 'ter' or param == 'ster' or param == 'z':
-                    continue
-                elif param[0] == 's':
-                    params_subj[param] = np.abs(value + np.random.randn()*.01)
-                else:
-                    params_subj[param] = np.abs(value + np.random.randn()*.05)
+            params_subj = _add_noise(params_subj)
+
         params_subj['z'] = params_subj['a']/2.
         params_subjs.append(params_subj)
 
