@@ -61,29 +61,14 @@ cdef DTYPE_t fptpdf_single(DTYPE_t t, double z, double a, double driftrate, doub
     return (driftrate*(norm_cdf(azu)-norm_cdf(azumax)) + sddrift*(norm_pdf(azumax)-norm_pdf(azu)))/z
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def lba_single(cnp.ndarray[DTYPE_t, ndim=1] t, double z, double a, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, cnp.ndarray[DTYPE_t, ndim=1] out=None):
-    # Generates defective PDF for responses on node #1.
-    cdef unsigned int i=0
-    cdef unsigned int max = <unsigned int> t.shape[0]
-    if out is None:
-        out = np.empty(max, dtype=DTYPE)
-    elif out.shape[0] != t.shape[0]:
-        raise ValueError('out array must have the same shape as input array t')
-        
-
-    for i from 0 <= i < max:
-         out[i] = (1-fptcdf_single(t[i], z, a, drift[<unsigned int> 1], sv)) * \
-                fptpdf_single(t[i], z, a, drift[<unsigned int> 0], sv)
-
-    return out
-
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, unsigned int logp=0, unsigned int normalize_v=0):
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = <unsigned int> value.shape[0]
     cdef unsigned int i = 0
     cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
 
+    assert sv >= 0, "sv must be larger than 0"
+    
     if normalize_v == 1:
         v1 = 1 - v0
         

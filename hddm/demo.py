@@ -25,7 +25,7 @@ from enthought.traits.ui.wx.editor import Editor
 from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
 
 from math import sqrt
-from scipy.stats import uniform, norm
+
 import numpy as np
 import pylab as pl
 
@@ -38,26 +38,6 @@ except:
 
 import hddm
 
-def scale(x, max=None, min=None):
-    #x = np.array(x, dtype=np.float)
-    if max is None:
-        max = np.max(x)
-    if min is None:
-        min = np.min(x)
-    return (x-min)/(max-min)
-
-def scale_multi(a1, a2):
-    """Scale two arrays to be in range [0,1].
-    """
-    # Scale appropriately
-    if np.max(a1) > np.max(a2):
-        a1_scaled = scale(a1)
-        a2_scaled = scale(a2, max=np.max(a1), min=np.min(a1))
-    else:
-        a2_scaled = scale(a2)
-        a1_scaled = scale(a1, max=np.max(a2), min=np.min(a2))
-
-    return (a1_scaled, a2_scaled)
 
 class DDM(HasTraits):
     """Drift diffusion model"""
@@ -67,148 +47,72 @@ class DDM(HasTraits):
     sz = Range(0,5.,.1)
     v = Range(-3,3.,.5)
     sv = Range(0.0,2.,0.01)
-    t0 = Range(0,2.,.3)
-    st0 = Range(0,2.,.1)
+    ter = Range(0,2.,.3)
+    ster = Range(0,2.,.1)
     a = Range(0.,10.,2.)
 
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 't0', 'st0', 'a'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])
 
     # Distributions
-    start_delays = Property(Array, depends_on=['ter', 'ster'])
-    start_points = Property(Array, depends_on=['z', 'sz'])
-    drift_rates = Property(Array, depends_on=['v', 'sv'])
-    drifts = Property(Array, depends_on=['v', 'sv'])
-    randoms = Property(Array)
-    
-    rts = Property(Tuple, depends_on=['params'])
-    rts_upper = Property(Array, depends_on=['params'])
-    rts_lower = Property(Array, depends_on=['params'])
+    drifts = Property(Tuple, depends_on=['params'])
+    rts = Property(Tuple, depends_on=['drifts'])
+    params_dict = Property(Dict)
 
+    mask = Property(Array)
+    
     histo_lower = Property(Array, depends_on=['params'])
     histo_upper = Property(Array, depends_on=['params'])
 
     # Total time.
     T = Float(5.0)
     # Number of steps.
-    N = Int(1000)
+    steps = Int(1000)
     # Time step size
-    dt = Property(Float, depends_on=['T', 'N'])
+    dt = Property(Float, depends_on=['T', 'steps'])
     # Number of realizations to generate.
     num_samples = Int(1000)
     # Number of drifts to plot
     iter_plot = Int(30)
     # Number of histogram bins
     bins = Int(100)
-    dt_bins = Property(Float, depends_on=['T', 'bins'])
     no_bias = Bool(True)
-    view = View('z_bias', 'sz', 'v', 'sv', 't0', 'st0', 'a', 'N', 'num_samples', 'no_bias', 'iter_plot')
+    view = View('z_bias', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'no_bias', 'iter_plot')
 
+    def _get_dt(self):
+        return self.steps / self.T
     def _get_z(self):
         if self.no_bias:
             return self.a/2.
         else:
             return self.z_bias
-        
+
+    def _get_params_dict(self):
+        return {'v':self.v, 'sv':self.sv, 'z':self.z, 'sz':self.sz, 'ter':self.ter, 'ster':self.ster, 'a':self.a}
+
     @cached_property
     def _get_drifts(self):
-	# This computes the Brownian motion by forming the cumulative sum of
-	# the random samples. Add the starting points as a constant offset.
-	return np.cumsum(self.randoms, axis=1) + np.tile(self.start_points, (self.N, 1)).T
-
-    @cached_property
-    def _get_randoms(self):
-	# Generate num_samples samples from a normal distribution and
-        # add the drift rates
-	x = norm.rvs(loc=0, scale=np.sqrt(self.dt), size=(self.num_samples, self.N))/self.dt  + np.tile(self.drift_rates, (self.N, 1)).T
-	# Go through every line and zero out the non-decision component
-	for i in range(self.num_samples):
-	    x[i,:self.start_delays[i]] = 0
-	return x
-
-    @cached_property
-    def _get_start_delays(self):
-        # Draw starting delays from uniform distribution around [t0-0.5*st0, t0+0.5*st0].
-        start_delays = np.abs(uniform.rvs(size=(self.num_samples), scale=(self.st0)) - self.st0/2. + self.t0)
-        start_delays *= self.dt
-	return np.array(start_delays, dtype='int')
-
-    @cached_property
-    def _get_start_points(self):
-        # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
-        return uniform.rvs(size=(self.num_samples), scale=(self.sz)) - self.sz/2. + self.z
-
-    @cached_property
-    def _get_drift_rates(self):
-        # Draw drift rates from a normal distribution
-        return norm.rvs(loc=self.v, scale=self.sv, size=self.num_samples)/self.dt
-    
-    def _get_dt(self):
-        return self.N / self.T
-
-    def _get_dt_bins(self):
-        return self.bins / self.T
+        return hddm.generate.simulate_drifts(self.params_dict, self.num_samples, self.steps, self.T)
 
     @cached_property
     def _get_rts(self):
-	# Find lines over the threshold
-	rts_upper = []
-	rts_lower = []
-        self.mask = np.ones(self.drifts.shape, dtype='bool')
-        # Go through every drift individually
-	for line_x, line_mask in zip(self.drifts, self.mask):
-            # Check if upper bound was reached, and where
-	    thresh_upper = np.where((line_x > self.a))[0]
-            upper = np.Inf
-            lower = np.Inf
-	    if thresh_upper.shape != (0,):
-                # This provides the RT, append
-                upper = thresh_upper[0]
-		
-            # Check if lower bound was reached, and where
-	    thresh_lower = np.where((line_x < 0))[0]
-	    if thresh_lower.shape != (0,):
-                # Lower RT
-		lower = thresh_lower[0]
-
-            if upper == lower == np.Inf:
-                # Threshold not crossed
-                continue
-            
-            # Determine which one hit the threshold before
-            if upper < lower:
-                rts_upper.append(upper)
-            else:
-                rts_lower.append(lower)
-            # For plotting, we want to cut off the diffusion processes
-            # after they reached the threshold. So get all thresholds,
-            # and create a mask with Trues if below threshold. Mask is used
-            # for displaying only.
-	    thresh = np.where((line_x > self.a) | (line_x < 0))[0]
-
-	    if thresh.shape != (0,):
-		line_mask[thresh[0]:] = np.zeros((self.N-thresh[0]), dtype='bool')
-
-        return (rts_upper, rts_lower)
+        return hddm.generate.find_thresholds(self.drifts, self.a)
 
     @cached_property
-    def _get_rts_upper(self):
-        return self.rts[0]
-    
-    @cached_property
-    def _get_rts_lower(self):
-        return self.rts[1]
+    def _get_mask(self):
+        return hddm.generate.gen_mask(self.drifts, self.a)
     
     @cached_property
     def _get_histo_upper(self):
-        return np.histogram(self.rts_upper, bins=self.bins, range=(0,self.N))[0]
+        rts = self.rts[self.rts>0]
+        return np.histogram(rts, bins=self.bins, range=(0,self.steps))[0]
 
     @cached_property
     def _get_histo_lower(self):
-        return np.histogram(self.rts_lower, bins=self.bins, range=(0,self.N))[0]
-        
+        rts = -self.rts[self.rts<0]
+        return np.histogram(rts, bins=self.bins, range=(0,self.steps))[0]
     
     def _get_params(self):
-        return np.array([self.a, self.v, self.t0, self.sz, self.sv, self.st0])
+        return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
 
     
 class DDMPlot(HasTraits):
@@ -240,6 +144,7 @@ class DDMPlot(HasTraits):
 		     show_label=False),
 		Item('ddm'),
                 Item('plot_histogram'),
+                Item('plot_drifts'),
                 Item('plot_simple'),
                 Item('plot_full_avg'),
                 Item('plot_lba'),
@@ -282,11 +187,11 @@ class DDMPlot(HasTraits):
         except KeyError:
             pass
         try:
-            self.ddm.t0 = new['t']
+            self.ddm.ter = new['t']
         except KeyError:
             pass
         try:
-            self.ddm.st0 = new['T']
+            self.ddm.ster = new['T']
         except KeyError:
             pass
         try:
@@ -311,17 +216,17 @@ class DDMPlot(HasTraits):
         
     @cached_property
     def _get_x_analytical(self):
-        return np.linspace(0, self.ddm.N/self.ddm.dt, 1000)
+        return np.linspace(0, self.ddm.steps/self.ddm.dt, 1000)
     
     def _get_full_avg_upper(self):
-        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
+        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.ter, ster=self.ddm.ster, a=self.ddm.a, err=.0001, reps=100)
     def _get_full_avg_lower(self):
-        return hddm.likelihoods.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.t0, ster=self.ddm.st0, a=self.ddm.a, err=.0001, reps=100)
+        return hddm.likelihoods.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.ter, ster=self.ddm.ster, a=self.ddm.a, err=.0001, reps=100)
 
     def _get_simple_upper(self):
-        return hddm.wfpt.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.wfpt.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.ter, err=.000001)
     def _get_simple_lower(self):
-        return hddm.wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.t0, err=.000001)
+        return hddm.wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.ter, err=.000001)
 
     def _get_lba_upper(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
@@ -329,7 +234,7 @@ class DDMPlot(HasTraits):
                                         z=self.ddm.z_bias,
                                         v0=self.ddm.v, 
 					v1=self.ddm.sz,
-                                        ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
+                                        ter=self.ddm.ter, sv=self.ddm.sv, logp=False)
 
     def _get_lba_lower(self):
         return hddm.likelihoods.LBA_like(-self.x_analytical,
@@ -337,7 +242,7 @@ class DDMPlot(HasTraits):
                                         z=self.ddm.z_bias,
                                         v0=self.ddm.v, 
 					v1=self.ddm.sz,
-                                        ter=self.ddm.t0, sv=self.ddm.sv, logp=False)
+                                        ter=self.ddm.ter, sv=self.ddm.sv, logp=False)
 
     def _go_fired(self):
         self.update_plot()
@@ -351,41 +256,41 @@ class DDMPlot(HasTraits):
 	for i in range(self.num_axes):
 	    self.figure.axes[i].clear()
 
-        x = np.linspace(0,self.ddm.N/self.ddm.dt,self.ddm.bins)
+        x = np.linspace(0,self.ddm.steps/self.ddm.dt,self.ddm.bins)
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
-            upper_scaled, lower_scaled = scale_multi(self.ddm.histo_upper, self.ddm.histo_lower)
-            self.figure.axes[0].plot(x, upper_scaled, color='g')
-            self.figure.axes[2].plot(x, -lower_scaled, color='g')
+            upper_scaled, lower_scaled = hddm.utils.scale_multi(self.ddm.histo_upper, self.ddm.histo_lower)
+            self.figure.axes[0].plot(x, upper_scaled, color='g', lw=2.)
+            self.figure.axes[2].plot(x, -lower_scaled, color='g', lw=2.)
 
         # Plot normalized histograms of empirical data
         if self.plot_data:
-            histo_upper = np.histogram(self.data[self.data > 0], bins=self.ddm.bins, range=(0,self.ddm.N/self.ddm.dt))[0]
-            histo_lower = np.histogram(-self.data[self.data < 0], bins=self.ddm.bins, range=(0,self.ddm.N/self.ddm.dt))[0]
-            upper_scaled, lower_scaled = scale_multi(histo_upper, histo_lower)
+            histo_upper = np.histogram(self.data[self.data > 0], bins=self.ddm.bins, range=(0,self.ddm.steps/self.ddm.dt))[0]
+            histo_lower = np.histogram(-self.data[self.data < 0], bins=self.ddm.bins, range=(0,self.ddm.steps/self.ddm.dt))[0]
+            upper_scaled, lower_scaled = hddm.utils.scale_multi(histo_upper, histo_lower)
             self.figure.axes[0].plot(x, upper_scaled, color='y', lw=2.)
             self.figure.axes[2].plot(x, -lower_scaled, color='y', lw=2.)
 
         # Plot analyitical full averaged likelihood function
         if self.plot_full_avg:
-            y_upper_avg_scaled, y_lower_avg_scaled = scale_multi(self.full_avg_upper, self.full_avg_lower)
+            y_upper_avg_scaled, y_lower_avg_scaled = hddm.utils.scale_multi(self.full_avg_upper, self.full_avg_lower)
             self.figure.axes[0].plot(self.x_analytical, y_upper_avg_scaled, color='r', lw=2.)
             self.figure.axes[2].plot(self.x_analytical, -y_lower_avg_scaled, color='r', lw=2.)
 
         # Plot analytical simple likelihood function
         if self.plot_simple:
-            y_upper_scaled, y_lower_scaled = scale_multi(self.simple_upper, self.simple_lower)
+            y_upper_scaled, y_lower_scaled = hddm.utils.scale_multi(self.simple_upper, self.simple_lower)
             self.figure.axes[0].plot(self.x_analytical, y_upper_scaled, color='b', lw=2.)
             self.figure.axes[2].plot(self.x_analytical, -y_lower_scaled, color='b', lw=2.)
 
         if self.plot_lba:
-            upper_scaled, lower_scaled = scale_multi(self.lba_upper, self.lba_lower)
+            upper_scaled, lower_scaled = hddm.utils.scale_multi(self.lba_upper, self.lba_lower)
             self.figure.axes[0].plot(self.x_analytical, upper_scaled, color='k', lw=2.)
             self.figure.axes[2].plot(self.x_analytical, -lower_scaled, color='k', lw=2.)
 
         if self.plot_drifts:
-            t = np.linspace(0.0, self.ddm.N/self.ddm.dt, self.ddm.N)
+            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             for k in range(self.ddm.iter_plot):
                 self.figure.axes[1].plot(t[self.ddm.mask[k]],
                                          self.ddm.drifts[k][self.ddm.mask[k]], 'b')

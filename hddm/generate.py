@@ -1,5 +1,8 @@
+from __future__ import division
+
 import numpy as np
 import numpy.lib.recfunctions as rec
+from scipy.stats import uniform, norm
 from copy import copy
 
 try:
@@ -11,11 +14,95 @@ except:
 ################################################################
 # Functions to generate RT distributions with known parameters #
 ################################################################
-def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, num_samples=500, fname=None, structured=True):
+def gen_rts(self, params, samples, steps, T):
+    drifts = simulate_drifts(params, samples, steps, T)
+    rts = find_thresholds(drifts, a, steps)
+
+    return rts
+    
+def simulate_drifts(params, samples, steps, T):
+    dt = steps / T
+    # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
+    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['ster'])) - params['ster']/2. + params['ter'])
+    start_delays *= dt
+
+    # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
+    starting_points = uniform.rvs(size=samples, scale=params['sz']) - params['sz']/2. + params['z']
+
+    # Draw drift rates from a normal distribution
+    drift_rates = norm.rvs(loc=params['v'], scale=params['sv'], size=samples)/dt
+
+    # Generate samples from a normal distribution and
+    # add the drift rates
+    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt), size=(samples, steps))/dt  + np.tile(drift_rates, (steps, 1)).T
+    # Go through every line and zero out the non-decision component
+    for i in range(samples):
+        step_sizes[i,:start_delays[i]] = 0
+
+    # This computes the Brownian motion by forming the cumulative sum of
+    # the random samples. Add the starting points as a constant offset.
+    drifts = np.cumsum(step_sizes, axis=1) + np.tile(starting_points, (steps, 1)).T
+
+    return drifts
+
+def find_thresholds(drifts, a):
+    steps = drifts.shape[1]
+    # Find lines over the threshold
+    rts_upper = []
+    rts_lower = []
+    # Go through every drift individually
+    for drift in drifts:
+        # Check if upper bound was reached, and where
+        thresh_upper = np.where((drift > a))[0]
+        upper = np.Inf
+        lower = np.Inf
+        if thresh_upper.shape != (0,):
+            # This provides the RT, append
+            upper = thresh_upper[0]
+
+        # Check if lower bound was reached, and where
+        thresh_lower = np.where((drift < 0))[0]
+        if thresh_lower.shape != (0,):
+            # Lower RT
+            lower = thresh_lower[0]
+
+        if upper == lower == np.Inf:
+            # Threshold not crossed
+            continue
+
+        # Determine which one hit the threshold before
+        if upper < lower:
+            rts_upper.append(np.float(upper))
+        else:
+            rts_lower.append(np.float(lower))
+
+    rts_upper = np.asarray(rts_upper)
+    rts_lower = np.asarray(rts_lower)
+    # Switch sign
+    rts_lower *= -1
+    rts = np.concatenate((rts_upper, rts_lower))
+
+    return rts
+
+def gen_mask(drifts, a):
+    steps = drifts.shape[1]
+    mask = np.ones(drifts.shape, dtype='bool')
+    for drift,mask_drift in zip(drifts, mask):
+        # For plotting, we want to cut off the diffusion processes
+        # after they reached the threshold. So get all thresholds,
+        # and create a mask with Trues if below threshold. Mask is used
+        # for displaying only.
+        thresh = np.where((drift > a) | (drift < 0))[0]
+
+        if thresh.shape != (0,):
+            mask_drift[thresh[0]:] = np.zeros((steps-thresh[0]), dtype='bool')
+    return mask
+
+def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""
     if fname is None:
         fname = 'example_DDM.txt'
-    subprocess.call([sampler_exec, '-v', str(v), '-V', str(sv), '-z', str(z), '-Z', str(sz), '-a', str(a), '-t', str(ter), '-T', str(ster), '-n', str(num_samples), '-o', fname])
+    subprocess.call([sampler_exec, '-v', str(v), '-V', str(sv), '-z', str(z), '-Z', str(sz), '-a', str(a), '-t', str(ter), '-T', str(ster), '-n', str(samples), '-o', fname])
     data = np.loadtxt(fname)
     if structured:
         data.dtype = np.dtype([('response', np.float), ('rt', np.float)])
@@ -26,7 +113,7 @@ def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structure
     import hddm.demo
     
     ddm = hddm.demo.DDM()
-    ddm.num_samples = size
+    ddm.samples = size
     ddm.v = v
     ddm.sv = sv
     ddm.z_bias = z
@@ -58,7 +145,7 @@ def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structure
         
     return data
 
-def _gen_rts_params(params, num_samples=500, fname=None, structured=True, subj_idx=None):
+def _gen_rts_params(params, samples=500, fname=None, structured=True, subj_idx=None):
     """Generate simulated RTs with fixed parameters."""
     return gen_ddm_rts(v=params['v'],
                        sv=params['sv'],
@@ -67,11 +154,11 @@ def _gen_rts_params(params, num_samples=500, fname=None, structured=True, subj_i
                        a=params['a'],
                        ter=params['ter'],
                        ster=params['ster'],
-                       size=num_samples,
+                       size=samples,
                        structured=structured,
                        subj_idx=subj_idx)
 
-def gen_rand_data(num_samples=500, params=None, gen_data=True, no_var=False, tag=None):
+def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=None):
     """Generate simulated RTs with random parameters."""
     #z = np.random.normal(loc=1, scale=2)
     #ster = np.random.uniform(loc=0, scale=.5)
@@ -84,7 +171,7 @@ def gen_rand_data(num_samples=500, params=None, gen_data=True, no_var=False, tag
 
     if gen_data:
         # Create RT data
-        data = _gen_rts_params(params, num_samples=num_samples, fname='test_data.txt', structured=True)
+        data = _gen_rts_params(params, samples=samples, fname='test_data.txt', structured=True)
 
     if tag is None:
         tag = ''
@@ -107,7 +194,7 @@ def gen_rand_correlation_data(v=.5, corr=.1):
     for i in np.linspace(-1,1,10):
         params['a'] = a_offset + i*corr
         params['z'] = (a_offset + i*corr)/2.
-        data = gen_rand_subj_data(num_subjs=1, params=params, num_samples=20, add_noise=False)[0]
+        data = gen_rand_subj_data(num_subjs=1, params=params, samples=20, add_noise=False)[0]
         theta = np.ones(data.shape) * i
         theta.dtype = dtype=np.dtype([('theta', np.float)])
         stim = np.tile('test', data.shape)
@@ -120,7 +207,7 @@ def gen_rand_correlation_data(v=.5, corr=.1):
 
     return np.concatenate(all_data)
     
-def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True, add_noise=True, tag=None):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, add_noise=True, tag=None):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
     # Set global parameters
     #z = rnd(loc=1, scale=2)
@@ -130,7 +217,7 @@ def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True
         params = {'v': .5, 'sv': 0.1, 'z': 1., 'sz': 0.1, 'ter': 1., 'ster': 0.1, 'a': 2}
 
     params_subjs = []
-    #data = np.empty((num_samples*num_subjs, 3), dtype=np.float)
+    #data = np.empty((samples*num_subjs, 3), dtype=np.float)
     resps = []
     rts = []
     subj_idx = []
@@ -152,7 +239,7 @@ def gen_rand_subj_data(num_subjs=10, params=None, num_samples=100, gen_data=True
 
         if gen_data:
             # Create RT data
-            data_gen = _gen_rts_params(params_subj, num_samples=num_samples, fname='test_data.txt', structured=True, subj_idx=i)
+            data_gen = _gen_rts_params(params_subj, samples=samples, fname='test_data.txt', structured=True, subj_idx=i)
             data_gens.append(data_gen)
     
     if tag is None:

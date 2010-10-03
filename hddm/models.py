@@ -18,7 +18,7 @@ class Base(object):
     model."""
     def __init__(self, data, load=None, no_bias=False, trace_subjs=True, save_stats_to=None, debug=False):
         # Flip sign for lower boundary RTs
-        self._prepare_data(data)
+        self.data = hddm.utils.flip_errors(data)
 
         self.model = None
         self.mcmc_model = None
@@ -35,15 +35,6 @@ class Base(object):
         #if load:
         #    self.mcmc_load_from_db(dbname=load)
 
-    def _prepare_data(self, data):
-        """Flip sign for lower boundary responses."""
-        # Copy data
-        self.data = np.array(data)
-        # Flip sign for lower boundary responses
-        idx = self.data['response'] == 0
-        self.data['rt'][idx] = -self.data['rt'][idx]
-
-        return self
 
     def _set_group_params(self):
         raise NotImplementedError("This method has to be overloaded")
