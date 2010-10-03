@@ -11,14 +11,28 @@ except:
     pass
 
 
-################################################################
-# Functions to generate RT distributions with known parameters #
-################################################################
-def gen_rts(self, params, samples, steps, T):
+####################################################################
+# Functions to generate RT distributions with specified parameters #
+####################################################################
+def gen_rts(self, params, samples=1000, steps=1000, T=5, structured=False, subj_idx=None):
+    dt = steps / T
     drifts = simulate_drifts(params, samples, steps, T)
-    rts = find_thresholds(drifts, a, steps)
+    rts = find_thresholds(drifts, a)/dt
 
-    return rts
+    if structured:
+        if subj_idx is None:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
+        else:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
+            data['subj_idx'] = subj_idx
+        data['response'][rts>0] = 1.
+        data['response'][rts<0] = 0.
+        data['rt'] = rts
+
+        return data
+    else:
+        return rts
+
     
 def simulate_drifts(params, samples, steps, T):
     dt = steps / T
@@ -109,55 +123,6 @@ def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, f
 
     return data
 
-def gen_ddm_rts(v=.5, sv=0, z=1, sz=0, a=2, ter=0.3, ster=0, size=500, structured=False, subj_idx=None):
-    import hddm.demo
-    
-    ddm = hddm.demo.DDM()
-    ddm.samples = size
-    ddm.v = v
-    ddm.sv = sv
-    ddm.z_bias = z
-    ddm.sz = sz
-    ddm.a = a
-    ddm.ter = ter
-    ddm.ster = ster
-
-    rts_upper, rts_lower = ddm.rts
-    rts_upper = np.array(rts_upper)/ddm.dt
-    rts_lower = np.array(rts_lower)/ddm.dt
-    num_upper_resps = rts_upper.shape[0]
-    num_lower_resps = rts_lower.shape[0]
-
-    if structured:
-        if subj_idx is None:
-            data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float)]))
-        else:
-            data = np.empty((num_upper_resps + num_lower_resps), dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
-            data['subj_idx'] = subj_idx
-        data['response'][:num_upper_resps] = 1.
-        data['response'][num_upper_resps:] = 0.
-        data['rt'][:num_upper_resps] = rts_upper
-        data['rt'][num_upper_resps:] = rts_lower
-    else:
-        data = np.empty((num_upper_resps + num_lower_resps))
-        data[:num_upper_resps] = rts_upper
-        data[num_upper_resps:] = -rts_lower
-        
-    return data
-
-def _gen_rts_params(params, samples=500, fname=None, structured=True, subj_idx=None):
-    """Generate simulated RTs with fixed parameters."""
-    return gen_ddm_rts(v=params['v'],
-                       sv=params['sv'],
-                       z=params['z'],
-                       sz=params['sz'],
-                       a=params['a'],
-                       ter=params['ter'],
-                       ster=params['ster'],
-                       size=samples,
-                       structured=structured,
-                       subj_idx=subj_idx)
-
 def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=None):
     """Generate simulated RTs with random parameters."""
     #z = np.random.normal(loc=1, scale=2)
@@ -171,7 +136,7 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
 
     if gen_data:
         # Create RT data
-        data = _gen_rts_params(params, samples=samples, fname='test_data.txt', structured=True)
+        data = gen_rts(params, samples=samples, structured=True)
 
     if tag is None:
         tag = ''
@@ -239,7 +204,7 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
 
         if gen_data:
             # Create RT data
-            data_gen = _gen_rts_params(params_subj, samples=samples, fname='test_data.txt', structured=True, subj_idx=i)
+            data_gen = gen_rts(params_subj, samples=samples, structured=True, subj_idx=i)
             data_gens.append(data_gen)
     
     if tag is None:
@@ -251,18 +216,3 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
         data = np.load('data_%s.npy'%tag)
 
     return (data, params)
-
-def rec2csv(data, fname, sep=None):
-    """Save record array to fname as csv.
-    """
-    if sep is None:
-        sep = ','
-    with open(fname, 'w') as fd:
-        # Write header
-        fd.write(sep.join(data.dtype.names))
-        fd.write('\n')
-        # Write data
-        for line in data:
-            line_str = [str(i) for i in line]
-            fd.write(sep.join(line_str))
-            fd.write('\n')

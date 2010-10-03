@@ -80,6 +80,7 @@ class DDM(HasTraits):
 
     def _get_dt(self):
         return self.steps / self.T
+
     def _get_z(self):
         if self.no_bias:
             return self.a/2.
@@ -128,12 +129,11 @@ class DDMPlot(HasTraits):
     plot_data = Bool(False)
     
     x_analytical = Property(Array)
-    full_avg_lower = Property(Array)
-    full_avg_upper = Property(Array)
-    simple_upper = Property(Array)
-    simple_lower = Property(Array)
-    lba_upper = Property(Array)
-    lba_lower = Property(Array)
+
+    full_avg = Property(Array)
+    simple = Property(Array)
+    lba = Property(Array)
+
 
     data = Array() # Can be set externally
     external_params = Dict()
@@ -216,37 +216,48 @@ class DDMPlot(HasTraits):
         
     @cached_property
     def _get_x_analytical(self):
-        return np.linspace(0, self.ddm.steps/self.ddm.dt, 1000)
+        time = self.ddm.steps/self.ddm.dt
+        return np.linspace(-time, time, 2000)
     
-    def _get_full_avg_upper(self):
-        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.ter, ster=self.ddm.ster, a=self.ddm.a, err=.0001, reps=100)
-    def _get_full_avg_lower(self):
-        return hddm.likelihoods.wiener_like_full_avg(t=-self.x_analytical, v=self.ddm.v, sv=self.ddm.sv, z=self.ddm.z, sz=self.ddm.sz, ter=self.ddm.ter, ster=self.ddm.ster, a=self.ddm.a, err=.0001, reps=100)
+    def _get_full_avg(self):
+        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical,
+                                                     v=self.ddm.v,
+                                                     sv=self.ddm.sv,
+                                                     z=self.ddm.z,
+                                                     sz=self.ddm.sz,
+                                                     ter=self.ddm.ter,
+                                                     ster=self.ddm.ster,
+                                                     a=self.ddm.a, err=.0001, reps=100)
 
-    def _get_simple_upper(self):
-        return hddm.wfpt.pdf_array(x=self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.ter, err=.000001)
-    def _get_simple_lower(self):
-        return hddm.wfpt.pdf_array(x=-self.x_analytical, a=self.ddm.a, z=self.ddm.z, v=self.ddm.v, ter=self.ddm.ter, err=.000001)
+    def _get_simple(self):
+        return hddm.wfpt.pdf_array(x=self.x_analytical,
+                                   a=self.ddm.a,
+                                   z=self.ddm.z,
+                                   v=self.ddm.v,
+                                   ter=self.ddm.ter, err=.000001)
 
-    def _get_lba_upper(self):
+    def _get_lba(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
                                         a=self.ddm.a,
                                         z=self.ddm.z_bias,
                                         v0=self.ddm.v, 
 					v1=self.ddm.sz,
-                                        ter=self.ddm.ter, sv=self.ddm.sv, logp=False)
-
-    def _get_lba_lower(self):
-        return hddm.likelihoods.LBA_like(-self.x_analytical,
-                                        a=self.ddm.a,
-                                        z=self.ddm.z_bias,
-                                        v0=self.ddm.v, 
-					v1=self.ddm.sz,
-                                        ter=self.ddm.ter, sv=self.ddm.sv, logp=False)
+                                        ter=self.ddm.ter,
+                                        sv=self.ddm.sv, logp=False)
 
     def _go_fired(self):
         self.update_plot()
-        
+
+    def plot_analytical(self, y, color):
+        time = self.ddm.steps/self.ddm.dt
+        upper = self.x_analytical > 0
+        lower = self.x_analytical < 0
+
+        x = np.linspace(0, time, 1000)
+
+        self.figure.axes[0].plot(x, y[upper], color=color, lw=2.)
+        self.figure.axes[2].plot(x, -y[lower][::-1], color=color, lw=2.)
+
     @on_trait_change('ddm.params')
     def update_plot(self):
         if self.figure.canvas is None:
@@ -274,20 +285,17 @@ class DDMPlot(HasTraits):
 
         # Plot analyitical full averaged likelihood function
         if self.plot_full_avg:
-            y_upper_avg_scaled, y_lower_avg_scaled = hddm.utils.scale_multi(self.full_avg_upper, self.full_avg_lower)
-            self.figure.axes[0].plot(self.x_analytical, y_upper_avg_scaled, color='r', lw=2.)
-            self.figure.axes[2].plot(self.x_analytical, -y_lower_avg_scaled, color='r', lw=2.)
+            y_avg_scaled = hddm.utils.scale(self.full_avg)
+            self.plot_analytical(y_scaled, color='r')
 
         # Plot analytical simple likelihood function
         if self.plot_simple:
-            y_upper_scaled, y_lower_scaled = hddm.utils.scale_multi(self.simple_upper, self.simple_lower)
-            self.figure.axes[0].plot(self.x_analytical, y_upper_scaled, color='b', lw=2.)
-            self.figure.axes[2].plot(self.x_analytical, -y_lower_scaled, color='b', lw=2.)
+            y_scaled = hddm.utils.scale(self.simple)
+            self.plot_analytical(y_scaled, color='b')
 
         if self.plot_lba:
-            upper_scaled, lower_scaled = hddm.utils.scale_multi(self.lba_upper, self.lba_lower)
-            self.figure.axes[0].plot(self.x_analytical, upper_scaled, color='k', lw=2.)
-            self.figure.axes[2].plot(self.x_analytical, -lower_scaled, color='k', lw=2.)
+            y_scaled = hddm.utils.scale(self.lba)
+            self.plot_analytical(y_scaled, color='k')
 
         if self.plot_drifts:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
