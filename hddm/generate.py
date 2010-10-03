@@ -37,8 +37,7 @@ def gen_rts(self, params, samples=1000, steps=1000, T=5, structured=False, subj_
 def simulate_drifts(params, samples, steps, T):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
-    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['ster'])) - params['ster']/2. + params['ter'])
-    start_delays *= dt
+    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['ster'])) - params['ster']/2. + params['ter'])*dt
 
     # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
     starting_points = uniform.rvs(size=samples, scale=params['sz']) - params['sz']/2. + params['z']

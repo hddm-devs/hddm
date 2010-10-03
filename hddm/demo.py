@@ -60,8 +60,7 @@ class DDM(HasTraits):
 
     mask = Property(Array)
     
-    histo_lower = Property(Array, depends_on=['params'])
-    histo_upper = Property(Array, depends_on=['params'])
+    histo = Property(Array, depends_on=['params'])
 
     # Total time.
     T = Float(5.0)
@@ -103,14 +102,8 @@ class DDM(HasTraits):
         return hddm.generate.gen_mask(self.drifts, self.a)
     
     @cached_property
-    def _get_histo_upper(self):
-        rts = self.rts[self.rts>0]
-        return np.histogram(rts, bins=self.bins, range=(0,self.steps))[0]
-
-    @cached_property
-    def _get_histo_lower(self):
-        rts = -self.rts[self.rts<0]
-        return np.histogram(rts, bins=self.bins, range=(0,self.steps))[0]
+    def _get_histo(self):
+        return np.histogram(self.rts, bins=2*self.bins, range=(-self.steps,self.steps))[0]
     
     def _get_params(self):
         return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
@@ -248,15 +241,14 @@ class DDMPlot(HasTraits):
     def _go_fired(self):
         self.update_plot()
 
-    def plot_analytical(self, y, color):
-        time = self.ddm.steps/self.ddm.dt
-        upper = self.x_analytical > 0
-        lower = self.x_analytical < 0
-
-        x = np.linspace(0, time, 1000)
-
-        self.figure.axes[0].plot(x, y[upper], color=color, lw=2.)
-        self.figure.axes[2].plot(x, -y[lower][::-1], color=color, lw=2.)
+    def plot_histo(self, x, y, color):
+        y_scaled = hddm.utils.scale(y)
+        # y consists of lower and upper boundary responses
+        # mid point tells us where to split
+        mid = y.shape[0]/2
+        self.figure.axes[0].plot(x, y_scaled[mid:], color=color, lw=2.)
+        # [::-1] -> reverse ordering
+        self.figure.axes[2].plot(x, -y_scaled[:mid][::-1], color=color, lw=2.)
 
     @on_trait_change('ddm.params')
     def update_plot(self):
@@ -267,35 +259,33 @@ class DDMPlot(HasTraits):
 	for i in range(self.num_axes):
 	    self.figure.axes[i].clear()
 
+        # Set x axis values 
         x = np.linspace(0,self.ddm.steps/self.ddm.dt,self.ddm.bins)
+        # Set x axis values for analyticals
+        time = self.ddm.steps/self.ddm.dt
+        x_anal = np.linspace(0, time, 1000)
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
-            upper_scaled, lower_scaled = hddm.utils.scale_multi(self.ddm.histo_upper, self.ddm.histo_lower)
-            self.figure.axes[0].plot(x, upper_scaled, color='g', lw=2.)
-            self.figure.axes[2].plot(x, -lower_scaled, color='g', lw=2.)
+            self.plot_histo(x, self.ddm.histo, color='g')
 
         # Plot normalized histograms of empirical data
         if self.plot_data:
-            histo_upper = np.histogram(self.data[self.data > 0], bins=self.ddm.bins, range=(0,self.ddm.steps/self.ddm.dt))[0]
-            histo_lower = np.histogram(-self.data[self.data < 0], bins=self.ddm.bins, range=(0,self.ddm.steps/self.ddm.dt))[0]
-            upper_scaled, lower_scaled = hddm.utils.scale_multi(histo_upper, histo_lower)
-            self.figure.axes[0].plot(x, upper_scaled, color='y', lw=2.)
-            self.figure.axes[2].plot(x, -lower_scaled, color='y', lw=2.)
+            range_ = self.ddm.steps/self.ddm.dt
+            histo = np.histogram(self.data, bins=2*self.ddm.bins, range=(-range_,range_))[0]
+            self.plot_histo(x, histo, color='y')
 
         # Plot analyitical full averaged likelihood function
         if self.plot_full_avg:
-            y_avg_scaled = hddm.utils.scale(self.full_avg)
-            self.plot_analytical(y_scaled, color='r')
+            self.plot_histo(x_anal, self.full_avg, color='r')
 
         # Plot analytical simple likelihood function
         if self.plot_simple:
-            y_scaled = hddm.utils.scale(self.simple)
-            self.plot_analytical(y_scaled, color='b')
+            self.plot_histo(x_anal, self.simple, color='b')
 
         if self.plot_lba:
             y_scaled = hddm.utils.scale(self.lba)
-            self.plot_analytical(y_scaled, color='k')
+            self.plot_histo(x_anal, self.lba, color='k')
 
         if self.plot_drifts:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
