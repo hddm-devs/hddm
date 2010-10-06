@@ -6,12 +6,13 @@
 Welcome to HDDM's documentation!
 ================================
 
-HDDM is a toolkit to fit Drift Diffusion Models to reaction times using Hierarchical Bayesian estimation. HDDM is written in Python_ and is licensed under the GPLv3.
+HDDM is a python toolkit to fit Drift Diffusion Models to reaction times using Hierarchical Bayesian estimation (via PyMC_).
 
 Quickstart for the impatient
 ============================
 
 Homepage: http://code.google.com/p/hddm
+License: GPLv3
 
 Installation
 ------------
@@ -20,6 +21,7 @@ Installation
     easy_install hddm
 
 or get the source from the project page or the repository and
+
 ::
     setup.py install
 
@@ -72,6 +74,9 @@ possible. Here is a short list of some of its features:
     * Full DDM: Ratcliff DDM with full hierarchical bayesian parameter estimation of intra-trial variabilites.
     * LBA: Linear Ballistic Accumulator (Brown et al.)
 
+* Includes a demo application that generates and displays drift
+  processes with user-specified parameters in real time.
+
 * Several convergence and goodness-of-fit diagnostics.
 
 Table of Contents:
@@ -81,8 +86,6 @@ Table of Contents:
     
     abstract
     intro
-        Drift Models
-        Hierarchical Bayesian Models
     tutorial
     manual
 
@@ -95,3 +98,9 @@ Indices and tables
 * :ref:`search`
 
 
+.. _HDDM: http://code.google.com/p/hddm/
+.. _Python: http://www.python.org/
+.. _PyMC: http://code.google.com/p/pymc/
+.. _Cython: http://www.cython.org/
+.. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
+.. _fast-dm: http://seehuhn.de/pages/fast-dm
