@@ -23,6 +23,7 @@ Installation
 or get the source from the project page or the repository and
 
 ::
+
     setup.py install
 
 Usage
@@ -51,7 +52,8 @@ example.conf
 Then call hddm:
 
 ::
-    hddm.py example.conf
+
+    hddmfit example.conf
 
 
 Features
@@ -80,6 +82,7 @@ possible. Here is a short list of some of its features:
 * Several convergence and goodness-of-fit diagnostics.
 
 Table of Contents:
+==================
 
 .. toctree::
     :maxdepth: 2

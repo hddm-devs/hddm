@@ -36,9 +36,22 @@ different parameter combinations.
 Diffusion Models
 ----------------
 
+HDDM implements two drift model types, (i) the Ratcliff drift
+diffusion model (DDM) and (ii) the linear ballistic accumulator
+(LBA). Both of these models implement decision making as an evidence
+accumulation process that executes a response upon crossing a decision
+threshold. The speed of the accumulation is called the drift rate and
+influences how swiftly a particular reponse is executed; it depends
+stimulus properties. The distance of the decision threshold from the
+starting point of evidence accumulation also influences the speed of
+responding, but unlike the drift rate, influences the speed of all
+responses. A lower threshold makes responding faster in general but
+more random while a higher threshold leads to more cautious
+responding.
 
 Ratcliff Drift Diffusion Model
 ------------------------------
+
 
 
 Linear Ballistic Accumulator
