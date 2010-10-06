@@ -47,11 +47,30 @@ starting point of evidence accumulation also influences the speed of
 responding, but unlike the drift rate, influences the speed of all
 responses. A lower threshold makes responding faster in general but
 more random while a higher threshold leads to more cautious
-responding.
+responding. Reaction time, however, is not solely comprised of the
+decision making process -- perception, movement initiation and
+execution all take time and are summarized into one variable called
+non-decision time.
 
 Ratcliff Drift Diffusion Model
 ------------------------------
 
+The Ratcliff DDM models decision making in two-choice tasks -- each
+choice is represented as and upper and lower boundary. A drift process
+accumulates evidence over time until it crosses one of the two
+boundaries and initiates the corresponding response. Because there is
+noise in the drift process, the time of the boundary crossing and the
+selected response will vary between trials. The starting point of the
+drift process relative to the two boundaries can influence if one
+response has a prepotent bias. This pattern gives rise to the reaction
+time distributions of both choices and will henceforth be called the
+simple DDM.
+
+Early on, Ratcliff noticed that this simple DDM could not account for
+two phenomena observed in decision making -- early and late
+errors. This lead to inclusion of intertrial variability in the
+drift-rate, the non-decision time and the starting point. Models that
+take this into account are henceforth called full DDM.
 
 
 Linear Ballistic Accumulator
