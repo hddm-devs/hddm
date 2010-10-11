@@ -126,8 +126,8 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int
         return y
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] t, double v, double sv, z, double sz, double ter, double ster, a, double err=.0001, int logp=0, unsigned int reps=10, a_is_multi=False):
-    cdef unsigned int num_resps = t.shape[0]
+def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
+    cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
 
     if logp == 1:
@@ -143,16 +143,12 @@ def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] t, double v, double sv, z, 
 
     for rep from 0 <= rep < reps:
         for i from 0 <= i < num_resps:
-            if a_is_multi:
-                a_val = a[i]
-            else:
-                a_val = a
-            if (fabs(t[i])-ter_samples[rep,i]) < 0:
+            if (fabs(x[i])-ter_samples[rep,i]) < 0:
                 probs[rep,i] = zero_prob
-            elif a_val <= z_samples[rep,i]:
+            elif a <= z_samples[rep,i]:
                 probs[rep,i] = zero_prob
             else:
-                probs[rep,i] = pdf_sign(t[i], v_samples[rep,i], a_val, z_samples[rep,i], ter_samples[rep,i], err=err, logp=logp)
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep,i], a, z_samples[rep,i], ter_samples[rep,i], err=err, logp=logp)
 
     return np.mean(probs, axis=0)
 

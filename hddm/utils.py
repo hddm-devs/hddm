@@ -383,3 +383,99 @@ def check_geweke(model, assert_=True):
 
     return True
 
+def EZ_data(data, s=1):
+    """
+    Calculate Wagenmaker's EZ-diffusion statistics on data.
+
+       :Parameters:
+       - data : numpy.array
+           Data array with reaction time data. Correct RTs
+           are positive, incorrect RTs are negative.
+       - s : float
+           Scaling parameter (default=1)
+
+      :Returns:
+      - (v, a, ter) : tuple
+          drift-rate, threshold and non-decision time
+
+    :SeeAlso: EZ
+    """
+
+    if data.ndim == 2:
+        data = data['rt']
+
+    # Compute statistics over data
+    idx_correct = data > 0
+    idx_error = data < 0
+    mrt = np.mean(data[idx_correct])
+    vrt = np.var(data[idx_correct])
+    pc = np.sum(idx_correct) / np.sum(idx_error)
+
+    # Calculate EZ estimates.
+    return EZ(mrt, vrt, pc, s)
+
+def EZ(pc, vrt, mrt, s=1):
+    """
+    Calculate Wagenmaker's EZ-diffusion statistics.
+    
+      :Parameters:
+      - pc : float
+          probability correct.
+      - vrt : float
+          variance of response time for correct decisions (only!).
+      - mrt : float
+          mean response time for correct decisions (only!).
+      - s : float
+          scaling parameter. Default s=1.
+
+      :Returns:
+      - (v, a, ter) : tuple
+          drift-rate, threshold and non-decision time
+          
+    The error RT distribution is assumed identical to the correct RT distrib.
+
+    Edge corrections are required for cases with Pc=0 or Pc=1. (Pc=.5 is OK)
+
+    Assumptions of the EZ-diffusion model:
+    * The error RT distribution is identical to the correct RT distrib.
+    * z=a/2 -- starting point is equidistant from the response boundaries
+    * sv=0 -- across-trial variability in drift rate is negligible
+    * sz=0  -- across-trial variability in starting point is negligible
+    * st=0  -- across-trial range in nondecision time is negligible
+
+    Reference:
+    Wagenmakers, E.-J., van der Maas, H. Li. J., & Grasman, R. (2007).
+    An EZ-diffusion model for response time and accuracy.
+    Psychonomic Bulletin & Review, 14 (1), 3-22.
+
+    :Example from Wagenmakers et al. (2007):
+    >>> EZ(.802, .112, .723, s=.1)
+    (0.099938526231301769, 0.13997020267583737, 0.30002997230248141)
+
+    :SeeAlso: EZ_data
+    """
+    assert(pc != 0.)
+    assert(pc != .5)
+    assert(pc != 1.)
+
+    s2 = s**2
+    logit_p = np.log(pc/(1-pc))
+
+    # Eq. 7
+    x = ((logit_p*(pc**2 * logit_p - pc * logit_p + pc - .5)) / vrt)
+    v = np.sign(pc - .5) * s * x**.25
+    # Eq 5
+    a = (s2 * logit_p) / v
+
+    y = (-v*a)/s2
+    # Eq 9
+    mdt = (a/(2*v)) * ((1-np.exp(y)) / (1+np.exp(y)))
+
+    # Eq 8
+    ter = mrt-mdt
+
+    return (v, a, ter)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

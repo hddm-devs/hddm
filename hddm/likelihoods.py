@@ -58,26 +58,9 @@ def wiener_full(v, z, ter, a, sv, sz, ster, size=1):
         z = a/2.
     return gen_ddm_rts(v=v, z=z, ter=ter, a=a, sz=sz, sv=sv, ster=ster, size=size)
 
-def wiener_like_full_avg_multi(value, v, z, ter, a, sz, ster, sv, multi=None):
-    """Log-likelihood for the simple DDM"""
-    if z is None:
-        z = a/2.
-    # DEBUG: overwrite s parameters
-    sz = 0.01
-    sv = 0.01
-    ster = 0.01
-    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.001, logp=1, reps=30, a_is_multi=True))
-    #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
-            
-WienerFullAvgMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                             logp=wiener_like_full_avg_multi,
-                                             dtype=np.float,
-                                             mv=True)
-
-
 def wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_avg(t=value, v=v, sv=sv, z=z, sz=sz, ter=ter, ster=ster, a=a, err=.0001, reps=10))
+    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10))
  
 WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     logp=wiener_like_full_avg,

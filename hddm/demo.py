@@ -213,7 +213,7 @@ class DDMPlot(HasTraits):
         return np.linspace(-time, time, 2000)
     
     def _get_full_avg(self):
-        return hddm.likelihoods.wiener_like_full_avg(t=self.x_analytical,
+        return hddm.wfpt.wiener_like_full_avg(x=self.x_analytical,
                                                      v=self.ddm.v,
                                                      sv=self.ddm.sv,
                                                      z=self.ddm.z,
