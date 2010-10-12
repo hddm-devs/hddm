@@ -146,7 +146,7 @@ def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double 
                                       sz=sz,
                                       ter=ter,
                                       ster=ster,
-                                      a=a, err=err, reps=reps, logp=logp)
+                                      a=a, err=err, reps=reps, logp=0)
     wfpt_upper = wiener_like_full_avg(x=x_upper,
                                       v=v,
                                       sv=sv,
@@ -154,12 +154,15 @@ def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double 
                                       sz=sz,
                                       ter=ter,
                                       ster=ster,
-                                      a=a, err=err, reps=reps, logp=logp)
+                                      a=a, err=err, reps=reps, logp=out)
 
     out[x<0] = scipy.interpolate.InterpolatedUnivariateSpline(x_lower, wfpt_lower,k=k)(x[x<0])
     out[x>0] = scipy.interpolate.InterpolatedUnivariateSpline(x_upper, wfpt_upper,k=k)(x[x>0])
 
-    return out
+    if logp == 1:
+        return np.log(out)
+    else:
+        return out
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
