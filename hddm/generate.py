@@ -14,12 +14,13 @@ except:
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(self, params, samples=1000, steps=1000, T=5, structured=False, subj_idx=None):
+def gen_rts(params, samples=1000, steps=1000, T=5, structured=False, subj_idx=None):
     dt = steps / T
     drifts = simulate_drifts(params, samples, steps, T)
-    rts = find_thresholds(drifts, a)/dt
-
-    if structured:
+    rts = find_thresholds(drifts, params['a'])/dt
+    if not structured:
+        return rts
+    else:
         if subj_idx is None:
             data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
         else:
@@ -30,8 +31,7 @@ def gen_rts(self, params, samples=1000, steps=1000, T=5, structured=False, subj_
         data['rt'] = rts
 
         return data
-    else:
-        return rts
+
 
     
 def simulate_drifts(params, samples, steps, T):
@@ -44,7 +44,7 @@ def simulate_drifts(params, samples, steps, T):
 
     # Draw drift rates from a normal distribution
     if params['sv'] == 0.:
-        drift_rates = np.repmat(params['v'], samples)/dt
+        drift_rates = np.repeat(params['v'], samples)/dt
     else:
         drift_rates = norm.rvs(loc=params['v'], scale=params['sv'], size=samples)/dt
 
