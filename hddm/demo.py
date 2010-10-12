@@ -28,6 +28,7 @@ from math import sqrt
 
 import numpy as np
 import pylab as pl
+import time
 
 import enthought.traits.ui
 
@@ -39,6 +40,15 @@ except:
 import hddm
 
 
+def timer(method):
+    def time_me(self, *args,**kwargs):
+        t0 = time.clock()
+        res = method(self,*args,**kwargs)
+        print "%s took %f secs" % (method.__name__, time.clock() - t0)
+        return res
+    
+    return time_me
+    
 class DDM(HasTraits):
     """Drift diffusion model"""
     # Paremeters
@@ -117,16 +127,19 @@ class DDMPlot(HasTraits):
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
     plot_full_avg = Bool(False)
+    plot_full_avg_interp = Bool(True)
     plot_lba = Bool(True)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
     
     x_analytical = Property(Array)
-
+    
     full_avg = Property(Array)
+    full_avg_interp = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
 
+    x_raster = Int(100)
 
     data = Array() # Can be set externally
     external_params = Dict()
@@ -140,6 +153,7 @@ class DDMPlot(HasTraits):
                 Item('plot_drifts'),
                 Item('plot_simple'),
                 Item('plot_full_avg'),
+                Item('plot_full_avg_interp'),
                 Item('plot_lba'),
                 Item('plot_data'),
 		Item('go'),
@@ -210,18 +224,30 @@ class DDMPlot(HasTraits):
     @cached_property
     def _get_x_analytical(self):
         time = self.ddm.steps/self.ddm.dt
-        return np.linspace(-time, time, 2000)
-    
+        return np.linspace(-time, time, self.x_raster)
+
+    @timer
     def _get_full_avg(self):
         return hddm.wfpt.wiener_like_full_avg(x=self.x_analytical,
+                                              v=self.ddm.v,
+                                              sv=self.ddm.sv,
+                                              z=self.ddm.z,
+                                              sz=self.ddm.sz,
+                                              ter=self.ddm.ter,
+                                              ster=self.ddm.ster,
+                                              a=self.ddm.a, err=.0001, reps=50)
+    @timer
+    def _get_full_avg_interp(self):
+        return hddm.wfpt.wiener_like_full_avg_interp(x=self.x_analytical,
                                                      v=self.ddm.v,
                                                      sv=self.ddm.sv,
                                                      z=self.ddm.z,
                                                      sz=self.ddm.sz,
                                                      ter=self.ddm.ter,
                                                      ster=self.ddm.ster,
-                                                     a=self.ddm.a, err=.0001, reps=100)
+                                                     a=self.ddm.a, err=.0001, reps=50, samples=100, k=2)
 
+    @timer
     def _get_simple(self):
         return hddm.wfpt.pdf_array(x=self.x_analytical,
                                    a=self.ddm.a,
@@ -229,6 +255,7 @@ class DDMPlot(HasTraits):
                                    v=self.ddm.v,
                                    ter=self.ddm.ter, err=.000001)
 
+    @timer
     def _get_lba(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
                                         a=self.ddm.a,
@@ -245,6 +272,7 @@ class DDMPlot(HasTraits):
         y_scaled = hddm.utils.scale(y)
         # y consists of lower and upper boundary responses
         # mid point tells us where to split
+        assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
         mid = y.shape[0]/2
         self.figure.axes[0].plot(x, y_scaled[mid:], color=color, lw=2.)
         # [::-1] -> reverse ordering
@@ -263,7 +291,7 @@ class DDMPlot(HasTraits):
         x = np.linspace(0,self.ddm.steps/self.ddm.dt,self.ddm.bins)
         # Set x axis values for analyticals
         time = self.ddm.steps/self.ddm.dt
-        x_anal = np.linspace(0, time, 1000)
+        x_anal = np.linspace(0, time, self.x_raster/2)
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
@@ -278,6 +306,10 @@ class DDMPlot(HasTraits):
         # Plot analyitical full averaged likelihood function
         if self.plot_full_avg:
             self.plot_histo(x_anal, self.full_avg, color='r')
+
+        # Plot analyitical full averaged likelihood function
+        if self.plot_full_avg_interp:
+            self.plot_histo(x_anal, self.full_avg_interp, color='c')
 
         # Plot analytical simple likelihood function
         if self.plot_simple:

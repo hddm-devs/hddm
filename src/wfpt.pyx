@@ -125,6 +125,42 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int
 
         return y
     
+
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=0.0001, int logp=0, int logspace=0, double samples=50., unsigned int reps=10, unsigned int k=2):
+    cdef double max_rt = np.max(np.abs(x))
+    cdef np.ndarray[DTYPE_t, ndim=1] out = np.empty_like(x)
+    
+    import scipy.interpolate
+    if logspace:
+        x_pos = (np.logspace(0,1,samples)-1)*(4./9.)
+        x_interp = np.concatenate((-x_pos[::-1], x_pos))
+    else:
+        x_lower = np.linspace(-max_rt, 0, samples/2.)
+        x_upper = np.linspace(0, max_rt, samples/2.)
+            
+    wfpt_lower = wiener_like_full_avg(x=x_lower,
+                                      v=v,
+                                      sv=sv,
+                                      z=z,
+                                      sz=sz,
+                                      ter=ter,
+                                      ster=ster,
+                                      a=a, err=err, reps=reps, logp=logp)
+    wfpt_upper = wiener_like_full_avg(x=x_upper,
+                                      v=v,
+                                      sv=sv,
+                                      z=z,
+                                      sz=sz,
+                                      ter=ter,
+                                      ster=ster,
+                                      a=a, err=err, reps=reps, logp=logp)
+
+    out[x<0] = scipy.interpolate.InterpolatedUnivariateSpline(x_lower, wfpt_lower,k=k)(x[x<0])
+    out[x>0] = scipy.interpolate.InterpolatedUnivariateSpline(x_upper, wfpt_upper,k=k)(x[x>0])
+
+    return out
+    
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
@@ -136,19 +172,18 @@ def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, dou
         zero_prob = 0
         
     # Create samples
-    cdef np.ndarray[DTYPE_t, ndim=2] ter_samples = np.random.uniform(size=(reps, num_resps), low=ter-ster/2., high=ter+ster/2.)
-    cdef np.ndarray[DTYPE_t, ndim=2] z_samples = np.random.uniform(size=(reps, num_resps), low=z-sz/2., high=z+sz/2.)
-    cdef np.ndarray[DTYPE_t, ndim=2] v_samples = np.random.normal(size=(reps, num_resps), loc=v, scale=sv)
-    cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps, num_resps), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] ter_samples = np.random.uniform(size=reps, low=ter-ster/2., high=ter+ster/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-sz/2., high=z+sz/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=sv)
+    cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
 
     for rep from 0 <= rep < reps:
         for i from 0 <= i < num_resps:
-            if (fabs(x[i])-ter_samples[rep,i]) < 0:
+            if (fabs(x[i])-ter_samples[rep]) < 0:
                 probs[rep,i] = zero_prob
-            elif a <= z_samples[rep,i]:
+            elif a <= z_samples[rep]:
                 probs[rep,i] = zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep,i], a, z_samples[rep,i], ter_samples[rep,i], err=err, logp=logp)
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], ter_samples[rep], err=err, logp=logp)
 
     return np.mean(probs, axis=0)
-

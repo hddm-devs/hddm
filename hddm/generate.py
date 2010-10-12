@@ -43,7 +43,10 @@ def simulate_drifts(params, samples, steps, T):
     starting_points = uniform.rvs(size=samples, scale=params['sz']) - params['sz']/2. + params['z']
 
     # Draw drift rates from a normal distribution
-    drift_rates = norm.rvs(loc=params['v'], scale=params['sv'], size=samples)/dt
+    if params['sv'] == 0.:
+        drift_rates = np.repmat(params['v'], samples)/dt
+    else:
+        drift_rates = norm.rvs(loc=params['v'], scale=params['sv'], size=samples)/dt
 
     # Generate samples from a normal distribution and
     # add the drift rates

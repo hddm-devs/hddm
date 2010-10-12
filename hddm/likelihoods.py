@@ -60,7 +60,7 @@ def wiener_full(v, z, ter, a, sv, sz, ster, size=1):
 
 def wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10))
+    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10, logp=1))
  
 WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     logp=wiener_like_full_avg,
@@ -68,20 +68,18 @@ WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     dtype=np.float,
                                     mv=True)
 
-# def wiener_like(value, v, a, z, ter):
-#     """Log-likelihood of the DDM for one RT point."""
-#     if a<z or z<=0:
-#         return -np.Inf
-#     prob = hddm.wfpt.pdf(t=value-ter, v=v, a=a, z=z, err=.001, logp=1)
-#     if prob == -np.Inf:
-#         print value, ter, v, a, z
-#     return prob
+def wiener_like_full_avg_interp(value, v, sv, z, sz, ter, ster, a):
+    """Log-likelihood for the full DDM using the sampling method"""
+    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=100, logp=1, samples=50))
+ 
+WienerAvgInterp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
+                                          logp=wiener_like_full_avg_interp,
+                                          random=wiener_full,
+                                          dtype=np.float,
+                                          mv=True)
 
-# Wiener = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-#                                  logp=wiener_like,
-#                                  dtype=np.float,
-#                                  mv=False)
 
+        
 def wiener_like2(value, v, a, z, ter):
     """Log-likelihood of the DDM for one RT point."""
     prob = hddm.wfpt.pdf_sign(t=value, v=v, a=a, z=z, ter=ter, err=0.0001, logp=1)
@@ -95,6 +93,7 @@ Wiener2 = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                   random=wiener_simple,
                                   dtype=np.float,
                                   mv=False)
+
 
 def centeruniform_like(value, center, width):
     R"""Likelihood of centered uniform"""
