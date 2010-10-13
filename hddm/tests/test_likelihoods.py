@@ -9,7 +9,7 @@ import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
 
-class TestLikelihoodFuncsGPU(unittest.TestCase):
+class TestGPU(unittest.TestCase):
     def runTest(self):
         pass
         #self.setUp()
@@ -159,7 +159,7 @@ def benchmark(size=100, reps=2000):
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
-        bins=100
+        bins=200
         range_=(-4,4)
         self.x = np.linspace(range_[0], range_[1], bins)
         
@@ -171,7 +171,7 @@ class TestWfpt(unittest.TestCase):
         self.params_novar['sv'] = 0
         self.params_novar['ster'] = 0
         self.params_novar['sz'] = 0
-        self.samples_novar = hddm.generate.gen_rts(self.params_novar, samples=10000)
+        self.samples_novar = hddm.generate.gen_rts(self.params_novar, samples=20000)
         self.histo_novar = np.histogram(self.samples_novar, bins=bins, range=range_, normed=True)[0]
         
         self.params = {}
@@ -182,7 +182,7 @@ class TestWfpt(unittest.TestCase):
         self.params['sv'] = rand()
         self.params['ster'] = rand()*(self.params['ter']/2.)
         self.params['sz'] = rand()*(self.params['z']/2.)
-        self.samples = hddm.generate.gen_rts(self.params, samples=10000)
+        self.samples = hddm.generate.gen_rts(self.params, samples=20000)
         self.histo = np.histogram(self.samples, bins=bins, range=range_, normed=True)[0]
        
     def runTest(self):
@@ -228,32 +228,27 @@ class TestWfpt(unittest.TestCase):
 
         
 
-class TestLikelihoodFuncsLBA(unittest.TestCase):
-    #def __init__(self):
-    #    super(TestLikelihoodFuncsLBA, self).__init__()
-
+class TestLBA(unittest.TestCase):
     def runTest(self):
         pass
         #self.setUp()
     
-    def setUp(self, size=20):
+    def setUp(self, size=200):
+        self.x = np.random.rand(size)
+        self.a = np.random.rand(1)+1
+        self.z = np.random.rand(1)*self.a
+        self.v = np.random.rand(2)+.5
+        #self.v_multi = np.random.rand(5)
+        self.sv = np.random.rand(1)+.5
+
+    def test_lba_single(self):
         import rpy2.robjects as robjects
         import rpy2.robjects.numpy2ri
         robjects.r.source('lba-math.r')
 
-        self.x = np.random.rand(size)*3000
-        self.out = np.empty_like(self.x)
-        self.a = np.random.rand(1)*1000
-        self.z = self.a / np.random.rand(1)
-        self.v = np.random.rand(2)
-        self.v_multi = np.random.rand(5)
-        self.sv = np.random.rand(1)
-
-    def test_lba_single(self):
-        like_cython = hddm.lba.lba_like(self.x, self.z, self.a, self.sv, self.v[0], self.v[1])
+        like_cython = hddm.likelihoods.LBA_like(self.x, self.a, self.z, 0., self.sv, self.v[0], self.v[1], logp=False)
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.sv)))
-
-        np.testing.assert_array_almost_equal(like_cython, like_r)
+        np.testing.assert_array_almost_equal(like_cython, like_r,5)
 
     def call_cython(self):
         return hddm.lba.lba(self.x, self.z, self.a, self.sv, self.v[0], self.v[1])
@@ -261,22 +256,11 @@ class TestLikelihoodFuncsLBA(unittest.TestCase):
     def call_r(self):
         return np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.sv)))
         
-    def test_lba_multi(self):
-        return
-        like_cython = hdmd.lba.lba(self.x, self.z, self.a, self.sv, selv.v_multi[0])
-        like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v_multi, sdI=np.float(self.sv)))
-
-        np.testing.assert_array_almost_equal(like_cython, like_r)        
-        # logp_lba = LBA_like(self.params['x'],
-        #                     self.params['z'],
-        #                     self.params['a'],
-        #                     self.params['ter'],
-        #                     self.params['v'],
-        #                     self.params['z'])
-        
-
 
 
 if __name__=='__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestWfpt)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestLBA)
     unittest.TextTestRunner(verbosity=2).run(suite)
