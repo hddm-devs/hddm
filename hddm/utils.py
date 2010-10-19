@@ -266,7 +266,7 @@ def rec2csv(data, fname, sep=None):
 def csv2rec(fname):
     return np.lib.io.recfromcsv(fname)
 
-def parse_config_file(fname, mcmc=True, load=False):
+def parse_config_file(fname, mcmc=False, load=False):
     import os.path
     if not os.path.isfile(fname):
         raise ValueError("%s could not be found."%fname)
@@ -386,6 +386,30 @@ def check_geweke(model, assert_=True):
 
     return True
 
+def EZ_subjs(data):
+    params = {}
+    
+    # Estimate EZ group parameters
+    v, a, t = EZ_data(data)
+    params['v'] = v
+    params['a'] = a
+    params['t'] = t-.2 if t-.2>0 else .1 # Causes problems otherwise
+    params['z'] = a/2.
+
+    
+    # Estimate EZ parameters for each subject
+    try:
+        for subj in np.unique(data['subj_idx']):
+            v, a, t = EZ_data(data[data['subj_idx'] == subj])
+            params['v_%i'%subj] = v
+            params['a_%i'%subj] = a
+            params['t_%i'%subj] = t-.2 if t-.2>0 else .1
+            params['z_%i'%subj] = a/2.
+    except ValueError:
+        pass
+        
+    return params
+        
 def EZ_param_ranges(data, range_=.75):
     v, a, t = EZ_data(data)
     z = a/2.

@@ -284,7 +284,7 @@ class Multi(Base):
     def __init__(self, data,
                  depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
                  trace_subjs=True, load=None, save_stats_to=None,
-                 debug=False, no_bias=True, normalize_v=True):
+                 debug=False, no_bias=True, normalize_v=True, init_EZ=True):
 
         super(Multi, self).__init__(data, save_stats_to=save_stats_to, trace_subjs=trace_subjs,
                                     debug=debug, no_bias=no_bias)
@@ -298,7 +298,9 @@ class Multi(Base):
                                           data=self.data,
                                           trace_subjs=trace_subjs,
                                           normalize_v=normalize_v,
-                                          no_bias=no_bias)
+                                          no_bias=no_bias,
+                                          init=init_EZ)
+            
         
         # Initialize
         if depends_on is None:
@@ -472,7 +474,7 @@ class Multi(Base):
         return pdf
 
 class ParamFactory(object):
-    def __init__(self, model_type, data=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None):
+    def __init__(self, model_type, data=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=True):
         self.trace_subjs = trace_subjs
         self.model_type = model_type
         self.no_bias = no_bias
@@ -487,7 +489,7 @@ class ParamFactory(object):
                         'lba':self._get_lba}
 
         if self.model_type != 'lba':
-            if self.data is None:
+            if not init:
                 # Default param ranges
                 self.param_ranges = {'a_lower': 1.,
                                      'a_upper': 3.,
@@ -497,13 +499,18 @@ class ParamFactory(object):
                                      't_upper': 1.,
                                      'v_lower': -3.,
                                      'v_upper': 3.}
+                self.init_params = {}
+                
             else:
                 # Compute ranges based on EZ method
                 self.param_ranges = hddm.utils.EZ_param_ranges(self.data)
+                self.init_params = hddm.utils.EZ_subjs(self.data)
                 
             self.normalize_v = False
             self.fix_sv = None
+            
         else:
+            # LBA model
             self.normalize_v = normalize_v
 
             self.param_ranges = {'a_lower': .2,
@@ -533,15 +540,23 @@ class ParamFactory(object):
             tag = ''
         else:
             tag = '_' + tag
+
+        if param in self.init_params:
+            init_val = self.init_params[param]
+        else:
+            init_val = None
+            
         if param == 'a': # threshold
             return pm.Uniform("a%s"%tag,
                               lower=self.param_ranges['a_lower'],
-                              upper=self.param_ranges['a_upper'])
+                              upper=self.param_ranges['a_upper'],
+                              value=init_val)
 
         elif param.startswith('v'): # drift-rate
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['v_lower'],
-                              upper=self.param_ranges['v_upper'], observed=False)
+                              upper=self.param_ranges['v_upper'],
+                              value=init_val)
         
         elif param == 'V': # drift rate variability
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
@@ -552,7 +567,8 @@ class ParamFactory(object):
             else:
                 return pm.Uniform('z%s'%tag,
                                   lower=self.param_ranges['z_lower'],
-                                  upper=self.param_ranges['z_upper'])
+                                  upper=self.param_ranges['z_upper'],
+                                  value=init_val)
         
         elif param == 'Z': # starting point variability
             return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
@@ -561,7 +577,7 @@ class ParamFactory(object):
             return pm.Uniform("t%s"%tag,
                               lower=self.param_ranges['t_lower'],
                               upper=self.param_ranges['t_upper'],
-                              value=.2, observed=False)
+                              value=init_val)
 
         elif param == 'T': # non-decision time variability
             return pm.Uniform("T%s"%tag, lower=0, upper=1)
@@ -590,18 +606,25 @@ class ParamFactory(object):
             param = param_name
             tag = '_' + str(subj_idx)
 
+        init_param_name = '%s_%i'%(param_name,subj_idx)
+        if init_param_name in self.init_params:
+            init_val = self.init_params[init_param_name]
+        else:
+            init_val = None
+            
         if param == 'a':
             return pm.TruncatedNormal("a%s"%tag,
                                       a=self.param_ranges['a_lower'],
                                       b=self.param_ranges['a_upper'],
                                       mu=parent_mean, tau=parent_tau,
-                                      plot=False, trace=self.trace_subjs)
+                                      plot=False, trace=self.trace_subjs,
+                                      value=init_val)
 
         elif param.startswith('v'):
             return pm.Normal("%s%s"%(param,tag),
                              mu=parent_mean,
-                             tau=parent_tau, value=.5,
-                             observed=False, plot=False, trace=self.trace_subjs)
+                             tau=parent_tau, value=init_val,
+                             plot=False, trace=self.trace_subjs)
 
         elif param == 'V':
             return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
@@ -615,7 +638,8 @@ class ParamFactory(object):
                                           a=self.param_ranges['z_lower'],
                                           b=self.param_ranges['z_upper'],
                                           mu=parent_mean, tau=parent_tau,
-                                          plot=False, trace=self.trace_subjs)
+                                          plot=False, trace=self.trace_subjs,
+                                          value=init_val)
 
         elif param == 'Z':
             return pm.TruncatedNormal("Z%s"%tag,
@@ -629,7 +653,8 @@ class ParamFactory(object):
                                       a=self.param_ranges['t_lower'],
                                       b=self.param_ranges['t_upper'],
                                       mu=parent_mean, tau=parent_tau,
-                                      observed=False, plot=False, trace=self.trace_subjs)
+                                      observed=False, plot=False, trace=self.trace_subjs,
+                                      value=init_val)
 
         elif param == 'T':
             return pm.TruncatedNormal("T%s"%tag,
@@ -659,6 +684,7 @@ class ParamFactory(object):
                                                 z=params['z'],
                                                 observed=True)
         else:
+            hddm.debug_here()
             return hddm.likelihoods.WienerSimple(name,
                                 value=data['rt'].flatten(), 
                                 v=params['v'][idx], 
