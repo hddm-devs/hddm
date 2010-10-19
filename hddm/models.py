@@ -124,7 +124,7 @@ class Base(object):
     def map(self):
         """Compute Maximum A Posterior estimates."""
         # Prepare and fit MAP
-        self._prepare(map=True)
+        self._prepare(map_=True)
 
         # Write estimates to params_est.
         for param_name in self.param_names:
@@ -135,6 +135,7 @@ class Base(object):
     def _prepare(self, dbname=None, map_=True, load=False, verbose=0):
         """Compute posterior model by markov chain monte carlo estimation."""
 
+        ############################################################
         # Try multiple times to create model. Sometimes bad initial
         # parameters are chosen randomly that yield -Inf
         # log-likelihood which causes PyMC to choke.
@@ -199,7 +200,17 @@ class Base(object):
             self.mcmc_model.db.commit()
 
         return self
+
+    def norm_approx(self):
+        # Set model parameter values to Normal Approximations
+        self._prepare()
         
+        self.norm_approx_model = pm.NormApprox(self.model)
+        self.norm_approx_model.fit()
+
+        return self
+            
+
     def mcmc(self, samples=10000, burn=5000, thin=2, verbose=0, dbname=None, map_=True):
         """Main method for sampling. Creates and initializes the model and starts sampling.
         """
@@ -207,7 +218,9 @@ class Base(object):
         self._prepare(dbname=dbname, map_=map_)
         # Draw samples
         self._sample(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
-        
+
+        return self
+    
     def _set_traces(self, params, mcmc_model=None, add=False):
         """Externally set the traces of group_params. This is needed
         when loading a model from a previous sampling run saved to a
@@ -282,6 +295,7 @@ class Multi(Base):
             self.model_type = model_type
 
         self.param_factory = ParamFactory(self.model_type,
+                                          data=self.data,
                                           trace_subjs=trace_subjs,
                                           normalize_v=normalize_v,
                                           no_bias=no_bias)
@@ -458,11 +472,12 @@ class Multi(Base):
         return pdf
 
 class ParamFactory(object):
-    def __init__(self, model_type, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None):
+    def __init__(self, model_type, data=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None):
         self.trace_subjs = trace_subjs
         self.model_type = model_type
         self.no_bias = no_bias
         self.fix_sv = fix_sv
+        self.data = data
         
         # Set function map
         self._models = {'simple': self._get_simple,
@@ -472,14 +487,22 @@ class ParamFactory(object):
                         'lba':self._get_lba}
 
         if self.model_type != 'lba':
-            self.param_ranges = {'a_lower': 1.,
-                                 'a_upper': 3.,
-                                 'z_lower': .1,
-                                 'z_upper': 2.,
-                                 't_lower': .1,
-                                 't_upper': 1.,
-                                 'v_lower': -3.,
-                                 'v_upper': 3.}
+            if self.data is None:
+                # Default param ranges
+                self.param_ranges = {'a_lower': 1.,
+                                     'a_upper': 3.,
+                                     'z_lower': .1,
+                                     'z_upper': 2.,
+                                     't_lower': .1,
+                                     't_upper': 1.,
+                                     'v_lower': -3.,
+                                     'v_upper': 3.}
+            else:
+                # Compute ranges based on EZ method
+                self.param_ranges = hddm.utils.EZ_param_ranges(self.data)
+                
+            self.normalize_v = False
+            self.fix_sv = None
         else:
             self.normalize_v = normalize_v
 
@@ -544,7 +567,8 @@ class ParamFactory(object):
             return pm.Uniform("T%s"%tag, lower=0, upper=1)
 
         elif param == 'e': # effect on other parameter
-            return pm.Uniform("e%s"%tag, lower=-.7, upper=.7)
+            return pm.Uniform("e%s"%tag, lower=-.5, upper=.5, value=0)
+
         else:
             raise ValueError("Param %s not recognized" % param)
 

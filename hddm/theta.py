@@ -12,7 +12,7 @@ try:
 except:
     pass
 
-class HDDM_regress_multi(hddm.models.hddm_multi):
+class Theta(hddm.models.Multi):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
@@ -93,7 +93,7 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
 
         # Call parent's init.
         kwargs['model_type'] = 'simple'
-        super(HDDM_regress_multi, self).__init__(*args, **kwargs)
+        super(Theta, self).__init__(*args, **kwargs)
 
         if not self.single_effect:
             self.stims = np.unique(self.data['stim'])
@@ -114,8 +114,8 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
 
     def _set_group_params(self):
         """Set effect and group level parameters."""
-        super(HDDM_regress_multi, self)._set_group_params()
-
+        super(Theta, self)._set_group_params()
+    
         # Set effect distributions
         for effect in self.effect_on:
             if self.single_effect: # Effect should not depend on stimuli.
@@ -125,17 +125,18 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
             else:
                 stims = self.stims # Effect should depend on individual stimuli.
             for stim in stims:
-                self.group_params['e_theta_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='theta_%s_%s'%(effect, stim))
+                self.group_params['e_theta_%s_%s'%(effect,stim)] = self.param_factory.get_group_param('e', tag='theta_%s_%s'%(effect, stim))
                 if not self.ignore_dbs:
-                    self.group_params['e_inter_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='inter_%s_%s'%(effect, stim))
+                    self.group_params['e_inter_%s_%s'%(effect,stim)] = self.param_factory.get_group_param('e', tag='inter_%s_%s'%(effect, stim))
                     if not self.dbs_global:
-                        self.group_params['e_dbs_%s_%s'%(effect,stim)] = self._get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
+                        self.group_params['e_dbs_%s_%s'%(effect,stim)] = self.param_factory.get_group_param('e', tag='dbs_%s_%s'%(effect, stim))
                     else:
-                        self.group_params['e_dbs_%s'%(effect)] = self._get_group_param('e', tag='dbs_%s'%(effect))
+                        self.group_params['e_dbs_%s'%(effect)] = self.param_factory.get_group_param('e', tag='dbs_%s'%(effect))
 
 
         # Set parameter distribution classes depending on data
         for depend in self.depend_on:
+            del self.group_params[depend] # Remove parameter as we will create a new one
             if self.single_effect: # Effect should not depend on stimuli.
                 stims = ('',)
             elif depend in self.HL_on:
@@ -143,7 +144,7 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
             else:
                 stims = self.stims # param depends on individual stimuli
             for stim in stims:
-                self.group_params['%s_%s'%(depend, stim)] = self._get_group_param(depend, tag=stim) #pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
+                self.group_params['%s_%s'%(depend, stim)] = self.param_factory.get_group_param(depend, tag=stim) #pm.Uniform('%s_%s'%(depend, stim), lower=-2, upper=2)
 
         self.param_names = self.group_params.keys()
 
@@ -151,7 +152,7 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
 
     def _set_subj_params(self):
         """Set subject distributions that depend on group distributions."""
-        super(HDDM_regress_multi, self)._set_subj_params()
+        super(Theta, self)._set_subj_params()
 
         for effect in self.effect_on:
             if self.single_effect: # If effects should not depend on stimuli
@@ -161,7 +162,7 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
             else: # if effects should depend on individual stimuli
                 stims = self.stims
 
-            for i in range(self.num_subjs):
+            for i,subj_idx in enumerate(self.subjs):
                 param_names = []
                 for stim in stims:
                     param_names.append('e_theta_%s_%s'%(effect,stim))
@@ -173,8 +174,8 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
                             param_names.append('e_dbs_%s'%(effect))
 
                 for param_name in param_names:
-                    self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
-                                                                           self.group_params_tau[param_name], subj_idx=i)
+                    self.subj_params[param_name][i] = self.param_factory.get_subj_param(param_name, self.group_params[param_name],
+                                                                           self.group_params_tau[param_name], subj_idx=subj_idx)
 
 
         for depend in self.depend_on:
@@ -190,9 +191,9 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
                 # Reinit parameters as this can conflict with _get_subj_param().
                 self.subj_params[param_name] = np.empty(self.num_subjs, dtype=object)
 
-                for i in range(self.num_subjs):
-                    self.subj_params[param_name][i] = self._get_subj_param(param_name, self.group_params[param_name],
-                                                                            self.group_params_tau[param_name], subj_idx=i)
+                for i,subj_idx in enumerate(self.subjs):
+                    self.subj_params[param_name][i] = self.param_factory.get_subj_param(param_name, self.group_params[param_name],
+                                                                            self.group_params_tau[param_name], subj_idx=subj_idx)
 
     def _set_model(self):
         """Generate the HDDM."""
@@ -205,8 +206,8 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
         theta_vals = np.empty(self.num_subjs, dtype=object)
         dbs_vals = np.empty(self.num_subjs, dtype=object)
 
-        for i in range(self.num_subjs):
-            data_subj = self.data[self.data['subj_idx'] == i]
+        for i,subj_idx in enumerate(self.subjs):
+            data_subj = self.data[self.data['subj_idx'] == subj_idx]
             ddm_subjs[i] = np.empty(len(self.stims), dtype=object)
             effect_inst[i] = np.empty(len(self.stims), dtype=object)
             theta_vals[i] = np.empty(len(self.stims), dtype=object)
@@ -281,8 +282,7 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
                             e_dbs = self.subj_params['e_dbs_%s_%s'%(effect,effect_stim)][i]
                         else:
                             e_dbs = self.subj_params['e_dbs_%s'%(effect)][i]
-
-                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
+                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,stim,subj_idx),
                                                           lambda e_base = base_effect,
                                                           theta_val = theta_vals[i][j],
                                                           dbs_val = dbs_vals[i][j],
@@ -292,12 +292,11 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
                                                           e_base + theta_val*e_theta + dbs_val*e_dbs  + theta_val*dbs_val*e_inter,
                                                           trace=False)
                     else:
-                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,effect_stim,i),
-                                                      lambda e_base = base_effect,
-                                                      theta_val = theta_vals[i][j],
-                                                      e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i]:
-                                                      e_base + theta_val*e_theta,
-                                                      trace=False)
+                        effect_inst[i][j][effect] = pm.Lambda('e_inst_%s_%s_%i'%(effect,stim,subj_idx),
+                                                              lambda e_base = base_effect, theta_val = theta_vals[i][j],
+                                                              e_theta=self.subj_params['e_theta_%s_%s'%(effect,effect_stim)][i]:
+                                                              e_base + theta_val*e_theta,
+                                                              trace=False)
 
 
                 # Construct parameter set for this ddm.
@@ -332,9 +331,8 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
                     multi = self.effect_on
 
                 # Create the wiener likelihood distribution.
-
-                ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(i,j), data_stim['rt'], params, multi)
-
+                #print [p.value for p in params.itervalues() if p is not None]
+                ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(subj_idx,j), data_stim['rt'], params, multi)
 
                 idx_trl+=1
                 params_all.append(params)
@@ -345,20 +343,20 @@ class HDDM_regress_multi(hddm.models.hddm_multi):
         return self
 
     def _get_ddm(self, name, data, params, multi):
-        return WienerSimpleMulti(name,
-                                 value=data,
-                                 v=params['v'],
-                                 ter=params['t'],
-                                 a=params['a'],
-                                 z=params['z'],
-                                 multi=multi,
-                                 observed=True, trace=False)
+        return hddm.likelihoods.WienerSimpleMulti(name,
+                                                  value=data,
+                                                  v=params['v'],
+                                                  ter=params['t'],
+                                                  a=params['a'],
+                                                  z=params['z'],
+                                                  multi=multi,
+                                                  observed=True, trace=False)
 
 
-class HDDM_regress_multi_lba(HDDM_regress_multi):
+class ThetaLBA(hddm.models.Multi):
     def __init__(self, *args, **kwargs):
         kwargs['model_type'] = 'lba'
-        super(HDDM_regress_multi_lba, self).__init__(*args, **kwargs)
+        super(ThetaLBA, self).__init__(*args, **kwargs)
         
     def _get_ddm(self, name, data, params, multi):
         resps = np.double(data > 0)
@@ -461,7 +459,6 @@ def load_intraop_data(high_conf=False, continuous=True):
     
     return all_data
 
-
 def analyze_final(model, range=(-.2,.2), bins=100, e_idx=0, lower=0, upper=.3, plot_prior=True, reverse=True):
     effect_on = model.effect_on[e_idx]
     if effect_on == 'a':
@@ -482,7 +479,7 @@ def analyze_final(model, range=(-.2,.2), bins=100, e_idx=0, lower=0, upper=.3, p
     effect_types = ('theta', 'dbs', 'inter')
     sav_dick = {}
     x = np.linspace(range[0], range[1], bins)
-    prior = uniform(x, lower, upper)
+    prior = hddm.utils.uniform(x, lower, upper)
     # Get traces
     for effect_type in effect_types:
         sav_dick[effect_type] = {}
@@ -496,7 +493,7 @@ def analyze_final(model, range=(-.2,.2), bins=100, e_idx=0, lower=0, upper=.3, p
                 post_trace = model.group_params['e_%s_%s'%(effect_type,effect_on)].trace()
             else:
                 post_trace = model.group_params['e_%s_%s_%s'%(effect_type,effect_on,stim)].trace()
-            sd = savage_dickey(post_trace, range=range, bins=bins, plot=True, title=title, prior_y=prior, plot_prior=((i==0) and plot_prior), label='%s'%(stim))
+            sd = hddm.utils.savage_dickey(post_trace, range=range, bins=bins, plot=True, title=title, prior_y=prior, plot_prior=((i==0) and plot_prior), label='%s'%(stim))
             if reverse:
                 sd = 1./sd
             sav_dick[effect_type][stim] = sd

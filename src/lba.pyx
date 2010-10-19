@@ -65,7 +65,7 @@ def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter,
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = <unsigned int> value.shape[0]
     cdef unsigned int i = 0
-    cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
+    cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty_like(value)
 
     assert sv >= 0, "sv must be larger than 0"
     

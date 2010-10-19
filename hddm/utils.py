@@ -1,4 +1,6 @@
+from __future__ import division
 import numpy as np
+import matplotlib.pyplot as plt
 
 import hddm
 
@@ -264,7 +266,7 @@ def rec2csv(data, fname, sep=None):
 def csv2rec(fname):
     return np.lib.io.recfromcsv(fname)
 
-def parse_config_file(fname, load=False):
+def parse_config_file(fname, mcmc=True, load=False):
     import os.path
     if not os.path.isfile(fname):
         raise ValueError("%s could not be found."%fname)
@@ -346,11 +348,12 @@ def parse_config_file(fname, load=False):
     print "Creating model..."
     m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
 
-    if not load:
-        print "Sampling... (this can take some time)"
-        m.mcmc(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
-    else:
-        m.mcmc_load_from_db(dbname=dbname)
+    if mcmc:
+        if not load:
+            print "Sampling... (this can take some time)"
+            m.mcmc(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
+        else:
+            m.mcmc_load_from_db(dbname=dbname)
 
     return m
 
@@ -383,6 +386,20 @@ def check_geweke(model, assert_=True):
 
     return True
 
+def EZ_param_ranges(data, range_=.75):
+    v, a, t = EZ_data(data)
+    z = a/2.
+    param_ranges = {'a_lower': a-range_,
+                    'a_upper': a+range_,
+                    'z_lower': z-range_,
+                    'z_upper': z+range_,
+                    't_lower': t-range_ if (t-range_)>0 else 0.,
+                    't_upper': t+range_,
+                    'v_lower': v-range_,
+                    'v_upper': v+range_}
+
+    return param_ranges
+
 def EZ_data(data, s=1):
     """
     Calculate Wagenmaker's EZ-diffusion statistics on data.
@@ -401,18 +418,20 @@ def EZ_data(data, s=1):
     :SeeAlso: EZ
     """
 
-    if data.ndim == 2:
-        data = data['rt']
+    try:
+        rt = data['rt']
+    except ValueError:
+        rt = data
 
     # Compute statistics over data
-    idx_correct = data > 0
-    idx_error = data < 0
-    mrt = np.mean(data[idx_correct])
-    vrt = np.var(data[idx_correct])
-    pc = np.sum(idx_correct) / np.sum(idx_error)
+    idx_correct = rt > 0
+    idx_error = rt < 0
+    mrt = np.mean(rt[idx_correct])
+    vrt = np.var(rt[idx_correct])
+    pc = np.sum(idx_correct) / rt.shape[0]
 
     # Calculate EZ estimates.
-    return EZ(mrt, vrt, pc, s)
+    return EZ(pc, vrt, mrt, s)
 
 def EZ(pc, vrt, mrt, s=1):
     """
