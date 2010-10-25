@@ -198,9 +198,10 @@ def test_chain_convergance(models):
     return R_hat_param
 
 def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
+    import numpy.lib.recfunctions as rec
     pos_stims = ('A', 'C', 'E')
     neg_stims = ('B', 'D', 'F')
-    fname = 'data/gene/Gene_tst1_RT.csv'
+    fname = 'Gene_tst1_RT.csv'
     data = np.recfromcsv(fname)
     data['subj_idx'] = data['subj_idx']-1 # Offset subj_idx to start at 0
 
@@ -360,7 +361,7 @@ def parse_config_file(fname, mcmc=False, load=False):
 def posterior_predictive_check(model, data):
     params = copy(model.params_est)
     if model.model_type.startswith('simple'):
-        params['sv'] = 0.1
+        params['sv'] = 0
         params['sz'] = 0
         params['ster'] = 0
     if model.no_bias:
@@ -400,17 +401,28 @@ def EZ_subjs(data):
     # Estimate EZ parameters for each subject
     try:
         for subj in np.unique(data['subj_idx']):
-            v, a, t = EZ_data(data[data['subj_idx'] == subj])
-            params['v_%i'%subj] = v
-            params['a_%i'%subj] = a
-            params['t_%i'%subj] = t-.2 if t-.2>0 else .1
-            params['z_%i'%subj] = a/2.
+            try:
+                v, a, t = EZ_data(data[data['subj_idx'] == subj])
+                params['v_%i'%subj] = v
+                params['a_%i'%subj] = a
+                params['t_%i'%subj] = 0 #t-.2 if t-.2>0 else .1
+                params['z_%i'%subj] = a/2.
+            except ValueError:
+                # Subject either had 0%, 50%, or 100% correct, which does not work
+                # with easy. But we can deal with that by just not initializing the
+                # parameters for that one model.
+                params['v_%i'%subj] = None
+                params['a_%i'%subj] = None
+                params['t_%i'%subj] = None
+                params['z_%i'%subj] = None
+                
     except ValueError:
+        # Data array has no subj_idx -> ignore.
         pass
         
     return params
         
-def EZ_param_ranges(data, range_=.75):
+def EZ_param_ranges(data, range_=1.):
     v, a, t = EZ_data(data)
     z = a/2.
     param_ranges = {'a_lower': a-range_,
@@ -452,7 +464,7 @@ def EZ_data(data, s=1):
     idx_error = rt < 0
     mrt = np.mean(rt[idx_correct])
     vrt = np.var(rt[idx_correct])
-    pc = np.sum(idx_correct) / rt.shape[0]
+    pc = np.sum(idx_correct) / np.float(rt.shape[0])
 
     # Calculate EZ estimates.
     return EZ(pc, vrt, mrt, s)
@@ -497,10 +509,9 @@ def EZ(pc, vrt, mrt, s=1):
 
     :SeeAlso: EZ_data
     """
-    assert(pc != 0.)
-    assert(pc != .5)
-    assert(pc != 1.)
-
+    if (pc == 0 or pc == .5 or pc == 1):
+        raise ValueError('pc is either 0%, 50% or 100%')
+    
     s2 = s**2
     logit_p = np.log(pc/(1-pc))
 

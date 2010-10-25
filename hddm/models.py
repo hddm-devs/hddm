@@ -256,6 +256,8 @@ class Base(object):
 
         return self
 
+
+    
     def _gen_stats(self):
         for param_name in self.param_names:
             if param_name == 'z' and self.no_bias:
@@ -284,7 +286,7 @@ class Multi(Base):
     def __init__(self, data,
                  depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
                  trace_subjs=True, load=None, save_stats_to=None,
-                 debug=False, no_bias=True, normalize_v=True, init_EZ=True):
+                 debug=False, no_bias=True, normalize_v=True, init_EZ=True, pool_depends=True):
 
         super(Multi, self).__init__(data, save_stats_to=save_stats_to, trace_subjs=trace_subjs,
                                     debug=debug, no_bias=no_bias)
@@ -293,7 +295,7 @@ class Multi(Base):
             self.model_type = 'simple'
         else:
             self.model_type = model_type
-
+        
         self.param_factory = ParamFactory(self.model_type,
                                           data=self.data,
                                           trace_subjs=trace_subjs,
@@ -307,6 +309,8 @@ class Multi(Base):
             self.depends_on = {}
         else:
             self.depends_on = copy(depends_on)
+
+        self.pool_depends = pool_depends
 
         self.is_subj_model = is_subj_model
 
@@ -326,6 +330,7 @@ class Multi(Base):
 
         self.param_names = copy(self.group_param_names)
         self.group_params = {}
+        self.group_params_tau = {}
 
         if load:
             self.mcmc_load_from_db(dbname=load)
@@ -336,21 +341,38 @@ class Multi(Base):
             self._set_subj_params()
 
         return self
-    
+
+    def _set_dependent_group_param(self, param):
+        """Set group parameters that only depend on individual classes of data."""
+        depends_on = self.depends_on[param]
+        uniq_data_dep = np.unique(self.data[depends_on])
+
+        if self.pool_depends:
+            # Create a global parameter that is parent to all dependent group parameters.
+            self.group_params[param] = self.param_factory.get_root_param(param)
+            self.group_params_tau[param] = self.param_factory.get_tau_param(param)
+
+        for uniq_date in uniq_data_dep:
+            tag = str(uniq_date)
+            param_tag = '%s_%s'%(param, tag)
+            if self.pool_depends:
+                self.group_params[param_tag] = self.param_factory.get_child_param(param,
+                                                                                  parent_mean=self.group_params[param],
+                                                                                  parent_tau=self.group_params_tau[param],
+                                                                                  tag=tag)
+            else:
+                self.group_params[param_tag] = self.param_factory.get_root_param(param, tag=tag)
+
+        return self
+
     def _set_group_params(self):
         """Set group level distributions. One distribution for each DDM parameter."""
         for param in self.group_param_names: # Loop through param names
             if param in self.depends_on.keys():
-                # Parameter depends on data
-                depends_on = self.depends_on[param]
-                uniq_data_dep = np.unique(self.data[depends_on])
-                for uniq_date in uniq_data_dep:
-                    tag = str(uniq_date)
-                    param_tag = '%s_%s'%(param, tag)
-                    self.group_params[param_tag] = self.param_factory.get_group_param(param, tag=tag)
+                self._set_dependent_group_param(param)
             else:
                 # Parameter does not depend on data
-                self.group_params[param] = self.param_factory.get_group_param(param)
+                self.group_params[param] = self.param_factory.get_root_param(param)
         
         return self
 
@@ -360,7 +382,6 @@ class Multi(Base):
         group level parameters as their parents"""
         # For each global param, create n subj_params
         self.subj_params = {}
-        self.group_params_tau = {}
 
         # Initialize
         for param_name, param_inst in self.group_params.iteritems():
@@ -368,7 +389,7 @@ class Multi(Base):
             
         for param_name, param_inst in self.group_params.iteritems():
             # Create tau parameter for global param
-            param_inst_tau = self.param_factory.get_group_param_tau(param_name)
+            param_inst_tau = self.param_factory.get_tau_param(param_name)
             self.group_params_tau[param_name] = param_inst_tau
             # Create num_subjs individual subject ddm parameter
             for subj_idx,subj in enumerate(self.subjs):
@@ -441,7 +462,30 @@ class Multi(Base):
         
         return ddm
 
+    def summary(self, delimiter=None):
+        """Return summary statistics of the fit model."""
+        if delimiter is None:
+            delimiter = '\n'
+        
+        s = 'Model type: %s%s'%(self.model_type, delimiter)
+        for param, depends_on in self.depends_on.iteritems():
+            s+= 'DDM parameter %s depends on: %s%s' %(param, ','.join(depends_on), delimiter)
+        
+        s += delimiter + 'Mean group estimates:' + delimiter
+        for name, value in self.params_est.iteritems():
+            s += '%s: %f%s'%(name, value, delimiter)
+        s += delimiter + 'Standard deviations of group parameters:' + delimiter
+        for name, value in self.params_est_std.iteritems():
+            s += '%s: %f%s'%(name, value, delimiter)
+        s += delimiter + 'General model stats:' + delimiter
+        for name, value in self.stats.iteritems():
+            s += '%s: %f%s'%(name, value, delimiter) 
+
+        return s
+
     def _gen_stats(self):
+        """Generate summary statistics of fit model."""
+        
         for param_name in self.group_params.iterkeys():
             if param_name == 'z' and self.no_bias:
                 continue
@@ -450,20 +494,14 @@ class Multi(Base):
 
         self.stats['logp'] = self.mcmc_model.logp
         self.stats['dic'] = self.mcmc_model.dic
-        
-        # Save stats to output file
-        if self.save_stats_to is not None:
-            print "Saving stats to %s" % self.save_stats_to
-            with open(self.save_stats_to, 'w') as fd:
-                fd.write('Mean group estimates:\n')
-                for name, value in self.params_est.iteritems():
-                    fd.write('%s: %f\n'%(name, value))
-                fd.write('\nStandard deviations of group parameters:\n')
-                for name, value in self.params_est_std.iteritems():
-                    fd.write('%s: %f\n'%(name, value))
-                fd.write('\nGeneral model stats:\n')
-                for name, value in self.stats.iteritems():
-                    fd.write('%s: %f\n'%(name, value))
+
+    def save_stats(self, fname):
+        """Save stats to output file."""
+        print "Saving stats to %s" % fname
+        s = self.summary()
+        with open(fname, 'w') as fd:
+            fd.write(s)
+                
         return self
 
     def _get_analytical_lba(self, params, x):
@@ -489,21 +527,30 @@ class ParamFactory(object):
                         'lba':self._get_lba}
 
         if self.model_type != 'lba':
+            self.param_ranges = {'a_lower': .5,
+                                 'a_upper': 4.5,
+                                 'z_lower': .1,
+                                 'z_upper': 2.5,
+                                 't_lower': .1,
+                                 't_upper': 1.,
+                                 'v_lower': -3.,
+                                 'v_upper': 3.,
+                                 'T_lower': 0.,
+                                 'T_upper': 1.,
+                                 'Z_lower': 0.,
+                                 'Z_upper': 1.,
+                                 'e_lower': -.5,
+                                 'e_upper': .5
+                                 }
             if not init:
                 # Default param ranges
-                self.param_ranges = {'a_lower': 1.,
-                                     'a_upper': 3.,
-                                     'z_lower': .1,
-                                     'z_upper': 2.,
-                                     't_lower': .1,
-                                     't_upper': 1.,
-                                     'v_lower': -3.,
-                                     'v_upper': 3.}
                 self.init_params = {}
-                
             else:
                 # Compute ranges based on EZ method
-                self.param_ranges = hddm.utils.EZ_param_ranges(self.data)
+                param_ranges = hddm.utils.EZ_param_ranges(self.data)
+                # Overwrite set parameters
+                for param,value in param_ranges.iteritems():
+                    self.param_ranges[param] = value
                 self.init_params = hddm.utils.EZ_subjs(self.data)
                 
             self.normalize_v = False
@@ -532,7 +579,7 @@ class ParamFactory(object):
     def get_model(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_group_param(self, param, tag=None):
+    def get_root_param(self, param, tag=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -546,51 +593,19 @@ class ParamFactory(object):
         else:
             init_val = None
             
-        if param == 'a': # threshold
-            return pm.Uniform("a%s"%tag,
-                              lower=self.param_ranges['a_lower'],
-                              upper=self.param_ranges['a_upper'],
-                              value=init_val)
-
-        elif param.startswith('v'): # drift-rate
-            return pm.Uniform("%s%s"%(param, tag),
-                              lower=self.param_ranges['v_lower'],
-                              upper=self.param_ranges['v_upper'],
-                              value=init_val)
-        
-        elif param == 'V': # drift rate variability
+        if param == 'V' and self.fix_sv is not None: # drift rate variability
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
 
-        elif param == 'z': # starting point position (bias)
-            if self.no_bias:
-                return None # z = a/2.
-            else:
-                return pm.Uniform('z%s'%tag,
-                                  lower=self.param_ranges['z_lower'],
-                                  upper=self.param_ranges['z_upper'],
-                                  value=init_val)
-        
-        elif param == 'Z': # starting point variability
-            return pm.Uniform("Z%s"%tag, lower=0, upper=1.)
-
-        elif param == 't': # ter, non-decision time
-            return pm.Uniform("t%s"%tag,
-                              lower=self.param_ranges['t_lower'],
-                              upper=self.param_ranges['t_upper'],
-                              value=init_val)
-
-        elif param == 'T': # non-decision time variability
-            return pm.Uniform("T%s"%tag, lower=0, upper=1)
-
-        elif param == 'e': # effect on other parameter
-            return pm.Uniform("e%s"%tag, lower=-.5, upper=.5, value=0)
+        elif param == 'z' and self.no_bias: # starting point position (bias)
+            return None # z = a/2.
 
         else:
-            raise ValueError("Param %s not recognized" % param)
+            return pm.Uniform("%s%s"%(param, tag),
+                              lower=self.param_ranges['%s_lower'%param],
+                              upper=self.param_ranges['%s_upper'%param],
+                              value=init_val)
 
-        return self
-
-    def get_group_param_tau(self, param, tag=None):
+    def get_tau_param(self, param, tag=None):
         if tag is None:
             tag = '_tau'
         else:
@@ -611,66 +626,37 @@ class ParamFactory(object):
             init_val = self.init_params[init_param_name]
         else:
             init_val = None
-            
-        if param == 'a':
-            return pm.TruncatedNormal("a%s"%tag,
-                                      a=self.param_ranges['a_lower'],
-                                      b=self.param_ranges['a_upper'],
-                                      mu=parent_mean, tau=parent_tau,
-                                      plot=False, trace=self.trace_subjs,
-                                      value=init_val)
 
-        elif param.startswith('v'):
-            return pm.Normal("%s%s"%(param,tag),
-                             mu=parent_mean,
-                             tau=parent_tau, value=init_val,
-                             plot=False, trace=self.trace_subjs)
+        return self.get_child_param(param, parent_mean, parent_tau, tag=tag, init_val=init_val)
 
-        elif param == 'V':
+    def get_child_param(self, param, parent_mean, parent_tau, tag=None, init_val=None):
+        if tag is None:
+            tag = ''
+
+        if not tag.startswith('_'):
+            tag = '_'+tag
+    
+        if param == 'V' and self.fix_sv is not None:
             return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
                              plot=False, trace=self.trace_subjs)
 
-        elif param == 'z':
-            if self.no_bias:
-                return None
-            else:
-                return pm.TruncatedNormal('z%s'%tag,
-                                          a=self.param_ranges['z_lower'],
-                                          b=self.param_ranges['z_upper'],
-                                          mu=parent_mean, tau=parent_tau,
-                                          plot=False, trace=self.trace_subjs,
-                                          value=init_val)
+        elif param == 'z' and self.no_bias:
+            return None
 
-        elif param == 'Z':
-            return pm.TruncatedNormal("Z%s"%tag,
-                                      a=0, b=1.,
-                                      mu=parent_mean,
-                                      tau=parent_tau,
-                                      plot=False, trace=self.trace_subjs)
-
-        elif param == 't':
-            return pm.TruncatedNormal("t%s"%tag,
-                                      a=self.param_ranges['t_lower'],
-                                      b=self.param_ranges['t_upper'],
-                                      mu=parent_mean, tau=parent_tau,
-                                      observed=False, plot=False, trace=self.trace_subjs,
-                                      value=init_val)
-
-        elif param == 'T':
-            return pm.TruncatedNormal("T%s"%tag,
-                                      a=0, b=1,
-                                      mu=parent_mean,
-                                      tau=parent_tau,
-                                      plot=False, trace=self.trace_subjs)
-
-        elif param == 'e':
-            return pm.Normal("e%s"%tag,
+        elif param == 'e' or param.startswith('v'):
+            return pm.Normal("%s%s"%(param,tag),
                              mu=parent_mean,
                              tau=parent_tau,
-                             plot=False, trace=self.trace_subjs)
+                             plot=False, trace=self.trace_subjs,
+                             value=init_val)
 
         else:
-            raise ValueError("Param %s not recognized" % param)
+            return pm.TruncatedNormal("%s%s"%(param,tag),
+                                      a=self.param_ranges['%s_lower'%param],
+                                      b=self.param_ranges['%s_upper'%param],
+                                      mu=parent_mean, tau=parent_tau,
+                                      plot=False, trace=self.trace_subjs,
+                                      value=init_val)
 
 
 
@@ -684,7 +670,6 @@ class ParamFactory(object):
                                                 z=params['z'],
                                                 observed=True)
         else:
-            hddm.debug_here()
             return hddm.likelihoods.WienerSimple(name,
                                 value=data['rt'].flatten(), 
                                 v=params['v'][idx], 
@@ -721,7 +706,7 @@ class ParamFactory(object):
                              ter=params['t'],
                              ster=params['T'], 
                              a=params['a'],
-                             z=params['a']/2.,
+                             z=params['z'],
                              sz=params['Z'],
                              observed=True)
 

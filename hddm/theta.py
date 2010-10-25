@@ -317,26 +317,28 @@ class Theta(hddm.models.Multi):
                         depend_stim = stim_HL
                     else:
                         depend_stim = stim
-                    #params['z'] = None #self.subj_params['a_%s'%(depend_stim)][i]/2.
 
                 # Overwrite effect distribution
-                for effect in self.effect_on:
-                    params[effect] = effect_inst[i][j][effect]
-
-                if 'a' in self.effect_on and self.no_bias:
-                    #params['z'] = None #effect_inst[i][j][effect]/2.
-                    multi = list(self.effect_on)+['z']
+                if len(self.effect_on) != 0:
+                    for effect in self.effect_on:
+                        params[effect] = effect_inst[i][j][effect]
+                        
+                    if 'a' in self.effect_on and self.no_bias:
+                        multi = list(self.effect_on)+['z']
+                    else:
+                        multi = self.effect_on
+                    
+                    # Create the wiener likelihood distribution.
+                    #print [p.value for p in params.itervalues() if p is not None]
+                    ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(subj_idx,j), data_stim['rt'], params, multi)
                 else:
-                    #params['z'] = params['a']/2.
-                    multi = self.effect_on
-
-                # Create the wiener likelihood distribution.
-                #print [p.value for p in params.itervalues() if p is not None]
-                ddm_subjs[i][j] = self._get_ddm("ddm_%i_%i"%(subj_idx,j), data_stim['rt'], params, multi)
+                    ddm_subjs[i][j] = self.param_factory._get_simple("ddm_%i_%i"%(subj_idx,j), data_stim, params)
 
                 idx_trl+=1
                 params_all.append(params)
 
+        self.ddm = ddm_subjs
+        
         # Combine all parameters
         self.model = self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + [ddm_subjs] + params_all
 
@@ -353,6 +355,34 @@ class Theta(hddm.models.Multi):
                                                   observed=True, trace=False)
 
 
+    def plot(self):
+        for i,stim in enumerate(self.stims):
+            # Plot data
+            x = np.linspace(-5,5,100)
+            data = self.data['rt'][self.data['stim']==stim]
+            hist = np.histogram(data, range=(-5,5), bins=100)
+            plt.plot(x, hist, color=self.colors[i], label=stim)
+
+            # Plot estimates
+            x = np.linspace(-5,5,300)
+            params = {}
+            for name, param in self.subj_params.iteritems():
+                params[name] = param[i]
+
+                # Overwrite depend on distribution
+                for depend in self.depend_on:
+                    if depend in self.HL_on:
+                        depend_stim = stim_HL
+                    else:
+                        depend_stim = stim
+                    params[depend] = self.subj_params['%s_%s'%(depend, depend_stim)][i]
+            for depend in self.depend_on:
+                analytical = hddm.wfpt.pdf_array(x, v=self.params_est['v_%'%stim], a=self.params_est['a_%s'%stim], z=self.params_est['a_%s'%stim]/2.,
+                                                 ter=self.params_est['ter_%'%stim], err=0.0001)
+            plt.plot(x, analytical, '--', color=self.colors[i], label='%s pdf'%stim)
+        
+        plt.legend()
+            
 class ThetaLBA(hddm.models.Multi):
     def __init__(self, *args, **kwargs):
         kwargs['model_type'] = 'lba'
