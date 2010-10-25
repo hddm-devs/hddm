@@ -605,11 +605,7 @@ class ParamFactory(object):
                               upper=self.param_ranges['%s_upper'%param],
                               value=init_val)
 
-<<<<<<< .mine
-    def get_group_param_tau(self, param, tag=None):
-=======
     def get_tau_param(self, param, tag=None):
->>>>>>> .r51
         if tag is None:
             tag = '_tau'
         else:
@@ -630,10 +626,6 @@ class ParamFactory(object):
             init_val = self.init_params[init_param_name]
         else:
             init_val = None
-<<<<<<< .mine
-            
-        if param == 'V' and self.fix_sv is not None:
-=======
 
         return self.get_child_param(param, parent_mean, parent_tau, tag=tag, init_val=init_val)
 
@@ -645,7 +637,6 @@ class ParamFactory(object):
             tag = '_'+tag
     
         if param == 'V' and self.fix_sv is not None:
->>>>>>> .r51
             return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
                              plot=False, trace=self.trace_subjs)
 
