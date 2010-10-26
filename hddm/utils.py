@@ -6,6 +6,10 @@ import hddm
 
 def flip_errors(data):
     """Flip sign for lower boundary responses."""
+    # Check if data is already flipped
+    if np.any(data['rt'] < 0):
+        return data
+    
     # Copy data
     data = np.array(data)
     # Flip sign for lower boundary responses

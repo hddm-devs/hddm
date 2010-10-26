@@ -44,13 +44,64 @@ def analyze_regress(posterior_trace, x_range=(-.5, .5), bins=100, plot=True):
 
     return sav_dick
 
-class TestHDDM(unittest.TestCase):
+class TestMulti(unittest.TestCase):
+    def runTest(self):
+        pass
+
+    def create_multi_data(self, params1, params2, samples=1000, subj=False, num_subjs=10.):
+        import numpy.lib.recfunctions as rec
+
+        if not subj:
+            data1 = hddm.generate.gen_rts(params1, structured=True, samples=samples)
+            data2 = hddm.generate.gen_rts(params2, structured=True, samples=samples)
+        else:
+            data1 = gen_rand_subj_data(num_subjs=num_subjs, params=params1, samples=samples/num_subjs, gen_data=True, add_noise=True, tag=None)[0]
+            data2 = gen_rand_subj_data(num_subjs=num_subjs, params=params2, samples=samples/num_subjs, gen_data=True, add_noise=True, tag=None)[0]
+           
+        # Add stimulus field
+        data1 = rec.append_fields(data1, names='stim', data=np.zeros(data1.shape[0]), dtypes='i8', usemask=False)
+        data2 = rec.append_fields(data2, names='stim', data=np.ones(data2.shape[0]), dtypes='i8', usemask=False)
+
+        data = rec.stack_arrays((data1, data2), usemask=False)
+
+        return data
+
+    def diff_model(self, param, subj=True, num_subjs=10, change=.5, samples=10000, pool_depends=True):
+        params1 = {'v':.5, 'a':2., 'z':1., 'ter': .3, 'ster':0., 'sv':0., 'sz':0.}
+        params2 = copy(params1)
+        params2[param] = params1[param]+change
+
+        data = self.create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
+
+        model = hddm.models.Multi(data, depends_on={param:['stim']}, is_subj_model=subj, pool_depends=pool_depends)
+        model.mcmc()
+
+        print model.summary()
+        return model
+
+    def test_diff_v_pool(self, samples=1000):
+        m = self.diff_model('v', subj=False, change=.5, pool_depends=True, samples=samples)
+        return m
+    
+    def test_diff_v_nopool(self, samples=1000):
+        m = self.diff_model('v', subj=False, change=.5, pool_depends=False, samples=samples)
+        return m
+    
+    def test_diff_a_subj_nopool(self, samples=10000):
+        m = self.diff_model('a', subj=True, change=-.5, pool_depends=False, samples=samples)
+        return m
+        
+    def test_diff_a_subj_pool(self, samples=10000):
+        m = self.diff_model('a', subj=True, change=-.5, pool_depends=True, samples=samples)
+        return m
+    
+class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestHDDM, self).__init__(*args, **kwargs)
         gen_data = False
         self.data, self.params_true = gen_rand_data(gen_data=gen_data, tag='global_test')
-        self.data_subj, self.params_true_subj = gen_rand_subj_data(gen_data=gen_data, num_samples=300, add_noise=False, tag='subj_test')
-        self.data_basic, self.params_true_basic = gen_rand_data(gen_data=gen_data, num_samples=2000, no_var=True, tag='global_basic_test')
+        self.data_subj, self.params_true_subj = gen_rand_subj_data(gen_data=gen_data, samples=300, add_noise=False, tag='subj_test')
+        self.data_basic, self.params_true_basic = gen_rand_data(gen_data=gen_data, samples=2000, no_var=True, tag='global_basic_test')
         
         self.assert_ = True
         
@@ -76,6 +127,9 @@ class TestHDDM(unittest.TestCase):
         self.samples = 10000
         self.burn = 5000
 
+
+        
+        
     def test_basic(self):
         model = hddm.models.Multi(self.data_basic, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)

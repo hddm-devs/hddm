@@ -330,8 +330,10 @@ class Multi(Base):
 
         self.param_names = copy(self.group_param_names)
         self.group_params = {}
+        self.root_params = {}
         self.group_params_tau = {}
-
+        self.root_params_tau = {}
+        
         if load:
             self.mcmc_load_from_db(dbname=load)
 
@@ -349,17 +351,18 @@ class Multi(Base):
 
         if self.pool_depends:
             # Create a global parameter that is parent to all dependent group parameters.
-            self.group_params[param] = self.param_factory.get_root_param(param)
-            self.group_params_tau[param] = self.param_factory.get_tau_param(param)
+            self.root_params[param] = self.param_factory.get_root_param(param)
+            self.root_params_tau[param] = self.param_factory.get_tau_param(param)
 
         for uniq_date in uniq_data_dep:
             tag = str(uniq_date)
             param_tag = '%s_%s'%(param, tag)
             if self.pool_depends:
                 self.group_params[param_tag] = self.param_factory.get_child_param(param,
-                                                                                  parent_mean=self.group_params[param],
-                                                                                  parent_tau=self.group_params_tau[param],
-                                                                                  tag=tag)
+                                                                                  parent_mean=self.root_params[param],
+                                                                                  parent_tau=self.root_params_tau[param],
+                                                                                  tag=tag,
+                                                                                  plot=True)
             else:
                 self.group_params[param_tag] = self.param_factory.get_root_param(param, tag=tag)
 
@@ -414,9 +417,10 @@ class Multi(Base):
 
         # Set and return all distributions belonging to the DDM.
         if self.is_subj_model:
-            self.model = ddm + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values()
+            self.model = ddm + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + \
+                         self.root_params.values() + self.root_params_tau.values()
         else:
-            self.model = ddm + self.group_params.values()
+            self.model = ddm + self.group_params.values() + self.root_params.values() + self.root_params_tau.values()
 
         return self
         
@@ -466,25 +470,41 @@ class Multi(Base):
         """Return summary statistics of the fit model."""
         if delimiter is None:
             delimiter = '\n'
-        
+
         s = 'Model type: %s%s'%(self.model_type, delimiter)
         for param, depends_on in self.depends_on.iteritems():
-            s+= 'DDM parameter %s depends on: %s%s' %(param, ','.join(depends_on), delimiter)
-        
-        s += delimiter + 'Mean group estimates:' + delimiter
-        for name, value in self.params_est.iteritems():
-            s += '%s: %f%s'%(name, value, delimiter)
-        s += delimiter + 'Standard deviations of group parameters:' + delimiter
-        for name, value in self.params_est_std.iteritems():
-            s += '%s: %f%s'%(name, value, delimiter)
+            s+= 'DDM parameter "%s" depends on: %s%s' %(param, ','.join(depends_on), delimiter)
+
         s += delimiter + 'General model stats:' + delimiter
         for name, value in self.stats.iteritems():
             s += '%s: %f%s'%(name, value, delimiter) 
 
+        s += delimiter + 'Group parameter\t\t\tMean\t\tStd' + delimiter
+        for name, value in self.params_est.iteritems():
+            s += '%s\t\t\t\t%f\t%f%s'%(name, value, self.params_est_std[name], delimiter)
+
         return s
 
+    def summary_subjs(self, delimiter=None):
+        if delimiter is None:
+            delimiter = '\n'
+
+        s = 'Group parameter\t\t\tMean\t\tStd' + delimiter
+        for subj, params in self.params_est_subj.iteritems():
+            s += 'Subject: %i%s' % (subj, delimiter)
+            for name,value in params.iteritems():
+                s += '%s\t\t\t\t%f\t%f%s'%(name, value, self.params_est_subj_std[subj][name], delimiter)
+            s += delimiter
+            
+        return s
+    
     def _gen_stats(self):
         """Generate summary statistics of fit model."""
+        self.stats['logp'] = self.mcmc_model.logp
+        self.stats['dic'] = self.mcmc_model.dic
+
+        self.params_est_subj = {}
+        self.params_est_subj_std = {}
         
         for param_name in self.group_params.iterkeys():
             if param_name == 'z' and self.no_bias:
@@ -492,8 +512,27 @@ class Multi(Base):
             self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
             self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
 
-        self.stats['logp'] = self.mcmc_model.logp
-        self.stats['dic'] = self.mcmc_model.dic
+        for param_name in self.root_params.iterkeys():
+            if param_name == 'z' and self.no_bias:
+                continue
+            self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
+            self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
+
+        if self.trace_subjs and self.is_subj_model:
+            for name,params in self.subj_params.iteritems():
+                for subj_idx,subj_dist in enumerate(params):
+                    if not self.params_est_subj.has_key(subj_idx):
+                        # Init
+                        self.params_est_subj[subj_idx] = {}
+                        self.params_est_subj_std[subj_idx] = {}
+
+                    if subj_dist is None:
+                        continue # z is none in non-bias case
+
+                    self.params_est_subj[subj_idx][name] = np.mean(subj_dist.trace())
+                    self.params_est_subj_std[subj_idx][name] = np.std(subj_dist.trace())
+            
+        
 
     def save_stats(self, fname):
         """Save stats to output file."""
@@ -629,7 +668,7 @@ class ParamFactory(object):
 
         return self.get_child_param(param, parent_mean, parent_tau, tag=tag, init_val=init_val)
 
-    def get_child_param(self, param, parent_mean, parent_tau, tag=None, init_val=None):
+    def get_child_param(self, param, parent_mean, parent_tau, tag=None, init_val=None, plot=False):
         if tag is None:
             tag = ''
 
@@ -638,7 +677,7 @@ class ParamFactory(object):
     
         if param == 'V' and self.fix_sv is not None:
             return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
-                             plot=False, trace=self.trace_subjs)
+                             plot=plot, trace=self.trace_subjs)
 
         elif param == 'z' and self.no_bias:
             return None
@@ -647,7 +686,7 @@ class ParamFactory(object):
             return pm.Normal("%s%s"%(param,tag),
                              mu=parent_mean,
                              tau=parent_tau,
-                             plot=False, trace=self.trace_subjs,
+                             plot=plot, trace=self.trace_subjs,
                              value=init_val)
 
         else:
@@ -655,7 +694,7 @@ class ParamFactory(object):
                                       a=self.param_ranges['%s_lower'%param],
                                       b=self.param_ranges['%s_upper'%param],
                                       mu=parent_mean, tau=parent_tau,
-                                      plot=False, trace=self.trace_subjs,
+                                      plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
 

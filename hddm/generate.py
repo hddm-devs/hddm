@@ -14,7 +14,7 @@ except:
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, steps=1000, T=5, structured=False, subj_idx=None):
+def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=None):
     dt = steps / T
     drifts = simulate_drifts(params, samples, steps, T)
     rts = find_thresholds(drifts, params['a'])/dt
