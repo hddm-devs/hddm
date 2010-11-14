@@ -67,6 +67,14 @@ class Base(object):
 
         return pdf
 
+    def _get_histo(self, data, x, interpolate=False, k=2):
+        if interpolate:
+            histo_upper = InterpolatedUnivariateSpline(x, np.histogram(resps_upper, bins=bins, range=hrange)[0], k=k)(xs)
+            histo_lower = InterpolatedUnivariateSpline(x, np.histogram(resps_lower, bins=bins, range=hrange)[0], k=k)(xs)
+        else:
+            histo_upper = np.histogram(resps_upper, bins=bins, range=hrange)[0]
+            histo_lower = np.histogram(resps_lower, bins=bins, range=hrange)[0]
+
     def _plot(self, resps_upper, resps_lower, bins=40, hrange=(0,4), params=None, params_true=None, reps=100, title=None, label=None, c1=None, c2=None, plot_estimated=True, interpolate=False, k=2):
         """Plot real and estimated RT model. A set of parameters (params) may be provided."""
         import scipy.interpolate
@@ -86,12 +94,6 @@ class Base(object):
         xs = np.linspace(hrange[0], hrange[1], bins*10)
         xs_br = np.linspace(-hrange[1], hrange[1], bins*20)
 
-        if interpolate:
-            histo_upper = InterpolatedUnivariateSpline(x, np.histogram(resps_upper, bins=bins, range=hrange)[0], k=k)(xs)
-            histo_lower = InterpolatedUnivariateSpline(x, np.histogram(resps_lower, bins=bins, range=hrange)[0], k=k)(xs)
-        else:
-            histo_upper = np.histogram(resps_upper, bins=bins, range=hrange)[0]
-            histo_lower = np.histogram(resps_lower, bins=bins, range=hrange)[0]
 
         histo = np.concatenate((histo_lower[::-1], histo_upper))
         if interpolate:
@@ -177,12 +179,14 @@ class Base(object):
             # Take the traces from the database and feed them into our
             # distribution variables (needed for _gen_stats())
             self._set_traces(self.group_params)
+            self._gen_stats()
             
             if self.is_subj_model:
                 self._set_traces(self.group_params_tau)
                 self._set_traces(self.subj_params)
+                self._gen_stats_subjs()
 
-            self._gen_stats()
+            
             
         return self
     
@@ -195,7 +199,9 @@ class Base(object):
             raise NameError("mcmc_model not set, call ._prepare()")
 
         self._gen_stats()
-
+        if self.is_subj_model:
+            self._gen_stats_subjs()
+            
         if dbname is not None:
             self.mcmc_model.db.commit()
 
@@ -252,11 +258,7 @@ class Base(object):
         """
         # Set up model
         self._prepare(dbname=dbname, load=True)
-
-
         return self
-
-
     
     def _gen_stats(self):
         for param_name in self.param_names:
@@ -273,6 +275,9 @@ class Base(object):
                     fd.write('%s: %f\n'%(name, value))
                     
         return self
+
+    def _gen_stats_subjs(self):
+        raise NotImplementedError, "Model has no subject capabilites"
 
 class Multi(Base):
     """Hierarchical Drift-Diffusion Model.
@@ -404,66 +409,102 @@ class Multi(Base):
     
     def _set_model(self):
         """Create and set up the complete DDM."""
+        data_dep = self._get_data_depend()
+
+        self.ddm = []
+        
+        for i, (data, params, param_name) in enumerate(data_dep):
+            self.ddm.append(self._create_ddm(data, params, i))
+            
+        # Set and return all distributions belonging to the DDM.
         if self.is_subj_model:
+            self.model = self.ddm + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + self.root_params.values() + self.root_params_tau.values()
+        else:
+            self.model = self.ddm + self.group_params.values() + self.root_params.values() + self.root_params_tau.values()
+
+        return self
+        
+
+    def _get_data_depend(self, get_group_params=False):
+        if self.is_subj_model and not get_group_params:
             params = copy(self.subj_params) # use subj parameters to feed into ddm 
         else:
             params = copy(self.group_params) # use group parameters to feed into ddm
 
-        self.idx = 0 # DDM counter
-
-        # call recursive function to create dependency model
         depends_on = copy(self.depends_on)
-        ddm = self._set_model_rec(data=self.data, depends_on=depends_on, params=params)
 
-        # Set and return all distributions belonging to the DDM.
-        if self.is_subj_model:
-            self.model = ddm + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + \
-                         self.root_params.values() + self.root_params_tau.values()
-        else:
-            self.model = ddm + self.group_params.values() + self.root_params.values() + self.root_params_tau.values()
+        data_dep = self._get_data_depend_rec(self.data, depends_on, params)
 
-        return self
-        
-    def _set_model_rec(self, data, depends_on, params):
-        """Recursive function called by _set_model() to generate the DDM."""
+        return data_dep
+    
+    def _get_data_depend_rec(self, data, depends_on, params, param_name=None):
+        """Recursive function partition data and params depending on classes (i.e. depends_on)."""
         if depends_on: # If depends are present
-            ddm_list = []
+            data_params = []
             param_name = depends_on.keys()[0] # Get first param from depends_on
-            depends_on_col = depends_on.pop(param_name) # Take out param
-            depend_elements = np.unique(data[depends_on_col])
+            col_name = depends_on.pop(param_name) # Take out param
+            depend_elements = np.unique(data[col_name])
             for depend_element in depend_elements:
-                data_dep = data[data[depends_on_col] == depend_element]
+                data_dep = data[data[col_name] == depend_element]
                 # Set the appropriate param
                 if self.is_subj_model:
                     params[param_name] = self.subj_params[param_name+'_'+str(depend_element)]
                 else:
                     params[param_name] = self.group_params[param_name+'_'+str(depend_element)]
                 # Recursive call with one less dependency and the sliced data.
-                ddm = self._set_model_rec(data_dep, depends_on=depends_on, params=params)
-                ddm_list += ddm
-            return ddm_list
+                data_param = self._get_data_depend_rec(data_dep, depends_on=depends_on, params=copy(params), param_name=param_name+'_'+str(depend_element))
+                data_params += data_param
+            return data_params
                 
         else: # Data does not depend on anything (anymore)
-            ddm = self._create_ddm(data, params)
-            return [ddm]
+            return [(data, params, param_name)]
 
-    def _plot(self):
-        raise NotImplementedError("TODO")
+    def _plot(self, bins=50, range=(-5.,5.)):
+        plt.figure()
+        x = np.linspace(-5,5,100)
+        data_deps = self._get_data_depend(get_group_params=True)
 
-    def _create_ddm(self, data, params):
-        """Create and return a DDM on [data] with [params].
+        size = int(np.ceil(np.sqrt(len(data_deps))))
+        for i,(data, params, param_name) in enumerate(data_deps):
+            plt.subplot(size,size,i+1)
+            
+            # Plot data
+            x_data = np.linspace(range[0], range[1], bins)
+            data_histo = np.histogram(data['rt'], bins=bins, range=range)[0]
+            plt.plot(x_data, hddm.utils.scale(data_histo), color='b', lw=2., label='data')
+
+            # Plot analytical
+            if self.no_bias:
+                z = np.mean(params['a'].trace())/2.
+            else:
+                z = np.mean(params['z'].trace())
+            analytical = hddm.wfpt.pdf_array(x,
+                                             v=np.mean(params['v'].trace()),
+                                             a=np.mean(params['a'].trace()),
+                                             z=z,
+                                             ter=np.mean(params['t'].trace()),
+                                             err=0.0001)
+                    
+            plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)
+
+            [ytick.set_visible(False) for ytick in plt.yticks()[1]] # Turn y ticks off
+            plt.xlim(range)
+            plt.title(param_name)
+            if i==0:
+                plt.legend(loc=0)
+
+    def _create_ddm(self, data, params, idx):
+        """Create and creturn a DDM on [data] with [params].
         """
         if self.is_subj_model:
             ddm = np.empty(self.num_subjs, dtype=object)
             for i,subj in enumerate(self.subjs):
                 data_subj = data[data['subj_idx'] == subj] # Select data belong to subj
 
-                ddm = self.param_factory.get_model("ddm_%i_%i"%(self.idx, i), data_subj, params, idx=i)
+                ddm = self.param_factory.get_model("ddm_%i_%i"%(idx, i), data_subj, params, idx=i)
         else: # Do not use subj params, but group ones
-            ddm = self.param_factory.get_model("ddm_%i"%self.idx, data, params)
+            ddm = self.param_factory.get_model("ddm_%i"%idx, data, params)
 
-        self.idx+=1
-        
         return ddm
 
     def summary(self, delimiter=None):
@@ -518,20 +559,28 @@ class Multi(Base):
             self.params_est[param_name] = np.mean(self.mcmc_model.trace(param_name)())
             self.params_est_std[param_name] = np.std(self.mcmc_model.trace(param_name)())
 
-        if self.trace_subjs and self.is_subj_model:
-            for name,params in self.subj_params.iteritems():
-                for subj_idx,subj_dist in enumerate(params):
-                    if not self.params_est_subj.has_key(subj_idx):
-                        # Init
-                        self.params_est_subj[subj_idx] = {}
-                        self.params_est_subj_std[subj_idx] = {}
+        return self
+    
+    def _gen_stats_subjs(self):
+        if not (self.trace_subjs or self.is_subj_model):
+            return self
 
-                    if subj_dist is None:
-                        continue # z is none in non-bias case
+        # Initialize params_est_subj arrays
+        for subj_idx in range(self.num_subjs):
+            if not self.params_est_subj.has_key(subj_idx):
+                self.params_est_subj[subj_idx] = {}
+                self.params_est_subj_std[subj_idx] = {}
 
-                    self.params_est_subj[subj_idx][name] = np.mean(subj_dist.trace())
-                    self.params_est_subj_std[subj_idx][name] = np.std(subj_dist.trace())
-            
+        # Generate stats
+        for name,params in self.subj_params.iteritems():
+            for subj_idx,subj_dist in enumerate(params):
+                if subj_dist is None:
+                    continue # z is none in non-bias case
+
+                self.params_est_subj[subj_idx][name] = np.mean(subj_dist.trace())
+                self.params_est_subj_std[subj_idx][name] = np.std(subj_dist.trace())
+
+        return self
         
 
     def save_stats(self, fname):

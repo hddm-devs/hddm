@@ -16,8 +16,10 @@ import subprocess
 import pymc as pm
 
 import hddm
+
 from hddm.likelihoods import *
 from hddm.generate import *
+
 
 def scale(x):
     return (x-np.min(x))/(np.max(x)-np.min(x))

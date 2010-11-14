@@ -10,17 +10,17 @@ underlying psychological process has the intriguing property of
 reproducing the full shape of reaction times in simple decision making
 tasks.
 
-Hierarchical bayesian estimation methods are quickly gaining
-popularity in cognitive sciences. Traditionally, models where
-either fit separately to individual subjects (thus not taking
-similarities of subjects into account) or to the whole group (thus not
-taking differences of subjects into account). Hierarchical bayesian
-methods provide a remedy for this problem by allowing group and
-subject parameters to be estimated simultaniously at different
-hierarchies. In essence, subject parameters are assumed to come from a
-group distribution. Markov-Chain Monte Carlo (MCMC) methods allow the
-estimation of these distributions. In addition, because these methods
-are bayesian they deal naturally with uncertainty and variability.
+Hierarchical bayesian methods are quickly gaining popularity in
+cognitive sciences. Traditionally, models where either fit separately
+to individual subjects (thus not taking similarities of subjects into
+account) or to the whole group (thus not taking differences of
+subjects into account). Hierarchical bayesian methods provide a remedy
+for this problem by allowing group and subject parameters to be
+estimated simultaniously at different hierarchies. In essence, subject
+parameters are assumed to come from a group distribution. Sampling
+methods such as Markov-Chain Monte Carlo (MCMC) allow the estimation
+of these distributions. In addition, because these methods are
+bayesian they deal naturally with uncertainty and variability.
 
 HDDM_ (Hierarchical Drift Diffusion Modeling) is an open-source
 software package written in Python_ which allows (i) the construction
@@ -55,7 +55,7 @@ non-decision time.
 Ratcliff Drift Diffusion Model
 ------------------------------
 
-The Ratcliff DDM models decision making in two-choice tasks -- each
+The Ratcliff DDM models decision making in two-choice tasks. Each
 choice is represented as and upper and lower boundary. A drift process
 accumulates evidence over time until it crosses one of the two
 boundaries and initiates the corresponding response. Because there is
@@ -68,7 +68,7 @@ simple DDM.
 
 Early on, Ratcliff noticed that this simple DDM could not account for
 two phenomena observed in decision making -- early and late
-errors. This lead to inclusion of intertrial variability in the
+errors. This lead to the inclusion of inter-trial variability in the
 drift-rate, the non-decision time and the starting point. Models that
 take this into account are henceforth called full DDM.
 
@@ -76,10 +76,20 @@ take this into account are henceforth called full DDM.
 Linear Ballistic Accumulator
 ----------------------------
 
+While the Linear Ballistic Accumulator (LBA) model also belongs to the
+class of drift models, it separates itself from the Ratcliff DDM in
+multiple ways. First, instead of one drift process and two boundaries,
+the LBA contains one drift process for each response. Thus, the LBA
+can model decision making when more than two responses are possible
+
+Moreover, unlike the DDM, the LBA drift process has no intra-trial
+variance. RT variability is obtained by including inter-trial
+variability in the drift-rate and the starting point distribution.
 
 ------------------------------
 Hierarchical Bayesian Modeling
 ------------------------------
+
 
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/

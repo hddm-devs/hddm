@@ -7,4 +7,4 @@ if __name__=='__main__':
         print "hddm <filename>"
         sys.exit(-1)
         
-    hddm.utils.parse_config_file(sys.argv[1])
+    hddm.utils.parse_config_file(sys.argv[1], mcmc=True)

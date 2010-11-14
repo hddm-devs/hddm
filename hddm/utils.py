@@ -351,7 +351,7 @@ def parse_config_file(fname, mcmc=False, load=False):
         verbose = 0
 
     print "Creating model..."
-    m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, save_stats_to=save, debug=debug)
+    m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
 
     if mcmc:
         if not load:
@@ -360,6 +360,9 @@ def parse_config_file(fname, mcmc=False, load=False):
         else:
             m.mcmc_load_from_db(dbname=dbname)
 
+    if save:
+        m.save_stats(save)
+        
     return m
 
 def posterior_predictive_check(model, data):

@@ -354,7 +354,6 @@ class Theta(hddm.models.Multi):
                                                   multi=multi,
                                                   observed=True, trace=False)
 
-
     def plot(self):
         for i,stim in enumerate(self.stims):
             # Plot data
