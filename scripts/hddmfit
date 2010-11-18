@@ -1,10 +1,10 @@
 #!/usr/bin/python
-import hddm
 
 if __name__=='__main__':
+    import hddm
     import sys
+    import os
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
         print "hddm <filename>"
         sys.exit(-1)
-        
-    hddm.utils.parse_config_file(sys.argv[1], mcmc=True)
+    hddm.utils.parse_config_file(sys.argv[1], mcmc=True) 

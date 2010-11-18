@@ -284,8 +284,13 @@ def parse_config_file(fname, mcmc=False, load=False):
     #####################################################
     # Parse config file
     data_fname = config.get('data', 'load')
-    save = config.get('data', 'save')
-    #format_ = config.get('data', 'format')
+    if not os.path.exists(data_fname):
+        raise IOError, "Data file %s not found."%data_fname
+
+    try:
+        save = config.get('data', 'save')
+    except ConfigParser.NoOptionError:
+        save = False
 
     data = np.recfromcsv(data_fname)
     
@@ -362,6 +367,8 @@ def parse_config_file(fname, mcmc=False, load=False):
 
     if save:
         m.save_stats(save)
+    else:
+        print m.summary()
         
     return m
 
