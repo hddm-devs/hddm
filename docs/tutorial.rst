@@ -154,6 +154,5 @@ After calling HDDM this is what the output looks like:
     v					0.750207	0.208061
 
 
-
 Specifiying Models in Python
 ============================

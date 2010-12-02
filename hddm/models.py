@@ -414,6 +414,7 @@ class Multi(Base):
         self.ddm = []
         
         for i, (data, params, param_name) in enumerate(data_dep):
+            hddm.debug_here()
             self.ddm.append(self._create_ddm(data, params, i))
             
         # Set and return all distributions belonging to the DDM.
@@ -438,8 +439,9 @@ class Multi(Base):
         return data_dep
     
     def _get_data_depend_rec(self, data, depends_on, params, param_name=None):
-        """Recursive function partition data and params depending on classes (i.e. depends_on)."""
-        if depends_on: # If depends are present
+        """Recursive function to partition data and params depending on classes (i.e. depends_on)."""
+        #hddm.debug_here()
+        if len(depends_on) != 0: # If depends are present
             data_params = []
             param_name = depends_on.keys()[0] # Get first param from depends_on
             col_name = depends_on.pop(param_name) # Take out param
@@ -452,7 +454,7 @@ class Multi(Base):
                 else:
                     params[param_name] = self.group_params[param_name+'_'+str(depend_element)]
                 # Recursive call with one less dependency and the sliced data.
-                data_param = self._get_data_depend_rec(data_dep, depends_on=depends_on, params=copy(params), param_name=param_name+'_'+str(depend_element))
+                data_param = self._get_data_depend_rec(data_dep, depends_on=copy(depends_on), params=copy(params), param_name=param_name+'_'+str(depend_element))
                 data_params += data_param
             return data_params
                 
@@ -499,9 +501,9 @@ class Multi(Base):
         if self.is_subj_model:
             ddm = np.empty(self.num_subjs, dtype=object)
             for i,subj in enumerate(self.subjs):
-                data_subj = data[data['subj_idx'] == subj] # Select data belong to subj
+                data_subj = data[data['subj_idx'] == subj] # Select data belonging to subj
 
-                ddm = self.param_factory.get_model("ddm_%i_%i"%(idx, i), data_subj, params, idx=i)
+                ddm[i] = self.param_factory.get_model("ddm_%i_%i"%(idx, i), data_subj, params, idx=i)
         else: # Do not use subj params, but group ones
             ddm = self.param_factory.get_model("ddm_%i"%idx, data, params)
 
@@ -1011,7 +1013,6 @@ class MultiEffect(Multi):
                 data_dep = data[data[depends_on_col] == depend_element]
                 # Set the appropriate param
                 if self.is_subj_model:
-                    debug_here()
                     effect_name = 'e_det_%s_%s_%s'%(param_name[0], depends_on_col, depend_element)
                     if not self.subj_params.has_key(effect_name):
                         # Create effect distributions
