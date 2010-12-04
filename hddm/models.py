@@ -414,7 +414,6 @@ class Multi(Base):
         self.ddm = []
         
         for i, (data, params, param_name) in enumerate(data_dep):
-            hddm.debug_here()
             self.ddm.append(self._create_ddm(data, params, i))
             
         # Set and return all distributions belonging to the DDM.
@@ -461,7 +460,7 @@ class Multi(Base):
         else: # Data does not depend on anything (anymore)
             return [(data, params, param_name)]
 
-    def _plot(self, bins=50, range=(-5.,5.)):
+    def plot(self, bins=50, range=(-5.,5.)):
         plt.figure()
         x = np.linspace(-5,5,100)
         data_deps = self._get_data_depend(get_group_params=True)
@@ -1013,6 +1012,7 @@ class MultiEffect(Multi):
                 data_dep = data[data[depends_on_col] == depend_element]
                 # Set the appropriate param
                 if self.is_subj_model:
+
                     effect_name = 'e_det_%s_%s_%s'%(param_name[0], depends_on_col, depend_element)
                     if not self.subj_params.has_key(effect_name):
                         # Create effect distributions
