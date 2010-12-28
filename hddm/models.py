@@ -134,8 +134,8 @@ class Base(object):
 
         return self
 
-    def _prepare(self, dbname=None, map_=True, load=False, verbose=0):
-        """Compute posterior model by markov chain monte carlo estimation."""
+    def _prepare(self):
+        """Create model."""
 
         ############################################################
         # Try multiple times to create model. Sometimes bad initial
@@ -147,7 +147,6 @@ class Base(object):
             while (model_yields_zero_prob):
                 try:
                     self._set_all_params()
-                    dists = self._set_model()
                     model_yields_zero_prob = False
                 except pm.ZeroProbability:
                     tries += 1
@@ -155,39 +154,7 @@ class Base(object):
                         raise pm.ZeroProbability("Model creation failed")
         else:
             self._set_all_params()
-            self._set_model()
 
-        # Set model parameter values to MAP estimates
-        if map_ and not load:
-            self.map_model = pm.MAP(self.model)
-            self.map_model.fit()
-
-        # Save future samples to database if needed.
-        if not load:
-            if dbname is None:
-                self.mcmc_model = pm.MCMC(self.model, verbose=verbose)
-            else:
-                self.mcmc_model = pm.MCMC(self.model, db='sqlite', dbname=dbname, verbose=verbose)
-        else:
-            # Open database
-            #db = pm.database.pickle.load(dbname)
-            db = pm.database.sqlite.load(dbname)
-        
-            # Create mcmc instance reading from the opened database
-            self.mcmc_model = pm.MCMC(self.model, db=db, verbose=verbose)
-
-            # Take the traces from the database and feed them into our
-            # distribution variables (needed for _gen_stats())
-            self._set_traces(self.group_params)
-            self._gen_stats()
-            
-            if self.is_subj_model:
-                self._set_traces(self.group_params_tau)
-                self._set_traces(self.subj_params)
-                self._gen_stats_subjs()
-
-            
-            
         return self
     
     def _sample(self, samples=10000, burn=5000, thin=2, verbose=0, dbname=None):
@@ -215,13 +182,24 @@ class Base(object):
         self.norm_approx_model.fit()
 
         return self
-            
 
     def mcmc(self, samples=10000, burn=5000, thin=2, verbose=0, dbname=None, map_=True):
         """Main method for sampling. Creates and initializes the model and starts sampling.
         """
         # Set and initialize model
-        self._prepare(dbname=dbname, map_=map_)
+        self._prepare()
+
+        # Set model parameter values to MAP estimates
+        if map_:
+            self.map_model = pm.MAP(self.model)
+            self.map_model.fit()
+
+        # Save future samples to database if needed.
+        if dbname is None:
+            self.mcmc_model = pm.MCMC(self.model, verbose=verbose)
+        else:
+            self.mcmc_model = pm.MCMC(self.model, db='sqlite', dbname=dbname, verbose=verbose)
+
         # Draw samples
         self._sample(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
 
@@ -257,7 +235,24 @@ class Base(object):
         run (e.g. by calling .mcmc(dbname='test'))
         """
         # Set up model
-        self._prepare(dbname=dbname, load=True)
+        self._prepare()
+        
+        # Open database
+        db = pm.database.sqlite.load(dbname)
+
+        # Create mcmc instance reading from the opened database
+        self.mcmc_model = pm.MCMC(self.model, db=db, verbose=verbose)
+
+        # Take the traces from the database and feed them into our
+        # distribution variables (needed for _gen_stats())
+        self._set_traces(self.group_params)
+        self._gen_stats()
+
+        if self.is_subj_model:
+            self._set_traces(self.group_params_tau)
+            self._set_traces(self.subj_params)
+            self._gen_stats_subjs()
+
         return self
     
     def _gen_stats(self):
@@ -278,6 +273,83 @@ class Base(object):
 
     def _gen_stats_subjs(self):
         raise NotImplementedError, "Model has no subject capabilites"
+
+class HDDM(Multi):
+    """Hierarchical Drift-Diffusion Model.
+
+    This class can generate different hddms:
+    - simple DDM (without inter-trial variabilities)
+    - full averaging DDM (with inter-trial variabilities)
+    - subject param DDM (each subject get's it's own param, see EJ's book 8.3)
+    - parameter dependent on data (e.g. drift rate is dependent on stimulus
+    """
+    def __init__(self, data,
+                 depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
+                 trace_subjs=True, load=None, save_stats_to=None,
+                 debug=False, no_bias=True, normalize_v=True, init_EZ=True, pool_depends=True):
+
+        super(HDDM, self).__init__(data, save_stats_to=save_stats_to, trace_subjs=trace_subjs,
+                                    debug=debug, no_bias=no_bias)
+
+        if model_type is None:
+            self.model_type = 'simple'
+        else:
+            self.model_type = model_type
+        
+        self.param_factory = ParamFactory(self.model_type,
+                                          data=self.data,
+                                          trace_subjs=trace_subjs,
+                                          normalize_v=normalize_v,
+                                          no_bias=no_bias,
+                                          init=init_EZ)
+            
+        
+        # Define parameters for the simple and full averaged ddm.
+        if self.model_type == 'simple' or self.model_type == 'simple_gpu':
+            self.group_param_names = ['a', 'v', 'z', 't']
+        elif self.model_type == 'full_avg' or self.model_type == 'full':
+            self.group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
+        elif self.model_type == 'lba':
+            self.group_param_names = ['a', 'z', 't', 'V', 'v0', 'v1']
+        else:
+            raise ValueError('Model %s not recognized' % self.model_type)
+
+        self.param_names = copy(self.group_param_names)
+
+
+    def plot(self, bins=50, range=(-5.,5.)):
+        plt.figure()
+        x = np.linspace(-5,5,100)
+        data_deps = self._get_data_depend(get_group_params=True)
+
+        size = int(np.ceil(np.sqrt(len(data_deps))))
+        for i,(data, params, param_name) in enumerate(data_deps):
+            plt.subplot(size,size,i+1)
+            
+            # Plot data
+            x_data = np.linspace(range[0], range[1], bins)
+            data_histo = np.histogram(data['rt'], bins=bins, range=range)[0]
+            plt.plot(x_data, hddm.utils.scale(data_histo), color='b', lw=2., label='data')
+
+            # Plot analytical
+            if self.no_bias:
+                z = np.mean(params['a'].trace())/2.
+            else:
+                z = np.mean(params['z'].trace())
+            analytical = hddm.wfpt.pdf_array(x,
+                                             v=np.mean(params['v'].trace()),
+                                             a=np.mean(params['a'].trace()),
+                                             z=z,
+                                             ter=np.mean(params['t'].trace()),
+                                             err=0.0001)
+                    
+            plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)
+
+            [ytick.set_visible(False) for ytick in plt.yticks()[1]] # Turn y ticks off
+            plt.xlim(range)
+            plt.title(param_name)
+            if i==0:
+                plt.legend(loc=0)
 
 class Multi(Base):
     """Hierarchical Drift-Diffusion Model.
@@ -323,17 +395,6 @@ class Multi(Base):
             self.subjs = np.unique(self.data['subj_idx'])
             self.num_subjs = self.subjs.shape[0]
 
-        # Define parameters for the simple and full averaged ddm.
-        if self.model_type == 'simple' or self.model_type == 'simple_gpu':
-            self.group_param_names = ['a', 'v', 'z', 't']
-        elif self.model_type == 'full_avg' or self.model_type == 'full':
-            self.group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
-        elif self.model_type == 'lba':
-            self.group_param_names = ['a', 'z', 't', 'V', 'v0', 'v1']
-        else:
-            raise ValueError('Model %s not recognized' % self.model_type)
-
-        self.param_names = copy(self.group_param_names)
         self.group_params = {}
         self.root_params = {}
         self.group_params_tau = {}
@@ -343,9 +404,14 @@ class Multi(Base):
             self.mcmc_load_from_db(dbname=load)
 
     def _set_all_params(self):
+        # Create group parameters
         self._set_group_params()
+        # Create subject parameters
         if self.is_subj_model:
             self._set_subj_params()
+
+        # Connect parameters to likelihood function
+        self._set_model()
 
         return self
 
@@ -411,16 +477,16 @@ class Multi(Base):
         """Create and set up the complete DDM."""
         data_dep = self._get_data_depend()
 
-        self.ddm = []
+        self.likelihood = []
         
         for i, (data, params, param_name) in enumerate(data_dep):
-            self.ddm.append(self._create_ddm(data, params, i))
+            self.likelihood.append(self._create_likelihood(data, params, i))
             
         # Set and return all distributions belonging to the DDM.
         if self.is_subj_model:
-            self.model = self.ddm + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + self.root_params.values() + self.root_params_tau.values()
+            self.model = self.likelihood + self.group_params.values() + self.group_params_tau.values() + self.subj_params.values() + self.root_params.values() + self.root_params_tau.values()
         else:
-            self.model = self.ddm + self.group_params.values() + self.root_params.values() + self.root_params_tau.values()
+            self.model = self.likelihood + self.group_params.values() + self.root_params.values() + self.root_params_tau.values()
 
         return self
         
@@ -433,13 +499,12 @@ class Multi(Base):
 
         depends_on = copy(self.depends_on)
 
-        data_dep = self._get_data_depend_rec(self.data, depends_on, params)
+        data_dep = self._get_data_depend_rec(self.data, depends_on, params, get_group_params=get_group_params)
 
         return data_dep
     
-    def _get_data_depend_rec(self, data, depends_on, params, param_name=None):
+    def _get_data_depend_rec(self, data, depends_on, params, param_name=None, get_group_params=False):
         """Recursive function to partition data and params depending on classes (i.e. depends_on)."""
-        #hddm.debug_here()
         if len(depends_on) != 0: # If depends are present
             data_params = []
             param_name = depends_on.keys()[0] # Get first param from depends_on
@@ -448,65 +513,32 @@ class Multi(Base):
             for depend_element in depend_elements:
                 data_dep = data[data[col_name] == depend_element]
                 # Set the appropriate param
-                if self.is_subj_model:
+                if self.is_subj_model and not get_group_params:
                     params[param_name] = self.subj_params[param_name+'_'+str(depend_element)]
                 else:
                     params[param_name] = self.group_params[param_name+'_'+str(depend_element)]
                 # Recursive call with one less dependency and the sliced data.
-                data_param = self._get_data_depend_rec(data_dep, depends_on=copy(depends_on), params=copy(params), param_name=param_name+'_'+str(depend_element))
+                data_param = self._get_data_depend_rec(data_dep, depends_on=copy(depends_on), params=copy(params), param_name=param_name+'_'+str(depend_element), get_group_params=get_group_params)
                 data_params += data_param
             return data_params
                 
         else: # Data does not depend on anything (anymore)
             return [(data, params, param_name)]
 
-    def plot(self, bins=50, range=(-5.,5.)):
-        plt.figure()
-        x = np.linspace(-5,5,100)
-        data_deps = self._get_data_depend(get_group_params=True)
 
-        size = int(np.ceil(np.sqrt(len(data_deps))))
-        for i,(data, params, param_name) in enumerate(data_deps):
-            plt.subplot(size,size,i+1)
-            
-            # Plot data
-            x_data = np.linspace(range[0], range[1], bins)
-            data_histo = np.histogram(data['rt'], bins=bins, range=range)[0]
-            plt.plot(x_data, hddm.utils.scale(data_histo), color='b', lw=2., label='data')
-
-            # Plot analytical
-            if self.no_bias:
-                z = np.mean(params['a'].trace())/2.
-            else:
-                z = np.mean(params['z'].trace())
-            analytical = hddm.wfpt.pdf_array(x,
-                                             v=np.mean(params['v'].trace()),
-                                             a=np.mean(params['a'].trace()),
-                                             z=z,
-                                             ter=np.mean(params['t'].trace()),
-                                             err=0.0001)
-                    
-            plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)
-
-            [ytick.set_visible(False) for ytick in plt.yticks()[1]] # Turn y ticks off
-            plt.xlim(range)
-            plt.title(param_name)
-            if i==0:
-                plt.legend(loc=0)
-
-    def _create_ddm(self, data, params, idx):
-        """Create and creturn a DDM on [data] with [params].
+    def _create_likelihood(self, data, params, idx):
+        """Create and return a DDM on [data] with [params].
         """
         if self.is_subj_model:
-            ddm = np.empty(self.num_subjs, dtype=object)
+            likelihood = np.empty(self.num_subjs, dtype=object)
             for i,subj in enumerate(self.subjs):
                 data_subj = data[data['subj_idx'] == subj] # Select data belonging to subj
 
-                ddm[i] = self.param_factory.get_model("ddm_%i_%i"%(idx, i), data_subj, params, idx=i)
+                likelihood[i] = self.param_factory.get_model("likelihood_%i_%i"%(idx, i), data_subj, params, idx=i)
         else: # Do not use subj params, but group ones
-            ddm = self.param_factory.get_model("ddm_%i"%idx, data, params)
+            likelihood = self.param_factory.get_model("likelihood_%i"%idx, data, params)
 
-        return ddm
+        return likelihood
 
     def summary(self, delimiter=None):
         """Return summary statistics of the fit model."""
