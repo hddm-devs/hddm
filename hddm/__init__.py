@@ -4,7 +4,7 @@ from __future__ import division
 try:
     import demo
 except ImportError, err:
-    print "Demo applet could not be importet: " + str(err)
+    print "Demo applet could not be imported: " + str(err)
 
 import numpy as np
 import numpy.lib.recfunctions as rec

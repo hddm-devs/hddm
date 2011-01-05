@@ -147,7 +147,6 @@ class Base(object):
             while (model_yields_zero_prob):
                 try:
                     self._set_all_params()
-                    self._set_model()
                     model_yields_zero_prob = False
                 except pm.ZeroProbability:
                     tries += 1
@@ -155,7 +154,6 @@ class Base(object):
                         raise pm.ZeroProbability("Model creation failed")
         else:
             self._set_all_params()
-            self._set_model()
 
         return self
     
@@ -344,6 +342,8 @@ class Multi(Base):
         self._set_group_params()
         if self.is_subj_model:
             self._set_subj_params()
+
+        self._set_model()
 
         return self
 
@@ -749,12 +749,12 @@ class ParamFactory(object):
     def _get_simple(self, name, data, params, idx=None):
         if idx is None:
             return hddm.likelihoods.WienerSimple(name,
-                                                value=data['rt'].flatten(), 
-                                                v=params['v'], 
-                                                ter=params['t'], 
-                                                a=params['a'], 
-                                                z=params['z'],
-                                                observed=True)
+                                                 value=data['rt'].flatten(), 
+                                                 v=params['v'], 
+                                                 ter=params['t'], 
+                                                 a=params['a'], 
+                                                 z=params['z'],
+                                                 observed=True)
         else:
             return hddm.likelihoods.WienerSimple(name,
                                 value=data['rt'].flatten(), 

@@ -39,7 +39,6 @@ except:
 
 import hddm
 
-
 def timer(method):
     def time_me(self, *args,**kwargs):
         t0 = time.clock()
