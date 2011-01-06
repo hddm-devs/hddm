@@ -90,6 +90,56 @@ variability in the drift-rate and the starting point distribution.
 Hierarchical Bayesian Modeling
 ------------------------------
 
+Bayesian estimation of posterior distributions differs from other
+approaches such as maximum likelihood (ML) by not only finding the one
+parameter value with the highest probability, but instead estimating
+the likelihood of each parameter value (i.e. the posterior
+distribution). The posterior can be computed with Bayes formula:
+
+P(\theta|data) = P(data|\theta) * P(\theta) / P(data)
+
+Where P(data|\theta) is the likelihood and P(\theta) is the prior
+probability. To compute P(data) we have to integrate (or sum in the
+discrete case) across all parameter values:
+
+Note that the dimensionality of this integral depends on the number of
+parameters and can thus easily become impossible to derive
+analytically. Sampling methods that rely on Markov-Chain Monte Carlo
+(MCMC) have been developed that estimate the integral by drawing
+samples. These methods, albeit slow, have been used with great success
+in many different scenarios. The theoretical background of these
+sampling methods is out of the scope of this paper and are not
+required for an intuitive understanding of Bayesian parameter
+estimation. The interested reader is referred to: TODO.
+
+Another nice property of the Bayesian method is that it lends itself
+naturally to a hierarchical design. In such a design, parameters for
+one distribution can themselves come from a different
+distribution. This allows chaining together of distributions of
+arbitrary complexity and map the structure of the data onto the model. 
+
+This hierarchical property, while useful in many cases, has a
+particular benefit to cognitive modeling where data is often
+scarce. Traditionally, multiple subjects are tested on the same task
+and a model is fit to explain the subject's behavior. Using maximum
+likelihood we can either fit individual models to individual subjects
+and neglect that they are most likely more similar than not and that
+what we learn from one subject could be used for inference on other
+subjects. Alternatively, we could fit one model to all subjects and
+neglect the individual differences that most likely exist. A
+hierarchical design helps us to capture this specific design of our
+data: we can create one distribution for each individual subject
+parameter but let the parameters for these distributions come from
+another group distribution. This way, the individual subject
+distributions restrict the group distribution and vice versa. 
+
+# TODO: CUT?
+As an example, consider a design where we have a large number of
+subjects that each only have very few trials. In this case, we do not
+have enough data for each subject to fit a model to each subject
+separately and if we lump all subjects together we increase the
+variance in our dataset by the inter-subject variance. 
+
 
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/

@@ -275,6 +275,13 @@ class Base(object):
     def _gen_stats_subjs(self):
         raise NotImplementedError, "Model has no subject capabilites"
 
+    def plot_posteriors(self):
+        """Generate posterior plots for each parameter.
+
+        This is a wrapper for pymc.Matplot.plot()
+        """
+        pm.Matplot.plot(self.mcmc_model)
+
 class Multi(Base):
     """Hierarchical Drift-Diffusion Model.
 
@@ -492,7 +499,7 @@ class Multi(Base):
                 plt.legend(loc=0)
 
     def _create_ddm(self, data, params, idx):
-        """Create and creturn a DDM on [data] with [params].
+        """Create and return a DDM on [data] with [params].
         """
         if self.is_subj_model:
             ddm = np.empty(self.num_subjs, dtype=object)
@@ -518,9 +525,14 @@ class Multi(Base):
         for name, value in self.stats.iteritems():
             s += '%s: %f%s'%(name, value, delimiter) 
 
-        s += delimiter + 'Group parameter\t\t\tMean\t\tStd' + delimiter
+        s += delimiter + 'Group parameter\t\t\t\tMean\t\tStd' + delimiter
         for name, value in self.params_est.iteritems():
-            s += '%s\t\t\t\t%f\t%f%s'%(name, value, self.params_est_std[name], delimiter)
+            # Create appropriate number of tabs for correct displaying
+            # if parameter names are longer than one tab space.
+            # 5 tabs if name string is smaller than 4 letters.
+            num_tabs = 5-np.ceil((len(name)/4.))
+            tabs = ''.join(['\t' for i in range(num_tabs)])
+            s += '%s%s%f\t%f%s'%(name, tabs, value, self.params_est_std[name], delimiter)
 
         return s
 
@@ -528,11 +540,15 @@ class Multi(Base):
         if delimiter is None:
             delimiter = '\n'
 
-        s = 'Group parameter\t\t\tMean\t\tStd' + delimiter
+        s = 'Group parameter\t\t\t\tMean\t\tStd' + delimiter
         for subj, params in self.params_est_subj.iteritems():
             s += 'Subject: %i%s' % (subj, delimiter)
             for name,value in params.iteritems():
-                s += '%s\t\t\t\t%f\t%f%s'%(name, value, self.params_est_subj_std[subj][name], delimiter)
+                # Create appropriate number of tabs for correct displaying
+                # if parameter names are longer than one tab space.
+                num_tabs = 5-np.ceil((len(name)/4.))
+                tabs = ''.join(['\t' for i in range(num_tabs)])
+                s += '%s%s%f\t%f%s'%(name, tabs, value, self.params_est_subj_std[subj][name], delimiter)
             s += delimiter
             
         return s
