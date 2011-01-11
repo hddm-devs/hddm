@@ -294,7 +294,7 @@ class Multi(Base):
     def __init__(self, data,
                  depends_on=None, stats_on=None, model_type=None, is_subj_model=True,
                  trace_subjs=True, load=None, save_stats_to=None,
-                 debug=False, no_bias=True, normalize_v=True, init_EZ=True, root_param_for_depends=False):
+                 debug=False, no_bias=True, normalize_v=True, init_EZ=True):
 
         super(Multi, self).__init__(data, save_stats_to=save_stats_to, trace_subjs=trace_subjs,
                                     debug=debug, no_bias=no_bias)
@@ -316,8 +316,6 @@ class Multi(Base):
             self.depends_on = {}
         else:
             self.depends_on = copy(depends_on)
-
-        self.root_param_for_depends = root_param_for_depends
 
         self.is_subj_model = is_subj_model
 
@@ -358,22 +356,10 @@ class Multi(Base):
         depends_on = self.depends_on[param]
         uniq_data_dep = np.unique(self.data[depends_on])
 
-        if self.root_param_for_depends:
-            # Create a global parameter that is parent to all dependent group parameters.
-            self.root_params[param] = self.param_factory.get_root_param(param)
-            self.root_params_tau[param] = self.param_factory.get_tau_param(param)
-
         for uniq_date in uniq_data_dep:
             tag = str(uniq_date)
             param_tag = '%s_%s'%(param, tag)
-            if self.root_param_for_depends:
-                self.group_params[param_tag] = self.param_factory.get_child_param(param,
-                                                                                  parent_mean=self.root_params[param],
-                                                                                  parent_tau=self.root_params_tau[param],
-                                                                                  tag=tag,
-                                                                                  plot=True)
-            else:
-                self.group_params[param_tag] = self.param_factory.get_root_param(param, tag=tag)
+            self.group_params[param_tag] = self.param_factory.get_root_param(param, tag=tag)
 
         return self
 
