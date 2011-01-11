@@ -211,6 +211,7 @@ y-axis.
 The final program then looks as follows:
 
 ::
+
     import hddm
     
     # Load data from csv file into a NumPy structured array

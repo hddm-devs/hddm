@@ -3,54 +3,60 @@ Introduction
 ============
 
 Diffusion models have established themselves as the de-facto standard
-for fitting simple decision making processes in the last years. Each
-decision is modeled as a drift process that once it reaches a certain
-threshold executes a response. This simple assumption about the
-underlying psychological process has the intriguing property of
-reproducing the full shape of reaction times in simple decision making
-tasks.
+for fitting simple decision making processes. Each decision is modeled
+as a drift process that once it reaches a certain threshold executes a
+response. This simple assumption about the underlying psychological
+process has the intriguing property of reproducing the full shapes of
+reaction time distributions in simple two-choice decision making tasks.
 
 Hierarchical bayesian methods are quickly gaining popularity in
-cognitive sciences. Traditionally, models where either fit separately
-to individual subjects (thus not taking similarities of subjects into
-account) or to the whole group (thus not taking differences of
-subjects into account). Hierarchical bayesian methods provide a remedy
-for this problem by allowing group and subject parameters to be
-estimated simultaniously at different hierarchies. In essence, subject
-parameters are assumed to come from a group distribution. Sampling
-methods such as Markov-Chain Monte Carlo (MCMC) allow the estimation
-of these distributions. In addition, because these methods are
-bayesian they deal naturally with uncertainty and variability.
+cognitive sciences. Traditionally, psychological models where either
+fit separately to individual subjects (thus not taking similarities of
+subjects into account) or to the whole group (thus not taking
+differences of subjects into account). Hierarchical bayesian methods
+provide a remedy for this problem by allowing group and subject
+parameters to be estimated simultaniously at different hierarchies. In
+essence, subject parameters are assumed to come from a group
+distribution. In addition, because these methods are bayesian they
+deal naturally with uncertainty and variability.
 
 HDDM_ (Hierarchical Drift Diffusion Modeling) is an open-source
 software package written in Python_ which allows (i) the construction
 of hierarchical bayesian drift models and (ii) the estimation of
 posterior parameter distributions via PyMC_. For efficiency, all
 runtime critical functions are coded in cython_, heavily optimized and
-compiled natively. Models can be constructed via a simple
-configuration file. For illustrative purposes, HDDM includes a
+compiled natively. User-defined models can be constructed via a simple
+configuration files or directly via HDDM library calls. To assess
+model fit, HDDM generates different statistics and comes with various
+plotting capabilities. For illustrative purposes, HDDM includes a
 graphical demo applet which simulates individual drift processes under
-different parameter combinations.
+user-specified parameter combinations. The code is test-covered to
+assure correct function and is propery documented. Online
+documentation and tutorials are provided.
+
+In sum, the presented software allows researches to construct and fit
+complex, user-specified models using state-of-the-art estimation
+methods without requiring a strong computer science or math
+background.
 
 ----------------
 Diffusion Models
 ----------------
 
-HDDM implements two drift model types, (i) the Ratcliff drift
+HDDM implements two types of drift models, (i) the Ratcliff drift
 diffusion model (DDM) and (ii) the linear ballistic accumulator
 (LBA). Both of these models implement decision making as an evidence
-accumulation process that executes a response upon crossing a decision
-threshold. The speed of the accumulation is called the drift rate and
-influences how swiftly a particular reponse is executed; it depends
-stimulus properties. The distance of the decision threshold from the
-starting point of evidence accumulation also influences the speed of
-responding, but unlike the drift rate, influences the speed of all
-responses. A lower threshold makes responding faster in general but
-more random while a higher threshold leads to more cautious
-responding. Reaction time, however, is not solely comprised of the
-decision making process -- perception, movement initiation and
-execution all take time and are summarized into one variable called
-non-decision time.
+accumulation process that executes a response upon crossing one of two
+decision boundaries. The speed of which the accumulation process
+approaches one of the two boundaries is called the drift rate and
+influences how swiftly a particular reponse is executed. The distance
+between the two boundaries influences how much evidence must be
+accumulated until a reponse is executed. A lower threshold makes
+responding faster in general but more random while a higher threshold
+leads to more cautious responding. Reaction time, however, is not
+solely comprised of the decision making process -- perception,
+movement initiation and execution all take time and are summarized
+into one variable called non-decision time.
 
 Ratcliff Drift Diffusion Model
 ------------------------------
@@ -96,7 +102,9 @@ parameter value with the highest probability, but instead estimating
 the likelihood of each parameter value (i.e. the posterior
 distribution). The posterior can be computed with Bayes formula:
 
-P(\theta|data) = P(data|\theta) * P(\theta) / P(data)
+.. math::
+
+    P(\theta|data) = \frac{P(data|\theta) * P(\theta)}{P(data)}
 
 Where P(data|\theta) is the likelihood and P(\theta) is the prior
 probability. To compute P(data) we have to integrate (or sum in the
