@@ -355,6 +355,16 @@ def parse_config_file(fname, mcmc=False, load=False):
     except ConfigParser.NoOptionError:
         verbose = 0
 
+    try:
+        plot_rt_fit = config.getboolean('stats', 'plot_rt_fit')
+    except ConfigParser.NoOptionError:
+        plot_rt_fit = False
+    try:
+        plot_posteriors = config.getboolean('stats', 'plot_posteriors')
+    except ConfigParser.NoOptionError:
+        plot_posteriors = False
+
+    
     print "Creating model..."
     m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
 
@@ -369,6 +379,12 @@ def parse_config_file(fname, mcmc=False, load=False):
         m.save_stats(save)
     else:
         print m.summary()
+
+    if plot_rt_fit:
+        m.plot_rt_fit()
+        
+    if plot_posteriors:
+        m.plot_posteriors
         
     return m
 

@@ -5,6 +5,14 @@ if __name__=='__main__':
     import sys
     import os
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
-        print "hddm <filename>"
+        print "hddmfit [-l] <model.cfg>"
+        print "-l: load previous samples from database. Does not run MCMC."
         sys.exit(-1)
-    hddm.utils.parse_config_file(sys.argv[1], mcmc=True) 
+
+    if sys.argv[1] == '-l':
+        mcmc=False
+        config_fname = sys.argv[2]
+    else:
+        config_fname = sys.argv[1]
+        
+    hddm.utils.parse_config_file(config_fname, mcmc=mcmc)

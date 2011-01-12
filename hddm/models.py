@@ -52,7 +52,7 @@ class Base(object):
         ddmplot.external_params = self.params_est
         ddmplot.configure_traits()
         
-    def plot_global(self, params_true=None, params=None):
+    def plot_rt_fit(self, params_true=None, params=None):
         """Plot real and estimated RT model"""
         # Separate upper and lower boundary responses
         resps_upper = self.data['rt'][self.data['response']==1]
@@ -449,7 +449,7 @@ class Multi(Base):
         else: # Data does not depend on anything (anymore)
             return [(data, params, param_name)]
 
-    def plot(self, bins=50, range=(-5.,5.)):
+    def plot_rt_fit(self, bins=50, range=(-5.,5.)):
         plt.figure()
         x = np.linspace(-5,5,100)
         data_deps = self._get_data_depend(get_group_params=True)
@@ -515,7 +515,7 @@ class Multi(Base):
             # Create appropriate number of tabs for correct displaying
             # if parameter names are longer than one tab space.
             # 5 tabs if name string is smaller than 4 letters.
-            num_tabs = 5-np.ceil((len(name)/4.))
+            num_tabs = int(6-np.ceil((len(name)/8.)))
             tabs = ''.join(['\t' for i in range(num_tabs)])
             s += '%s%s%f\t%f%s'%(name, tabs, value, self.params_est_std[name], delimiter)
 
