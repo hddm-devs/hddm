@@ -68,38 +68,31 @@ class TestMulti(unittest.TestCase):
 
         return data
 
-    def diff_model(self, param, subj=True, num_subjs=10, change=.5, samples=10000, pool_depends=True):
-        params1 = {'v':.5, 'a':2., 'z':1., 'ter': .3, 'ster':0., 'sv':0., 'sz':0.}
+    def diff_model(self, param, subj=True, num_subjs=10, change=.5, samples=10000):
+        params1 = {'v':.5, 'a':2., 'z':1., 't': .3, 'T':0., 'V':0., 'Z':0.}
         params2 = copy(params1)
         params2[param] = params1[param]+change
 
         data = self.create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
 
-        model = hddm.models.Multi(data, depends_on={param:['stim']}, is_subj_model=subj, pool_depends=pool_depends)
+        model = hddm.models.Multi(data, depends_on={param:['stim']}, is_subj_model=subj)
         model.mcmc()
 
         print model.summary()
         return model
 
-    def test_diff_v_pool(self, samples=1000):
-        m = self.diff_model('v', subj=False, change=.5, pool_depends=True, samples=samples)
+    def test_diff_v(self, samples=1000):
+        m = self.diff_model('v', subj=False, change=.5, samples=samples)
         return m
     
-    def test_diff_v_nopool(self, samples=1000):
-        m = self.diff_model('v', subj=False, change=.5, pool_depends=False, samples=samples)
-        return m
-    
-    def test_diff_a_subj_nopool(self, samples=10000):
-        m = self.diff_model('a', subj=True, change=-.5, pool_depends=False, samples=samples)
+    def test_diff_a_subj(self, samples=10000):
+        m = self.diff_model('a', subj=True, change=-.5, samples=samples)
         return m
         
-    def test_diff_a_subj_pool(self, samples=10000):
-        m = self.diff_model('a', subj=True, change=-.5, pool_depends=True, samples=samples)
-        return m
     
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestHDDM, self).__init__(*args, **kwargs)
+        super(TestSingle, self).__init__(*args, **kwargs)
         gen_data = False
         self.data, self.params_true = gen_rand_data(gen_data=gen_data, tag='global_test')
         self.data_subj, self.params_true_subj = gen_rand_subj_data(gen_data=gen_data, samples=300, add_noise=False, tag='subj_test')
@@ -108,37 +101,34 @@ class TestSingle(unittest.TestCase):
         self.assert_ = True
         
         self.params_true_no_s = copy(self.params_true)
-        del self.params_true_no_s['sv']
-        del self.params_true_no_s['sz']
-        del self.params_true_no_s['ster']
+        del self.params_true_no_s['V']
+        del self.params_true_no_s['Z']
+        del self.params_true_no_s['T']
 
         self.params_true_subj_no_s = copy(self.params_true_subj)
-        del self.params_true_subj_no_s['sv']
-        del self.params_true_subj_no_s['sz']
-        del self.params_true_subj_no_s['ster']
+        del self.params_true_subj_no_s['V']
+        del self.params_true_subj_no_s['Z']
+        del self.params_true_subj_no_s['T']
 
         self.params_true_lba = copy(self.params_true)
-        del self.params_true_lba['sz']
-        del self.params_true_lba['ster']
+        del self.params_true_lba['Z']
+        del self.params_true_lba['T']
 
         self.params_true_basic_no_s = copy(self.params_true_basic)
-        del self.params_true_basic_no_s['sv']
-        del self.params_true_basic_no_s['sz']
-        del self.params_true_basic_no_s['ster']
+        del self.params_true_basic_no_s['V']
+        del self.params_true_basic_no_s['Z']
+        del self.params_true_basic_no_s['T']
 
         self.samples = 10000
         self.burn = 5000
-
-
-        
         
     def test_basic(self):
         model = hddm.models.Multi(self.data_basic, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_basic_no_s)
         
-    def test_full_avg(self):
-        model = hddm.models.Multi(self.data, model_type='full_avg', no_bias=False)
+    def test_full_mc(self):
+        model = hddm.models.Multi(self.data, model_type='full_mc', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
@@ -192,11 +182,11 @@ class TestSingle(unittest.TestCase):
         model.mcmc()
 
         # Fit second model
-        params = {'v': .1, 'sv': 0.3, 'z': 0.9, 'sz': 0.25, 'ter': .3, 'ster': 0.1, 'a': 1.8}
+        params = {'v': .1, 'V': 0.3, 'z': 0.9, 'Z': 0.25, 't': .3, 'T': 0.1, 'a': 1.8}
         data2, params_true2 = gen_rand_data(gen_data=True, params=params, num_samples=200)
-        del params_true2['sv']
-        del params_true2['sz']
-        del params_true2['ster']
+        del params_true2['V']
+        del params_true2['Z']
+        del params_true2['T']
         model2 = hddm.models.HDDM_simple(data2, no_bias=True)
         model2.mcmc()
 
@@ -217,7 +207,7 @@ class TestSingle(unittest.TestCase):
         err=[]
 
         # Check for proper chain convergence
-        check_geweke(model, assert_=True)
+        #check_geweke(model, assert_=True)
 
         # Test for correct parameter estimation
         for param in params_true.iterkeys():

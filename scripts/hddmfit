@@ -13,6 +13,7 @@ if __name__=='__main__':
         mcmc=False
         config_fname = sys.argv[2]
     else:
+        mcmc=True
         config_fname = sys.argv[1]
         
     hddm.utils.parse_config_file(config_fname, mcmc=mcmc)

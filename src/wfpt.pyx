@@ -41,8 +41,10 @@ cpdef double pdf(double t, double v, double a, double z, double err, unsigned in
         else:
             return -np.Inf
     cdef double tt = t/(pow(a,2)) # use normalized time
-    cdef double w = z/a # convert to relative start point
-    
+    # CHANGE: Relative starting point is expected now.
+    cdef double w = z
+    #cdef double w = z/a # convert to relative start point
+
     cdef double kl, ks, p
     cdef double PI = 3.1415926535897
     cdef double PIs = 9.869604401089358 # PI^2
@@ -94,7 +96,7 @@ cpdef double pdf_sign(double t, double v, double a, double z, double ter, double
     if t<0:
         return pdf(fabs(t)-ter, v, a, z, err, logp)
     else:
-        return pdf(t-ter, -v, a, a-z, err, logp)
+        return pdf(t-ter, -v, a, 1.-z, err, logp)
     
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
@@ -127,7 +129,7 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int
     
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=0.0001, int logp=0, int logspace=0, double samples=50., unsigned int reps=10, unsigned int k=2):
+def wiener_like_full_mc_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=0.0001, int logp=0, int logspace=0, double samples=50., unsigned int reps=10, unsigned int k=2):
     cdef double max_rt = np.max(np.abs(x))
     cdef np.ndarray[DTYPE_t, ndim=1] out = np.empty_like(x)
     
@@ -139,7 +141,7 @@ def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double 
         x_lower = np.linspace(-max_rt, 0, samples/2.)
         x_upper = np.linspace(0, max_rt, samples/2.)
             
-    wfpt_lower = wiener_like_full_avg(x=x_lower,
+    wfpt_lower = wiener_like_full_mc(x=x_lower,
                                       v=v,
                                       sv=sv,
                                       z=z,
@@ -147,7 +149,7 @@ def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double 
                                       ter=ter,
                                       ster=ster,
                                       a=a, err=err, reps=reps, logp=0)
-    wfpt_upper = wiener_like_full_avg(x=x_upper,
+    wfpt_upper = wiener_like_full_mc(x=x_upper,
                                       v=v,
                                       sv=sv,
                                       z=z,
@@ -165,7 +167,7 @@ def wiener_like_full_avg_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double 
         return out
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_avg(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
+def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
 

@@ -317,8 +317,11 @@ class Multi(Base):
         else:
             self.depends_on = copy(depends_on)
 
-        self.is_subj_model = is_subj_model
-
+        if ('subj_idx' in self.data.dtype.names) and (is_subj_model != False):
+            self.is_subj_model = True
+        else:
+            self.is_subj_model = False
+            
         if self.is_subj_model:
             self.subjs = np.unique(self.data['subj_idx'])
             self.num_subjs = self.subjs.shape[0]
@@ -326,7 +329,7 @@ class Multi(Base):
         # Define parameters for the simple and full averaged ddm.
         if self.model_type == 'simple' or self.model_type == 'simple_gpu':
             self.group_param_names = ['a', 'v', 'z', 't']
-        elif self.model_type == 'full_avg' or self.model_type == 'full':
+        elif self.model_type == 'full_mc' or self.model_type == 'full':
             self.group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
         elif self.model_type == 'lba':
             self.group_param_names = ['a', 'z', 't', 'V', 'v0', 'v1']
@@ -609,15 +612,15 @@ class ParamFactory(object):
         # Set function map
         self._models = {'simple': self._get_simple,
                         'simple_gpu': self._get_simple_gpu,
-                        'full_avg': self._get_full_avg,
+                        'full_mc': self._get_full_mc,
                         'full': self._get_full,
                         'lba':self._get_lba}
 
         if self.model_type != 'lba':
             self.param_ranges = {'a_lower': .5,
                                  'a_upper': 4.5,
-                                 'z_lower': .1,
-                                 'z_upper': 2.5,
+                                 'z_lower': .0,
+                                 'z_upper': 1.,
                                  't_lower': .1,
                                  't_upper': 1.,
                                  'v_lower': -3.,
@@ -646,7 +649,8 @@ class ParamFactory(object):
         else:
             # LBA model
             self.normalize_v = normalize_v
-
+            self.init_params = {}
+            
             self.param_ranges = {'a_lower': .2,
                                  'a_upper': 4.,
                                  'v_lower': 0.1,
@@ -784,7 +788,7 @@ class ParamFactory(object):
                                    z=params['z'][idx],
                                    observed=True)
 
-    def _get_full_avg(self, name, data, params, idx=None):
+    def _get_full_mc(self, name, data, params, idx=None):
         if idx is None:
             return hddm.likelihoods.WienerAvg(name,
                              value=data['rt'].flatten(), 

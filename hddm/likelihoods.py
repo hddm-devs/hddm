@@ -10,14 +10,14 @@ import hddm
 def wiener_like_simple(value, v, z, ter, a):
     """Log-likelihood for the simple DDM"""
     if z is None:
-        z = a/2.
+        z = .5
     return np.sum(hddm.wfpt.pdf_array(value, v=v, a=a, z=z, ter=ter, err=.0001, logp=1))
     #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, ter=ter, a=a, err=.0001)
 
 @pm.randomwrap
 def wiener_simple(v, z, ter, a, size=1):
     if z is None:
-        z = a/2.
+        z = .5
     return gen_ddm_rts(v=v, z=z, ter=ter, a=a, sz=0, sv=0, ster=0, size=size)
 
 WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -43,7 +43,7 @@ def pdf_array_multi_py(x, v, a, z, ter, multi=None, err=0.0001, logp=1):
 def wiener_like_simple_multi(value, v, z, ter, a, multi=None):
     """Log-likelihood for the simple DDM"""
     if z is None:
-        z = a/2.
+        z = .5
     return np.sum(hddm.wfpt.pdf_array_multi(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
     #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
             
@@ -55,25 +55,25 @@ WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Proces
 @pm.randomwrap
 def wiener_full(v, z, ter, a, sv, sz, ster, size=1):
     if z is None:
-        z = a/2.
+        z = .5
     return gen_ddm_rts(v=v, z=z, ter=ter, a=a, sz=sz, sv=sv, ster=ster, size=size)
 
-def wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a):
+def wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10, logp=1))
+    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10, logp=1))
  
 WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                    logp=wiener_like_full_avg,
+                                    logp=wiener_like_full_mc,
                                     random=wiener_full,
                                     dtype=np.float,
                                     mv=True)
 
-def wiener_like_full_avg_interp(value, v, sv, z, sz, ter, ster, a):
+def wiener_like_full_mc_interp(value, v, sv, z, sz, ter, ster, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_avg(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=100, logp=1, samples=50))
+    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=100, logp=1, samples=50))
  
 WienerAvgInterp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                          logp=wiener_like_full_avg_interp,
+                                          logp=wiener_like_full_mc_interp,
                                           random=wiener_full,
                                           dtype=np.float,
                                           mv=True)
@@ -217,7 +217,7 @@ def wiener_like_gpu_single(value, a, z, v, ter, debug=False):
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
 
     if z is None:
-        z = np.float32(a/2.)
+        z = np.float32(.5)
     if (ter<0) or np.any(np.abs(value)-ter < 0) or (a<z):
         if not debug:
             return -np.Inf
@@ -247,7 +247,7 @@ def wiener_like_cpu(value, a, z, v, ter, debug=False):
     """Test log likelihood for gpu (uses cpu).
     """
     if z[0] is None:
-        z = a/2.
+        z = .5
 
     out = np.empty_like(value)
     for i, val in enumerate(value):

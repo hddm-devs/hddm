@@ -253,7 +253,7 @@ def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
 
     return data[include]
 
-def rec2csv(data, fname, sep=None):
+def save_csv(data, fname, sep=None):
     """Save record array to fname as csv.
     """
     if sep is None:
@@ -268,7 +268,7 @@ def rec2csv(data, fname, sep=None):
             fd.write(sep.join(line_str))
             fd.write('\n')
 
-def csv2rec(fname):
+def load_csv(fname):
     return np.lib.io.recfromcsv(fname)
 
 def parse_config_file(fname, mcmc=False, load=False):
@@ -321,7 +321,7 @@ def parse_config_file(fname, mcmc=False, load=False):
 
     if model_type == 'simple' or model_type == 'simple_gpu':
         group_param_names = ['a', 'v', 'z', 't']
-    elif model_type == 'full_avg' or model_type == 'full':
+    elif model_type == 'full_mc' or model_type == 'full':
         group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
     elif model_type == 'lba':
         group_param_names = ['a', 'v', 'z', 't', 'V']
@@ -357,11 +357,12 @@ def parse_config_file(fname, mcmc=False, load=False):
 
     try:
         plot_rt_fit = config.getboolean('stats', 'plot_rt_fit')
-    except ConfigParser.NoOptionError:
+    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
         plot_rt_fit = False
+        
     try:
         plot_posteriors = config.getboolean('stats', 'plot_posteriors')
-    except ConfigParser.NoOptionError:
+    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
         plot_posteriors = False
 
     

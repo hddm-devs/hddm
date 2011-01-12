@@ -37,22 +37,23 @@ def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=N
 def simulate_drifts(params, samples, steps, T):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
-    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['ster'])) - params['ster']/2. + params['ter'])*dt
+    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['T'])) - params['T']/2. + params['t'])*dt
 
     # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
-    starting_points = uniform.rvs(size=samples, scale=params['sz']) - params['sz']/2. + params['z']
+    # Starting point is relative, so have to convert to absolute first: z*a
+    starting_points = uniform.rvs(size=samples, scale=params['Z']) - params['Z']/2. + params['z']*params['a']
 
     # Draw drift rates from a normal distribution
-    if params['sv'] == 0.:
+    if params['V'] == 0.:
         drift_rates = np.repeat(params['v'], samples)/dt
     else:
-        drift_rates = norm.rvs(loc=params['v'], scale=params['sv'], size=samples)/dt
+        drift_rates = norm.rvs(loc=params['v'], scale=params['V'], size=samples)/dt
 
     # Generate samples from a normal distribution and
     # add the drift rates
     step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt), size=(samples, steps))/dt  + np.tile(drift_rates, (steps, 1)).T
     # Go through every line and zero out the non-decision component
-    for i in range(samples):
+    for i in range(int(samples)):
         step_sizes[i,:start_delays[i]] = 0
 
     # This computes the Brownian motion by forming the cumulative sum of
@@ -129,12 +130,12 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
     """Generate simulated RTs with random parameters."""
     #z = np.random.normal(loc=1, scale=2)
     #ster = np.random.uniform(loc=0, scale=.5)
-    #params_true = {'v': np.random.normal(loc=-2, scale=4), 'sv': np.random.normal(loc=0, scale=.5), 'z': z, 'sz': np.random.normal(loc=0, scale=.5), 'ter': np.random.normal(loc=ster/2., scale=ster/2.), 'ster': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
+    #params_true = {'v': np.random.normal(loc=-2, scale=4), 'V': np.random.normal(loc=0, scale=.5), 'z': z, 'Z': np.random.normal(loc=0, scale=.5), 't': np.random.normal(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
     if params is None:
         if not no_var:
-            params = {'v': .5, 'sv': 0.3, 'z': 1., 'sz': 0.25, 'ter': .3, 'ster': 0.1, 'a': 2}
+            params = {'v': .5, 'V': 0.3, 'z': 1., 'Z': 0.25, 't': .3, 'T': 0.1, 'a': 2}
         else:
-            params = {'v': .5, 'sv': 0., 'z': 1., 'sz': 0., 'ter': .3, 'ster': 0., 'a': 2}
+            params = {'v': .5, 'V': 0., 'z': 1., 'Z': 0., 't': .3, 'T': 0., 'a': 2}
 
     if gen_data:
         # Create RT data
@@ -151,10 +152,10 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
 
 def gen_rand_correlation_data(v=.5, corr=.1):
     params = {'v': v,
-              'sv': .001,
-              'ter': .3,
-              'ster': 0.,
-              'sz':0}
+              'V': .001,
+              't': .3,
+              'T': 0.,
+              'Z':0}
 
     all_data = []
     a_offset = 2
@@ -177,7 +178,7 @@ def gen_rand_correlation_data(v=.5, corr=.1):
 def _add_noise(params_subj):
     """Add individual noise to each parameter."""
     for param, value in params_subj.iteritems():
-        if param == 'ter' or param == 'ster' or param == 'z':
+        if param == 't' or param == 'T' or param == 'z':
             continue
         elif param[0] == 's':
             params_subj[param] = np.abs(value + np.random.randn()*.01)
@@ -191,9 +192,9 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
     # Set global parameters
     #z = rnd(loc=1, scale=2)
     #ster = rnd(loc=0, scale=.5)
-    #self.params_true = {'v': rnd(loc=-2, scale=4), 'sv': rnd(loc=0, scale=.5), 'z': z, 'sz': rnd(loc=0, scale=.5), 'ter': rnd(loc=ster/2., scale=ster/2.), 'ster': ster, 'a': z+rnd(loc=.5, scale=3)}
+    #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
-        params = {'v': .5, 'sv': 0.1, 'z': 1., 'sz': 0.1, 'ter': 1., 'ster': 0.1, 'a': 2}
+        params = {'v': .5, 'V': 0.1, 'z': 1., 'Z': 0.1, 't': 1., 'T': 0.1, 'a': 2}
 
     params_subjs = []
     #data = np.empty((samples*num_subjs, 3), dtype=np.float)

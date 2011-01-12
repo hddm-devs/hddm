@@ -51,8 +51,7 @@ def timer(method):
 class DDM(HasTraits):
     """Drift diffusion model"""
     # Paremeters
-    z_bias = Range(0,10.,1.)
-    z = Property(Float, depends_on=['a','z_bias','no_bias'])
+    z = Range(0,1.,.5)
     sz = Range(0,5.,.1)
     v = Range(-3,3.,.5)
     sv = Range(0.0,2.,0.01)
@@ -83,17 +82,10 @@ class DDM(HasTraits):
     iter_plot = Int(30)
     # Number of histogram bins
     bins = Int(100)
-    no_bias = Bool(True)
-    view = View('z_bias', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'no_bias', 'iter_plot')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'no_bias', 'iter_plot')
 
     def _get_dt(self):
         return self.steps / self.T
-
-    def _get_z(self):
-        if self.no_bias:
-            return self.a/2.
-        else:
-            return self.z_bias
 
     def _get_params_dict(self):
         return {'v':self.v, 'sv':self.sv, 'z':self.z, 'sz':self.sz, 'ter':self.ter, 'ster':self.ster, 'a':self.a}
@@ -125,16 +117,16 @@ class DDMPlot(HasTraits):
     ddm = Instance(DDM, ())
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
-    plot_full_avg = Bool(False)
-    plot_full_avg_interp = Bool(True)
+    plot_full_mc = Bool(False)
+    plot_full_mc_interp = Bool(True)
     plot_lba = Bool(True)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
     
     x_analytical = Property(Array)
     
-    full_avg = Property(Array)
-    full_avg_interp = Property(Array)
+    full_mc = Property(Array)
+    full_mc_interp = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
 
@@ -151,8 +143,8 @@ class DDMPlot(HasTraits):
                 Item('plot_histogram'),
                 Item('plot_drifts'),
                 Item('plot_simple'),
-                Item('plot_full_avg'),
-                Item('plot_full_avg_interp'),
+                Item('plot_full_mc'),
+                Item('plot_full_mc_interp'),
                 Item('plot_lba'),
                 Item('plot_data'),
 		Item('go'),
@@ -226,8 +218,8 @@ class DDMPlot(HasTraits):
         return np.linspace(-time, time, self.x_raster)
 
     @timer
-    def _get_full_avg(self):
-        return hddm.wfpt.wiener_like_full_avg(x=self.x_analytical,
+    def _get_full_mc(self):
+        return hddm.wfpt.wiener_like_full_mc(x=self.x_analytical,
                                               v=self.ddm.v,
                                               sv=self.ddm.sv,
                                               z=self.ddm.z,
@@ -236,8 +228,8 @@ class DDMPlot(HasTraits):
                                               ster=self.ddm.ster,
                                               a=self.ddm.a, err=.0001, reps=50)
     @timer
-    def _get_full_avg_interp(self):
-        return hddm.wfpt.wiener_like_full_avg_interp(x=self.x_analytical,
+    def _get_full_mc_interp(self):
+        return hddm.wfpt.wiener_like_full_mc_interp(x=self.x_analytical,
                                                      v=self.ddm.v,
                                                      sv=self.ddm.sv,
                                                      z=self.ddm.z,
@@ -303,12 +295,12 @@ class DDMPlot(HasTraits):
             self.plot_histo(x, histo, color='y')
 
         # Plot analyitical full averaged likelihood function
-        if self.plot_full_avg:
-            self.plot_histo(x_anal, self.full_avg, color='r')
+        if self.plot_full_mc:
+            self.plot_histo(x_anal, self.full_mc, color='r')
 
         # Plot analyitical full averaged likelihood function
-        if self.plot_full_avg_interp:
-            self.plot_histo(x_anal, self.full_avg_interp, color='c')
+        if self.plot_full_mc_interp:
+            self.plot_histo(x_anal, self.full_mc_interp, color='c')
 
         # Plot analytical simple likelihood function
         if self.plot_simple:
