@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
+import pymc as pm
 
 import hddm
 
@@ -561,6 +562,35 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
+def plot_rt_fit(model, bins=50, range=(-5.,5.)):
+    plt.figure()
+    x = np.linspace(-5,5,100)
+    data_deps = model._get_data_depend(get_group_params=True)
+
+    size = int(np.ceil(np.sqrt(len(data_deps))))
+    for i,(data, params, param_name) in enumerate(data_deps):
+        plt.subplot(size,size,i+1)
+
+        # Plot data
+        x_data = np.linspace(range[0], range[1], bins)
+        data_histo = np.histogram(data['rt'], bins=bins, range=range)[0]
+        plt.plot(x_data, hddm.utils.scale(data_histo), color='b', lw=2., label='data')
+
+        # Plot analytical
+        analytical = hddm.wfpt.pdf_array(x,
+                                         v=np.mean(params['v'].trace()),
+                                         a=np.mean(params['a'].trace()),
+                                         z=np.mean(params['z'].trace()),
+                                         ter=np.mean(params['t'].trace()),
+                                         err=0.0001)
+
+        plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)
+
+        [ytick.set_visible(False) for ytick in plt.yticks()[1]] # Turn y ticks off
+        plt.xlim(range)
+        plt.title(param_name)
+        if i==0:
+            plt.legend(loc=0)
 
 def plot_posteriors(model):
     """Generate posterior plots for each parameter.

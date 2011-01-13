@@ -88,7 +88,7 @@ class DDM(HasTraits):
         return self.steps / self.T
 
     def _get_params_dict(self):
-        return {'v':self.v, 'sv':self.sv, 'z':self.z, 'sz':self.sz, 'ter':self.ter, 'ster':self.ster, 'a':self.a}
+        return {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
 
     @cached_property
     def _get_drifts(self):
