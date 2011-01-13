@@ -561,6 +561,14 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
+
+def plot_posteriors(model):
+    """Generate posterior plots for each parameter.
+
+    This is a wrapper for pymc.Matplot.plot()
+    """
+    pm.Matplot.plot(model.mcmc_model)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

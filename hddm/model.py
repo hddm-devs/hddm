@@ -123,7 +123,7 @@ class HDDM(object):
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
 
         elif param == 'z' and self.no_bias: # starting point position (bias)
-            return None # z = a/2.
+            return pm.Lambda("z%s"%tag, lambda x=param: .5) #None # z = a/2.
 
         else:
             return pm.Uniform("%s%s"%(param, tag),
@@ -167,7 +167,8 @@ class HDDM(object):
                              plot=plot, trace=self.trace_subjs)
 
         elif param == 'z' and self.no_bias:
-            return None
+            return pm.Lambda("z%s"%tag, lambda x=parent_mean: .5,
+                             plot=plot, trace=self.trace_subjs)
 
         elif param == 'e' or param.startswith('v'):
             return pm.Normal("%s%s"%(param,tag),
