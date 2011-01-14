@@ -105,7 +105,7 @@ class HDDM(object):
     def get_model(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, tag=None):
+    def get_root_param(self, param, all_params, tag=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -131,7 +131,7 @@ class HDDM(object):
                               upper=self.param_ranges['%s_upper'%param],
                               value=init_val)
 
-    def get_tau_param(self, param, tag=None):
+    def get_tau_param(self, param, all_params, tag=None):
         if tag is None:
             tag = '_tau'
         else:
@@ -139,7 +139,7 @@ class HDDM(object):
 
         return pm.Uniform(param + tag, lower=0, upper=800, plot=False)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx):
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params):
         if len(param_name) != 1: # if there is a tag attached to the param
             param = param_name[0]
             tag = param_name[1:] + '_' + str(subj_idx) # create new name for the subj parameter
