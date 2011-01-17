@@ -4,7 +4,7 @@
 # on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
 #
-# This implementation is about 170 times faster than the matlab
+# This implementation is about 170 times faT than the matlab
 # reference version.
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
@@ -31,16 +31,16 @@ cdef extern from "math.h":
 DTYPE = np.double
 ctypedef double DTYPE_t
 
-cpdef double pdf(double t, double v, double a, double z, double err, unsigned int logp=0):
+cpdef double pdf(double x, double v, double a, double z, double err, unsigned int logp=0):
     """Compute the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
-    if t <= 0:
+    if x <= 0:
         if logp == 0:
             return 0
         else:
             return -np.Inf
-    cdef double tt = t/(pow(a,2)) # use normalized time
+    cdef double tt = x/(pow(a,2)) # use normalized time
     # CHANGE: Relative starting point is expected now.
     cdef double w = z
     #cdef double w = z/a # convert to relative start point
@@ -56,7 +56,6 @@ cpdef double pdf(double t, double v, double a, double z, double err, unsigned in
         kl=fmax(kl,1./(PI*sqrt(tt))) # ensure boundary conditions met
     else: # if error threshold set too high
         kl=1./(PI*sqrt(tt)) # set to boundary condition
-
 
     # calculate number of terms needed for small t
     if 2*sqrt(2*PI*tt)*err<1: # if error threshold is set low enough
@@ -83,91 +82,52 @@ cpdef double pdf(double t, double v, double a, double z, double err, unsigned in
 
     # convert to f(t|v,a,w)
     if logp == 0:
-        return p*exp(-v*a*w -(pow(v,2))*t/2.)/(pow(a,2))
+        return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
     else:
-        return log(p) + (-v*a*w -(pow(v,2))*t/2.) - 2*log(a)
+        return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
 
-cpdef double pdf_sign(double t, double v, double a, double z, double ter, double err, int logp=0):
+cpdef double pdf_sign(double x, double v, double a, double z, double t, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
     if a<z or z<=0 or z<0 or a<0:
         return -np.Inf
 
-    if t<0:
-        return pdf(fabs(t)-ter, v, a, z, err, logp)
+    if x<0:
+        return pdf(fabs(x)-t, v, a, z, err, logp)
     else:
-        return pdf(t-ter, -v, a, 1.-z, err, logp)
+        return pdf(x-t, -v, a, 1.-z, err, logp)
     
     
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double ter, double err, int logp=0):
+def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, int logp=0):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
     for i from 0 <= i < size:
-        y[i] = pdf_sign(x[i], v, a, z, ter, err, logp)
+        y[i] = pdf_sign(x[i], v, a, z, t, err, logp)
     return y
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, ter, double err, int logp=0, multi=None):
+def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int logp=0, multi=None):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
 
     if multi is None:
-        return pdf_array(x, v=v, a=a, z=z, ter=ter, err=err, logp=logp)
+        return pdf_array(x, v=v, a=a, z=z, t=t, err=err, logp=logp)
     else:
-        params = {'v':v, 'z':z, 'ter':ter, 'a':a}
+        params = {'v':v, 'z':z, 't':t, 'a':a}
         params_iter = copy(params)
         for i from 0 <= i < size:
             for param in multi:
                 params_iter[param] = params[param][i]
                 
-            y[i] = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['ter'], err=err, logp=logp)
+            y[i] = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err=err, logp=logp)
 
         return y
     
-
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_mc_interp(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=0.0001, int logp=0, int logspace=0, double samples=50., unsigned int reps=10, unsigned int k=2):
-    cdef double max_rt = np.max(np.abs(x))
-    cdef np.ndarray[DTYPE_t, ndim=1] out = np.empty_like(x)
-    
-    import scipy.interpolate
-    if logspace:
-        x_pos = (np.logspace(0,1,samples)-1)*(4./9.)
-        x_interp = np.concatenate((-x_pos[::-1], x_pos))
-    else:
-        x_lower = np.linspace(-max_rt, 0, samples/2.)
-        x_upper = np.linspace(0, max_rt, samples/2.)
-            
-    wfpt_lower = wiener_like_full_mc(x=x_lower,
-                                      v=v,
-                                      sv=sv,
-                                      z=z,
-                                      sz=sz,
-                                      ter=ter,
-                                      ster=ster,
-                                      a=a, err=err, reps=reps, logp=0)
-    wfpt_upper = wiener_like_full_mc(x=x_upper,
-                                      v=v,
-                                      sv=sv,
-                                      z=z,
-                                      sz=sz,
-                                      ter=ter,
-                                      ster=ster,
-                                      a=a, err=err, reps=reps, logp=out)
-
-    out[x<0] = scipy.interpolate.InterpolatedUnivariateSpline(x_lower, wfpt_lower,k=k)(x[x<0])
-    out[x>0] = scipy.interpolate.InterpolatedUnivariateSpline(x_upper, wfpt_upper,k=k)(x[x>0])
-
-    if logp == 1:
-        return np.log(out)
-    else:
-        return out
-    
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, double z, double sz, double ter, double ster, double a, double err=.0001, int logp=0, unsigned int reps=10):
+def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, int logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
 
@@ -177,18 +137,18 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double sv, doub
         zero_prob = 0
         
     # Create samples
-    cdef np.ndarray[DTYPE_t, ndim=1] ter_samples = np.random.uniform(size=reps, low=ter-ster/2., high=ter+ster/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-sz/2., high=z+sz/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=sv)
+    cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=V)
     cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
 
     for rep from 0 <= rep < reps:
         for i from 0 <= i < num_resps:
-            if (fabs(x[i])-ter_samples[rep]) < 0:
+            if (fabs(x[i])-t_samples[rep]) < 0:
                 probs[rep,i] = zero_prob
             elif a <= z_samples[rep]:
                 probs[rep,i] = zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], ter_samples[rep], err=err, logp=logp)
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=logp)
 
     return np.mean(probs, axis=0)

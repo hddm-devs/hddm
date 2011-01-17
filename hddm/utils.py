@@ -427,7 +427,7 @@ def EZ_subjs(data):
     params['v'] = v
     params['a'] = a
     params['t'] = t-.2 if t-.2>0 else .1 # Causes problems otherwise
-    params['z'] = a/2.
+    params['z'] = .5
 
     
     # Estimate EZ parameters for each subject
@@ -438,7 +438,7 @@ def EZ_subjs(data):
                 params['v_%i'%subj] = v
                 params['a_%i'%subj] = a
                 params['t_%i'%subj] = 0 #t-.2 if t-.2>0 else .1
-                params['z_%i'%subj] = a/2.
+                params['z_%i'%subj] = .5
             except ValueError:
                 # Subject either had 0%, 50%, or 100% correct, which does not work
                 # with easy. But we can deal with that by just not initializing the
@@ -456,7 +456,7 @@ def EZ_subjs(data):
         
 def EZ_param_ranges(data, range_=1.):
     v, a, t = EZ_data(data)
-    z = a/2.
+    z = .5
     param_ranges = {'a_lower': a-range_,
                     'a_upper': a+range_,
                     'z_lower': z-range_,
@@ -525,7 +525,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     Assumptions of the EZ-diffusion model:
     * The error RT distribution is identical to the correct RT distrib.
-    * z=a/2 -- starting point is equidistant from the response boundaries
+    * z=.5 -- starting point is equidistant from the response boundaries
     * sv=0 -- across-trial variability in drift rate is negligible
     * sz=0  -- across-trial variability in starting point is negligible
     * st=0  -- across-trial range in nondecision time is negligible

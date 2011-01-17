@@ -7,18 +7,14 @@ np.seterr(divide='ignore')
 
 import hddm
 
-def wiener_like_simple(value, v, z, ter, a):
+def wiener_like_simple(value, v, z, t, a):
     """Log-likelihood for the simple DDM"""
-    if z is None:
-        z = .5
-    return np.sum(hddm.wfpt.pdf_array(value, v=v, a=a, z=z, ter=ter, err=.0001, logp=1))
-    #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, ter=ter, a=a, err=.0001)
+    return np.sum(hddm.wfpt.pdf_array(value, v=v, a=a, z=z, t=t, err=.0001, logp=1))
+    #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, t=t, a=a, err=.0001)
 
 @pm.randomwrap
-def wiener_simple(v, z, ter, a, size=1):
-    if z is None:
-        z = .5
-    return gen_ddm_rts(v=v, z=z, ter=ter, a=a, sz=0, sv=0, ster=0, size=size)
+def wiener_simple(v, z, t, a, size=1):
+    return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=0, V=0, T=0, size=size)
 
 WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        logp=wiener_like_simple,
@@ -26,26 +22,24 @@ WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        dtype=np.float,
                                        mv=True)
 
-def pdf_array_multi_py(x, v, a, z, ter, multi=None, err=0.0001, logp=1):
+def pdf_array_multi_py(x, v, a, z, t, multi=None, err=0.0001, logp=1):
     size = x.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
-        return hddm.wfpt.pdf_array(x, v=v, a=a, z=z, ter=ter, err=err, logp=logp)
+        return hddm.wfpt.pdf_array(x, v=v, a=a, z=z, t=t, err=err, logp=logp)
     else:
-        params = {'v':v, 'z':z, 'ter':ter, 'a':a}
+        params = {'v':v, 'z':z, 't':ter, 'a':a}
         params_iter = copy(params)
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
-            y[i] = hddm.wfpt.pdf_sign(t=x[i], v=params_iter['v'], a=params_iter['a'], z=params_iter['z'], ter=params_iter['ter'], err=err, logp=logp)
+            y[i] = hddm.wfpt.pdf_sign(x=x[i], v=params_iter['v'], a=params_iter['a'], z=params_iter['z'], t=params_iter['t'], err=err, logp=logp)
         return y
 
-def wiener_like_simple_multi(value, v, z, ter, a, multi=None):
+def wiener_like_simple_multi(value, v, z, t, a, multi=None):
     """Log-likelihood for the simple DDM"""
-    if z is None:
-        z = .5
-    return np.sum(hddm.wfpt.pdf_array_multi(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
-    #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, ter=ter, err=.001, logp=1, multi=multi))
+    return np.sum(hddm.wfpt.pdf_array_multi(value, v=v, a=a, z=z, t=t, err=.001, logp=1, multi=multi))
+    #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, t=t, err=.001, logp=1, multi=multi))
             
 WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                             logp=wiener_like_simple_multi,
@@ -53,14 +47,12 @@ WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Proces
                                             mv=True)
 
 @pm.randomwrap
-def wiener_full(v, z, ter, a, sv, sz, ster, size=1):
-    if z is None:
-        z = .5
-    return gen_ddm_rts(v=v, z=z, ter=ter, a=a, sz=sz, sv=sv, ster=ster, size=size)
+def wiener_full(v, z, t, a, V, Z, T, size=1):
+    return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=Z, V=V, T=T, size=size)
 
-def wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a):
+def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=10, logp=1))
+    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001, reps=10, logp=1))
  
 WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     logp=wiener_like_full_mc,
@@ -68,24 +60,13 @@ WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                     dtype=np.float,
                                     mv=True)
 
-def wiener_like_full_mc_interp(value, v, sv, z, sz, ter, ster, a):
-    """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, sv, z, sz, ter, ster, a, err=.0001, reps=100, logp=1, samples=50))
- 
-WienerAvgInterp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                          logp=wiener_like_full_mc_interp,
-                                          random=wiener_full,
-                                          dtype=np.float,
-                                          mv=True)
-
-
         
-def wiener_like2(value, v, a, z, ter):
+def wiener_like2(value, v, a, z, t):
     """Log-likelihood of the DDM for one RT point."""
-    prob = hddm.wfpt.pdf_sign(t=value, v=v, a=a, z=z, ter=ter, err=0.0001, logp=1)
+    prob = hddm.wfpt.pdf_sign(x=value, v=v, a=a, z=z, t=t, err=0.0001, logp=1)
     
     #if prob == -np.Inf:
-    #    print value, ter, v, a, z
+    #    print value, t, v, a, z
     return prob
 
 Wiener2 = pm.stochastic_from_dist(name="Wiener Diffusion Process",
@@ -112,21 +93,21 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
 
 
 def get_avg_likelihood(x, params):
-    pdf_upper = np.mean(hddm.wfpt.wiener_like_mult(t=x,
+    pdf_upper = np.mean(hddm.wfpt.wiener_like_mult(x=x,
                                               v=-params['v'],
-                                              sv=params['sv'],
+                                              V=params['V'],
                                               z=params['a']-params['z'],
-                                              sz=params['sz'], ter=params['ter'],
-                                              ster=params['ster'],
+                                              Z=params['Z'], t=params['t'],
+                                              T=params['T'],
                                               a=params['a'],
                                               err=.0001, reps=100), axis=0)
-    pdf_lower = np.mean(hddm.wfpt.wiener_like_mult(t=x,
+    pdf_lower = np.mean(hddm.wfpt.wiener_like_mult(x=x,
                                               v=params['v'],
-                                              sv=params['sv'],
+                                              V=params['V'],
                                               z=params['z'],
-                                              sz=params['sz'],
-                                              ter=params['ter'],
-                                              ster=params['ster'],
+                                              Z=params['Z'],
+                                              t=params['t'],
+                                              T=params['T'],
                                               a=params['a'],
                                               err=.0001, reps=100), axis=0)
     
@@ -138,26 +119,26 @@ def get_avg_likelihood(x, params):
 ################################
 # Linear Ballistic Accumulator
 
-def LBA_like(value, a, z, ter, sv, v0, v1=0., logp=True, normalize_v=False):
+def LBA_like(value, a, z, t, V, v0, v1=0., logp=True, normalize_v=False):
     """Linear Ballistic Accumulator PDF
     """
     if z is None:
         z = a/2.
 
-    #print a, z, ter, v, sv
-    prob = hddm.lba.lba_like(np.asarray(value, dtype=np.double), z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
+    #print a, z, t, v, V
+    prob = hddm.lba.lba_like(np.asarray(value, dtype=np.double), z, a, t, V, v0, v1, int(logp), int(normalize_v))
     return prob
     
-def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, normalize_v=False):
+def LBA_like_multi(value, a, z, t, V, v0, v1=0., multi=None, logp=True, normalize_v=False):
     """Linear Ballistic Accumulator PDF
     """
     size = value.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
         return hddm.lba.lba_like(np.asarray(value, dtype=np.double),
-                            z, a, ter, sv, v0, v1, int(logp), int(normalize_v))
+                            z, a, t, V, v0, v1, int(logp), int(normalize_v))
     else:
-        params = {'v0':v0, 'v1':v1, 'z':z, 'ter':ter, 'a':a, 'sv':sv}
+        params = {'v0':v0, 'v1':v1, 'z':z, 't':ter, 'a':a, 'V':V}
         params_iter = copy(params) # Here we set the individual values
 
         for i in range(size):
@@ -166,8 +147,8 @@ def LBA_like_multi(value, a, z, ter, sv, v0, v1=0., multi=None, logp=True, norma
             y[i] = hddm.lba.lba_like(np.asarray([value[i]], dtype=np.double),
                                 np.double(params_iter['z']),
                                 np.double(params_iter['a']),
-                                np.double(params_iter['ter']),
-                                np.double(params_iter['sv']),
+                                np.double(params_iter['t']),
+                                np.double(params_iter['V']),
                                 np.double(params_iter['v0']),
                                 np.double(params_iter['v1']),
                                 logp=int(logp), normalize_v=int(normalize_v))
@@ -198,7 +179,7 @@ try:
     a_gpu = None
     z_gpu = None
     v_gpu = None
-    ter_gpu = None
+    t_gpu = None
     out = None
     dev_pool_input = DeviceMemoryPool()
     dev_pool_output = DeviceMemoryPool()
@@ -211,7 +192,7 @@ try:
 except:
     gpu = False
 
-def wiener_like_gpu_single(value, a, z, v, ter, debug=False):
+def wiener_like_gpu_single(value, a, z, v, t, debug=False):
     """Log-likelihood for the simple DDM"""
     if not gpu:
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
@@ -243,7 +224,7 @@ def wiener_like_gpu_single(value, a, z, v, ter, debug=False):
 
 
 
-def wiener_like_cpu(value, a, z, v, ter, debug=False):
+def wiener_like_cpu(value, a, z, v, t, debug=False):
     """Test log likelihood for gpu (uses cpu).
     """
     if z[0] is None:
@@ -251,7 +232,7 @@ def wiener_like_cpu(value, a, z, v, ter, debug=False):
 
     out = np.empty_like(value)
     for i, val in enumerate(value):
-        out[i] = hddm.wfpt.pdf_sign(val, v[i], a[i], z[i], ter[i], 0.001, 1)
+        out[i] = hddm.wfpt.pdf_sign(val, v[i], a[i], z[i], t[i], 0.001, 1)
 
     if not debug:
         return np.sum(out)
@@ -259,7 +240,7 @@ def wiener_like_cpu(value, a, z, v, ter, debug=False):
         return out
     
     
-def wiener_like_gpu(value, a, z, v, ter, debug=False):
+def wiener_like_gpu(value, a, z, v, t, debug=False):
     """Log-likelihood for the simple DDM."""
     if not gpu:
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
@@ -270,14 +251,14 @@ def wiener_like_gpu(value, a, z, v, ter, debug=False):
     else:
         z_array = np.asarray(z).astype(np.float32)
     v_array = np.asarray(v).astype(np.float32)
-    ter_array = np.asarray(ter).astype(np.float32)
+    t_array = np.asarray(ter).astype(np.float32)
 
     tt = copy(value)
-    tt[value>0] -= ter_array[value>0]
-    tt[value<0] += ter_array[value<0]
+    tt[value>0] -= t_array[value>0]
+    tt[value<0] += t_array[value<0]
 
     # Sanity checks
-    if np.any(ter_array<0) or np.any(np.abs(value) < ter_array) or np.any(a_array<z_array):
+    if np.any(ter_array<0) or np.any(np.abs(value) < t_array) or np.any(a_array<z_array):
         if not debug:
             return -np.Inf
 
@@ -295,7 +276,7 @@ def wiener_like_gpu(value, a, z, v, ter, debug=False):
 
     if debug:
         out[ter_array<0] = -np.Inf
-        out[np.abs(value) < ter_array] = -np.Inf
+        out[np.abs(value) < t_array] = -np.Inf
         out[a_array<z_array] = -np.Inf
         
     if not debug:
@@ -305,25 +286,25 @@ def wiener_like_gpu(value, a, z, v, ter, debug=False):
 
 
 def free_gpu():
-    global input_gpu, output_gpu, out, dev_pool, a_gpu, z_gpu, v_gpu, ter_gpu
+    global input_gpu, output_gpu, out, dev_pool, a_gpu, z_gpu, v_gpu, t_gpu
     input_gpu.free()
     output_gpu.free()
     # a_gpu.free()
     # z_gpu.free()
     # v_gpu.free()
-    # ter_gpu.free()
+    # t_gpu.free()
     input_gpu = None
     output_gpu = None
     
     #dev_pool.stop_holding()
     
     
-def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
+def wiener_like_gpu_global(value, a, z, v, t, debug=False):
     """Log-likelihood for the simple DDM."""
     if not gpu:
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
 
-    global input_gpu, output_gpu, out, dev_pool, a_gpu, z_gpu, v_gpu, ter_gpu
+    global input_gpu, output_gpu, out, dev_pool, a_gpu, z_gpu, v_gpu, t_gpu
     
     a_array = np.asarray(a).astype(np.float32)
     if z[0] is None:
@@ -331,10 +312,10 @@ def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
     else:
         z_array = np.asarray(z).astype(np.float32)
     v_array = np.asarray(v).astype(np.float32)
-    ter_array = np.asarray(ter).astype(np.float32)
+    t_array = np.asarray(ter).astype(np.float32)
 
     # Sanity checks
-    if np.any(ter_array<0) or np.any(np.abs(value) < ter_array) or np.any(a_array<z_array):
+    if np.any(ter_array<0) or np.any(np.abs(value) < t_array) or np.any(a_array<z_array):
         if not debug:
             return -np.Inf
 
@@ -347,22 +328,22 @@ def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
         # a_gpu = cuda.mem_alloc(value.nbytes)
         # z_gpu = cuda.mem_alloc(value.nbytes)
         # v_gpu = cuda.mem_alloc(value.nbytes)
-        # ter_gpu = cuda.mem_alloc(value.nbytes)
+        # t_gpu = cuda.mem_alloc(value.nbytes)
 
     #cuda.memcpy_htod(a_gpu, a_array)
     #cuda.memcpy_htod(z_gpu, z_array)
     #cuda.memcpy_htod(v_gpu, v_array)
-    #cuda.memcpy_htod(ter_gpu, ter_array)
+    #cuda.memcpy_htod(ter_gpu, t_array)
     a_gpu = gpuarray.to_gpu(a_array, allocator=dev_pool_a.allocate)
     z_gpu = gpuarray.to_gpu(z_array, allocator=dev_pool_z.allocate)
     v_gpu = gpuarray.to_gpu(v_array, allocator=dev_pool_v.allocate)
-    ter_gpu = gpuarray.to_gpu(ter_array, allocator=dev_pool_ter.allocate)
+    t_gpu = gpuarray.to_gpu(ter_array, allocator=dev_pool_ter.allocate)
     
     hddm.wfpt_gpu.pdf_func_ter(input_gpu,
                           a_gpu,
                           z_gpu, 
                           v_gpu,
-                          ter_gpu,
+                          t_gpu,
                           np.float32(.0001), np.int16(1),
                           output_gpu,
                           block=(256, 1, 1),
@@ -373,7 +354,7 @@ def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
 
     if debug:
         out[ter_array<0] = -np.Inf
-        out[np.abs(value) < ter_array] = -np.Inf
+        out[np.abs(value) < t_array] = -np.Inf
         out[a_array<z_array] = -np.Inf
         
     if not debug:
@@ -381,7 +362,7 @@ def wiener_like_gpu_global(value, a, z, v, ter, debug=False):
     else:
         return out
 
-def wiener_like_gpu_opt(value, a, z, v, ter, debug=False):
+def wiener_like_gpu_opt(value, a, z, v, t, debug=False):
     """Log-likelihood for the simple DDM."""
     if not gpu:
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
@@ -396,16 +377,16 @@ def wiener_like_gpu_opt(value, a, z, v, ter, debug=False):
         mem = 256
 
     v_array = np.asarray(v).astype(np.float32)
-    ter_array = np.asarray(ter).astype(np.float32)
+    t_array = np.asarray(ter).astype(np.float32)
 
     tt = copy(value)
-    tt[value>0] -= ter_array[value>0]
-    tt[value<0] += ter_array[value<0]
+    tt[value>0] -= t_array[value>0]
+    tt[value<0] += t_array[value<0]
 
     z_array[value>0] = a_array[value>0]-z_array[value>0]
     v_array[value>0] = -v_array[value>0]
     
-    if np.any(ter_array<0) or np.any(ter_array[value[value>0] < ter_array[value>0]]) or np.any(tt[np.abs(value[value<0]) < ter_array[value<0]]) or np.any(a_array<z_array):
+    if np.any(ter_array<0) or np.any(ter_array[value[value>0] < t_array[value>0]]) or np.any(tt[np.abs(value[value<0]) < t_array[value<0]]) or np.any(a_array<z_array):
         if not debug:
             return -np.Inf
 

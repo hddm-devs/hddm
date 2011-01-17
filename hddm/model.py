@@ -50,6 +50,8 @@ class HDDM(object):
                                  't_upper': 1.,
                                  'v_lower': -3.,
                                  'v_upper': 3.,
+                                 'V_lower': 0.,
+                                 'V_upper': .2,
                                  'T_lower': 0.,
                                  'T_upper': 1.,
                                  'Z_lower': 0.,
@@ -78,8 +80,10 @@ class HDDM(object):
             
             self.param_ranges = {'a_lower': .2,
                                  'a_upper': 4.,
-                                 'v_lower': 0.1,
-                                 'v_upper': 3.,
+                                 'v0_lower': 0.1,
+                                 'v0_upper': 3.,
+                                 'v1_lower': 0.1,
+                                 'v1_upper': 3.,
                                  'z_lower': .0,
                                  'z_upper': 2.,
                                  't_lower': .05,
@@ -88,8 +92,10 @@ class HDDM(object):
                                  'V_upper': 2.}
             
             if self.normalize_v:
-                self.param_ranges['v_lower'] = 0.
-                self.param_ranges['v_upper'] = 1.
+                self.param_ranges['v0_lower'] = 0.
+                self.param_ranges['v0_upper'] = 1.
+                self.param_ranges['v1_lower'] = 0.
+                self.param_ranges['v1_upper'] = 1.
 
 
     def get_param_names(self):
@@ -105,15 +111,10 @@ class HDDM(object):
     def get_model(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, all_params, tag=None):
+    def get_root_param(self, param, all_params, tag=None, pos=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
-        if tag is None:
-            tag = ''
-        else:
-            tag = '_' + tag
-
         if param in self.init_params:
             init_val = self.init_params[param]
         else:
@@ -123,7 +124,7 @@ class HDDM(object):
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
 
         elif param == 'z' and self.no_bias: # starting point position (bias)
-            return pm.Lambda("z%s"%tag, lambda x=param: .5) #None # z = a/2.
+            return pm.Lambda("z%s"%tag, lambda x=param: .5)
 
         else:
             return pm.Uniform("%s%s"%(param, tag),
@@ -131,68 +132,47 @@ class HDDM(object):
                               upper=self.param_ranges['%s_upper'%param],
                               value=init_val)
 
-    def get_tau_param(self, param, all_params, tag=None):
-        if tag is None:
-            tag = '_tau'
-        else:
-            tag = tag + '_tau'
+    def get_tau_param(self, param_name, all_params, tag=None):
+        return pm.Uniform(param_name + tag, lower=0, upper=800, plot=False)
 
-        return pm.Uniform(param + tag, lower=0, upper=800, plot=False)
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag=None, pos=None, plot=False):
+        param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
+        init_param_name = '%s%i'%(param_name, subj_idx)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params):
-        if len(param_name) != 1: # if there is a tag attached to the param
-            param = param_name[0]
-            tag = param_name[1:] + '_' + str(subj_idx) # create new name for the subj parameter
-        else:
-            param = param_name
-            tag = '_' + str(subj_idx)
-
-        init_param_name = '%s_%i'%(param_name,subj_idx)
         if init_param_name in self.init_params:
             init_val = self.init_params[init_param_name]
         else:
             init_val = None
 
-        return self.get_child_param(param, parent_mean, parent_tau, tag=tag, init_val=init_val)
-
-    def get_child_param(self, param, parent_mean, parent_tau, tag=None, init_val=None, plot=False):
-        if tag is None:
-            tag = ''
-
-        if not tag.startswith('_'):
-            tag = '_'+tag
-    
-        if param == 'V' and self.fix_sv is not None:
-            return pm.Lambda("V%s"%tag, lambda x=parent_mean: parent_mean,
+        if param_name == 'V' and self.fix_sv is not None:
+            return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
                              plot=plot, trace=self.trace_subjs)
 
-        elif param == 'z' and self.no_bias:
-            return pm.Lambda("z%s"%tag, lambda x=parent_mean: .5,
+        elif param_name == 'z' and self.no_bias:
+            return pm.Lambda(param_full_name, lambda x=parent_mean: .5,
                              plot=plot, trace=self.trace_subjs)
 
-        elif param == 'e' or param.startswith('v'):
-            return pm.Normal("%s%s"%(param,tag),
+        elif param_name == 'e' or param_name.startswith('v'):
+            return pm.Normal(param_full_name,
                              mu=parent_mean,
                              tau=parent_tau,
                              plot=plot, trace=self.trace_subjs,
                              value=init_val)
 
         else:
-            return pm.TruncatedNormal("%s%s"%(param,tag),
-                                      a=self.param_ranges['%s_lower'%param],
-                                      b=self.param_ranges['%s_upper'%param],
+            return pm.TruncatedNormal(param_full_name,
+                                      a=self.param_ranges['%s_lower'%param_name],
+                                      b=self.param_ranges['%s_upper'%param_name],
                                       mu=parent_mean, tau=parent_tau,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
-
-
 
     def _get_simple(self, name, data, params, idx=None):
         if idx is None:
             return hddm.likelihoods.WienerSimple(name,
                                                  value=data['rt'].flatten(), 
                                                  v=params['v'], 
-                                                 ter=params['t'], 
+                                                 t=params['t'], 
                                                  a=params['a'], 
                                                  z=params['z'],
                                                  observed=True)
@@ -200,7 +180,7 @@ class HDDM(object):
             return hddm.likelihoods.WienerSimple(name,
                                 value=data['rt'].flatten(), 
                                 v=params['v'][idx], 
-                                ter=params['t'][idx], 
+                                t=params['t'][idx], 
                                 a=params['a'][idx], 
                                 z=params['z'][idx],
                                 observed=True)
@@ -211,7 +191,7 @@ class HDDM(object):
             return hddm.likelihoods.WienerGPUSingle(name,
                                    value=data['rt'].flatten(), 
                                    v=params['v'], 
-                                   ter=params['t'], 
+                                   t=params['t'], 
                                    a=params['a'], 
                                    z=params['z'],
                                    observed=True)
@@ -219,7 +199,7 @@ class HDDM(object):
             return hddm.likelihoods.WienerGPUSingle(name,
                                    value=data['rt'].flatten(), 
                                    v=params['v'][idx], 
-                                   ter=params['t'][idx], 
+                                   t=params['t'][idx], 
                                    a=params['a'][idx],
                                    z=params['z'][idx],
                                    observed=True)
@@ -229,24 +209,24 @@ class HDDM(object):
             return hddm.likelihoods.WienerAvg(name,
                              value=data['rt'].flatten(), 
                              v=params['v'], 
-                             sv=params['V'],
-                             ter=params['t'],
-                             ster=params['T'], 
+                             V=params['V'],
+                             t=params['t'],
+                             T=params['T'], 
                              a=params['a'],
                              z=params['z'],
-                             sz=params['Z'],
+                             Z=params['Z'],
                              observed=True)
 
         else:
             return hddm.likelihoods.WienerAvg(name,
                              value=data['rt'].flatten(), 
                              v=params['v'][idx], 
-                             sv=params['V'][idx],
-                             ter=params['t'][idx],
-                             ster=params['T'][idx], 
+                             V=params['V'][idx],
+                             t=params['t'][idx],
+                             T=params['T'][idx], 
                              a=params['a'][idx],
                              z=params['z'][idx],
-                             sz=params['Z'][idx],
+                             Z=params['Z'][idx],
                              observed=True)
 
 
@@ -258,22 +238,22 @@ class HDDM(object):
             v_trial = np.empty(trials, dtype=object)
             ter_trial = np.empty(trials, dtype=object)
             for trl in range(trials):
-                z_trial[trl] = hddm.likelihoods.CenterUniform("z_%i"%trl,
-                                             center=params['z'],
-                                             width=params['sz'],
+                z_trial[trl] = hddm.likelihoods.CenterUniform("z%i"%trl,
+                                             cent=params['z'],
+                                             width=params['Z'],
                                              plot=False, observed=False, trace=False)
-                v_trial[trl] = pm.Normal("v_%i"%trl,
+                v_trial[trl] = pm.Normal("v%i"%trl,
                                          mu=params['v'],
-                                         tau=1/(params['sv']**2),
+                                         tau=1/(params['V']**2),
                                          plot=False, observed=False, trace=False)
-                ter_trial[trl] = hddm.likelihoods.CenterUniform("ter_%i"%trl,
-                                               center=params['ter'],
-                                               width=params['ster'],
+                ter_trial[trl] = hddm.likelihoods.CenterUniform("t%i"%trl,
+                                               cent=params['t'],
+                                               width=params['T'],
                                                plot=False, observed=False, trace=False)
                 ddm[i][trl] = hddm.likelihoods.Wiener2("ddm_%i_%i"%(trl, i),
                                       value=data['rt'].flatten()[trl],
                                       v=v_trial[trl],
-                                      ter=ter_trial[trl], 
+                                      t=ter_trial[trl], 
                                       a=param['a'],
                                       z=z_trial[trl],
                                       observed=True, trace=False)
@@ -287,22 +267,22 @@ class HDDM(object):
             v_trial = np.empty(trials, dtype=object)
             ter_trial = np.empty(trials, dtype=object)
             for trl in range(trials):
-                z_trial[trl] = hddm.likelihoods.CenterUniform("z_%i"%trl,
-                                             center=params['z'],
-                                             width=params['sz'],
+                z_trial[trl] = hddm.likelihoods.CenterUniform("z%i"%trl,
+                                             cent=params['z'],
+                                             width=params['Z'],
                                              plot=False, observed=False)
                 v_trial[trl] = pm.Normal("v_%i"%trl,
                                          mu=params['v'],
-                                         tau=1/(params['sv']**2),
+                                         tau=1/(params['V']**2),
                                          plot=False, observed=False)
-                ter_trial[trl] = hddm.likelihoods.CenterUniform("ter_%i"%trl,
-                                               center=params['ter'],
-                                               width=params['ster'],
+                ter_trial[trl] = hddm.likelihoods.CenterUniform("t%i"%trl,
+                                               cent=params['t'],
+                                               width=params['T'],
                                                plot=False, observed=False)
-                ddm[trl] = hddm.likelihoods.Wiener2("ddm_%i"%trl,
+                ddm[trl] = hddm.likelihoods.Wiener2("ddm%i"%trl,
                                    value=data['rt'].flatten()[trl],
                                    v=v_trial[trl],
-                                   ter=ter_trial[trl], 
+                                   t=ter_trial[trl],
                                    a=param['a'],
                                    z=z_trial[trl],
                                    observed=True)
@@ -315,10 +295,10 @@ class HDDM(object):
                                         value=data['rt'].flatten(),
                                         a=params['a'],
                                         z=params['z'],
-                                        ter=params['t'],
+                                        t=params['t'],
                                         v0=params['v0'],
                                         v1=params['v1'],
-                                        sv=params['V'],
+                                        V=params['V'],
                                         normalize_v=self.normalize_v,
                                         observed=True)
         else:
@@ -326,10 +306,10 @@ class HDDM(object):
                                         value=data['rt'].flatten(),
                                         a=params['a'][idx],
                                         z=params['z'][idx],
-                                        ter=params['t'][idx],
+                                        t=params['t'][idx],
                                         v0=params['v0'][idx],
                                         v1=params['v1'][idx],
-                                        sv=params['V'][idx],
+                                        V=params['V'][idx],
                                         normalize_v=self.normalize_v,
                                         observed=True)    
 

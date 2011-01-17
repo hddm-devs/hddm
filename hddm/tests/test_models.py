@@ -75,7 +75,7 @@ class TestMulti(unittest.TestCase):
 
         data = self.create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
 
-        model = hddm.models.Multi(data, depends_on={param:['stim']}, is_subj_model=subj)
+        model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_subj_model=subj)
         model.mcmc()
 
         print model.summary()
@@ -93,7 +93,7 @@ class TestMulti(unittest.TestCase):
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingle, self).__init__(*args, **kwargs)
-        gen_data = False
+        gen_data = True
         self.data, self.params_true = gen_rand_data(gen_data=gen_data, tag='global_test')
         self.data_subj, self.params_true_subj = gen_rand_subj_data(gen_data=gen_data, samples=300, add_noise=False, tag='subj_test')
         self.data_basic, self.params_true_basic = gen_rand_data(gen_data=gen_data, samples=2000, no_var=True, tag='global_basic_test')
@@ -123,24 +123,24 @@ class TestSingle(unittest.TestCase):
         self.burn = 5000
         
     def test_basic(self):
-        model = hddm.models.Multi(self.data_basic, no_bias=True)
+        model = hddm.model.HDDM(self.data_basic, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_basic_no_s)
         
     def test_full_mc(self):
-        model = hddm.models.Multi(self.data, model_type='full_mc', no_bias=False)
+        model = hddm.model.HDDM(self.data, model_type='full_mc', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_lba(self):
-        model = hddm.models.Multi(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
+        model = hddm.model.HDDM(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
         model.mcmc(samples=self.samples, burn=self.burn)
         #self.check_model(model, self.params_true_lba)
         print model.params_est
         return model
 
     def test_lba_subj(self):
-        model = hddm.models.Multi(self.data_subj, is_subj_model=True, normalize_v=True, model_type='lba')
+        model = hddm.model.HDDM(self.data_subj, is_subj_model=True, normalize_v=True, model_type='lba')
         model.mcmc(samples=self.samples, burn=self.burn)
         #self.check_model(model, self.params_true_lba)
         print model.params_est
@@ -148,29 +148,29 @@ class TestSingle(unittest.TestCase):
 
     def test_full(self):
         return
-        model = hddm.models.Multi(self.data, model_type='full', no_bias=False)
+        model = hddm.model.HDDM(self.data, model_type='full', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_full_subj(self):
         return
-        model = hddm.models.Multi(self.data_subj, model_type='full', is_subj_model=True, no_bias=False)
+        model = hddm.model.HDDM(self.data_subj, model_type='full', is_subj_model=True, no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_subj)
 
     def test_subjs_fixed_z(self):
-        model = hddm.models.Multi(self.data_subj, model_type='simple', is_subj_model=True, no_bias=False)
+        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true)
 
     def test_simple(self):
-        model = hddm.models.Multi(self.data, model_type='simple', no_bias=True)
+        model = hddm.model.HDDM(self.data, model_type='simple', no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_no_s)
         return model
     
     def test_simple_subjs(self):
-        model = hddm.models.Multi(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
+        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         self.check_model(model, self.params_true_subj_no_s)
         return model
@@ -199,7 +199,7 @@ class TestSingle(unittest.TestCase):
 
     def test_chains(self):
         return
-        models = run_parallel_chains(hddm.models.Multi, [data, data], ['test1', 'test2'])
+        models = run_parallel_chains(hddm.model.HDDM, [data, data], ['test1', 'test2'])
         return models
 
     def check_model(self, model, params_true):
@@ -212,7 +212,7 @@ class TestSingle(unittest.TestCase):
         # Test for correct parameter estimation
         for param in params_true.iterkeys():
             # no-bias models do not contain z
-            if model.no_bias and param == 'z':
+            if model._param_factory.no_bias and param == 'z':
                 continue
             
             est = model.params_est[param]

@@ -37,11 +37,11 @@ def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=N
 def simulate_drifts(params, samples, steps, T):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
-    start_delays = np.abs(uniform.rvs(size=(samples), scale=(params['T'])) - params['T']/2. + params['t'])*dt
+    start_delays = np.abs(uniform.rvs(loc=params['t'], scale=params['T'], size=samples) - params['T']/2.)*dt
 
     # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
     # Starting point is relative, so have to convert to absolute first: z*a
-    starting_points = uniform.rvs(size=samples, scale=params['Z']) - params['Z']/2. + params['z']*params['a']
+    starting_points = uniform.rvs(loc=params['z']*params['a'], scale=params['Z'], size=samples) - params['Z']/2.
 
     # Draw drift rates from a normal distribution
     if params['V'] == 0.:
@@ -133,9 +133,9 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
     #params_true = {'v': np.random.normal(loc=-2, scale=4), 'V': np.random.normal(loc=0, scale=.5), 'z': z, 'Z': np.random.normal(loc=0, scale=.5), 't': np.random.normal(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
     if params is None:
         if not no_var:
-            params = {'v': .5, 'V': 0.3, 'z': 1., 'Z': 0.25, 't': .3, 'T': 0.1, 'a': 2}
+            params = {'v': .5, 'V': 0.3, 'z': .5, 'Z': 0.25, 't': .3, 'T': 0.1, 'a': 2}
         else:
-            params = {'v': .5, 'V': 0., 'z': 1., 'Z': 0., 't': .3, 'T': 0., 'a': 2}
+            params = {'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}
 
     if gen_data:
         # Create RT data
@@ -153,6 +153,7 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
 def gen_rand_correlation_data(v=.5, corr=.1):
     params = {'v': v,
               'V': .001,
+              'z': .5,
               't': .3,
               'T': 0.,
               'Z':0}
@@ -161,7 +162,6 @@ def gen_rand_correlation_data(v=.5, corr=.1):
     a_offset = 2
     for i in np.linspace(-1,1,10):
         params['a'] = a_offset + i*corr
-        params['z'] = (a_offset + i*corr)/2.
         data = gen_rand_subj_data(num_subjs=1, params=params, samples=20, add_noise=False)[0]
         theta = np.ones(data.shape) * i
         theta.dtype = dtype=np.dtype([('theta', np.float)])
@@ -194,7 +194,7 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
     #ster = rnd(loc=0, scale=.5)
     #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
-        params = {'v': .5, 'V': 0.1, 'z': 1., 'Z': 0.1, 't': 1., 'T': 0.1, 'a': 2}
+        params = {'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': 1., 'T': 0.1, 'a': 2}
 
     params_subjs = []
     #data = np.empty((samples*num_subjs, 3), dtype=np.float)
@@ -208,7 +208,6 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
         if add_noise:
             params_subj = _add_noise(params_subj)
 
-        params_subj['z'] = params_subj['a']/2.
         params_subjs.append(params_subj)
 
         if gen_data:

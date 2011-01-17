@@ -82,7 +82,7 @@ class DDM(HasTraits):
     iter_plot = Int(30)
     # Number of histogram bins
     bins = Int(100)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'no_bias', 'iter_plot')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'iter_plot')
 
     def _get_dt(self):
         return self.steps / self.T
@@ -118,7 +118,6 @@ class DDMPlot(HasTraits):
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
     plot_full_mc = Bool(False)
-    plot_full_mc_interp = Bool(True)
     plot_lba = Bool(True)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
@@ -126,7 +125,6 @@ class DDMPlot(HasTraits):
     x_analytical = Property(Array)
     
     full_mc = Property(Array)
-    full_mc_interp = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
 
@@ -144,7 +142,6 @@ class DDMPlot(HasTraits):
                 Item('plot_drifts'),
                 Item('plot_simple'),
                 Item('plot_full_mc'),
-                Item('plot_full_mc_interp'),
                 Item('plot_lba'),
                 Item('plot_data'),
 		Item('go'),
@@ -220,23 +217,13 @@ class DDMPlot(HasTraits):
     @timer
     def _get_full_mc(self):
         return hddm.wfpt.wiener_like_full_mc(x=self.x_analytical,
-                                              v=self.ddm.v,
-                                              sv=self.ddm.sv,
-                                              z=self.ddm.z,
-                                              sz=self.ddm.sz,
-                                              ter=self.ddm.ter,
-                                              ster=self.ddm.ster,
-                                              a=self.ddm.a, err=.0001, reps=50)
-    @timer
-    def _get_full_mc_interp(self):
-        return hddm.wfpt.wiener_like_full_mc_interp(x=self.x_analytical,
-                                                     v=self.ddm.v,
-                                                     sv=self.ddm.sv,
-                                                     z=self.ddm.z,
-                                                     sz=self.ddm.sz,
-                                                     ter=self.ddm.ter,
-                                                     ster=self.ddm.ster,
-                                                     a=self.ddm.a, err=.0001, reps=50, samples=100, k=2)
+                                             v=self.ddm.v,
+                                             V=self.ddm.sv,
+                                             z=self.ddm.z,
+                                             Z=self.ddm.sz,
+                                             t=self.ddm.ter,
+                                             T=self.ddm.ster,
+                                             a=self.ddm.a, err=.0001, reps=50)
 
     @timer
     def _get_simple(self):
@@ -244,17 +231,17 @@ class DDMPlot(HasTraits):
                                    a=self.ddm.a,
                                    z=self.ddm.z,
                                    v=self.ddm.v,
-                                   ter=self.ddm.ter, err=.000001)
+                                   t=self.ddm.ter, err=.000001)
 
     @timer
     def _get_lba(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
-                                        a=self.ddm.a,
-                                        z=self.ddm.z_bias,
-                                        v0=self.ddm.v, 
-					v1=self.ddm.sz,
-                                        ter=self.ddm.ter,
-                                        sv=self.ddm.sv, logp=False)
+                                         a=self.ddm.a,
+                                         z=self.ddm.z_bias,
+                                         v0=self.ddm.v, 
+                                         v1=self.ddm.sz,
+                                         t=self.ddm.ter,
+                                         V=self.ddm.sv, logp=False)
 
     def _go_fired(self):
         self.update_plot()
@@ -298,10 +285,6 @@ class DDMPlot(HasTraits):
         if self.plot_full_mc:
             self.plot_histo(x_anal, self.full_mc, color='r')
 
-        # Plot analyitical full averaged likelihood function
-        if self.plot_full_mc_interp:
-            self.plot_histo(x_anal, self.full_mc_interp, color='c')
-
         # Plot analytical simple likelihood function
         if self.plot_simple:
             self.plot_histo(x_anal, self.simple, color='b')
@@ -328,7 +311,7 @@ class DDMPlot(HasTraits):
         # Set axes limits
         self.figure.axes[0].set_ylim((0,1.05))
         self.figure.axes[2].set_ylim((-1.05, 0))
-        self.figure.axes[0].set_xlim((0,self.ddm.T))
+        self.figure.axes[0].set_xlim((0, self.ddm.T))
         self.figure.axes[2].set_xlim((0, self.ddm.T))
         self.figure.axes[1].set_ylim((0, self.ddm.a))
 
