@@ -237,7 +237,7 @@ class DDMPlot(HasTraits):
     def _get_lba(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
                                          a=self.ddm.a,
-                                         z=self.ddm.z_bias,
+                                         z=self.ddm.z,
                                          v0=self.ddm.v, 
                                          v1=self.ddm.sz,
                                          t=self.ddm.ter,

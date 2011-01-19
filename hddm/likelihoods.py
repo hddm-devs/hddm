@@ -54,11 +54,11 @@ def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
     """Log-likelihood for the full DDM using the sampling method"""
     return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001, reps=10, logp=1))
  
-WienerAvg = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                    logp=wiener_like_full_mc,
-                                    random=wiener_full,
-                                    dtype=np.float,
-                                    mv=True)
+WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
+                                       logp=wiener_like_full_mc,
+                                       random=wiener_full,
+                                       dtype=np.float,
+                                       mv=True)
 
         
 def wiener_like2(value, v, a, z, t):

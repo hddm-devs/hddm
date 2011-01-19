@@ -19,6 +19,9 @@ def flip_errors(data):
     
     return data
 
+def return_fixed(value=.5):
+    return value
+
 def scale(x, max=None, min=None):
     x = x.astype(np.float)
     if max is None:
@@ -250,7 +253,8 @@ def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
         
     # Append rows to data
     data = rec.append_fields(data, names=['cond1','cond2','conf', 'contains_A', 'contains_B'],
-                             data=(cond1,cond2,cond_class,contains_A,contains_B), dtypes=['S1','S1','S2','B1','B1'], usemask=False)
+                             data=(cond1,cond2,cond_class,contains_A,contains_B),
+                             dtypes=['S1','S1','S2','B1','B1'], usemask=False)
 
     return data[include]
 
@@ -578,10 +582,10 @@ def plot_rt_fit(model, bins=50, range=(-5.,5.)):
 
         # Plot analytical
         analytical = hddm.wfpt.pdf_array(x,
-                                         v=np.mean(params['v'].trace()),
-                                         a=np.mean(params['a'].trace()),
-                                         z=np.mean(params['z'].trace()),
-                                         ter=np.mean(params['t'].trace()),
+                                         np.mean(params['v'].trace()),
+                                         np.mean(params['a'].trace()),
+                                         np.mean(params['z'].trace()),
+                                         np.mean(params['t'].trace()),
                                          err=0.0001)
 
         plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)

@@ -41,7 +41,7 @@ def simulate_drifts(params, samples, steps, T):
 
     # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
     # Starting point is relative, so have to convert to absolute first: z*a
-    starting_points = uniform.rvs(loc=params['z']*params['a'], scale=params['Z'], size=samples) - params['Z']/2.
+    starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) - params['Z']/2.)*params['a']
 
     # Draw drift rates from a normal distribution
     if params['V'] == 0.:
@@ -133,7 +133,7 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
     #params_true = {'v': np.random.normal(loc=-2, scale=4), 'V': np.random.normal(loc=0, scale=.5), 'z': z, 'Z': np.random.normal(loc=0, scale=.5), 't': np.random.normal(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
     if params is None:
         if not no_var:
-            params = {'v': .5, 'V': 0.3, 'z': .5, 'Z': 0.25, 't': .3, 'T': 0.1, 'a': 2}
+            params = {'v': .5, 'V': 0.5, 'z': .5, 'Z': 0.75, 't': .3, 'T': 0.3, 'a': 2}
         else:
             params = {'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}
 
@@ -194,7 +194,7 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, gen_data=True, ad
     #ster = rnd(loc=0, scale=.5)
     #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
-        params = {'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': 1., 'T': 0.1, 'a': 2}
+        params = {'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
 
     params_subjs = []
     #data = np.empty((samples*num_subjs, 3), dtype=np.float)

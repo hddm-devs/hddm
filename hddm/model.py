@@ -9,8 +9,8 @@ from copy import copy
 import hddm
 import kabuki
 
-@kabuki.hierarchical
-class HDDM(object):
+#@kabuki.hierarchical
+class Base(object):
     """
     This class can generate different hddms:
     - simple DDM (without inter-trial variabilities)
@@ -51,7 +51,7 @@ class HDDM(object):
                                  'v_lower': -3.,
                                  'v_upper': 3.,
                                  'V_lower': 0.,
-                                 'V_upper': .2,
+                                 'V_upper': 1.,
                                  'T_lower': 0.,
                                  'T_upper': 1.,
                                  'Z_lower': 0.,
@@ -124,12 +124,16 @@ class HDDM(object):
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
 
         elif param == 'z' and self.no_bias: # starting point position (bias)
-            return pm.Lambda("z%s"%tag, lambda x=param: .5)
+            return pm.Deterministic(hddm.utils.return_fixed,
+                                    'z%s'%tag,
+                                    'z%s'%tag,
+                                    parents={},
+                                    plot=False)
 
         else:
             return pm.Uniform("%s%s"%(param, tag),
-                              lower=self.param_ranges['%s_lower'%param],
-                              upper=self.param_ranges['%s_upper'%param],
+                              lower=self.param_ranges['%s_lower'%param[0]],
+                              upper=self.param_ranges['%s_upper'%param[0]],
                               value=init_val)
 
     def get_tau_param(self, param_name, all_params, tag=None):
@@ -149,10 +153,13 @@ class HDDM(object):
                              plot=plot, trace=self.trace_subjs)
 
         elif param_name == 'z' and self.no_bias:
-            return pm.Lambda(param_full_name, lambda x=parent_mean: .5,
-                             plot=plot, trace=self.trace_subjs)
+            return pm.Deterministic(hddm.utils.return_fixed,
+                                    param_full_name,
+                                    param_full_name,
+                                    parents={},
+                                    plot=False)
 
-        elif param_name == 'e' or param_name.startswith('v'):
+        elif param_name.startswith('e') or param_name.startswith('v'):
             return pm.Normal(param_full_name,
                              mu=parent_mean,
                              tau=parent_tau,
@@ -206,28 +213,28 @@ class HDDM(object):
 
     def _get_full_mc(self, name, data, params, idx=None):
         if idx is None:
-            return hddm.likelihoods.WienerAvg(name,
+            return hddm.likelihoods.WienerFullMc(name,
                              value=data['rt'].flatten(), 
                              v=params['v'], 
                              V=params['V'],
+                             z=params['z'],
+                             Z=params['Z'],
                              t=params['t'],
                              T=params['T'], 
                              a=params['a'],
-                             z=params['z'],
-                             Z=params['Z'],
                              observed=True)
 
         else:
-            return hddm.likelihoods.WienerAvg(name,
-                             value=data['rt'].flatten(), 
-                             v=params['v'][idx], 
-                             V=params['V'][idx],
-                             t=params['t'][idx],
-                             T=params['T'][idx], 
-                             a=params['a'][idx],
-                             z=params['z'][idx],
-                             Z=params['Z'][idx],
-                             observed=True)
+            return hddm.likelihoods.WienerFullMc(name,
+                                                 value=data['rt'].flatten(), 
+                                                 v=params['v'][idx], 
+                                                 V=params['V'][idx],
+                                                 z=params['z'][idx],
+                                                 Z=params['Z'][idx],
+                                                 t=params['t'][idx],
+                                                 T=params['T'][idx], 
+                                                 a=params['a'][idx],
+                                                 observed=True)
 
 
     def _get_full(self, name, data, params, idx=None):
@@ -314,6 +321,9 @@ class HDDM(object):
                                         observed=True)    
 
 
+@kabuki.hierarchical
+class HDDM(Base):
+    pass
 
 if __name__ == "__main__":
     import doctest

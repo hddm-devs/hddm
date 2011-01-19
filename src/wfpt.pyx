@@ -89,7 +89,7 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
 cpdef double pdf_sign(double x, double v, double a, double z, double t, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
-    if a<z or z<=0 or z<0 or a<0:
+    if a<z or z<0 or z>1 or a<0:
         return -np.Inf
 
     if x<0:
@@ -139,7 +139,12 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     # Create samples
     cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
     cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=V)
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
+    if V == 0.:
+        v_samples = np.repmat(v, reps)
+    else:
+        v_samples = np.random.normal(size=reps, loc=v, scale=V)
+        
     cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
 
     for rep from 0 <= rep < reps:
