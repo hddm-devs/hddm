@@ -19,7 +19,7 @@ class Base(object):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=True):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False):
         self.trace_subjs = trace_subjs
 
         if model_type is None:
@@ -56,8 +56,8 @@ class Base(object):
                                  'T_upper': 1.,
                                  'Z_lower': 0.,
                                  'Z_upper': 1.,
-                                 'e_lower': -.5,
-                                 'e_upper': .5
+                                 'e_lower': -.3,
+                                 'e_upper': .3
                                  }
             if not init:
                 # Default param ranges
@@ -80,10 +80,8 @@ class Base(object):
             
             self.param_ranges = {'a_lower': .2,
                                  'a_upper': 4.,
-                                 'v0_lower': 0.1,
-                                 'v0_upper': 3.,
-                                 'v1_lower': 0.1,
-                                 'v1_upper': 3.,
+                                 'v_lower': 0.1,
+                                 'v_upper': 3.,
                                  'z_lower': .0,
                                  'z_upper': 2.,
                                  't_lower': .05,
@@ -92,10 +90,8 @@ class Base(object):
                                  'V_upper': 2.}
             
             if self.normalize_v:
-                self.param_ranges['v0_lower'] = 0.
-                self.param_ranges['v0_upper'] = 1.
-                self.param_ranges['v1_lower'] = 0.
-                self.param_ranges['v1_upper'] = 1.
+                self.param_ranges['v_lower'] = 0.
+                self.param_ranges['v_upper'] = 1.
 
 
     def get_param_names(self):
@@ -321,9 +317,77 @@ class Base(object):
                                         observed=True)    
 
 
+
 @kabuki.hierarchical
 class HDDM(Base):
     pass
+
+
+@kabuki.hierarchical
+class HDDMTwoEffects(Base):
+    def __init__(self, *args, **kwargs):
+        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
+
+        Arguments:
+        ==========
+        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
+
+        Keyword Arguments:
+        ==================
+        effect_on <list>: theta and dbs effect these DDM parameters.
+        depends_on <list>: separate stimulus distributions for these parameters.
+
+        Example:
+        ========
+        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
+        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
+
+        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model.mcmc()
+        """
+        # Fish out keyword arguments that should not get passed on
+        # to the parent.
+        if kwargs.has_key('effect_on'):
+            self.effect_on = kwargs['effect_on']
+            del kwargs['effect_on']
+        else:
+            self.effect_on = []
+
+        self.effect_id = 0
+
+        super(self.__class__, self).__init__(*args, **kwargs)
+        
+    def get_param_names(self):
+        param_names = super(self.__class__, self).get_param_names()
+        param_names += ('e1','e2', 'e_inter')
+        return param_names
+
+    def get_model(self, name, data, params, idx=None):
+        """Generate the HDDM."""
+        data = copy(data)
+        params_subj = {}
+        for name, param in params.iteritems():
+            params_subj[name] = param[idx]
+        self.effect_id += 1
+        for effect in self.effect_on:
+            params_subj[effect] = pm.Lambda('e_inst_%s_%i_%i'%(effect,idx,self.effect_id),
+                                            lambda base=params_subj[effect],
+                                            e_theta=params_subj['e1'],
+                                            e_dbs=params_subj['e2'],
+                                            e_inter=params_subj['e_inter']:
+                                            base + data['theta']*e_theta + data[self.dbs]*e_dbs + data['theta']*data[self.dbs]*e_inter,
+                                            plot=False)
+
+        model = hddm.likelihoods.WienerSimpleMulti(name,
+                                                   value=data['rt'],
+                                                   v=params_subj['v'],
+                                                   t=params_subj['t'],
+                                                   a=params_subj['a'],
+                                                   z=params_subj['z'],
+                                                   multi=self.effect_on,
+                                                   observed=True, trace=False)
+
+        return model, params_subj, data
 
 if __name__ == "__main__":
     import doctest

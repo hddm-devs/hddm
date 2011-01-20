@@ -463,8 +463,8 @@ def EZ_param_ranges(data, range_=1.):
     z = .5
     param_ranges = {'a_lower': a-range_,
                     'a_upper': a+range_,
-                    'z_lower': z-range_,
-                    'z_upper': z+range_,
+                    'z_lower': np.min(z-range_, 0),
+                    'z_upper': np.max(z+range_, 1),
                     't_lower': t-range_ if (t-range_)>0 else 0.,
                     't_upper': t+range_,
                     'v_lower': v-range_,
