@@ -19,6 +19,9 @@ def flip_errors(data):
     
     return data
 
+def effect(base, effects):
+    first_order = np.sum(effects)
+
 def return_fixed(value=.5):
     return value
 

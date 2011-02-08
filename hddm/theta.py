@@ -38,7 +38,7 @@ class Theta(hddm.models.Multi):
         The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
         there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
 
-        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
         model.mcmc()
         """
         # Fish out keyword arguments that should not get passed on

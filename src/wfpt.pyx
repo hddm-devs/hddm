@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+i#!/usr/bin/python 
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based directly
 # on the following code by Navarro & Fuss:
@@ -93,11 +93,13 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
         return -np.Inf
 
     if x<0:
+        # Lower boundary
         return pdf(fabs(x)-t, v, a, z, err, logp)
     else:
+        # Upper boundary, flip v and z
         return pdf(x-t, -v, a, 1.-z, err, logp)
     
-    
+@cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, int logp=0):
     cdef unsigned int size = x.shape[0]
@@ -107,6 +109,7 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
         y[i] = pdf_sign(x[i], v, a, z, t, err, logp)
     return y
 
+@cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int logp=0, multi=None):
     cdef unsigned int size = x.shape[0]

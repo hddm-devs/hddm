@@ -32,8 +32,7 @@ class Base(object):
 
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
-
-
+            
         # Set function map
         self._models = {'simple': self._get_simple,
                         'simple_gpu': self._get_simple_gpu,
@@ -104,10 +103,12 @@ class Base(object):
         else:
             raise ValueError('Model %s not recognized' % self.model_type)
 
-    def get_model(self, *args, **kwargs):
+    param_names = property(get_param_names)
+    
+    def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, all_params, tag=None, pos=None):
+    def get_root_param(self, param, all_params, tag, pos):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -132,10 +133,10 @@ class Base(object):
                               upper=self.param_ranges['%s_upper'%param[0]],
                               value=init_val)
 
-    def get_tau_param(self, param_name, all_params, tag=None):
-        return pm.Uniform(param_name + tag, lower=0, upper=800, plot=False)
+    def get_tau_param(self, param_name, all_params, tag):
+        return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag=None, pos=None, plot=False):
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 
@@ -353,6 +354,19 @@ class HDDMTwoEffects(Base):
         else:
             self.effect_on = []
 
+        if kwargs.has_key('e1_data'):
+            self.e1_data = kwargs['e1_data']
+            del kwargs['e1_data']
+        else:
+            raise ValueError, "Provide e1_data parameter"
+
+        if kwargs.has_key('e2_data'):
+            self.e1_data = kwargs['e2_data']
+            del kwargs['e2_data']
+        else:
+            raise ValueError, "Provide e2_data parameter"
+
+
         self.effect_id = 0
 
         super(self.__class__, self).__init__(*args, **kwargs)
@@ -362,30 +376,32 @@ class HDDMTwoEffects(Base):
         param_names += ('e1','e2', 'e_inter')
         return param_names
 
-    def get_model(self, name, data, params, idx=None):
+    def get_model(self, model_name, data, params, idx=None):
         """Generate the HDDM."""
         data = copy(data)
         params_subj = {}
         for name, param in params.iteritems():
             params_subj[name] = param[idx]
         self.effect_id += 1
+
         for effect in self.effect_on:
+            # Create actual effect on base values, result is a matrix.
             params_subj[effect] = pm.Lambda('e_inst_%s_%i_%i'%(effect,idx,self.effect_id),
                                             lambda base=params_subj[effect],
-                                            e_theta=params_subj['e1'],
-                                            e_dbs=params_subj['e2'],
+                                            e1=params_subj['e1'],
+                                            e2=params_subj['e2'],
                                             e_inter=params_subj['e_inter']:
-                                            base + data['theta']*e_theta + data[self.dbs]*e_dbs + data['theta']*data[self.dbs]*e_inter,
+                                            base + data[self.e1_data]*e1 + data[self.e2_data]*e2 + data[self.e1_data]*data[e2_data]*e_inter,
                                             plot=False)
 
-        model = hddm.likelihoods.WienerSimpleMulti(name,
+        model = hddm.likelihoods.WienerSimpleMulti(model_name,
                                                    value=data['rt'],
                                                    v=params_subj['v'],
                                                    t=params_subj['t'],
                                                    a=params_subj['a'],
                                                    z=params_subj['z'],
                                                    multi=self.effect_on,
-                                                   observed=True, trace=False)
+                                                   observed=True)
 
         return model, params_subj, data
 

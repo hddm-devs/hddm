@@ -142,6 +142,13 @@ class TestGPU(unittest.TestCase):
                                    t=self.params_multi_multi['t'], debug=False)
 
 
+    def benchmark_cpu(self):
+        logp_cpu = hddm.likelihoods.wiener_like_cpu(value=-self.params_multi_multi['x'],
+                                                    a=self.params_multi_multi['a'],
+                                                    z=self.params_multi_multi['z'],
+                                                    v=self.params_multi_multi['v'],
+                                                    t=self.params_multi_multi['t'], debug=True)
+
 def benchmark(size=100, reps=2000):
     import cProfile
     import pstats
@@ -149,7 +156,7 @@ def benchmark(size=100, reps=2000):
 #    p = pstats.Stats('benchmark')
 #    p.print_stats('wiener_like')
 
-    cProfile.run('import hddm_test; bench = hddm_test.TestLikelihoodFuncs(); bench.setUp(size=%i); [bench.benchmark_global() for i in range(%i)]'%(size, reps), 'benchmark')
+    cProfile.run('import test_likelihoods; bench = hddm_test.TestLikelihoodFuncs(); bench.setUp(size=%i); [bench.benchmark_global() for i in range(%i)]'%(size, reps), 'benchmark')
     p = pstats.Stats('benchmark')
     p.print_stats('wiener_like')
     free_gpu()
