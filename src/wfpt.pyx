@@ -1,4 +1,4 @@
-i#!/usr/bin/python 
+#!/usr/bin/python 
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based directly
 # on the following code by Navarro & Fuss:
@@ -9,7 +9,6 @@ i#!/usr/bin/python
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
 # GPLv3
-from __future__ import division
 from copy import copy
 import numpy as np
 cimport numpy as np
