@@ -108,7 +108,7 @@ class Base(object):
     def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, all_params, tag, pos):
+    def get_root_param(self, param, all_params, tag, pos=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -136,7 +136,7 @@ class Base(object):
     def get_tau_param(self, param_name, all_params, tag):
         return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos, plot=False):
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos=None, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 

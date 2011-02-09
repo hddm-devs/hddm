@@ -143,7 +143,7 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
     cdef np.ndarray[DTYPE_t, ndim=1] v_samples
     if V == 0.:
-        v_samples = np.repmat(v, reps)
+        v_samples = np.repeat(v, reps)
     else:
         v_samples = np.random.normal(size=reps, loc=v, scale=V)
         
