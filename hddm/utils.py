@@ -25,6 +25,23 @@ def effect(base, effects):
 def return_fixed(value=.5):
     return value
 
+def scale_avg(x, min_perc=None, max_perc=None):
+    x = x.astype(np.float)
+    sorted = np.sort(x)
+    if max_perc is not None:
+        idx_max = int(np.ceil(max_perc*x.shape[0]))
+        max = np.mean(sorted[idx_max:])
+    else:
+        max = np.max(x)
+
+    if min_perc is not None:
+        idx_min = int(np.ceil(min_perc*x.shape[0]))
+        min = np.mean(sorted[:idx_min])
+    else:
+        min = np.min(x)
+
+    return scale(x, max=max, min=min)
+    
 def scale(x, max=None, min=None):
     x = x.astype(np.float)
     if max is None:

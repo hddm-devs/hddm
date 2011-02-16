@@ -246,8 +246,11 @@ class DDMPlot(HasTraits):
     def _go_fired(self):
         self.update_plot()
 
-    def plot_histo(self, x, y, color):
-        y_scaled = hddm.utils.scale(y)
+    def plot_histo(self, x, y, color, max_perc=None):
+        if max_perc is None:
+            y_scaled = hddm.utils.scale(y)
+        else:
+            y_scaled = hddm.utils.scale_avg(y, max_perc=max_perc)
         # y consists of lower and upper boundary responses
         # mid point tells us where to split
         assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
@@ -273,7 +276,7 @@ class DDMPlot(HasTraits):
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
-            self.plot_histo(x, self.ddm.histo, color='g')
+            self.plot_histo(x, self.ddm.histo, color='g', max_perc=.99)
 
         # Plot normalized histograms of empirical data
         if self.plot_data:
