@@ -76,7 +76,16 @@ def difference_prior(delta):
         out[delta > 0] = 1-delta[delta > 0]
         return out
 
+def uniform(x, lower, upper):
+    y = np.ones(x.shape, dtype=np.float)/(upper-lower)
+    #y[x<lower] = 0.
+    #y[x>upper] = 0.
+
+    return y
+
+
 def interpolate_trace(x, trace, range=(-1,1), bins=100):
+    """Create a histogram over a trace and interpolate to get a smoothed distribution."""
     import scipy.interpolate
 
     x_histo = np.linspace(range[0], range[1], bins)
@@ -85,48 +94,62 @@ def interpolate_trace(x, trace, range=(-1,1), bins=100):
 
     return interp
 
-def uniform(x, lower, upper):
-    y = np.ones(x.shape, dtype=np.float)/(upper-lower)
-    #y[x<lower] = 0.
-    #y[x>upper] = 0.
+def savage_dickey(pos, post_trace, range=(-1,1), bins=100, prior_trace=None, prior_y=None):
+    """Calculate Savage-Dickey density ratio test, see Wagenmakers et
+    al. 2010 at http://dx.doi.org/10.1016/j.cogpsych.2009.12.001
 
-    return y
+    Arguments:
+    **********
+    pos<float>: position at which to calculate the savage dickey ratio at (i.e. the specific hypothesis you want to test)
+    post_trace<numpy.array>: trace of the posterior distribution
 
-def savage_dickey(post_trace, range=(-1,1), bins=100, plot=False, title=None, savefig=None, prior_trace=None, prior_y=None, plot_prior=True, label=None):
-    # Calculate Savage-Dickey density ratio test, see Wagenmakers et al 2010
-    # Estimate density of posterior
-    # Calculate normalized histogram (density)
+    Keyword arguments:
+    ******************
+    prior_trace<numpy.array>: trace of the prior distribution
+    prior_y<numpy.array>: prior density at each point (must match range and bins)
+    range<(int,int)>: Range over which to interpolate and plot
+    bins<int>: Over how many bins to compute the histogram over
+
+    IMPORTANT: Supply either prior_trace or prior_y.
+    """
     x = np.linspace(range[0], range[1], bins)
+
     if prior_trace is not None:
-        prior0 = interpolate_trace(0, prior_trace, range=range, bins=bins)
-        prior = interpolate_trace(x, prior_trace, range=range, bins=bins)
+        # Prior is provided as a trace -> histogram + interpolate
+        prior_pos = interpolate_trace(pos, prior_trace, range=range, bins=bins)
+
     elif prior_y is not None:
+        # Prior is provided as a density for each point -> interpolate to retrieve positional density
         import scipy.interpolate
-        prior0 = scipy.interpolate.InterpolatedUnivariateSpline(x, prior_y)(0)
-        prior = prior_y
+        prior_pos = scipy.interpolate.InterpolatedUnivariateSpline(x, prior_y)(pos)
     else:
         assert ValueError, "Supply either prior_trace or prior_y keyword arguments"
-        
-    posterior0 = interpolate_trace(0, post_trace, range=range, bins=bins)
+
+    # Histogram and interpolate posterior trace at SD position
+    posterior_pos = interpolate_trace(pos, post_trace, range=range, bins=bins)
+
+    # Calculate Savage-Dickey density ratio at pos
+    sav_dick = posterior_pos / prior_pos
+
+    return sav_dick
+
+def plot_savage_dickey(range=(-1,1), bins=100):
+    x = np.linspace(range[0], range[1], bins)
+    label='posterior'
+            
+    # Histogram and interpolate posterior trace
     posterior = interpolate_trace(x, post_trace, range=range, bins=bins)
 
-    # Calculate Savage-Dickey density ratio at x=0
-    sav_dick = posterior0 / prior0
+    plt.plot(x, posterior, label=label, lw=2.)
+    if plot_prior:
+        if prior_trace is not None:
+            # Histogram and interpolate prior trace
+            prior_y = interpolate_trace(x, prior_trace, range=range, bins=bins)
+        plt.plot(x, prior_y, label='prior', lw=2.)
+    plt.axvline(x=0, lw=1., color='k')
+    plt.ylim(ymin=0)
 
-    if plot:
-        if label is None:
-            label='posterior'
-        plt.plot(x, posterior, label=label, lw=2.)
-        if plot_prior:
-            plt.plot(x, prior, label='prior', lw=2.)
-        plt.axvline(x=0, lw=1., color='k')
-        plt.ylim(ymin=0)
-        if title:
-            plt.title(title)
-        if savefig:
-            plt.savefig('plots/'+savefig+'.png')
 
-    return sav_dick #, prior, posterior, prior0, posterior0
     
 
 def call_mcmc((model_class, data, dbname, rnd, kwargs)):

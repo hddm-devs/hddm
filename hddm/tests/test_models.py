@@ -195,7 +195,7 @@ class TestSingle(unittest.TestCase):
         check_model(model, self.params_true)
 
     def test_simple(self):
-        model = hddm.model.HDDM(self.data, model_type='simple', no_bias=True)
+        model = hddm.model.HDDM(self.data_basic, model_type='simple', no_bias=True)
         model.mcmc(samples=self.samples, burn=self.burn)
         check_model(model, self.params_true_no_s)
         return model

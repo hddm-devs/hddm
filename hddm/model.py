@@ -46,7 +46,7 @@ class Base(object):
                                  'z_lower': .0,
                                  'z_upper': 1.,
                                  't_lower': .1,
-                                 't_upper': 1.,
+                                 't_upper': .5,
                                  'v_lower': -3.,
                                  'v_upper': 3.,
                                  'V_lower': 0.,
@@ -60,7 +60,7 @@ class Base(object):
                                  }
             if not init:
                 # Default param ranges
-                self.init_params = {}
+                self.init_params = {'t':0.1, 'T':0}
             else:
                 # Compute ranges based on EZ method
                 param_ranges = hddm.utils.EZ_param_ranges(self.data)
@@ -126,7 +126,16 @@ class Base(object):
                                     'z%s'%tag,
                                     parents={},
                                     plot=False)
-
+        elif param == 'Z':
+            return pm.Uniform("%s%s"%(param, tag),
+                              lower=self.param_ranges['%s_lower'%param[0]],
+                              upper=all_params['z']/2.,
+                              value=init_val)
+        elif param == 'T':
+            return pm.Uniform("%s%s"%(param, tag),
+                              lower=self.param_ranges['%s_lower'%param[0]],
+                              upper=all_params['t']/2.,
+                              value=init_val)
         else:
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
@@ -145,16 +154,34 @@ class Base(object):
         else:
             init_val = None
 
-        if param_name == 'V' and self.fix_sv is not None:
+        if param_name.startswith('V') and self.fix_sv is not None:
             return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
                              plot=plot, trace=self.trace_subjs)
 
-        elif param_name == 'z' and self.no_bias:
+        elif param_name.startswith('z') and self.no_bias:
             return pm.Deterministic(hddm.utils.return_fixed,
                                     param_full_name,
                                     param_full_name,
                                     parents={},
                                     plot=False)
+
+        elif param_name.startswith('Z'):
+            return pm.TruncatedNormal(param_full_name,
+                                      mu=parent_mean,
+                                      tau=parent_tau,
+                                      lower=0,
+                                      upper=self.all_params['z'][subj_idx]/2.,
+                                      plot=plot, trace=self.trace_subjs,
+                                      value=init_val)
+
+        elif param_name.startswith('T'):
+            return pm.TruncatedNormal(param_full_name,
+                                      mu=parent_mean,
+                                      tau=parent_tau,
+                                      lower=0,
+                                      upper=self.all_params['t'][subj_idx]/2.,
+                                      plot=plot, trace=self.trace_subjs,
+                                      value=init_val)
 
         elif param_name.startswith('e') or param_name.startswith('v'):
             return pm.Normal(param_full_name,
@@ -209,6 +236,7 @@ class Base(object):
                                    observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
+        hddm.debug_here()
         if idx is None:
             return hddm.likelihoods.WienerFullMc(name,
                              value=data['rt'].flatten(), 

@@ -439,3 +439,101 @@ WienerGPUOpt = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                     logp=wiener_like_gpu_opt,
                                     dtype=np.float32,
                                     mv=True)
+
+
+
+# Scipy Distributions
+from scipy import stats, integrate
+
+def expectedfunc(self, fn=None, args=(), lb=None, ub=None, conditional=False):
+    '''calculate expected value of a function with respect to the distribution
+
+    only for standard version of distribution,
+    location and scale not tested
+
+    Parameters
+    ----------
+        all parameters are keyword parameters
+        fn : function (default: identity mapping)
+           Function for which integral is calculated. Takes only one argument.
+        args : tuple
+           argument (parameters) of the distribution
+        lb, ub : numbers
+           lower and upper bound for integration, default is set to the support
+           of the distribution
+        conditional : boolean (False)
+           If true then the integral is corrected by the conditional probability
+           of the integration interval. The return value is the expectation
+           of the function, conditional on being in the given interval.
+
+    Returns
+    -------
+        expected value : float
+    '''
+    if fn is None:
+        def fun(x, *args):
+            return x*self.pdf(x, *args)
+    else:
+        def fun(x, *args):
+            return fn(x)*self.pdf(x, *args)
+    if lb is None:
+        lb = self.a
+    if ub is None:
+        ub = self.b
+    if conditional:
+        invfac = self.sf(lb,*args) - self.sf(ub,*args)
+    else:
+        invfac = 1.0
+    return integrate.quad(fun, lb, ub,
+                                args=args)[0]/invfac
+
+import types
+stats.distributions.rv_continuous.expectedfunc = types.MethodType(expectedfunc,None,stats.distributions.rv_continuous)
+
+class lba_gen(stats.distributions.rv_continuous):
+    def _pdf(self, x, a, z, t, V, v0, v1):
+        """Linear Ballistic Accumulator PDF
+        """
+        return np.asscalar(hddm.lba.lba_like(np.asarray(x, dtype=np.double), z, a, t, V, v0, v1))
+
+lba = lba_gen(a=0, b=5, name='LBA', longname="""Linear Ballistic Accumulator likelihood function. Models two choice decision making as a race between two independet linear accumulators towards one threshold. Once one crosses the threshold, an action with the corresponding RT is performed.
+
+Parameters:
+***********
+z: width of starting point distribution
+a: threshold
+t: non-decision time
+V: inter-trial variability in drift-rate
+v0: drift-rate of first accumulator
+v1: drift-rate of second accumulator
+
+References:
+***********
+The simplest complete model of choice response time: linear ballistic accumulation.
+Brown SD, Heathcote A; Cogn Psychol. 2008 Nov ; 57(3): 153-78 
+
+Getting more from accuracy and response time data: methods for fitting the linear ballistic accumulator.
+Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 1095-110 
+""")
+
+class wfpt_gen(stats.distributions.rv_continuous):
+    def _pdf(self, x, v, a, z, t):
+        return hddm.wfpt.pdf(x, v, a, z, t, err=.0001)
+    
+    def _rvs(self, v, a, z, t):
+        return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=0, V=0, T=0, size=self._size)
+
+wfpt = wfpt_gen(a=0, b=5, name='wfpt', longname="""Wfpt likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+
+Parameters:
+***********
+v: drift-rate
+a: threshold
+z: bias [0,1]
+t: non-decision time
+
+References:
+***********
+Fast and accurate calculations for first-passage times in Wiener diffusion models
+Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
+""")

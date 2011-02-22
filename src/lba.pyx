@@ -60,6 +60,7 @@ cdef DTYPE_t fptpdf_single(DTYPE_t t, double z, double a, double driftrate, doub
     
     return (driftrate*(norm_cdf(azu)-norm_cdf(azumax)) + sddrift*(norm_pdf(azumax)-norm_pdf(azu)))/z
 
+@cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, unsigned int logp=0, unsigned int normalize_v=0):
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)

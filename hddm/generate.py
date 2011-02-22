@@ -133,7 +133,7 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
     #params_true = {'v': np.random.normal(loc=-2, scale=4), 'V': np.random.normal(loc=0, scale=.5), 'z': z, 'Z': np.random.normal(loc=0, scale=.5), 't': np.random.normal(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
     if params is None:
         if not no_var:
-            params = {'v': .5, 'V': 0.5, 'z': .5, 'Z': 0.75, 't': .3, 'T': 0.3, 'a': 2}
+            params = {'v': .5, 'V': 0.5, 'z': .5, 'Z': 0.5, 't': .3, 'T': 0.3, 'a': 2}
         else:
             params = {'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}
 
@@ -143,6 +143,7 @@ def gen_rand_data(samples=500, params=None, gen_data=True, no_var=False, tag=Non
 
     if tag is None:
         tag = ''
+
     if gen_data:
         np.save('data_%s'%tag, data)
     else:
