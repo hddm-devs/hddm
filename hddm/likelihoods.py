@@ -192,30 +192,31 @@ try:
 except:
     gpu = False
 
-def wiener_like_gpu_single(value, a, z, v, t, debug=False):
+def wiener_like_gpu_single(value, a, z, v, t, gpu, debug=False):
     """Log-likelihood for the simple DDM"""
     if not gpu:
         raise NotImplementedError, "GPU likelihood function could not be loaded, is CUDA installed?"
 
-    if z is None:
-        z = np.float32(.5)
-    if (ter<0) or np.any(np.abs(value)-ter < 0) or (a<z):
-        if not debug:
-            return -np.Inf
+    # if z is None:
+    #     z = np.float32(.5)
+    # if (ter<0) or np.any(np.abs(value)-ter < 0) or (a<z):
+    #     if not debug:
+    #         return -np.Inf
 
-    input = gpuarray.to_gpu(value-np.float32(ter), allocator=dev_pool_input.allocate)
-    out_gpu = gpuarray.empty_like(input)
+    #input = gpuarray.to_gpu(value-np.float32(ter), allocator=dev_pool_input.allocate)
+    out_gpu = gpuarray.empty_like(gpu)
     #ut_gpu = gpuarray.empty(input.shape, allocator=dev_pool_output.allocate)
     
-    hddm.wfpt_gpu.pdf_func(input,
-                      np.float32(a),
-                      np.float32(z),
-                      np.float32(v),
-                      np.float32(.0001), # err
-                      np.int16(1), # log
-                      out_gpu,
-                      block=(128, 1, 1),
-                      grid=(int(np.ceil(value.shape[0]/128.)), 1))
+    hddm.wfpt_gpu.pdf_func_ter(gpu,
+                           np.float32(a),
+                           np.float32(z),
+                           np.float32(v),
+                           np.float32(t),
+                           np.float32(.0001), # err
+                           np.int16(1), # log
+                           out_gpu,
+                           block=(128, 1, 1),
+                           grid=(int(np.ceil(value.shape[0]/128.)), 1))
 
     if debug:
         return out_gpu.get()

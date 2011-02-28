@@ -209,31 +209,37 @@ class Base(object):
                                                  observed=True)
         else:
             return hddm.likelihoods.WienerSimple(name,
-                                value=data['rt'].flatten(), 
-                                v=params['v'][idx], 
-                                t=params['t'][idx], 
-                                a=params['a'][idx], 
-                                z=params['z'][idx],
-                                observed=True)
+                                                 value=data['rt'].flatten(), 
+                                                 v=params['v'][idx], 
+                                                 t=params['t'][idx], 
+                                                 a=params['a'][idx], 
+                                                 z=params['z'][idx],
+                                                 observed=True)
 
 
     def _get_simple_gpu(self, name, data, params, idx=None):
+        import pycuda.autoinit
+        import pycuda.driver as drv
+        import pycuda.gpuarray as gpuarray
+
         if idx is None:
             return hddm.likelihoods.WienerGPUSingle(name,
-                                   value=data['rt'].flatten(), 
-                                   v=params['v'], 
-                                   t=params['t'], 
-                                   a=params['a'], 
-                                   z=params['z'],
-                                   observed=True)
+                                                    value=data['rt'].flatten(),
+                                                    v=params['v'], 
+                                                    t=params['t'], 
+                                                    a=params['a'], 
+                                                    z=params['z'],
+                                                    gpu=gpuarray.to_gpu(data['rt'].flatten()),
+                                                    observed=True)
         else:
             return hddm.likelihoods.WienerGPUSingle(name,
-                                   value=data['rt'].flatten(), 
-                                   v=params['v'][idx], 
-                                   t=params['t'][idx], 
-                                   a=params['a'][idx],
-                                   z=params['z'][idx],
-                                   observed=True)
+                                                    value=data['rt'].flatten(),
+                                                    v=params['v'][idx], 
+                                                    t=params['t'][idx], 
+                                                    a=params['a'][idx],
+                                                    z=params['z'][idx],
+                                                    gpu=gpuarray.to_gpu(data['rt'].flatten()),
+                                                    observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
         hddm.debug_here()
