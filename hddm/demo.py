@@ -28,6 +28,7 @@ from math import sqrt
 
 import numpy as np
 import pylab as pl
+import scipy as sp
 import time
 
 import enthought.traits.ui
@@ -118,9 +119,10 @@ class DDMPlot(HasTraits):
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
     plot_full_mc = Bool(False)
-    plot_lba = Bool(True)
+    plot_lba = Bool(False)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
+    plot_density = Bool(True)
     
     x_analytical = Property(Array)
     
@@ -144,6 +146,7 @@ class DDMPlot(HasTraits):
                 Item('plot_full_mc'),
                 Item('plot_lba'),
                 Item('plot_data'),
+                Item('plot_density'),
 		Item('go'),
 		#style='custom',
 		width=800,
@@ -296,11 +299,22 @@ class DDMPlot(HasTraits):
             y_scaled = hddm.utils.scale(self.lba)
             self.plot_histo(x_anal, self.lba, color='k')
 
+        if self.plot_density:
+            plt.hot()
+            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
+            # Compute normal density
+            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v)+(self.ddm.a*self.ddm.z), scale=(t-self.ddm.ter))
+            # Normalize density
+            dens_norm = dens / np.max(dens, axis=0)
+            self.figure.axes[1].contourf(x,y,dens_norm)
+
         if self.plot_drifts:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             for k in range(self.ddm.iter_plot):
                 self.figure.axes[1].plot(t[self.ddm.mask[k]],
                                          self.ddm.drifts[k][self.ddm.mask[k]], 'b')
+    
 	# Draw boundaires
 	#self.figure.axes[1].plot(t, np.ones(t.shape)*self.ddm.a, 'k')
 	#self.figure.axes[1].plot(t, np.zeros(t.shape), 'k')
