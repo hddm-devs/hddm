@@ -13,8 +13,10 @@ def wiener_like_simple(value, v, z, t, a):
     #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, t=t, a=a, err=.0001)
 
 @pm.randomwrap
-def wiener_simple(v, z, t, a, size=1):
-    return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=0, V=0, T=0, size=size)
+def wiener_simple(v, z, t, a, size=None):
+    rts = hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':0, 'V':0, 'T':0}, samples=size)
+    print rts
+    return rts
 
 WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        logp=wiener_like_simple,
