@@ -53,22 +53,23 @@ class DDM(HasTraits):
     """Drift diffusion model"""
     # Paremeters
     z = Range(0,1.,.5)
-    sz = Range(0,5.,.1)
+    sz = Range(0,5.,.0)
     v = Range(-3,3.,.5)
-    sv = Range(0.0,2.,0.01)
+    sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
-    ster = Range(0,2.,.1)
+    ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
-
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])
+    intra_sv = Range(0.,10.,1.)
+    urgency = Range(.1,10.,1.)
+    
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'urgency'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
     rts = Property(Tuple, depends_on=['drifts'])
+        
     params_dict = Property(Dict)
 
-    mask = Property(Array)
-    
     histo = Property(Array, depends_on=['params'])
 
     # Total time.
@@ -83,7 +84,7 @@ class DDM(HasTraits):
     iter_plot = Int(30)
     # Number of histogram bins
     bins = Int(100)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'steps', 'num_samples', 'iter_plot')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot')
 
     def _get_dt(self):
         return self.steps / self.T
@@ -93,15 +94,15 @@ class DDM(HasTraits):
 
     @cached_property
     def _get_drifts(self):
-        return hddm.generate.simulate_drifts(self.params_dict, self.num_samples, self.steps, self.T)
+        return hddm.generate.simulate_drifts(self.params_dict, self.num_samples, self.steps, self.T, intra_sv=self.intra_sv)
 
     @cached_property
     def _get_rts(self):
         return hddm.generate.find_thresholds(self.drifts, self.a)
 
     @cached_property
-    def _get_mask(self):
-        return hddm.generate.gen_mask(self.drifts, self.a)
+    def _get_rts(self):
+        return hddm.generate.find_thresholds(self.drifts, self.a)
     
     @cached_property
     def _get_histo(self):
@@ -123,6 +124,7 @@ class DDMPlot(HasTraits):
     plot_drifts = Bool(False)
     plot_data = Bool(False)
     plot_density = Bool(True)
+    plot_density_dist = Bool(True)
     
     x_analytical = Property(Array)
     
@@ -147,6 +149,7 @@ class DDMPlot(HasTraits):
                 Item('plot_lba'),
                 Item('plot_data'),
                 Item('plot_density'),
+                Item('plot_density_dist'),
 		Item('go'),
 		#style='custom',
 		width=800,
@@ -230,11 +233,11 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_simple(self):
-        return hddm.wfpt.pdf_array(x=self.x_analytical,
-                                   a=self.ddm.a,
-                                   z=self.ddm.z,
-                                   v=self.ddm.v,
-                                   t=self.ddm.ter, err=.000001)
+        return hddm.wfpt.pdf_array(self.x_analytical,
+                                   self.ddm.v,
+                                   self.ddm.a,
+                                   self.ddm.z,
+                                   self.ddm.ter, .001)
 
     @timer
     def _get_lba(self):
@@ -299,12 +302,18 @@ class DDMPlot(HasTraits):
             y_scaled = hddm.utils.scale(self.lba)
             self.plot_histo(x_anal, self.lba, color='k')
 
+        if self.plot_density_dist:
+            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            dens_upper = sp.stats.norm.pdf(self.ddm.a, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
+            dens_lower = sp.stats.norm.pdf(0., loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
+            self.plot_histo(t, np.concatenate((dens_lower[::-1], dens_upper)), color='k')
+                
         if self.plot_density:
             plt.hot()
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             # Compute normal density
-            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v)+(self.ddm.a*self.ddm.z), scale=(t-self.ddm.ter))
+            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
             # Normalize density
             dens_norm = dens / np.max(dens, axis=0)
             self.figure.axes[1].contourf(x,y,dens_norm)
@@ -312,8 +321,13 @@ class DDMPlot(HasTraits):
         if self.plot_drifts:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             for k in range(self.ddm.iter_plot):
-                self.figure.axes[1].plot(t[self.ddm.mask[k]],
-                                         self.ddm.drifts[k][self.ddm.mask[k]], 'b')
+                reached_thresh = np.where((self.ddm.drifts[k] > self.ddm.a) | (self.ddm.drifts[k] < 0))[0]
+                if reached_thresh.shape == (0,):
+                    duration = -1
+                else:
+                    duration = reached_thresh[0]
+                self.figure.axes[1].plot(t[:duration],
+                                         self.ddm.drifts[k][:duration], 'b')
     
 	# Draw boundaires
 	#self.figure.axes[1].plot(t, np.ones(t.shape)*self.ddm.a, 'k')

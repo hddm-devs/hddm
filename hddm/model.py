@@ -46,7 +46,7 @@ class Base(object):
                                  'z_lower': .0,
                                  'z_upper': 1.,
                                  't_lower': .1,
-                                 't_upper': .6,
+                                 't_upper': 1.,
                                  'v_lower': -3.,
                                  'v_upper': 3.,
                                  'V_lower': 0.,

@@ -17,6 +17,7 @@ cimport cython
 
 cdef extern from "math.h":
     double sin(double)
+    double cos(double)
     double log(double)
     double exp(double)
     double sqrt(double)
@@ -39,6 +40,7 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
             return 0
         else:
             return -np.Inf
+        
     cdef double tt = x/(pow(a,2)) # use normalized time
     # CHANGE: Relative starting point is expected now.
     cdef double w = z
@@ -84,6 +86,98 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
         return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
     else:
         return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
+
+
+cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0, ):
+    """Compute the likelihood of the drift diffusion model using the method
+    and implementation of Navarro & Fuss, 2009.
+    """
+    if x <= 0:
+        if logp == 0:
+            return 0
+        else:
+            return -np.Inf
+    cdef double t = x
+    cdef double tt = x/(pow(a,2)) # use normalized time
+    # CHANGE: Relative starting point is expected now.
+    cdef double w = z
+    #cdef double w = z/a # convert to relative start point
+
+    cdef double kl, ks, p, p2, p3, p_out, p2_out, p3_out
+    cdef double PI = 3.1415926535897
+    cdef double pi = 3.1415926535897
+    cdef double PIs = 9.869604401089358 # PI^2
+    cdef int k, K, lower, upper
+
+    # calculate number of terms needed for large t
+    if PI*tt*err<1: # if error threshold is set low enough
+        kl=sqrt(-2*log(PI*tt*err)/(PIs*tt)) # bound
+        kl=fmax(kl,1./(PI*sqrt(tt))) # ensure boundary conditions met
+    else: # if error threshold set too high
+        kl=1./(PI*sqrt(tt)) # set to boundary condition
+
+    # calculate number of terms needed for small t
+    if 2*sqrt(2*PI*tt)*err<1: # if error threshold is set low enough
+        ks=2+sqrt(-2*tt*log(2*sqrt(2*PI*tt)*err)) # bound
+        ks=fmax(ks,sqrt(tt)+1) # ensure boundary conditions are met
+    else: # if error threshold was set too high
+        ks=2 # minimal kappa for that case
+
+    # compute f(tt|0,1,w)
+    p=0 #initialize density
+    p2=0
+    p3=0
+    p_out=0
+    p_out2=0
+    p_out3=0
+    if ks<kl: # if small t is better (i.e., lambda<0)
+        K=<int>(ceil(ks)) # round to smallest integer meeting error
+        lower = <int>(-floor((K-1)/2.))
+        upper = <int>(ceil((K-1)/2.))
+        for k from lower <= k <= upper: # loop over k
+            # Calculate fixed factor
+            p = p + (w + 2*k)*exp(t*(w + 2*k)**2/(2*a**2))    
+            if diff == 'z':
+                p2 = p2 + t*(w + 2*k)*(2*w + 4*k)*exp(t*(w + 2*k)**2/(2*a**2))/(2*a**2) + exp(t*(w + 2*k)**2/(2*a**2))
+            if diff == 'a':
+                p2 = p2 + -t*(w + 2*k)**3*exp(t*(w + 2*k)**2/(2*a**2))/a**3
+                p3 = p3 + (w + 2*k)*exp(t*(w + 2*k)**2/(2*a**2))
+
+        if diff == 'z':
+            p_out = -v*2**(1/2)*exp(-a*v*w - t*v**2/2) * p / (2*pi**(1/2)*a*(t**3/a**6)**(1/2))
+            p2_out = 2**(1/2)*exp(-a*v*w - t*v**2/2)* p2/ (2*pi**(1/2)*a**2*(t**3/a**6)**(1/2))
+            p3_out = p/(2*pi**(1/2)*a**2*(t**3/a**6)**(1/2))
+        elif diff == 'a':
+            p_out = 2**(1/2)*exp(-a*v*w - t*v**2/2) * p /(2*pi**(1/2)*a**3*(t**3/a**6)**(1/2)) + 2**(1/2)*exp(-a*v*w - t*v**2/2)* p2 /(2*pi**(1/2)*a**2*(t**3/a**6)**(1/2))
+            p3_out = - v*w*2**(1/2)*exp(-a*v*w - t*v**2/2)*p3/(2*pi**(1/2)*a**2*(t**3/a**6)**(1/2))
+        elif diff == 'v':
+            p_out = 2**(1/2)*(-a*w - t*v)*exp(-a*v*w - t*v**2/2) * p /(2*pi**(1/2)*a**2*(t**3/a**6)**(1/2))
+
+    else: # if large t is better...
+        K=<int>(ceil(kl)) # round to smallest integer meeting error
+        for k from 1 <= k <= K:
+            # Diff sum terms
+            if diff == 'z':
+                p = p + pi*k**2*cos(pi*k*w)*exp(-t*pi**2*k**2/(2*a**2))
+                p2 = p2 + k*exp(-t*pi**2*k**2/(2*a**2))*sin(pi*k*w)
+            elif diff == 'a':
+                p = p + t*pi**2*k**3*exp(-t*pi**2*k**2/(2*a**2))*sin(pi*k*w)/a**3
+                p2 = p2 + k*exp(-t*pi**2*k**2/(2*a**2))*sin(pi*k*w)
+            elif diff == 'v':
+                p = p + k*exp(-t*pi**2*k**2/(2*a**2))*sin(pi*k*w)
+        
+        if diff == 'z':
+            p_out = pi*exp(-a*v*w - t*v**2/2) * p /a**2
+            p2_out = - pi*v*exp(-a*v*w - t*v**2/2)* p2 /a
+        elif diff == 'a':
+            p_out = pi*exp(-a*v*w - t*v**2/2)* p /a**2
+            p2_out = - 2*pi*exp(-a*v*w - t*v**2/2)* p2 /a**3
+            p3_out = - pi*v*w*exp(-a*v*w - t*v**2/2)* p2 / a**2
+        elif diff == 'v':
+            p_out = pi*(-a*w - t*v)*exp(-a*v*w - t*v**2/2)* p /a**2
+            
+    return p_out + p2_out + p3_out
+
 
 cpdef double pdf_sign(double x, double v, double a, double z, double t, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound

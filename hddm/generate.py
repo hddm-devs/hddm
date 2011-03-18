@@ -36,7 +36,7 @@ def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=N
 
 
     
-def simulate_drifts(params, samples, steps, T):
+def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
     start_delays = np.abs(uniform.rvs(loc=params['t'], scale=params['T'], size=samples) - params['T']/2.)*dt
@@ -53,7 +53,7 @@ def simulate_drifts(params, samples, steps, T):
 
     # Generate samples from a normal distribution and
     # add the drift rates
-    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt), size=(samples, steps))/dt  + np.tile(drift_rates, (steps, 1)).T
+    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt)*intra_sv, size=(samples, steps))/dt  + np.tile(drift_rates, (steps, 1)).T
     # Go through every line and zero out the non-decision component
     for i in range(int(samples)):
         step_sizes[i,:start_delays[i]] = 0
@@ -86,7 +86,7 @@ def find_thresholds(drifts, a):
             lower = thresh_lower[0]
 
         if upper == lower == np.Inf:
-            # Threshold not crossed
+            # Threshold never crossed
             continue
 
         # Determine which one hit the threshold before
@@ -102,20 +102,6 @@ def find_thresholds(drifts, a):
     rts = np.concatenate((rts_upper, rts_lower))
 
     return rts
-
-def gen_mask(drifts, a):
-    steps = drifts.shape[1]
-    mask = np.ones(drifts.shape, dtype='bool')
-    for drift,mask_drift in zip(drifts, mask):
-        # For plotting, we want to cut off the diffusion processes
-        # after they reached the threshold. So get all thresholds,
-        # and create a mask with Trues if below threshold. Mask is used
-        # for displaying only.
-        thresh = np.where((drift > a) | (drift < 0))[0]
-
-        if thresh.shape != (0,):
-            mask_drift[thresh[0]:] = np.zeros((steps-thresh[0]), dtype='bool')
-    return mask
 
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""

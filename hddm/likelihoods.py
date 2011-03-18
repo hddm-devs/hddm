@@ -9,7 +9,8 @@ import hddm
 
 def wiener_like_simple(value, v, z, t, a):
     """Log-likelihood for the simple DDM"""
-    return np.sum(hddm.wfpt.pdf_array(value, v, a, z, t, err=.0001, logp=1))
+    probs = hddm.wfpt.pdf_array(value, v, a, z, t, err=.0001, logp=1)
+    return np.sum(probs[probs!=-np.Inf])
     #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, t=t, a=a, err=.0001)
 
 @pm.randomwrap
@@ -28,19 +29,21 @@ def pdf_array_multi_py(x, v, a, z, t, multi=None, err=0.0001, logp=1):
     size = x.shape[0]
     y = np.empty(size, dtype=np.float)
     if multi is None:
-        return hddm.wfpt.pdf_array(x, v=v, a=a, z=z, t=t, err=err, logp=logp)
+        return hddm.wfpt.pdf_array(x, v, a, z, t, err, logp=logp)
     else:
-        params = {'v':v, 'z':z, 't':ter, 'a':a}
+        params = {'v':v, 'z':z, 't':t, 'a':a}
         params_iter = copy(params)
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
-            y[i] = hddm.wfpt.pdf_sign(x=x[i], v=params_iter['v'], a=params_iter['a'], z=params_iter['z'], t=params_iter['t'], err=err, logp=logp)
+            y[i] = hddm.wfpt.pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err, logp=logp)
         return y
 
+# include single variability for ter
+# include dropping of -neg.log 
 def wiener_like_simple_multi(value, v, z, t, a, multi=None):
     """Log-likelihood for the simple DDM"""
-    return np.sum(hddm.wfpt.pdf_array_multi(value, v=v, a=a, z=z, t=t, err=.001, logp=1, multi=multi))
+    return np.sum(hddm.wfpt.pdf_array_multi(value, v, a, z, t, .001, logp=1, multi=multi))
     #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, t=t, err=.001, logp=1, multi=multi))
             
 WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
