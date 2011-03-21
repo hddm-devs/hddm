@@ -19,7 +19,7 @@ class Base(object):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, reference=None):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False):
         self.trace_subjs = trace_subjs
 
         if model_type is None:
@@ -30,8 +30,6 @@ class Base(object):
         self.no_bias = no_bias
         self.fix_sv = fix_sv
         
-        self.reference = reference
-
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
             
