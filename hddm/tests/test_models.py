@@ -53,8 +53,8 @@ def create_multi_data(params1, params2, samples=1000, subj=False, num_subjs=10.)
         data1 = hddm.generate.gen_rts(params1, structured=True, samples=samples)
         data2 = hddm.generate.gen_rts(params2, structured=True, samples=samples)
     else:
-        data1 = gen_rand_subj_data(num_subjs=num_subjs, params=params1, samples=samples/num_subjs, gen_data=True, add_noise=True, tag=None)[0]
-        data2 = gen_rand_subj_data(num_subjs=num_subjs, params=params2, samples=samples/num_subjs, gen_data=True, add_noise=True, tag=None)[0]
+        data1 = gen_rand_subj_data(num_subjs=num_subjs, params=params1, samples=samples/num_subjs, )[0]
+        data2 = gen_rand_subj_data(num_subjs=num_subjs, params=params2, samples=samples/num_subjs, )[0]
 
     # Add stimulus field
     data1 = rec.append_fields(data1, names='stim', data=np.zeros(data1.shape[0]), dtypes='i8', usemask=False)
@@ -115,9 +115,9 @@ class TestMulti(unittest.TestCase):
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingle, self).__init__(*args, **kwargs)
-        self.data, self.params_true = gen_rand_data(gen_data=True, tag='global_test')
-        self.data_subj, self.params_true_subj = gen_rand_subj_data(gen_data=True, samples=300, add_noise=False, tag='subj_test')
-        self.data_basic, self.params_true_basic = gen_rand_data(gen_data=True, samples=2000, no_var=True, tag='global_basic_test')
+        self.data, self.params_true = gen_rand_data()
+        self.data_subj, self.params_true_subj = gen_rand_subj_data(samples=300)
+        self.data_basic, self.params_true_basic = gen_rand_data(samples=2000, no_var=True)
         
         self.assert_ = True
         
@@ -210,8 +210,6 @@ class TestSingle(unittest.TestCase):
         return
         models = run_parallel_chains(hddm.model.HDDM, [data, data], ['test1', 'test2'])
         return models
-
-
 
     
 if __name__=='__main__':

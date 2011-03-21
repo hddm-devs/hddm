@@ -10,7 +10,7 @@ import hddm
 def wiener_like_simple(value, v, z, t, a):
     """Log-likelihood for the simple DDM"""
     probs = hddm.wfpt.pdf_array(value, v, a, z, t, err=.0001, logp=1)
-    return np.sum(probs[probs!=-np.Inf])
+    return np.sum(probs)
     #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, t=t, a=a, err=.0001)
 
 @pm.randomwrap

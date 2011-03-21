@@ -46,7 +46,7 @@ class Base(object):
                                  'z_lower': .0,
                                  'z_upper': 1.,
                                  't_lower': .1,
-                                 't_upper': 1.,
+                                 't_upper': 2.,
                                  'v_lower': -3.,
                                  'v_upper': 3.,
                                  'V_lower': 0.,
@@ -359,7 +359,79 @@ class HDDM(Base):
 
 
 @kabuki.hierarchical
-class HDDMTwoEffects(Base):
+class HDDMOneRegressor(Base):
+    def __init__(self, *args, **kwargs):
+        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
+
+        Arguments:
+        ==========
+        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
+
+        Keyword Arguments:
+        ==================
+        effect_on <list>: theta and dbs effect these DDM parameters.
+        depends_on <list>: separate stimulus distributions for these parameters.
+
+        Example:
+        ========
+        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
+        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
+
+        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model.mcmc()
+        """
+        # Fish out keyword arguments that should not get passed on
+        # to the parent.
+        if kwargs.has_key('effect_on'):
+            self.effect_on = kwargs['effect_on']
+            del kwargs['effect_on']
+        else:
+            self.effect_on = []
+
+        if kwargs.has_key('e_data'):
+            self.e1_data = kwargs['e_data']
+            del kwargs['e_data']
+        else:
+            raise ValueError, "Provide e_data parameter"
+
+        self.effect_id = 0
+
+        super(self.__class__, self).__init__(*args, **kwargs)
+        
+    def get_param_names(self):
+        param_names = super(self.__class__, self).get_param_names()
+        param_names += ('e')
+        return param_names
+
+    def get_model(self, model_name, data, params, idx=None):
+        """Generate the HDDM."""
+        data = copy(data)
+        params_subj = {}
+        for name, param in params.iteritems():
+            params_subj[name] = param[idx]
+        self.effect_id += 1
+
+        for effect in self.effect_on:
+            # Create actual effect on base values, result is a matrix.
+            params_subj[effect] = pm.Lambda('e_inst_%s_%i_%i'%(effect,idx,self.effect_id),
+                                            lambda base=params_subj[effect],
+                                            e=params_subj['e']:
+                                            base + data[self.e_data]*e,
+                                            plot=False)
+
+        model = hddm.likelihoods.WienerSimpleMulti(model_name,
+                                                   value=data['rt'],
+                                                   v=params_subj['v'],
+                                                   t=params_subj['t'],
+                                                   a=params_subj['a'],
+                                                   z=params_subj['z'],
+                                                   multi=self.effect_on,
+                                                   observed=True)
+
+        return model, params_subj, data
+
+@kabuki.hierarchical
+class HDDMTwoRegressor(Base):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
