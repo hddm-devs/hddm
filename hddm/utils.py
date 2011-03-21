@@ -317,7 +317,7 @@ def save_csv(data, fname, sep=None):
             fd.write('\n')
 
 def load_csv(fname):
-    return np.lib.io.recfromcsv(fname)
+    return np.recfromcsv(fname)
 
 def parse_config_file(fname, mcmc=False, load=False):
     import os.path
