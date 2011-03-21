@@ -192,11 +192,10 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.01, tag=N
     
     return (rec.stack_arrays(data_gens, usemask=False), params)
 
-def run_param_combo((V, Z, T)):
-    correlation = None
+def run_param_combo((V, Z, T, correlation)):
     repeat = 5
     m = []
-    params = {'v': .5, 'V': V, 'z': .5, 'Z': Z, 't': .3, 'T': T, 'a': 2, 'e': .1}
+    params = {'v': .5, 'V': V, 'z': .5, 'Z': Z, 't': .3, 'T': T, 'a': 2, 'e': correlation}
     # Generate data
     for r in range(repeat):
         if correlation is None:
@@ -204,7 +203,7 @@ def run_param_combo((V, Z, T)):
             m.append(hddm.model.HDDM(data).mcmc())
         else:
             data, params = gen_correlated_rts(num_subjs=15, samples=100, params=params)
-            m.append(hddm.model.HDDMOneRegressor(data).mcmc())
+            m.append(hddm.model.HDDMOneRegressor(data, e_data='cov').mcmc())
 
     result = {}
     for param in ['a','v','z','t']:
@@ -229,23 +228,29 @@ def run_all_var_individual(num_subjs=15, samples=100, correlation=None, jobs=2, 
     import multiprocessing
     p = multiprocessing.Pool(jobs)
     zeros = np.zeros_like(Vs)
-    results_V = p.map(run_param_combo, zip(Vs, zeros, zeros))
-    results_Z = p.map(run_param_combo, zip(zeros, Zs, zeros))
-    results_T = p.map(run_param_combo, zip(zeros, zeros, Ts))
+    cors = [correlation for i in range(len(zeros))]
+
+    results_V = p.map(run_param_combo, zip(Vs, zeros, zeros, cors))
+    results_Z = p.map(run_param_combo, zip(zeros, Zs, zeros, cors))
+    results_T = p.map(run_param_combo, zip(zeros, zeros, Ts, cors))
     
     return {'V':(results_V, Vs), 'Z': (results_Z, Zs), 'T':(results_T, Ts)}
 
-def plot_combs_individual(results):
+def plot_combs_individual(results, correlation=False):
     import matplotlib.pyplot as plt
-    params = {'v': .5, 'z': .5, 't': .3, 'a': 2, 'e': .1}
+    params = {'v': .5, 'z': .5, 't': .3, 'a': 2, 'e_cov': .1}
+    plot_params = ['a', 'v', 't']
+    if correlation:
+        plot_params.append('e_cov')
+
     for i, (variability, (est, variability_vals)) in enumerate(results.iteritems()):
         plt.subplot(3,1,i+1)
-        for name in ['a', 'v', 't']:
+        for name in plot_params:
             size = len(est)
             plt.errorbar(variability_vals, 
-                     [np.mean(est[i][name])-params[name] for i in range(size)],
-                     yerr=[np.std(est[i][name])/np.sqrt(5) for i in range(size)],
-                     label=name)
+                         [np.mean(est[i][name])-params[name] for i in range(size)],
+                         yerr=[np.std(est[i][name])/np.sqrt(5) for i in range(size)],
+                         label=name)
         plt.xlabel(variability)
     plt.legend()
 
