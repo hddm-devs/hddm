@@ -53,7 +53,7 @@ class DDM(HasTraits):
     """Drift diffusion model"""
     # Paremeters
     z = Range(0,1.,.5)
-    sz = Range(0,5.,.0)
+    sz = Range(0,1.,.0)
     v = Range(-3,3.,.5)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
@@ -125,6 +125,7 @@ class DDMPlot(HasTraits):
     plot_data = Bool(False)
     plot_density = Bool(True)
     plot_density_dist = Bool(True)
+    plot_mean_rt = Bool(True)
     
     x_analytical = Property(Array)
     
@@ -150,6 +151,7 @@ class DDMPlot(HasTraits):
                 Item('plot_data'),
                 Item('plot_density'),
                 Item('plot_density_dist'),
+                Item('plot_mean_rt'),
 		Item('go'),
 		#style='custom',
 		width=800,
@@ -262,9 +264,17 @@ class DDMPlot(HasTraits):
         assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
         mid = y.shape[0]/2
         self.figure.axes[0].plot(x, y_scaled[mid:], color=color, lw=2.)
+        # Compute correct EV
+        mean_correct_rt = np.sum(x*y[mid:])/np.sum(y[mid:])
         # [::-1] -> reverse ordering
         self.figure.axes[2].plot(x, -y_scaled[:mid][::-1], color=color, lw=2.)
+        # Compute error EV
+        mean_error_rt = np.sum(x*y[:mid][::-1])/np.sum(y[:mid][::-1])
 
+        if self.plot_mean_rt:
+            self.figure.axes[0].axvline(mean_correct_rt, color=color)
+            self.figure.axes[2].axvline(mean_error_rt, color=color)
+        
     @on_trait_change('ddm.params')
     def update_plot(self):
         if self.figure.canvas is None:
