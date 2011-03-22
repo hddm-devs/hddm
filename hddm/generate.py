@@ -275,7 +275,7 @@ def run_all_var_combs(num_subjs=15, samples=100, correlation=None, jobs=2, inter
 
         
 
-def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=1., cor_param=None, subj_noise=.01):
+def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, cor_param=None, subj_noise=.01):
     """Generate RT data where cor_param is linearly influenced by another variable."""
     
     if params is None:

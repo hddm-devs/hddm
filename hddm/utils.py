@@ -316,8 +316,8 @@ def save_csv(data, fname, sep=None):
             fd.write(sep.join(line_str))
             fd.write('\n')
 
-def load_csv(fname, **kwargs):
-    return np.recfromtxt(fname, delimiter=',', **kwargs)
+def load_csv(fname):
+    return np.recfromcsv(fname)
 
 def parse_config_file(fname, mcmc=False, load=False):
     import os.path

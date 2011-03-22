@@ -41,7 +41,7 @@ def pdf_array_multi_py(x, v, a, z, t, multi=None, err=0.0001, logp=1):
 
 # include single variability for ter
 # include dropping of -neg.log 
-def wiener_like_simple_multi(value, v, z, t, a, multi=None):
+def wiener_like_simple_multi(value, v, a, z, t, multi=None):
     """Log-likelihood for the simple DDM"""
     return np.sum(hddm.wfpt.pdf_array_multi(value, v, a, z, t, .001, logp=1, multi=multi))
     #return np.sum(pdf_array_multi_py(value, v=v, a=a, z=z, t=t, err=.001, logp=1, multi=multi))

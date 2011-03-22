@@ -169,8 +169,8 @@ class Base(object):
             return pm.TruncatedNormal(param_full_name,
                                       mu=parent_mean,
                                       tau=parent_tau,
-                                      lower=0,
-                                      upper=self.all_params['z'][subj_idx]/2.,
+                                      a=0,
+                                      b=all_params['z'][subj_idx]/2.,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
@@ -178,8 +178,8 @@ class Base(object):
             return pm.TruncatedNormal(param_full_name,
                                       mu=parent_mean,
                                       tau=parent_tau,
-                                      lower=0,
-                                      upper=self.all_params['t'][subj_idx]/2.,
+                                      a=0,
+                                      b=all_params['t'][subj_idx]/2.,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
@@ -242,7 +242,6 @@ class Base(object):
                                                     observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
-        hddm.debug_here()
         if idx is None:
             return hddm.likelihoods.WienerFullMc(name,
                              value=data['rt'].flatten(), 
