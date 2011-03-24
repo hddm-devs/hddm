@@ -19,7 +19,7 @@ class Base(object):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None):
         self.trace_subjs = trace_subjs
 
         if model_type is None:
@@ -58,6 +58,11 @@ class Base(object):
                                  'e_lower': -.3,
                                  'e_upper': .3
                                  }
+            if exclude_inter_var_params is not None:
+                for param in exclude_inter_var_params:
+                    self.param_ranges['%s_lower'%param] = 0
+                    self.param_ranges['%s_upper'%param] = 0
+                
             if not init:
                 # Default param ranges
                 self.init_params = {'t':0.1, 'T':0}

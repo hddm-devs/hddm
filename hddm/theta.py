@@ -735,6 +735,84 @@ def parse_config_file(fname, load=False):
 
     return m
 
+
+
+
+def analyze_final(model, range=(-.2,.2), bins=100, e_idx=0, lower=0, upper=.3, plot_prior=True, reverse=True):
+    effect_on = model.effect_on[e_idx]
+    if effect_on == 'a':
+        effect_name = 'threshold'
+    else:
+        effect_name = 'ter'
+        
+    if len(model.HL_on) != 0:
+        stims = model.stims_HL
+    else:
+        stims = model.stims
+
+    if not model.dbs_global:
+        effect_types = ('theta', 'dbs', 'inter')
+    else:
+        effect_types = ('theta', 'inter')
+    # HACK    
+    effect_types = ('theta', 'dbs', 'inter')
+    sav_dick = {}
+    x = np.linspace(range[0], range[1], bins)
+    prior = hddm.utils.uniform(x, lower, upper)
+    # Get traces
+    for effect_type in effect_types:
+        sav_dick[effect_type] = {}
+        plt.figure()
+        if effect_type == 'inter':
+            title = 'Interaction effect between dbs and theta on %s'%effect_name
+        else:
+            title = 'Effect of %s on %s'%(effect_type, effect_name)
+        for i,stim in enumerate(stims):
+            if effect_type == 'dbs':
+                post_trace = model.group_params['e_%s_%s'%(effect_type,effect_on)].trace()
+            else:
+                post_trace = model.group_params['e_%s_%s_%s'%(effect_type,effect_on,stim)].trace()
+            sd = hddm.utils.savage_dickey(post_trace, range=range, bins=bins, plot=True, title=title, prior_y=prior, plot_prior=((i==0) and plot_prior), label='%s'%(stim))
+            if reverse:
+                sd = 1./sd
+            sav_dick[effect_type][stim] = sd
+            plt.xlim(range)
+        plt.legend(loc=0)
+        plt.savefig('plots/final_%s_%s.png'%(effect_on, effect_type))
+        plt.savefig('plots/final_%s_%s.pdf'%(effect_on, effect_type))
+    return sav_dick
+
+def plot_theta_model(m, conf=None):
+    if conf is None:
+        conf='HC'
+    effect_on = m.effect_on[0]
+    a = m.params_est[effect_on]
+    e_theta = m.params_est['e_theta_%s_%s'%(effect_on, conf)]
+    e_dbs = m.params_est['e_theta_%s_%s'%(effect_on, conf)]
+    e_inter = m.params_est['e_theta_%s_%s'%(effect_on, conf)]
+    if m.effect_coding:
+        if m.on_as_1:
+            off = -1
+            on = 1
+        else:
+            off = 1
+            on = -1
+    else:
+        if m.on_as_1:
+            off = 0
+            on = 1
+        else:
+            off = 1
+            on = 0
+            
+    plot_theta(a, e_theta, e_dbs, e_inter, off, on)
+    
+def plot_theta(a, e_theta, e_dbs, e_inter, off=1, on=0):
+    x = np.linspace(-2, 2, 200)
+    plt.plot(x, (a + x*e_theta + on*e_dbs + x*on*e_inter), label='on')
+    plt.plot(x, (a + x*e_theta + off*e_dbs + x*off*e_inter), label='off')
+    plt.legend()
+
 if __name__=='__main__':
     import sys
     parse_config_file(sys.argv[1])

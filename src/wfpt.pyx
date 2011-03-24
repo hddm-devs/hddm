@@ -221,7 +221,43 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int l
             y[i] = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err=err, logp=logp)
 
         return y
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full_mc_multi_thresh(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, t, double T, np.ndarray[DTYPE_t, ndim=1] a, double err=.0001, int logp=0, unsigned int reps=10):
+    cdef unsigned int num_resps = x.shape[0]
+    cdef unsigned int rep, i
+
+    if logp == 1:
+        zero_prob = -np.Inf
+    else:
+        zero_prob = 0
+        
+    # Create samples
+    cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
     
+    if V == 0.:
+        v_samples = np.repeat(v, reps)
+    else:
+        v_samples = np.random.normal(size=reps, loc=v, scale=V)
+        
+    cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
+
+    for rep from 0 <= rep < reps:
+        for i from 0 <= i < num_resps:
+            if (fabs(x[i])-t_samples[rep]) < 0:
+                probs[rep,i] = zero_prob
+            elif a[i] <= z_samples[rep]:
+                probs[rep,i] = zero_prob
+            else:
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a[i], z_samples[rep], t_samples[rep], err=err, logp=logp)
+
+    return np.mean(probs, axis=0)
+
+
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, int logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]

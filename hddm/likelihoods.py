@@ -51,6 +51,9 @@ WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Proces
                                             dtype=np.float,
                                             mv=True)
 
+
+
+
 @pm.randomwrap
 def wiener_full(v, z, t, a, V, Z, T, size=1):
     return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=Z, V=V, T=T, size=size)
@@ -61,6 +64,16 @@ def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
  
 WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=wiener_like_full_mc,
+                                       random=wiener_full,
+                                       dtype=np.float,
+                                       mv=True)
+
+def wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a):
+    """Log-likelihood for the full DDM using the sampling method"""
+    return np.sum(hddm.wfpt.wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a, reps=10, logp=1))
+
+WienerFullMcMultiThresh = pm.stochastic_from_dist(name="Wiener Diffusion Process",
+                                       logp=wiener_like_full_mc_multi_thresh,
                                        random=wiener_full,
                                        dtype=np.float,
                                        mv=True)
