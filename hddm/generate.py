@@ -142,7 +142,7 @@ def gen_rand_correlation_data(v=.5, corr=.1):
     a_offset = 2
     for i in np.linspace(-1,1,10):
         params['a'] = a_offset + i*corr
-        data = gen_rand_subj_data(num_subjs=1, params=params, samples=20, add_noise=False)[0]
+        data = gen_rand_subj_data(num_subjs=1, params=params, samples=20, noise=.1)[0]
         theta = np.ones(data.shape) * i
         theta.dtype = dtype=np.dtype([('theta', np.float)])
         stim = np.tile('test', data.shape)
