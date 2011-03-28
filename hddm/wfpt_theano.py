@@ -57,8 +57,9 @@ x_input = T.dvector('x_input')
 x, a_input, v_input, z_input, err_input = T.dscalars(['x', 'a', 'v', 'z', 'err'])
 
 logp, tmp = theano.map(fn=wfpt, sequences=x_input, non_sequences=(a_input, v_input, z_input, err_input))
+logp_sum = T.log(logp).sum()
 logp_func = theano.function(inputs=[x_input, a_input, v_input, z_input, err_input], outputs=logp)
-logp_sum = theano.function(inputs=[x_input, a_input, v_input, z_input, err_input], outputs=T.log(logp).sum())
+logp_sum_func = theano.function(inputs=[x_input, a_input, v_input, z_input, err_input], outputs=logp_sum)
 
 print theano.pp(logp)
-logp_grad = T.grad(wfpt, x_input)
+logp_grad = T.grad(logp_sum, [x_input, a_input, v_input, z_input, err_input])
