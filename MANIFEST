@@ -1,0 +1,11 @@
+setup.py
+hddm/MPLTraits.py
+hddm/__init__.py
+hddm/demo.py
+hddm/generate.py
+hddm/likelihoods.py
+hddm/models.py
+hddm/theta.py
+hddm/wfpt_gpu.py
+src/lba.pyx
+src/wfpt.pyx
