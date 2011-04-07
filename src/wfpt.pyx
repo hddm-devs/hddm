@@ -286,6 +286,9 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
             elif a <= z_samples[rep]:
                 probs[rep,i] = zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=logp)
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=0)
 
-    return np.mean(probs, axis=0)
+    if logp==0:
+        return np.mean(probs, axis=0)
+    else:
+        return np.log(np.mean(probs, axis=0))
