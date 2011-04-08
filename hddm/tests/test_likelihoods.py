@@ -256,6 +256,21 @@ class TestWfpt(unittest.TestCase):
         #np.testing.assert_array_almost_equal(scaled_sim, scaled_analytic, 1)
 
 
+    def test_full_mc(self):
+        values = array([0.3, 0.4, 0.6, 1])
+        v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
+        true_vals = np.log(np.array([0.019925699375943847,
+                           1.0586617338544908,
+                           1.2906014938998163,
+                           0.446972173706388]))
+        
+        y = np.empty(len(values), dtype=float)
+        for (idx, val) in enuemrate(values):
+            y[i] = sum(wfpt.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001,
+                                                            reps=1000000,logp=1))
+        self.assertTrue(np.abs(y - true_val) < log(1.01))
+            
+
 class TestLBA(unittest.TestCase):
     def runTest(self):
         pass

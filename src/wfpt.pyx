@@ -275,7 +275,7 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     else:
         v_samples = np.random.normal(size=reps, loc=v, scale=V)
         
-    cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] probs = np.zeros(num_resps, dtype=DTYPE)
 
     for i from 0 <= i < num_resps:
         t_samples[:] = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
@@ -283,13 +283,13 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
         v_samples[:] = np.random.normal(size=reps, loc=v, scale=V)               
         for rep from 0 <= rep < reps:           
             if (fabs(x[i])-t_samples[rep]) < 0:
-                probs[rep,i] = zero_prob
+                probs[i] = probs[i] + zero_prob
             elif a <= z_samples[rep]:
-                probs[rep,i] = zero_prob
+                probs[i] = probs[i] + zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=0)
+                probs[i] = probs[i] + pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=0)
 
     if logp==0:
-        return np.mean(probs, axis=0)
+        return (probs/reps)
     else:
-        return np.log(np.mean(probs, axis=0))
+        return np.log(probs/reps)
