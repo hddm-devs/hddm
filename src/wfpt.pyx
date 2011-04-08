@@ -269,7 +269,7 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     # Create samples
     cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
     cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=V)
     if V == 0.:
         v_samples = np.repeat(v, reps)
     else:
@@ -277,8 +277,11 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
         
     cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
 
-    for rep from 0 <= rep < reps:
-        for i from 0 <= i < num_resps:
+    for i from 0 <= i < num_resps:
+        t_samples[:] = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
+        z_samples[:] = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
+        v_samples[:] = np.random.normal(size=reps, loc=v, scale=V)               
+        for rep from 0 <= rep < reps:           
             if (fabs(x[i])-t_samples[rep]) < 0:
                 probs[rep,i] = zero_prob
             elif a <= z_samples[rep]:
