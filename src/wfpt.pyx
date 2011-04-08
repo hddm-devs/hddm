@@ -263,10 +263,8 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
 
-    if logp == 1:
-        zero_prob = -np.Inf
-    else:
-        zero_prob = 0
+    
+    zero_prob = 0
         
     # Create samples
     cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
