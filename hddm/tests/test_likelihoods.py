@@ -234,7 +234,7 @@ class TestWfpt(unittest.TestCase):
         params['Z'] = rand()*(params['z']/2.)
         samples = hddm.generate.gen_rts(params, samples=self.samples)
         histo = np.histogram(samples, bins=self.bins, range=self.range_)[0]
-
+        
         analytical_full_avg = hddm.wfpt.wiener_like_full_mc(self.x,
                                                             params['v'],
                                                             params['V'],
@@ -243,11 +243,13 @@ class TestWfpt(unittest.TestCase):
                                                             params['t'],
                                                             params['T'],
                                                             params['a'],
-                                                            reps=1000,
+                                                            reps=10,
                                                             err=0.0001, logp=0)
+
         scaled_sim = hddm.utils.scale_avg(histo, max_perc=.95)
         print scaled_sim
         scaled_analytic = hddm.utils.scale(analytical_full_avg)
+        # TODO: Normalize according to integral
         print scaled_analytic
         print np.mean(scaled_sim - scaled_analytic)
         # Test if there are no systematic deviations
@@ -270,9 +272,13 @@ class TestLBA(unittest.TestCase):
         self.V = np.random.rand(1)+.5
 
     def test_lba_single(self):
-        import rpy2.robjects as robjects
-        import rpy2.robjects.numpy2ri
-        robjects.r.source('lba-math.r')
+        try:
+            import rpy2.robjects as robjects
+            import rpy2.robjects.numpy2ri
+            robjects.r.source('lba-math.r')
+        except ImportError:
+            print "rpy2 not installed, not testing against reference implementation."
+            return
 
         like_cython = hddm.likelihoods.LBA_like(self.x, self.a, self.z, 0., self.V, self.v[0], self.v[1], logp=False)
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.V)))
