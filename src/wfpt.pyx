@@ -182,8 +182,11 @@ cpdef double pdf_diff(double x, double v, double a, double z, double err, char d
 cpdef double pdf_sign(double x, double v, double a, double z, double t, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
-    if a<z or z<0 or z>1 or a<0:
-        return -np.Inf
+    if z<0 or z>1 or a<0:
+        if logp==1:
+            return -np.Inf
+        else:
+            return 0
 
     if x<0:
         # Lower boundary
@@ -263,29 +266,33 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
 
-    if logp == 1:
-        zero_prob = -np.Inf
-    else:
-        zero_prob = 0
+    
+    zero_prob = 0
         
     # Create samples
     cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
     cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=V)
     if V == 0.:
         v_samples = np.repeat(v, reps)
     else:
         v_samples = np.random.normal(size=reps, loc=v, scale=V)
         
-    cdef np.ndarray[DTYPE_t, ndim=2] probs = np.empty((reps,num_resps), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] probs = np.zeros(num_resps, dtype=DTYPE)
 
-    for rep from 0 <= rep < reps:
-        for i from 0 <= i < num_resps:
+    for i from 0 <= i < num_resps:
+        t_samples[:] = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
+        z_samples[:] = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
+        v_samples[:] = np.random.normal(size=reps, loc=v, scale=V)               
+        for rep from 0 <= rep < reps:           
             if (fabs(x[i])-t_samples[rep]) < 0:
-                probs[rep,i] = zero_prob
+                probs[i] = probs[i] + zero_prob
             elif a <= z_samples[rep]:
-                probs[rep,i] = zero_prob
+                probs[i] = probs[i] + zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=logp)
+                probs[i] = probs[i] + pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=0)
 
-    return np.mean(probs, axis=0)
+    if logp==0:
+        return (probs/reps)
+    else:
+        return np.log(probs/reps)
