@@ -259,6 +259,7 @@ class TestWfpt(unittest.TestCase):
 
 
     def test_full_mc(self):
+        #TODO: this function was not tested, it probably does not work well
         values = array([0.3, 0.4, 0.6, 1])
         v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
         true_vals = np.log(np.array([0.019925699375943847,
