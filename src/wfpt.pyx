@@ -182,7 +182,7 @@ cpdef double pdf_diff(double x, double v, double a, double z, double err, char d
 cpdef double pdf_sign(double x, double v, double a, double z, double t, double err, int logp=0):
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
-    if a<z or z<0 or z>1 or a<0:
+    if z<0 or z>1 or a<0:
         if logp==1:
             return -np.Inf
         else:
