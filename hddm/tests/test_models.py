@@ -22,10 +22,6 @@ from hddm.generate import *
 
 from nose import SkipTest
 
-def scale(x):
-    return (x-np.min(x))/(np.max(x)-np.min(x))
-
-    
 def analyze_regress(posterior_trace, x_range=(-.5, .5), bins=100, plot=True):
     import scipy.interpolate
     

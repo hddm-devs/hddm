@@ -25,45 +25,6 @@ def effect(base, effects):
 def return_fixed(value=.5):
     return value
 
-def scale_avg(x, min_perc=None, max_perc=None):
-    x = x.astype(np.float)
-    sorted = np.sort(x)
-    if max_perc is not None:
-        idx_max = int(np.ceil(max_perc*x.shape[0]))
-        max = np.mean(sorted[idx_max:])
-    else:
-        max = np.max(x)
-
-    if min_perc is not None:
-        idx_min = int(np.ceil(min_perc*x.shape[0]))
-        min = np.mean(sorted[:idx_min])
-    else:
-        min = np.min(x)
-
-    return scale(x, max=max, min=min)
-    
-def scale(x, max=None, min=None):
-    x = x.astype(np.float)
-    if max is None:
-        max = np.max(x)
-    if min is None:
-        min = np.min(x)
-    return (x-min)/(max-min)
-
-def scale_multi(a1, a2):
-    """Scale two arrays to be in range [0,1].
-    """
-    # Scale appropriately
-    if np.max(a1) > np.max(a2):
-        a1_scaled = scale(a1)
-        a2_scaled = scale(a2, max=np.max(a1), min=np.min(a1))
-    else:
-        a2_scaled = scale(a2)
-        a1_scaled = scale(a1, max=np.max(a2), min=np.min(a2))
-
-    return (a1_scaled, a2_scaled)
-
-
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
     Compute the histogram of a set of data.
