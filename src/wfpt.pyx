@@ -31,22 +31,12 @@ cdef extern from "math.h":
 DTYPE = np.double
 ctypedef double DTYPE_t
 
-cpdef double pdf(double x, double v, double a, double z, double err, unsigned int logp=0):
-    """Compute the likelihood of the drift diffusion model using the method
+
+cpdef double ftt_01w(double tt, double w, double err):
+    """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
-    if x <= 0:
-        if logp == 0:
-            return 0
-        else:
-            return -np.Inf
-        
-    cdef double tt = x/(pow(a,2)) # use normalized time
-    # CHANGE: Relative starting point is expected now.
-    cdef double w = z
-    #cdef double w = z/a # convert to relative start point
-
-    cdef double kl, ks, p
+   cdef double kl, ks, p
     cdef double PI = 3.1415926535897
     cdef double PIs = 9.869604401089358 # PI^2
     cdef int k, K, lower, upper
@@ -81,12 +71,45 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
             p=p+k*exp(-(pow(k,2))*(PIs)*tt/2)*sin(k*PI*w) # increment sum
         p=p*PI # add constant term
 
+    return p
+
+cpdef double pdf(double x, double v, double a, double z, double err, unsigned int logp=0):
+    """Compute the likelihood of the drift diffusion model f(t|v,a,z) using the method
+    and implementation of Navarro & Fuss, 2009.
+    """
+    if x <= 0:
+        if logp == 0:
+            return 0
+        else:
+            return -np.Inf
+        
+    cdef double tt = x/(pow(a,2)) # use normalized time
+    cdef double p  = ftt_01w(tt, z, err) #get f(t|0,1,w)
+  
     # convert to f(t|v,a,w)
     if logp == 0:
         return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
     else:
         return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
 
+cpdef double pdf_V(double x, double v, double V, double z, double a, double err, unsigned int logp=0):
+    """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method
+    and implementation of Navarro & Fuss, 2009.
+    """
+    if x <= 0:
+        if logp == 0:
+            return 0
+        else:
+            return -np.Inf
+        
+    cdef double tt = x/(pow(a,2)) # use normalized time
+    cdef double p  = ftt_01w(tt, z, err) #get f(t|0,1,w)
+  
+    # convert to f(t|v,a,w)
+    if logp == 0:
+        return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)
+    else:
+        return log(p) - 2*log(a) + ((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2) - log(sqrt((V**2)*x+1))
 
 cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0, ):
     """Compute the likelihood of the drift diffusion model using the method
