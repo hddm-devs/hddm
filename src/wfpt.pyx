@@ -36,7 +36,7 @@ cpdef double ftt_01w(double tt, double w, double err):
     """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
-   cdef double kl, ks, p
+    cdef double kl, ks, p
     cdef double PI = 3.1415926535897
     cdef double PIs = 9.869604401089358 # PI^2
     cdef int k, K, lower, upper
@@ -238,7 +238,7 @@ cpdef double simpson(func f, double a, double b, int n):
     """f=name of function, a=initial value, b=end value, n=number of double intervals of size 2h"""
     assert(n&1==0, "n has to be an even number")
  
-    cdef double h = (b - a) / n;
+    cdef double h = (b - a) / n
     cdef double S = f(a)
     cdef double x
     cdef int i
@@ -268,20 +268,22 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
                 return simpson(pdf_sign(x, v, a, z, t, err, logp), -T/2.,T/2., nT) #V=0,Z=0,T=1
         else: #Z=1
             if (T==0):
-                return simpson(pdf_sign(x, v, a, z?, t, err, logp), -Z/2.,Z/2., nT) #V=0,Z=1,T=0
+                return simpson(pdf_sign(x, v, a, z, t, err, logp), -Z/2.,Z/2., nT) #V=0,Z=1,T=0
             else: #T=1
-                dbl_simpson #V=0,Z=1,T=1
+                pass
+                #dbl_simpson #V=0,Z=1,T=1
     else:
         if (Z==0):
             if (T==0):
                 return pdf_V_sign(x, v, V, a, z, Z, t, T, err, logp) #V=1,Z=0,T=0
             else: #T=0
-                return simpson(, -T/2.,T/2., nT) #V=1,Z=0,T=1
+                return simpson(T, -T/2.,T/2., nT) #V=1,Z=0,T=1
         else: #Z=1
             if (T==0):
-                return simpson(, -Z/2.,Z/2., nT) #V=1,Z=1,T=0
+                return simpson(T, -Z/2.,Z/2., nT) #V=1,Z=1,T=0
             else: #T=1
-                dbl_simpson #V=1,Z=1,T=1    
+                pass
+                #dbl_simpson #V=1,Z=1,T=1    
     
     
 @cython.wraparound(False)
