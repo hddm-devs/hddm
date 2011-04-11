@@ -111,7 +111,7 @@ cpdef double pdf_V(double x, double v, double V, double a, double z, double err,
     else:
         return log(p) - 2*log(a) + ((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2) - log(sqrt((V**2)*x+1))
 
-cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0, ):
+cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0):
     """Compute the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
@@ -308,7 +308,7 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int l
             for param in multi:
                 params_iter[param] = params[param][i]
                 
-            y[i] = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err=err, logp=logp)
+            y[i] = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err, logp)
 
         return y
 
@@ -343,7 +343,7 @@ def wiener_like_full_mc_multi_thresh(np.ndarray[DTYPE_t, ndim=1] x, double v, do
             elif a[i] <= z_samples[rep]:
                 probs[rep,i] = zero_prob
             else:
-                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a[i], z_samples[rep], t_samples[rep], err=err, logp=logp)
+                probs[rep,i] = pdf_sign(x[i], v_samples[rep], a[i], z_samples[rep], t_samples[rep], err, logp)
 
     return np.mean(probs, axis=0)
 
@@ -352,32 +352,30 @@ def wiener_like_full_mc_multi_thresh(np.ndarray[DTYPE_t, ndim=1] x, double v, do
 def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, int logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
-
     
-    zero_prob = 0
+    cdef unsigned int zero_prob = 0
         
     # Create samples
     cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
     cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples = np.random.normal(size=reps, loc=v, scale=V)
+    # np.random.normal does not work for scale=0, create special case.
+    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
     if V == 0.:
         v_samples = np.repeat(v, reps)
     else:
         v_samples = np.random.normal(size=reps, loc=v, scale=V)
-        
+
     cdef np.ndarray[DTYPE_t, ndim=1] probs = np.zeros(num_resps, dtype=DTYPE)
 
+    # Loop through RTs and reps and add up the resulting probabilities
     for i from 0 <= i < num_resps:
-        t_samples[:] = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
-        z_samples[:] = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-        v_samples[:] = np.random.normal(size=reps, loc=v, scale=V)               
         for rep from 0 <= rep < reps:           
             if (fabs(x[i])-t_samples[rep]) < 0:
-                probs[i] = probs[i] + zero_prob
+                probs[i] += zero_prob
             elif a <= z_samples[rep]:
-                probs[i] = probs[i] + zero_prob
+                probs[i] += zero_prob
             else:
-                probs[i] = probs[i] + pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err=err, logp=0)
+                probs[i] += pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err, 0)
 
     if logp==0:
         return (probs/reps)
