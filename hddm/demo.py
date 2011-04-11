@@ -123,9 +123,9 @@ class DDMPlot(HasTraits):
     plot_lba = Bool(False)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
-    plot_density = Bool(True)
-    plot_density_dist = Bool(True)
-    plot_mean_rt = Bool(True)
+    plot_density = Bool(False)
+    plot_density_dist = Bool(False)
+    plot_mean_rt = Bool(False)
     
     x_analytical = Property(Array)
     
@@ -149,8 +149,8 @@ class DDMPlot(HasTraits):
                 Item('plot_full_mc'),
                 Item('plot_lba'),
                 Item('plot_data'),
-                Item('plot_density'),
-                Item('plot_density_dist'),
+#                Item('plot_density'),
+#                Item('plot_density_dist'),
                 Item('plot_mean_rt'),
 		Item('go'),
 		#style='custom',
@@ -231,7 +231,7 @@ class DDMPlot(HasTraits):
                                              Z=self.ddm.sz,
                                              t=self.ddm.ter,
                                              T=self.ddm.ster,
-                                             a=self.ddm.a, err=.0001, reps=50)
+                                             a=self.ddm.a, err=.0001, reps=100)
 
     @timer
     def _get_simple(self):
@@ -240,17 +240,6 @@ class DDMPlot(HasTraits):
                                   self.ddm.a,
                                   self.ddm.z,
                                   self.ddm.ter, .001)
-        mid = pdf.shape[0]/2
-
-        def p(mu, sigma, a, z):
-            return (np.exp(-2*z*mu/sigma**2)-1) / (np.exp(-2*a*mu/sigma**2)-1)
-        
-        p_upper = p(self.ddm.v, 1, self.ddm.a, self.ddm.z*self.ddm.a)
-        p_lower = 1-p_upper
-
-        #pdf[:mid] *= p_lower
-        #pdf[mid:] *= p_upper
-
         return pdf
 
 
@@ -268,10 +257,6 @@ class DDMPlot(HasTraits):
         self.update_plot()
 
     def plot_histo(self, x, y, color, max_perc=None):
-#        if max_perc is None:
-#            y_scaled = hddm.utils.scale(y)
-#        else:
-#            y_scaled = hddm.utils.scale_avg(y, max_perc=max_perc)
         # y consists of lower and upper boundary responses
         # mid point tells us where to split
         assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
@@ -322,7 +307,6 @@ class DDMPlot(HasTraits):
             self.plot_histo(x_anal, self.simple, color='b')
 
         if self.plot_lba:
-            #y_scaled = hddm.utils.scale(self.lba)
             self.plot_histo(x_anal, self.lba, color='k')
 
         if self.plot_density_dist:
@@ -337,8 +321,8 @@ class DDMPlot(HasTraits):
             x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             # Compute normal density
             dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
-            # Normalize density
-            dens_norm = dens / np.max(dens, axis=0)
+            ## Normalize density
+            #dens_norm = dens / np.max(dens, axis=0)
             self.figure.axes[1].contourf(x,y,dens_norm)
 
         if self.plot_drifts:
@@ -352,17 +336,13 @@ class DDMPlot(HasTraits):
                 self.figure.axes[1].plot(t[:duration],
                                          self.ddm.drifts[k][:duration], 'b')
     
-	# Draw boundaires
-	#self.figure.axes[1].plot(t, np.ones(t.shape)*self.ddm.a, 'k')
-	#self.figure.axes[1].plot(t, np.zeros(t.shape), 'k')
-        #self.figure.axes[1].set_ylim((0,10))
-        
         self.set_figure()
 
 	wx.CallAfter(self.figure.canvas.draw)
 
     def set_figure(self):
         # Set axes limits
+        # TODO: Fix boundary now that we are using true densities
         self.figure.axes[0].set_ylim((0,1.05))
         self.figure.axes[2].set_ylim((-1.05, 0))
         self.figure.axes[0].set_xlim((0, self.ddm.T))

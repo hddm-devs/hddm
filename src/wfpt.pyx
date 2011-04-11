@@ -88,7 +88,7 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
         return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
 
 
-cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0, ):
+cpdef double pdf_diff(double x, double v, double a, double z, double err, char diff, unsigned int logp=0):
     """Compute the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
