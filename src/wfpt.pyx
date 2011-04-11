@@ -84,7 +84,8 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
             return -np.Inf
         
     cdef double tt = x/(pow(a,2)) # use normalized time
-    cdef double p  = ftt_01w(tt, z, err) #get f(t|0,1,w)
+    cdef w = z
+    cdef double p  = ftt_01w(tt, w, err) #get f(t|0,1,w)
   
     # convert to f(t|v,a,w)
     if logp == 0:
@@ -234,57 +235,57 @@ cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double
         # Upper boundary, flip v and z
         return pdf_V(x-t, -v, V, a, 1.-z, err, logp)
 
-cpdef double simpson(func f, double a, double b, int n):
-    """f=name of function, a=initial value, b=end value, n=number of double intervals of size 2h"""
-    assert(n&1==0, "n has to be an even number")
- 
-    cdef double h = (b - a) / n
-    cdef double S = f(a)
-    cdef double x
-    cdef int i
-    
-    for i  from 1 <= i < n:        
-        x = a + h * i
-        if i&1: #check if i is odd
-            S += (4 * f(x))
-        else:
-            S += (2 * f(x))
- 
-    S = S + f(b)
-    return (h * S / 3)
-    
-    
-
-cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-                     double t, double T, double err, int nT= 10, int nZ=10, int logp=0):
-
-    
-
-    if (V==0):
-        if (Z==0):
-            if (T==0):
-                return pdf_sign(x, v, a, z, t, err, logp) #V=0,Z=0,T=0
-            else: #T=0
-                return simpson(pdf_sign(x, v, a, z, t, err, logp), -T/2.,T/2., nT) #V=0,Z=0,T=1
-        else: #Z=1
-            if (T==0):
-                return simpson(pdf_sign(x, v, a, z, t, err, logp), -Z/2.,Z/2., nT) #V=0,Z=1,T=0
-            else: #T=1
-                pass
-                #dbl_simpson #V=0,Z=1,T=1
-    else:
-        if (Z==0):
-            if (T==0):
-                return pdf_V_sign(x, v, V, a, z, Z, t, T, err, logp) #V=1,Z=0,T=0
-            else: #T=0
-                return simpson(T, -T/2.,T/2., nT) #V=1,Z=0,T=1
-        else: #Z=1
-            if (T==0):
-                return simpson(T, -Z/2.,Z/2., nT) #V=1,Z=1,T=0
-            else: #T=1
-                pass
-                #dbl_simpson #V=1,Z=1,T=1    
-    
+#cpdef double simpson(func f, double a, double b, int n):
+#    """f=name of function, a=initial value, b=end value, n=number of double intervals of size 2h"""
+#    assert(n&1==0, "n has to be an even number")
+# 
+#    cdef double h = (b - a) / n
+#    cdef double S = f(a)
+#    cdef double x
+#    cdef int i
+#    
+#    for i  from 1 <= i < n:        
+#        x = a + h * i
+#        if i&1: #check if i is odd
+#            S += (4 * f(x))
+#        else:
+#            S += (2 * f(x))
+# 
+#    S = S + f(b)
+#    return (h * S / 3)
+#    
+#    
+#
+#cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
+#                     double t, double T, double err, int nT= 10, int nZ=10, int logp=0):
+#
+#    
+#
+#    if (V==0):
+#        if (Z==0):
+#            if (T==0):
+#                return pdf_sign(x, v, a, z, t, err, logp) #V=0,Z=0,T=0
+#            else: #T=0
+#                return simpson(pdf_sign(x, v, a, z, t, err, logp), -T/2.,T/2., nT) #V=0,Z=0,T=1
+#        else: #Z=1
+#            if (T==0):
+#                return simpson(pdf_sign(x, v, a, z, t, err, logp), -Z/2.,Z/2., nT) #V=0,Z=1,T=0
+#            else: #T=1
+#                pass
+#                #dbl_simpson #V=0,Z=1,T=1
+#    else:
+#        if (Z==0):
+#            if (T==0):
+#                return pdf_V_sign(x, v, V, a, z, Z, t, T, err, logp) #V=1,Z=0,T=0
+#            else: #T=0
+#                return simpson(T, -T/2.,T/2., nT) #V=1,Z=0,T=1
+#        else: #Z=1
+#            if (T==0):
+#                return simpson(T, -Z/2.,Z/2., nT) #V=1,Z=1,T=0
+#            else: #T=1
+#                pass
+#                #dbl_simpson #V=1,Z=1,T=1    
+#    
     
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function

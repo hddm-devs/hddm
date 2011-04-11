@@ -197,7 +197,7 @@ class TestWfpt(unittest.TestCase):
             z = .5*rand()
             z_nonorm = a*z
             rt = rand()*4 + t
-            err = rand()
+            err = 10*(-3- ceil(rand()*20))
             # Test if equal up to the 9th decimal.
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err), mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0], 9)
             
@@ -213,18 +213,17 @@ class TestWfpt(unittest.TestCase):
         samples_novar = hddm.generate.gen_rts(params_novar, samples=self.samples)
         simulated_pdf = hddm.utils.histogram(samples_novar, bins=self.bins, range=self.range_, density=True)[0]
 
-        analytic_pdf = hddm.wfpt.pdf_array(self.x,
+        analytical_pdf = hddm.wfpt.pdf_array(self.x,
                                            params_novar['v'],
                                            params_novar['a'],
                                            params_novar['z'],
                                            params_novar['t'],
                                            err=0.0001, logp=0)
 
-        diff = np.mean(simulated_pdf - analytic_pdf)
+        diff = np.mean(abs(simulated_pdf - analytical_pdf))
         print diff
         # Test if there are no systematic deviations
-        self.assertTrue(diff < 0.01)
-        self.assertTrue(diff > -0.01)
+        self.assertTrue(diff < 0.03)
         np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
         
     def test_full_mc_simulated(self):
@@ -253,11 +252,10 @@ class TestWfpt(unittest.TestCase):
                                                        err=0.0001, logp=0)
 
         # TODO: Normalize according to integral
-        diff = np.mean(empirical_pdf - analytical_pdf)
+        diff = np.mean(np.abs(empirical_pdf - analytical_pdf))
         print diff
         # Test if there are no systematic deviations
-        self.assertTrue(diff < 0.01)
-        self.assertTrue(diff > -0.01)
+        self.assertTrue(diff < 0.03)
         np.testing.assert_array_almost_equal(empirical_pdf, analytical_pdf, 1)
 
 
@@ -278,7 +276,7 @@ class TestWfpt(unittest.TestCase):
         print values[i:i+1]
         y[i] = sum(hddm.wfpt.wiener_like_full_mc(values[i:i+1], v, V, z, Z, t, T, a, err=.0001,
                                                         reps=1000000,logp=1))
-    np.testing.assert_array_almost_equal(true_vals, y, 3)
+    np.testing.assert_array_almost_equal(true_vals, y, 2)
             
 
 class TestLBA(unittest.TestCase):
