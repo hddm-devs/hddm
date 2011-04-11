@@ -9,15 +9,20 @@ import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
 
+from nose import SkipTest
+
 class TestGPU(unittest.TestCase):
     def runTest(self):
         pass
         #self.setUp()
     
     def setUp(self, size=20):
-        import wfpt_gpu
-        import pycuda.driver as cuda
-        import pycuda
+        try:
+            import wfpt_gpu
+            import pycuda.driver as cuda
+            import pycuda
+        except ImportError:
+            raise SkipTest("Normal skip")
 
         pycuda.tools.mark_cuda_test(wfpt_gpu.pdf_func_complete)
         x = np.random.rand(size)+.5
@@ -206,21 +211,20 @@ class TestWfpt(unittest.TestCase):
         params_novar['T'] = 0
         params_novar['Z'] = 0
         samples_novar = hddm.generate.gen_rts(params_novar, samples=self.samples)
-        histo_novar = np.histogram(samples_novar, bins=self.bins, range=self.range_)[0]
+        simulated_pdf = hddm.utils.histogram(samples_novar, bins=self.bins, range=self.range_, density=True)[0]
 
-        analytical_simple = hddm.wfpt.pdf_array(self.x,
-                                                params_novar['v'],
-                                                params_novar['a'],
-                                                params_novar['z'],
-                                                params_novar['t'],
-                                                err=0.0001, logp=0)
+        analytic_pdf = hddm.wfpt.pdf_array(self.x,
+                                           params_novar['v'],
+                                           params_novar['a'],
+                                           params_novar['z'],
+                                           params_novar['t'],
+                                           err=0.0001, logp=0)
 
-        scaled_sim = hddm.utils.scale_avg(histo_novar, max_perc=.95)
-        scaled_analytic = hddm.utils.scale(analytical_simple)
-        print np.mean(scaled_sim - scaled_analytic)
+        diff = np.mean(simulated_pdf - analytic_pdf)
+        print diff
         # Test if there are no systematic deviations
-        self.assertTrue(np.mean(scaled_sim - scaled_analytic) < 0.04)
-        self.assertTrue(np.mean(scaled_sim - scaled_analytic) > -0.04)
+        self.assertTrue(diff < 0.01)
+        self.assertTrue(diff > -0.01)
         #np.testing.assert_array_almost_equal(scaled_sim, scaled_analytic, 1)
         
     def test_full_avg(self):
@@ -233,45 +237,42 @@ class TestWfpt(unittest.TestCase):
         params['T'] = rand()*(params['t']/2.)
         params['Z'] = rand()*(params['z']/2.)
         samples = hddm.generate.gen_rts(params, samples=self.samples)
-        histo = np.histogram(samples, bins=self.bins, range=self.range_)[0]
+        empirical_pdf = hddm.utils.histogram(samples, bins=self.bins, range=self.range_, density=True)[0]
         
-        analytical_full_avg = hddm.wfpt.wiener_like_full_mc(self.x,
-                                                            params['v'],
-                                                            params['V'],
-                                                            params['z'],
-                                                            params['Z'],
-                                                            params['t'],
-                                                            params['T'],
-                                                            params['a'],
-                                                            reps=10,
-                                                            err=0.0001, logp=0)
+        analytical_pdf = hddm.wfpt.wiener_like_full_mc(self.x,
+                                                       params['v'],
+                                                       params['V'],
+                                                       params['z'],
+                                                       params['Z'],
+                                                       params['t'],
+                                                       params['T'],
+                                                       params['a'],
+                                                       reps=1000,
+                                                       err=0.0001, logp=0)
 
-        scaled_sim = hddm.utils.scale_avg(histo, max_perc=.95)
-        print scaled_sim
-        scaled_analytic = hddm.utils.scale(analytical_full_avg)
         # TODO: Normalize according to integral
-        print scaled_analytic
-        print np.mean(scaled_sim - scaled_analytic)
+        diff = np.mean(empirical_pdf - analytical_pdf)
+        print diff
         # Test if there are no systematic deviations
-        self.assertTrue(np.mean(scaled_sim - scaled_analytic) < 0.04)
-        self.assertTrue(np.mean(scaled_sim - scaled_analytic) > -0.04)
+        self.assertTrue(diff < 0.01)
+        self.assertTrue(diff > -0.01)
         #np.testing.assert_array_almost_equal(scaled_sim, scaled_analytic, 1)
 
 
     def test_full_mc(self):
         #TODO: this function was not tested, it probably does not work well
-        values = array([0.3, 0.4, 0.6, 1])
+        values = np.array([0.3, 0.4, 0.6, 1])
         v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
         true_vals = np.log(np.array([0.019925699375943847,
-                           1.0586617338544908,
-                           1.2906014938998163,
-                           0.446972173706388]))
+                                     1.0586617338544908,
+                                     1.2906014938998163,
+                                     0.446972173706388]))
         
         y = np.empty(len(values), dtype=float)
-        for (idx, val) in enuemrate(values):
-            y[i] = sum(wfpt.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001,
-                                                            reps=1000000,logp=1))
-        self.assertTrue(np.abs(y - true_val) < log(1.01))
+        for (idx, val) in enumerate(values):
+            y[idx] = np.sum(hddm.wfpt.wiener_like_full_mc(values, v, V, z, Z, t, T, a, err=.0001,
+                                                   reps=10000, logp=1))
+        np.testing.assert_array_less(np.abs(y - true_vals), np.log(1.01))
             
 
 class TestLBA(unittest.TestCase):

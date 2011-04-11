@@ -106,7 +106,7 @@ class DDM(HasTraits):
     
     @cached_property
     def _get_histo(self):
-        return np.histogram(self.rts, bins=2*self.bins, range=(-self.steps,self.steps))[0]
+        return hddm.utils.histogram(self.rts/self.dt, bins=2*self.bins, range=(-self.T,self.T), density=True)[0]
     
     def _get_params(self):
         return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
@@ -235,11 +235,24 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_simple(self):
-        return hddm.wfpt.pdf_array(self.x_analytical,
-                                   self.ddm.v,
-                                   self.ddm.a,
-                                   self.ddm.z,
-                                   self.ddm.ter, .001)
+        pdf = hddm.wfpt.pdf_array(self.x_analytical,
+                                  self.ddm.v,
+                                  self.ddm.a,
+                                  self.ddm.z,
+                                  self.ddm.ter, .001)
+        mid = pdf.shape[0]/2
+
+        def p(mu, sigma, a, z):
+            return (np.exp(-2*z*mu/sigma**2)-1) / (np.exp(-2*a*mu/sigma**2)-1)
+        
+        p_upper = p(self.ddm.v, 1, self.ddm.a, self.ddm.z*self.ddm.a)
+        p_lower = 1-p_upper
+
+        #pdf[:mid] *= p_lower
+        #pdf[mid:] *= p_upper
+
+        return pdf
+
 
     @timer
     def _get_lba(self):
@@ -255,19 +268,19 @@ class DDMPlot(HasTraits):
         self.update_plot()
 
     def plot_histo(self, x, y, color, max_perc=None):
-        if max_perc is None:
-            y_scaled = hddm.utils.scale(y)
-        else:
-            y_scaled = hddm.utils.scale_avg(y, max_perc=max_perc)
+#        if max_perc is None:
+#            y_scaled = hddm.utils.scale(y)
+#        else:
+#            y_scaled = hddm.utils.scale_avg(y, max_perc=max_perc)
         # y consists of lower and upper boundary responses
         # mid point tells us where to split
         assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
         mid = y.shape[0]/2
-        self.figure.axes[0].plot(x, y_scaled[mid:], color=color, lw=2.)
+        self.figure.axes[0].plot(x, y[mid:], color=color, lw=2.)
         # Compute correct EV
         mean_correct_rt = np.sum(x*y[mid:])/np.sum(y[mid:])
         # [::-1] -> reverse ordering
-        self.figure.axes[2].plot(x, -y_scaled[:mid][::-1], color=color, lw=2.)
+        self.figure.axes[2].plot(x, -y[:mid][::-1], color=color, lw=2.)
         # Compute error EV
         mean_error_rt = np.sum(x*y[:mid][::-1])/np.sum(y[:mid][::-1])
 
@@ -297,7 +310,7 @@ class DDMPlot(HasTraits):
         # Plot normalized histograms of empirical data
         if self.plot_data:
             range_ = self.ddm.steps/self.ddm.dt
-            histo = np.histogram(self.data, bins=2*self.ddm.bins, range=(-range_,range_))[0]
+            histo = hddm.utils.histogram(self.data, bins=2*self.ddm.bins, range=(-range_,range_), dens=True)[0]
             self.plot_histo(x, histo, color='y')
 
         # Plot analyitical full averaged likelihood function
@@ -309,7 +322,7 @@ class DDMPlot(HasTraits):
             self.plot_histo(x_anal, self.simple, color='b')
 
         if self.plot_lba:
-            y_scaled = hddm.utils.scale(self.lba)
+            #y_scaled = hddm.utils.scale(self.lba)
             self.plot_histo(x_anal, self.lba, color='k')
 
         if self.plot_density_dist:

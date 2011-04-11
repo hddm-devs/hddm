@@ -20,6 +20,7 @@ import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
 
+from nose import SkipTest
 
 def scale(x):
     return (x-np.min(x))/(np.max(x)-np.min(x))
