@@ -92,7 +92,7 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
     else:
         return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
 
-cpdef double pdf_V(double x, double v, double V, double z, double a, double err, unsigned int logp=0):
+cpdef double pdf_V(double x, double v, double V, double a, double z, double err, unsigned int logp=0):
     """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method
     and implementation of Navarro & Fuss, 2009.
     """
@@ -217,6 +217,23 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
     else:
         # Upper boundary, flip v and z
         return pdf(x-t, -v, a, 1.-z, err, logp)
+
+cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err, int logp=0):
+    """Wiener likelihood function for two response types. Lower bound
+    responses have negative t, upper boundary response have positive t"""
+    if z<0 or z>1 or a<0:
+        if logp==1:
+            return -np.Inf
+        else:
+            return 0
+
+    if x<0:
+        # Lower boundary
+        return pdf_V(fabs(x)-t, v, V, a, z, err, logp)
+    else:
+        # Upper boundary, flip v and z
+        return pdf_V(x-t, -v, V, a, 1.-z, err, logp)
+
     
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
