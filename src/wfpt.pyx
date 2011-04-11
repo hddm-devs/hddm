@@ -234,7 +234,7 @@ cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double
         # Upper boundary, flip v and z
         return pdf_V(x-t, -v, V, a, 1.-z, err, logp)
 
-cpdf double simpson(func f, double a, double b, int n):
+cpdef double simpson(func f, double a, double b, int n):
     """f=name of function, a=initial value, b=end value, n=number of double intervals of size 2h"""
     assert(n&1==0, "n has to be an even number")
  
@@ -255,8 +255,10 @@ cpdf double simpson(func f, double a, double b, int n):
     
     
 
-cpdf double full_pdf(double x, double v, double V, double a, double z, double Z, 
+cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int nT= 10, int nZ=10, int logp=0):
+
+    
 
     if (V==0):
         if (Z==0):

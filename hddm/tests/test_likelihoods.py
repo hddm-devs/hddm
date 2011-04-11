@@ -22,7 +22,7 @@ class TestGPU(unittest.TestCase):
             import pycuda.driver as cuda
             import pycuda
         except ImportError:
-            raise SkipTest("Normal skip")
+            raise SkipTest("Could not import pycuda, skipping tests for GPU version of wfpt.")
 
         pycuda.tools.mark_cuda_test(wfpt_gpu.pdf_func_complete)
         x = np.random.rand(size)+.5
@@ -225,9 +225,11 @@ class TestWfpt(unittest.TestCase):
         # Test if there are no systematic deviations
         self.assertTrue(diff < 0.01)
         self.assertTrue(diff > -0.01)
-        #np.testing.assert_array_almost_equal(scaled_sim, scaled_analytic, 1)
+        np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
         
-    def test_full_avg(self):
+    def test_full_mc_simulated(self):
+        """Test for systematic deviations in full_mc by comparing to simulated pdf distribution.
+        """
         params = {}
         params['v'] = (rand()-.5)*1.5
         params['t'] = rand()*.5
@@ -256,23 +258,27 @@ class TestWfpt(unittest.TestCase):
         # Test if there are no systematic deviations
         self.assertTrue(diff < 0.01)
         self.assertTrue(diff > -0.01)
-        #np.testing.assert_array_almost_equal(scaled_sim, scaled_analytic, 1)
+        np.testing.assert_array_almost_equal(empirical_pdf, analytical_pdf, 1)
 
 
     def test_full_mc(self):
-        #TODO: this function was not tested, it probably does not work well
-        values = np.array([0.3, 0.4, 0.6, 1])
-        v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
-        true_vals = np.log(np.array([0.019925699375943847,
-                                     1.0586617338544908,
-                                     1.2906014938998163,
-                                     0.446972173706388]))
-        
-        y = np.empty(len(values), dtype=float)
-        for (idx, val) in enumerate(values):
-            y[idx] = np.sum(hddm.wfpt.wiener_like_full_mc(values, v, V, z, Z, t, T, a, err=.0001,
-                                                   reps=10000, logp=1))
-        np.testing.assert_array_less(np.abs(y - true_vals), np.log(1.01))
+        """"""
+    values = np.array([0.3, 0.4, 0.6, 1])
+    print "testing %d data points" % (len(values))
+
+    v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
+    #true values obtained by numerical integration
+    true_vals = np.log(np.array([0.019925699375943847,
+                       1.0586617338544908,
+                       1.2906014938998163,
+                       0.446972173706388]))
+    
+    y = np.empty(len(values), dtype=float)
+    for i in xrange(len(values)):
+        print values[i:i+1]
+        y[i] = sum(hddm.wfpt.wiener_like_full_mc(values[i:i+1], v, V, z, Z, t, T, a, err=.0001,
+                                                        reps=1000000,logp=1))
+    np.testing.assert_array_almost_equal(true_vals, y, 3)
             
 
 class TestLBA(unittest.TestCase):
@@ -294,8 +300,7 @@ class TestLBA(unittest.TestCase):
             import rpy2.robjects.numpy2ri
             robjects.r.source('lba-math.r')
         except ImportError:
-            print "rpy2 not installed, not testing against reference implementation."
-            return
+            raise SkipTest("rpy2 not installed, not testing against reference implementation.")
 
         like_cython = hddm.likelihoods.LBA_like(self.x, self.a, self.z, 0., self.V, self.v[0], self.v[1], logp=False)
         like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.V)))
