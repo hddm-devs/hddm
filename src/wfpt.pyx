@@ -94,8 +94,9 @@ cpdef double pdf(double x, double v, double a, double z, double err, unsigned in
         return log(p) + (-v*a*w -(pow(v,2))*x/2.) - 2*log(a)
 
 cpdef double pdf_V(double x, double v, double V, double a, double z, double err, unsigned int logp=0):
-    """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method
+    """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the metho    
     and implementation of Navarro & Fuss, 2009.
+    V is the std of the drift rate
     """
     if x <= 0:
         if logp == 0:
@@ -108,7 +109,7 @@ cpdef double pdf_V(double x, double v, double V, double a, double z, double err,
   
     # convert to f(t|v,a,w)
     if logp == 0:
-        return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)
+        return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
     else:
         return log(p) - 2*log(a) + ((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2) - log(sqrt((V**2)*x+1))
 
