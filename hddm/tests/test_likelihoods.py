@@ -174,7 +174,7 @@ class TestWfpt(unittest.TestCase):
         super(TestWfpt, self).__init__(*args, **kwargs)
         self.bins=50
         self.range_=(-4,4)
-        self.samples=4000
+        self.samples=5000
         self.x = np.linspace(self.range_[0], self.range_[1], self.bins)
         
         
@@ -199,7 +199,9 @@ class TestWfpt(unittest.TestCase):
             rt = rand()*4 + t
             err = 10*(-3- ceil(rand()*20))
             # Test if equal up to the 9th decimal.
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err), mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0], 9)
+            res = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=1), np.log(res), 9)
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=0), res, 9)
             
     def test_simple(self):
         params_novar = {}
@@ -221,7 +223,8 @@ class TestWfpt(unittest.TestCase):
                                            err=0.0001, logp=0)
 
         diff = np.mean(abs(simulated_pdf - analytical_pdf))
-        print diff
+        print 'mean err: %f' % diff
+        print 'max err: %f' % np.max(abs(simulated_pdf - analytical_pdf))
         # Test if there are no systematic deviations
         self.assertTrue(diff < 0.03)
         np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
@@ -278,6 +281,29 @@ class TestWfpt(unittest.TestCase):
                                                         reps=1000000,logp=1))
     np.testing.assert_array_almost_equal(true_vals, y, 2)
             
+    def test_pdf_V(self):
+        """Test if our wfpt pdf_V implementation yields the right results"""
+        try:
+            import mlabwrap
+        except ImportError:
+            print "Could not import mlabwrap, not performing pdf comparison test."
+            return
+
+        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf_sign(value, v=v_i, a=a, z=z, t=t, err=err, logp=0) *norm.pdf(v_i,v,V)
+
+        for i in range(500):
+            V = rand()*0.5
+            v = (rand()-.5)*1.5
+            t = rand()*.5
+            a = 1.5+rand()
+            z = .5*rand()
+            z_nonorm = a*z
+            rt = rand()*4 + t
+            err = 10*(-3- ceil(rand()*20))
+            # Test if equal up to the 9th decimal.
+            res =  quad(func, -inf,inf,args = (rt,err,v,V,z,a))
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v, V, a, z, err, 0), res)        
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v, V, a, z, err, 1), np.log(res))        
 
 class TestLBA(unittest.TestCase):
     def runTest(self):
