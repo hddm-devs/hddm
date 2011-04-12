@@ -200,7 +200,7 @@ class TestWfpt(unittest.TestCase):
             err = 10*(-3- ceil(rand()*20))
             # Test if equal up to the 9th decimal.
             res = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v+1, a, z, err,logp=1), np.log(res), 9)
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=1), np.log(res), 9)
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=0), res, 9)
             
     def test_simple(self):
