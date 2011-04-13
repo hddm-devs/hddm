@@ -344,6 +344,16 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
         y[i] = pdf_sign(x[i], v, a, z, t, err, logp)
     return y
 
+def wiener_like_full_intrp(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double a, double z, double Z, double t, double T, double err, int nT= 10, int nZ=10):
+    cdef Py_ssize_t i
+    cdef double y
+    
+    y = 0
+    for i from 0 <= i < x.shape[0]:
+        y += full_pdf(x[i], v=v, V=V, a=a, z=z, Z=Z, t=t, T=T, err=err, logp=1, nT=nT,nZ=nZ)
+    return y
+
+
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int logp=0, multi=None):
