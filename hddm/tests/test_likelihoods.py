@@ -8,6 +8,7 @@ import pymc as pm
 import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
+from scipy.integrate import *
 
 from nose import SkipTest
 
@@ -282,9 +283,8 @@ class TestWfpt(unittest.TestCase):
                                                         reps=1000000,logp=1))
     np.testing.assert_array_almost_equal(true_vals, y, 2)
             
-    def test_pdf_V_sign(self):
-        """Test if our wfpt pdf_V implementation yields the right results"""
-        from scipy.integrate import quad
+    def test_pdf(self):
+        """Test if our wfpt pdf_V implementation yields the right results"""       
         func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
 
         for i in range(100):
@@ -298,7 +298,54 @@ class TestWfpt(unittest.TestCase):
             # Test if equal up to the 9th decimal.
             res =  quad(func, -np.inf,np.inf,args = (rt,err,v,V,z,a), epsrel=1e-10, epsabs=1e-10)[0]
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=0), res)        
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=1), np.log(res))        
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=1), np.log(res)) 
+    
+    def test_full_pdf(self):
+  
+        f_pdf_intgrt_z = lambda z_i,value,err,v,V,z,Z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0)/Z
+        f_pdf_intgrt_t = lambda t_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0)
+        func_pdf_V = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
+        
+        nZ = 10; nT=10; 
+        for i in range(100):
+            V = rand()*0.4+0.1
+            v = (rand()-.5)*4
+            t = rand()*.5
+            a = 1.5+rand()
+            z = .5*rand()
+            rt = rand()*4 + t
+            err = 10**-15
+            Z = rand()*0.3
+            T = rand()*0.3
+            logp = np.floor(rand()*2)
+            
+            my_res = np.zeros(8)
+            res = my_res[:]
+            y_z = np.zeros(nZ+1);
+            y_t = np.zeros(nT+1)
+            #test pdf
+            my_res[0] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+            res[0] =  hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t, err=err,logp=logp)
+            
+            #test pdf + Z
+            my_res[1] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+            h = Z/nZ
+            for j in range(nZ+1):
+                z_tag = -Z/2. + h*j
+                y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t, err=err,logp=0)             
+            if logp:
+                res[1] = np.log(simps(y_z, x=None, dx=h))
+            else:
+                res[1] = simps(y_z, x=None, dx=h)
+            #test pdf + T
+           # my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,T=T,err=err,logp=logp, nZ=nZ, nT=nT)
+            #res[2] =  hddm.pdf_sign(rt, v, a, z, err,logp=logp)
+            my_res[np.isinf(my_res)] = 100
+            res[np.isinf(res)] = 100
+            print res
+            print my_res
+            np.testing.assert_array_almost_equal(my_res, res,7)        
+               
 
 class TestLBA(unittest.TestCase):
     def runTest(self):
