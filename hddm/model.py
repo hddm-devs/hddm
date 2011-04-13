@@ -19,7 +19,7 @@ class Base(object):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=[]):
         self.trace_subjs = trace_subjs
 
         if model_type is None:
@@ -37,6 +37,7 @@ class Base(object):
         self._models = {'simple': self._get_simple,
                         'simple_gpu': self._get_simple_gpu,
                         'full_mc': self._get_full_mc,
+                        'full_intrp': self._get_full_intrp,
                         'full': self._get_full,
                         'lba':self._get_lba}
 
@@ -47,10 +48,10 @@ class Base(object):
                                  'z_upper': 1.,
                                  't_lower': .1,
                                  't_upper': 2.,
-                                 'v_lower': -3.,
-                                 'v_upper': 3.,
+                                 'v_lower': -6.,
+                                 'v_upper': 6.,
                                  'V_lower': 0.,
-                                 'V_upper': 1.,
+                                 'V_upper': 3.,
                                  'T_lower': 0.,
                                  'T_upper': 1.,
                                  'Z_lower': 0.,
@@ -58,10 +59,9 @@ class Base(object):
                                  'e_lower': -.3,
                                  'e_upper': .3
                                  }
-            if exclude_inter_var_params is not None:
-                for param in exclude_inter_var_params:
-                    self.param_ranges['%s_lower'%param] = 0
-                    self.param_ranges['%s_upper'%param] = 0
+
+            self.exclude = exclude_inter_var_params
+
                 
             if not init:
                 # Default param ranges
@@ -101,8 +101,11 @@ class Base(object):
     def get_param_names(self):
         if self.model_type == 'simple' or self.model_type == 'simple_gpu':
             return ('a', 'v', 'z', 't')
-        elif self.model_type == 'full_mc' or self.model_type == 'full':
-            return ('a', 'v', 'V', 'z', 'Z', 't', 'T')
+        elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
+            names = set(['a', 'v', 'V', 'z', 'Z', 't', 'T'])
+            for ex in self.exclude:
+                names.remove(ex)
+            return tuple(names)
         elif self.model_type == 'lba':
             return ('a', 'z', 't', 'V', 'v0', 'v1')
         else:
@@ -270,6 +273,30 @@ class Base(object):
                                                  T=params['T'][idx], 
                                                  a=params['a'][idx],
                                                  observed=True)
+
+    
+    def _get_idx_node(self, node_name, params, idx):
+        if node_name in self.exclude:
+            return 0
+        else:
+            if idx is None:
+                return params[node_name]
+            else:
+                return params[node_name][idx]
+                
+
+
+    def _get_full_intrp(self, name, data, params, idx=None):
+        return hddm.likelihoods.WienerFullIntrp(name,
+                             value=data['rt'].flatten(),
+                             z = self._get_idx_node('z',params,idx),
+                             t = self._get_idx_node('t',params,idx),
+                             v = self._get_idx_node('v',params,idx),
+                             a = self._get_idx_node('a',params,idx),       
+                             Z = self._get_idx_node('Z',params,idx),
+                             T = self._get_idx_node('T',params,idx),
+                             V = self._get_idx_node('V',params,idx),
+                             observed=True)
 
 
     def _get_full(self, name, data, params, idx=None):
