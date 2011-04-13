@@ -250,29 +250,16 @@ class Base(object):
                                                     observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
-        if idx is None:
-            return hddm.likelihoods.WienerFullMc(name,
-                             value=data['rt'].flatten(), 
-                             v=params['v'], 
-                             V=params['V'],
-                             z=params['z'],
-                             Z=params['Z'],
-                             t=params['t'],
-                             T=params['T'], 
-                             a=params['a'],
+        return hddm.likelihoods.WienerFullMc(name,
+                             value=data['rt'].flatten(),
+                             z = self._get_idx_node('z',params,idx),
+                             t = self._get_idx_node('t',params,idx),
+                             v = self._get_idx_node('v',params,idx),
+                             a = self._get_idx_node('a',params,idx),       
+                             Z = self._get_idx_node('Z',params,idx),
+                             T = self._get_idx_node('T',params,idx),
+                             V = self._get_idx_node('V',params,idx),
                              observed=True)
-
-        else:
-            return hddm.likelihoods.WienerFullMc(name,
-                                                 value=data['rt'].flatten(), 
-                                                 v=params['v'][idx], 
-                                                 V=params['V'][idx],
-                                                 z=params['z'][idx],
-                                                 Z=params['Z'][idx],
-                                                 t=params['t'][idx],
-                                                 T=params['T'][idx], 
-                                                 a=params['a'][idx],
-                                                 observed=True)
 
     
     def _get_idx_node(self, node_name, params, idx):
