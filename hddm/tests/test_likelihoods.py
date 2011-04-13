@@ -287,7 +287,7 @@ class TestWfpt(unittest.TestCase):
         """Test if our wfpt pdf_V implementation yields the right results"""       
         func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
 
-        for i in range(100):
+        for i in range(50):
             V = rand()*0.4+0.1
             v = (rand()-.5)*4
             t = rand()*.5
@@ -329,15 +329,42 @@ class TestWfpt(unittest.TestCase):
             
             #test pdf + Z
             my_res[1] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-            h = Z/nZ
+            hZ = Z/nZ
             for j in range(nZ+1):
-                z_tag = -Z/2. + h*j
+                z_tag = -Z/2. + hZ*j
                 y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t, err=err,logp=0)             
             if logp:
-                res[1] = np.log(simps(y_z, x=None, dx=h))
+                res[1] = np.log(simps(y_z, x=None, dx=hZ))
             else:
-                res[1] = simps(y_z, x=None, dx=h)
+                res[1] = simps(y_z, x=None, dx=hZ)
+                
             #test pdf + T
+            my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+            hT = T/nT
+            for j in range(nT+1):
+                t_tag = -T/2. + hT*j
+                y_t[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t_tag, err=err,logp=0)             
+            if logp:
+                res[2] = np.log(simps(y_t, x=None, dx=hT))
+            else:
+               res[2] = simps(y_t, x=None, dx=hT)
+         
+            #test pdf + Z + T
+            my_res[3] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+            hT = T/nT
+            hZ = Z/nZ
+            for j_t in range(nT+1):
+                t_tag = -T/2. + hT*j
+                for j_z in range(nZ+1):
+                    z_tag = -Z/2. + hZ*j
+                    y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t_tag, err=err,logp=0)                
+                y_t[j_t] = simps(y_z, x=None, dx=hZ)             
+                               
+            if logp:
+                res[3] = np.log(simps(y_t, x=None, dx=hT))
+            else:
+               res[3] = simps(y_t, x=None, dx=hT)
+            
            # my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,T=T,err=err,logp=logp, nZ=nZ, nT=nT)
             #res[2] =  hddm.pdf_sign(rt, v, a, z, err,logp=logp)
             my_res[np.isinf(my_res)] = 100

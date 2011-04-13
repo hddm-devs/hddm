@@ -240,14 +240,14 @@ cpdef double simpson_pdf(double x, double v, double a, double z, double t, doubl
     assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
     assert ((ub_T-lb_T)*(ub_Z-lb_Z)==0 and (nZ*nT)==0), "the function is defined for 1D-integration only"
     
-    cdef double h
+    cdef double hT, hZ
     cdef int n = max(nT,nZ)
     if nT==0: #integration over Z
         hZ = (ub_Z-lb_Z)/n
         hT = 0
     else: #integration over T
         hZ = 0
-        h = (ub_T-lb_T)/n
+        hT = (ub_T-lb_T)/n
 
     cdef double S = pdf(x- (t+lb_T), v, a, z+lb_Z, err, logp=0) 
     cdef double z_tag, t_tag, y
@@ -265,11 +265,38 @@ cpdef double simpson_pdf(double x, double v, double a, double z, double t, doubl
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
     
     if logp==1:
-        return log(h * S / 3)
+        return log((hT+hZ) * S / 3) #hT+hZ=h sine one of them is zero
     else:
-        return (h * S / 3)
+        return ((hT+hZ) * S / 3)
     
+
+cpdef double dbl_simpson_pdf(double x, double v, double a, double z, double t, double err, int logp, double lb_Z, double ub_Z, int nZ, double lb_T, double ub_T, int nT):
+    assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
+    assert ((ub_T-lb_T)*(ub_Z-lb_Z)>0 and (nZ*nT)>0), "the function is defined for 2D-integration only"
     
+    cdef double hT
+    cdef double S
+    cdef double z_tag, t_tag, y
+    cdef int i
+
+    hT = (ub_T-lb_T)/nT
+
+    S = simpson_pdf(x, v, a, z, t+lb_T, err, logp, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)    
+    
+    for i_t  from 1 <= i_t <= nT:
+        t_tag = lb_T + hT * i
+        y = simpson_pdf(x, v, a, z, t+t_tag, err, logp, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
+        if i&1: #check if i is odd
+            S += (4 * y)
+        else:
+            S += (2 * y)
+    S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
+    
+    if logp==1:
+        return log(hT * S / 3)
+    else:
+        return (hT * S / 3)
+     
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int logp = 0, int nT= 10, int nZ=10):
@@ -299,14 +326,13 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
             if (T==0): #V=0,Z=0,T=0
                 return pdf(x, v, a, z, err, logp) 
             else: #V=0,Z=0,T=1
-                return simpson_pdf(x, v, a,z, t, err, logp, lb_Z=0,    ub_Z=0,    nZ=0,  lb_T=-T/2., ub_T=T/2., nT=nT)
+                return simpson_pdf(x, v, a, z, t, err, logp, lb_Z=0,    ub_Z=0,    nZ=0,  lb_T=-T/2., ub_T=T/2., nT=nT)
                 
         else: #Z=1           
             if (T==0): #V=0,Z=1,T=0
-                return simpson_pdf(x, v, a,z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=0,     ub_T=0 , nT=0)
+                return     simpson_pdf(x, v, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=0,     ub_T=0 , nT=0)
             else:  #V=0,Z=1,T=1
-                pass
-                #return dbl_simpson_pdf(x, v, a,z, t, err, logp, lb_Z=Z/2., ub_Z=Z/2., nZ=nZ, lb_T=, lb_T=0 , nT=0)
+                return dbl_simpson_pdf(x, v, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=-T/2., ub_T=T/2. , nT=nT)
                 
     else:
         if (Z==0):
