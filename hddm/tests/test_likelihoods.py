@@ -306,7 +306,6 @@ class TestWfpt(unittest.TestCase):
         f_pdf_intgrt_t = lambda t_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0)
         func_pdf_V = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
         
-        nZ = 10; nT=10; 
         for i in range(100):
             V = rand()*0.4+0.1
             v = (rand()-.5)*4
@@ -318,60 +317,64 @@ class TestWfpt(unittest.TestCase):
             Z = rand()*0.3
             T = rand()*0.3
             logp = np.floor(rand()*2)
-            
+            nZ = 4+int(rand()*5)*2 
+            nT = 4+int(rand()*5)*2 
+
             my_res = np.zeros(8)
             res = my_res[:]
             y_z = np.zeros(nZ+1);
             y_t = np.zeros(nT+1)
-            #test pdf
-            my_res[0] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-            res[0] =  hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t, err=err,logp=logp)
             
-            #test pdf + Z
-            my_res[1] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-            hZ = Z/nZ
-            for j in range(nZ+1):
-                z_tag = -Z/2. + hZ*j
-                y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t, err=err,logp=0)             
-            if logp:
-                res[1] = np.log(simps(y_z, x=None, dx=hZ))
-            else:
-                res[1] = simps(y_z, x=None, dx=hZ)
+            for vvv in [0,1]:
+                #test pdf
+                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                res[0+vvv*4] =  hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t, err=err,logp=logp)
                 
-            #test pdf + T
-            my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
-            hT = T/nT
-            for j in range(nT+1):
-                t_tag = -T/2. + hT*j
-                y_t[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t_tag, err=err,logp=0)             
-            if logp:
-                res[2] = np.log(simps(y_t, x=None, dx=hT))
-            else:
-               res[2] = simps(y_t, x=None, dx=hT)
-         
-            #test pdf + Z + T
-            my_res[3] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
-            hT = T/nT
-            hZ = Z/nZ
-            for j_t in range(nT+1):
-                t_tag = -T/2. + hT*j
-                for j_z in range(nZ+1):
+                #test pdf + Z
+                my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                hZ = Z/nZ
+                for j in range(nZ+1):
                     z_tag = -Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t_tag, err=err,logp=0)                
-                y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                               
-            if logp:
-                res[3] = np.log(simps(y_t, x=None, dx=hT))
-            else:
-               res[3] = simps(y_t, x=None, dx=hT)
-            
+                    y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t, err=err,logp=0)             
+                if logp:
+                    res[1+vvv*4] = np.log(simps(y_z, x=None, dx=hZ))
+                else:
+                    res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
+                    
+                #test pdf + T
+                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                hT = T/nT
+                for j in range(nT+1):
+                    t_tag = -T/2. + hT*j
+                    y_t[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t_tag, err=err,logp=0)             
+                if logp:
+                    res[2+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
+                else:
+                   res[2+vvv*4] = simps(y_t, x=None, dx=hT)
+             
+                #test pdf + Z + T
+                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                hT = T/nT
+                hZ = Z/nZ
+                for j_t in range(nT+1):
+                    t_tag = -T/2. + hT*j
+                    for j_z in range(nZ+1):
+                        z_tag = -Z/2. + hZ*j
+                        y_z[j_z] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t_tag, err=err,logp=0)                
+                    y_t[j_t] = simps(y_z, x=None, dx=hZ)             
+                                   
+                if logp:
+                    res[3+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
+                else:
+                   res[3+vvv*4] = simps(y_t, x=None, dx=hT)
+                
            # my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,T=T,err=err,logp=logp, nZ=nZ, nT=nT)
             #res[2] =  hddm.pdf_sign(rt, v, a, z, err,logp=logp)
             my_res[np.isinf(my_res)] = 100
             res[np.isinf(res)] = 100
             print res
             print my_res
-            np.testing.assert_array_almost_equal(my_res, res,7)        
+            np.testing.assert_array_almost_equal(my_res, res,13)        
                
 
 class TestLBA(unittest.TestCase):
