@@ -65,7 +65,7 @@ class Base(object):
                 
             if not init:
                 # Default param ranges
-                self.init_params = {'t':0.1, 'T':0}
+                self.init_params = {'t':0.3, 'T':0, 'z':0.5, 'Z':0}
             else:
                 # Compute ranges based on EZ method
                 param_ranges = hddm.utils.EZ_param_ranges(self.data)
