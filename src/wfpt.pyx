@@ -239,27 +239,28 @@ cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double
         # Upper boundary, flip v and z
         return pdf_V(x-t, -v, V, a, 1.-z, err, logp)
 
-cpdef double simpson_1D(double x, double v, double V, double a, double z, double t, double err, int logp, double lb_Z, double ub_Z, int nZ, double lb_T, double ub_T, int nT):
+cpdef double simpson_1D(double x, double v, double V, double a, double z, double t, double err, int logp, double lb_z, double ub_z, int nZ, 
+                        double lb_t, double ub_t, int nT):
     assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
-    assert ((ub_T-lb_T)*(ub_Z-lb_Z)==0 and (nZ*nT)==0), "the function is defined for 1D-integration only"
+    assert ((ub_t-lb_t)*(ub_z-lb_z)==0 and (nZ*nT)==0), "the function is defined for 1D-integration only"
     
-    cdef double hT, hZ
+    cdef double ht, hz
     cdef int n = max(nT,nZ)
-    if nT==0: #integration over Z
-        hZ = (ub_Z-lb_Z)/n
-        hT = 0
-    else: #integration over T
-        hZ = 0
-        hT = (ub_T-lb_T)/n
+    if nT==0: #integration over z
+        hz = (ub_z-lb_z)/n
+        ht = 0
+    else: #integration over t
+        hz = 0
+        ht = (ub_t-lb_t)/n
 
-    cdef double S = pdf_V(x- (t+lb_T), v, V, a, z+lb_Z, err, logp=0) 
+    cdef double S = pdf_V(x - lb_t, v, V, a, lb_z, err, logp=0) 
     cdef double z_tag, t_tag, y
     cdef int i
               
     for i  from 1 <= i <= n:        
-        z_tag = lb_Z + hZ * i
-        t_tag = lb_T + hT * i
-        y = pdf_V(x - (t+t_tag), v, V, a, z+z_tag, err, logp=0)
+        z_tag = lb_z + hz * i
+        t_tag = lb_t + ht * i
+        y = pdf_V(x - t_tag, v, V, a, z_tag, err, logp=0)
         if i&1: #check if i is odd
             S += (4 * y)
         else:
@@ -267,39 +268,39 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
     
     if logp==1:
-        return log((hT+hZ) * S / 3) #hT+hZ=h sine one of them is zero
+        return log((ht+hz) * S / 3) #ht+hz=h sine one of them is zero
     else:
-        return ((hT+hZ) * S / 3)
+        return ((ht+hz) * S / 3)
     
 
-cpdef double simpson_2D(double x, double v, double V, double a, double z, double t, double err, int logp, double lb_Z, double ub_Z, int nZ, double lb_T, double ub_T, int nT):
+cpdef double simpson_2D(double x, double v, double V, double a, double z, double t, double err, int logp, double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT):
     assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
-    assert ((ub_T-lb_T)*(ub_Z-lb_Z)>0 and (nZ*nT)>0), "the function is defined for 2D-integration only"
+    assert ((ub_t-lb_t)*(ub_z-lb_z)>0 and (nZ*nT)>0), "the function is defined for 2D-integration only, lb_t: %f, ub_t %f, lb_z %f, ub_z %f, nZ: %d, nT %d" % (lb_t, ub_t, lb_z, ub_z, nZ, nT)
     
-    cdef double hT
+    cdef double ht
     cdef double S
     cdef double z_tag, t_tag, y
     cdef int i
 
 
-    hT = (ub_T-lb_T)/nT
+    ht = (ub_t-lb_t)/nT
 
-    S = simpson_1D(x, v, V, a, z, t+lb_T, err, logp=0, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
+    S = simpson_1D(x, v, V, a, z, lb_t, err, logp=0, lb_z=lb_z, ub_z=ub_z, nZ=nZ, lb_t=0, ub_t=0 , nT=0)
     for i_t  from 1 <= i_t <= nT:
-        t_tag = lb_T + hT * i
-        y = simpson_1D(x, v, V, a, z, t+t_tag, err, logp=0, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
+        t_tag = lb_t + ht * i
+        y = simpson_1D(x, v, V, a, z, t_tag, err, logp=0, lb_z=lb_z, ub_z=ub_z, nZ=nZ, lb_t=0, ub_t=0 , nT=0)
         if i&1: #check if i is odd
             S += (4 * y)
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
     if np.isnan(S):
-            print "found Nan in simpson_2D:", x,v,V,a,z,t,err,logp,nT,nZ,lb_Z,ub_Z,lb_T,ub_T
+            print "found Nan in simpson_2D:", x,v,V,a,z,t,err,logp,nT,nZ,lb_z,ub_z,lb_t,ub_t
 
     if logp==1:
-        return log(hT * S / 3)
+        return log(ht * S / 3)
     else:
-        return (hT * S / 3)
+        return (ht * S / 3)
      
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
@@ -319,20 +320,25 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
     else:
         x = x-t
         v= -v;
-        z = 1.-z    
+        z = 1.-z
+    
+    if T<1e-2:
+        T = 0
+    if Z <1e-2:
+        Z = 0            
        
 
     if (Z==0):
         if (T==0): #V=0,Z=0,T=0
             return pdf_V(x, v, V, a, z, err, logp) 
         else:      #V=0,Z=0,T=1
-            return simpson_1D(x, v, V, a, z, t, err, logp, lb_Z=0,    ub_Z=0,    nZ=0,  lb_T=-T/2., ub_T=T/2., nT=nT)
+            return simpson_1D(x, v, V, a, z, t, err, logp, lb_z=0,    ub_z=0,    nZ=0,  lb_t=t-T/2., ub_t=t+T/2., nT=nT)
             
     else: #Z=1           
         if (T==0): #V=0,Z=1,T=0
-            return     simpson_1D(x, v, V, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=0,     ub_T=0 , nT=0)
+            return     simpson_1D(x, v, V, a, z, t, err, logp, lb_z=z-Z/2., ub_z=z+Z/2., nZ=nZ, lb_t=0,     ub_t=0 , nT=0)
         else:      #V=0,Z=1,T=1
-            return simpson_2D(x, v, V, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=-T/2., ub_T=T/2. , nT=nT)
+            return simpson_2D(x, v, V, a, z, t, err, logp, lb_z=z-Z/2., ub_z=z+Z/2., nZ=nZ, lb_t=t-T/2., ub_t=t+T/2. , nT=nT)
     
     
 @cython.wraparound(False)
