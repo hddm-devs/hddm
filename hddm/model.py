@@ -137,12 +137,12 @@ class Base(object):
         elif param == 'Z':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=all_params['z']/2.,
+                              upper=1.,
                               value=init_val)
         elif param == 'T':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=all_params['t']/2.,
+                              upper=1.,
                               value=init_val)
         else:
             return pm.Uniform("%s%s"%(param, tag),

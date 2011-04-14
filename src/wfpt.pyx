@@ -281,19 +281,21 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
     cdef double z_tag, t_tag, y
     cdef int i
 
+
     hT = (ub_T-lb_T)/nT
 
-    S = simpson_1D(x, v, V, a, z, t+lb_T, err, logp, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)    
-    
+    S = simpson_1D(x, v, V, a, z, t+lb_T, err, logp=0, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
     for i_t  from 1 <= i_t <= nT:
         t_tag = lb_T + hT * i
-        y = simpson_1D(x, v, V, a, z, t+t_tag, err, logp, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
+        y = simpson_1D(x, v, V, a, z, t+t_tag, err, logp=0, lb_Z=lb_Z, ub_Z=ub_Z, nZ=nZ, lb_T=0, ub_T=0 , nT=0)
         if i&1: #check if i is odd
             S += (4 * y)
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
-    
+    if np.isnan(S):
+            print "found Nan in simpson_2D:", x,v,V,a,z,t,err,logp,nT,nZ,lb_Z,ub_Z,lb_T,ub_T
+
     if logp==1:
         return log(hT * S / 3)
     else:
@@ -305,7 +307,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
     """pull pdf"""
     
     #check if parpameters are vaild
-    if z<0 or z>1 or a<0:
+    if z<0 or z>1 or a<0 or ((abs(x)-T/2.)<0) or (z+Z/2.>1) or (z-Z/2.<0):
         if logp==1:
             return -np.Inf
         else:
@@ -331,7 +333,6 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
             return     simpson_1D(x, v, V, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=0,     ub_T=0 , nT=0)
         else:      #V=0,Z=1,T=1
             return simpson_2D(x, v, V, a, z, t, err, logp, lb_Z=-Z/2., ub_Z=Z/2., nZ=nZ, lb_T=-T/2., ub_T=T/2. , nT=nT)
-            
     
     
 @cython.wraparound(False)
@@ -344,6 +345,9 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
         y[i] = pdf_sign(x[i], v, a, z, t, err, logp)
     return y
 
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_intrp(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double a, double z, double Z, double t, double T, double err, int nT= 10, int nZ=10):
     cdef Py_ssize_t i
     cdef double y
