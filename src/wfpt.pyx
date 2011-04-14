@@ -266,9 +266,14 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
-    
+
+   
     if logp==1:
-        return log((ht+hz) * S / 3) #ht+hz=h sine one of them is zero
+        res = log((ht+hz) * S / 3) #ht+hz=h sine one of them is zero
+        if np.isnan(res):
+            print "got NaN in simpson_1D", x, v, V, a, z, t, lb_t, ub_t, nT, ht, hz, S
+ 
+        return res
     else:
         return ((ht+hz) * S / 3)
     
@@ -294,8 +299,6 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
-    if np.isnan(S):
-            print "found Nan in simpson_2D:", x,v,V,a,z,t,err,logp,nT,nZ,lb_z,ub_z,lb_t,ub_t
 
     if logp==1:
         return log(ht * S / 3)
@@ -315,12 +318,11 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
             return 0
 
     #transform x,v,z according to the 
-    if x<0:
-        x = fabs(x) - t
-    else:
-        x = x-t
+    if x > 0:
         v= -v;
         z = 1.-z
+    
+    x = abs(x)
     
     if T<1e-2:
         T = 0
@@ -330,13 +332,15 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
 
     if (Z==0):
         if (T==0): #V=0,Z=0,T=0
-            return pdf_V(x, v, V, a, z, err, logp) 
+            return pdf_V(x - t, v, V, a, z, err, logp) 
         else:      #V=0,Z=0,T=1
-            return simpson_1D(x, v, V, a, z, t, err, logp, lb_z=0,    ub_z=0,    nZ=0,  lb_t=t-T/2., ub_t=t+T/2., nT=nT)
+            res = simpson_1D(x, v, V, a, z, t, err, logp, lb_z=z,    ub_z=z,    nZ=0,  lb_t=t-T/2., ub_t=t+T/2., nT=nT)
+
+            return res
             
     else: #Z=1           
         if (T==0): #V=0,Z=1,T=0
-            return     simpson_1D(x, v, V, a, z, t, err, logp, lb_z=z-Z/2., ub_z=z+Z/2., nZ=nZ, lb_t=0,     ub_t=0 , nT=0)
+            return     simpson_1D(x, v, V, a, z, t, err, logp, lb_z=z-Z/2., ub_z=z+Z/2., nZ=nZ, lb_t=t,     ub_t=t , nT=0)
         else:      #V=0,Z=1,T=1
             return simpson_2D(x, v, V, a, z, t, err, logp, lb_z=z-Z/2., ub_z=z+Z/2., nZ=nZ, lb_t=t-T/2., ub_t=t+T/2. , nT=nT)
     
