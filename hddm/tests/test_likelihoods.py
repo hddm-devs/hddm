@@ -357,9 +357,9 @@ class TestWfpt(unittest.TestCase):
                 hT = T/nT
                 hZ = Z/nZ
                 for j_t in range(nT+1):
-                    t_tag = -T/2. + hT*j
+                    t_tag = t-T/2. + hT*j
                     for j_z in range(nZ+1):
-                        z_tag = -Z/2. + hZ*j
+                        z_tag = z-Z/2. + hZ*j
                         y_z[j_z] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t_tag, err=err,logp=0)                
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
                                    
@@ -374,6 +374,8 @@ class TestWfpt(unittest.TestCase):
             res[np.isinf(res)] = 100
             print res
             print my_res
+            self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
+            self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
             np.testing.assert_array_almost_equal(my_res, res,13)        
                
 

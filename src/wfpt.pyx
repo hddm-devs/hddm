@@ -253,14 +253,14 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
         hz = 0
         ht = (ub_t-lb_t)/n
 
-    cdef double S = pdf_V(x - lb_t, v, V, a, lb_z, err, logp=0) 
+    cdef double S = pdf_V(x - lb_t, v, V, a, lb_z, err, 0) 
     cdef double z_tag, t_tag, y
     cdef int i
               
     for i  from 1 <= i <= n:        
         z_tag = lb_z + hz * i
         t_tag = lb_t + ht * i
-        y = pdf_V(x - t_tag, v, V, a, z_tag, err, logp=0)
+        y = pdf_V(x - t_tag, v, V, a, z_tag, err, 0)
         if i&1: #check if i is odd
             S += (4 * y)
         else:
@@ -269,11 +269,7 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
 
    
     if logp==1:
-        res = log((ht+hz) * S / 3) #ht+hz=h sine one of them is zero
-        if np.isnan(res):
-            print "got NaN in simpson_1D", x, v, V, a, z, t, lb_t, ub_t, nT, ht, hz, S
- 
-        return res
+        return log((ht+hz) * S / 3) #ht+hz=h sine one of them is zero        
     else:
         return ((ht+hz) * S / 3)
     
