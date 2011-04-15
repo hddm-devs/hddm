@@ -308,14 +308,14 @@ class TestWfptFull(unittest.TestCase):
           
         for i in range(100):
             V = rand()*0.4+0.1
-            v = (rand()-.5)*4
-            t = rand()*.5
-            a = 1.5+rand()
-            z = .5*rand()
+            v = (rand()-.5)*4            
+            T = rand()*0.3
+            t = rand()*.5+(T/2)
+            a = 1.5+rand()          
             rt = rand()*4 + t
             err = 10**-15
             Z = rand()*0.3
-            T = rand()*0.3
+            z = .5*rand()+Z/2  
             logp = np.floor(rand()*2)
             nZ = 4+int(rand()*5)*2 
             nT = 4+int(rand()*5)*2 
@@ -362,7 +362,7 @@ class TestWfptFull(unittest.TestCase):
                         z_tag = z-Z/2. + hZ*j
                         y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                                   
+                print "y_t (%d)" %j_t, y_t                   
                 if logp:
                     res[3+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
                 else:
