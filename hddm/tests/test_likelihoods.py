@@ -312,7 +312,7 @@ class TestWfptFull(unittest.TestCase):
             T = rand()*0.3
             t = rand()*.5+(T/2)
             a = 1.5+rand()          
-            rt = (rand()*4 + t+T/2) * np.sign(rand())
+            rt = (rand()*4 + t) * np.sign(rand())
             err = 10**-15
             Z = rand()*0.3
             z = .5*rand()+Z/2  
@@ -413,9 +413,6 @@ class TestWfptFull(unittest.TestCase):
             t = 0.7
             T = 0
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)            
-            t = 0.5
-            T = 0.3
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
             t = -0.3
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)          
             t = 0.1
