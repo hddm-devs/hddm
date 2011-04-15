@@ -312,14 +312,14 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int logp = 0, int nT= 10, int nZ=10):
     """pull pdf"""
-    #check if parpameters are vaild
-    if z<0 or z>1 or a<0 or ((fabs(x)-(t+T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
+    # Check if parpameters are valid
+    if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
         if logp==1:
             return -np.Inf
         else:
             return 0
 
-    #transform x,v,z according to the 
+    # transform x,v,z if x is upper bound response
     if x > 0:
         v= -v;
         z = 1.-z
@@ -338,7 +338,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
         else:      #V=0,Z=0,T=$
             return simpson_1D(x, v, V, a, z, t, err, logp, z,    z,  0, t-T/2., t+T/2., nT)
             
-    else: #Z=$           
+    else: #Z=$ 
         if (T==0): #V=0,Z=$,T=0
             return  simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
         else:      #V=0,Z=$,T=$
