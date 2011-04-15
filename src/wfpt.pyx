@@ -364,7 +364,7 @@ def wiener_like_full_intrp(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, do
     
     y = 0
     for i from 0 <= i < x.shape[0]:
-        y += full_pdf(x[i], v=v, V=V, a=a, z=z, Z=Z, t=t, T=T, err=err, logp=1, nT=nT,nZ=nZ)
+        y += full_pdf(x[i], v, V, a, z, Z, t, T, err, 1, nT, nZ)
     return y
 
 
