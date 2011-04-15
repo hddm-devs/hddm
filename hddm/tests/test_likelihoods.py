@@ -266,26 +266,26 @@ class TestWfpt(unittest.TestCase):
 
     def test_full_mc(self):
         """"""
-    values = np.array([0.3, 0.4, 0.6, 1])
-    print "testing %d data points" % (len(values))
-
-    v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
-    #true values obtained by numerical integration
-    true_vals = np.log(np.array([0.019925699375943847,
-                       1.0586617338544908,
-                       1.2906014938998163,
-                       0.446972173706388]))
+        values = np.array([0.3, 0.4, 0.6, 1])
+        print "testing %d data points" % (len(values))
     
-    y = np.empty(len(values), dtype=float)
-    for i in xrange(len(values)):
-        print values[i:i+1]
-        y[i] = sum(hddm.wfpt.wiener_like_full_mc(values[i:i+1], v, V, z, Z, t, T, a, err=.0001,
-                                                        reps=1000000,logp=1))
-    np.testing.assert_array_almost_equal(true_vals, y, 2)
+        v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
+        #true values obtained by numerical integration
+        true_vals = np.log(np.array([0.019925699375943847,
+                           1.0586617338544908,
+                           1.2906014938998163,
+                           0.446972173706388]))
+        
+        y = np.empty(len(values), dtype=float)
+        for i in xrange(len(values)):
+            print values[i:i+1]
+            y[i] = sum(hddm.wfpt.wiener_like_full_mc(values[i:i+1], v, V, z, Z, t, T, a, err=.0001,
+                                                            reps=1000000,logp=1))
+        np.testing.assert_array_almost_equal(true_vals, y, 2)
             
-    def test_pdf(self):
+    def test_pdf_V(self):
         """Test if our wfpt pdf_V implementation yields the right results"""       
-        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
+        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v_i, a, z, err, 0) *norm.pdf(v_i,v,V)
 
         for i in range(50):
             V = rand()*0.4+0.1
@@ -299,13 +299,13 @@ class TestWfpt(unittest.TestCase):
             res =  quad(func, -np.inf,np.inf,args = (rt,err,v,V,z,a), epsrel=1e-10, epsabs=1e-10)[0]
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=0), res)        
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=1), np.log(res)) 
+
+
+class TestWfptFull(unittest.TestCase):
+
     
     def test_full_pdf(self):
-  
-        f_pdf_intgrt_z = lambda z_i,value,err,v,V,z,Z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0)/Z
-        f_pdf_intgrt_t = lambda t_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0)
-        func_pdf_V = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v=v_i, a=a, z=z, err=err, logp=0) *norm.pdf(v_i,v,V)
-        
+          
         for i in range(100):
             V = rand()*0.4+0.1
             v = (rand()-.5)*4
@@ -321,21 +321,21 @@ class TestWfpt(unittest.TestCase):
             nT = 4+int(rand()*5)*2 
 
             my_res = np.zeros(8)
-            res = my_res[:]
+            res = np.zeros(8)
             y_z = np.zeros(nZ+1);
             y_t = np.zeros(nT+1)
             
-            for vvv in [0,1]:
+            for vvv in range(2):
                 #test pdf
                 my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-                res[0+vvv*4] =  hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t, err=err,logp=logp)
+                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
                 
                 #test pdf + Z
                 my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
                 hZ = Z/nZ
                 for j in range(nZ+1):
-                    z_tag = -Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t, err=err,logp=0)             
+                    z_tag = z-Z/2. + hZ*j
+                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err,logp=0, nT=nT, nZ=nZ)             
                 if logp:
                     res[1+vvv*4] = np.log(simps(y_z, x=None, dx=hZ))
                 else:
@@ -345,8 +345,8 @@ class TestWfpt(unittest.TestCase):
                 my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
                 hT = T/nT
                 for j in range(nT+1):
-                    t_tag = -T/2. + hT*j
-                    y_t[j] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z, t=t_tag, err=err,logp=0)             
+                    t_tag = t-T/2. + hT*j
+                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)      
                 if logp:
                     res[2+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
                 else:
@@ -360,7 +360,7 @@ class TestWfpt(unittest.TestCase):
                     t_tag = t-T/2. + hT*j
                     for j_z in range(nZ+1):
                         z_tag = z-Z/2. + hZ*j
-                        y_z[j_z] = hddm.wfpt.pdf_sign(rt, v=v, a=a, z=z_tag, t=t_tag, err=err,logp=0)                
+                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
                                    
                 if logp:
@@ -370,10 +370,11 @@ class TestWfpt(unittest.TestCase):
                 
            # my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,T=T,err=err,logp=logp, nZ=nZ, nT=nT)
             #res[2] =  hddm.pdf_sign(rt, v, a, z, err,logp=logp)
-            my_res[np.isinf(my_res)] = 100
-            res[np.isinf(res)] = 100
             print res
             print my_res
+            print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
+            my_res[np.isinf(my_res)] = 100
+            res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
             np.testing.assert_array_almost_equal(my_res, res,13)        

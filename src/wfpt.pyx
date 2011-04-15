@@ -280,7 +280,7 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
     
     cdef double ht
     cdef double S
-    cdef double z_tag, t_tag, y
+    cdef double t_tag, y
     cdef int i
 
 
@@ -330,15 +330,13 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
         if (T==0): #V=0,Z=0,T=0
             return pdf_V(x - t, v, V, a, z, err, logp) 
         else:      #V=0,Z=0,T=1
-            res = simpson_1D(x, v, V, a, z, t, err, logp, z,    z,  0, t-T/2., t+T/2., nT)
-
-            return res
+            return simpson_1D(x, v, V, a, z, t, err, logp, z,    z,  0, t-T/2., t+T/2., nT)
             
     else: #Z=1           
         if (T==0): #V=0,Z=1,T=0
-            return     simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
+            return  simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
         else:      #V=0,Z=1,T=1
-            return simpson_2D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2. , nT)
+            return  simpson_2D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2. , nT)
     
     
 @cython.wraparound(False)
