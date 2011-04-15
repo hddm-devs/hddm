@@ -362,7 +362,6 @@ class TestWfptFull(unittest.TestCase):
                         z_tag = z-Z/2. + hZ*j_z
                         y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)/Z/T    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                print "y_t:" , y_t                   
                 if logp:
                     res[3+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
                 else:
@@ -377,7 +376,7 @@ class TestWfptFull(unittest.TestCase):
             res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res,6)        
+            np.testing.assert_array_almost_equal(my_res, res,5)        
                
 
 class TestLBA(unittest.TestCase):
