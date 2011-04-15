@@ -249,9 +249,13 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
     if nT==0: #integration over z
         hz = (ub_z-lb_z)/n
         ht = 0
+        lb_t = t
+        ub_t = t
     else: #integration over t
         hz = 0
         ht = (ub_t-lb_t)/n
+        lb_z = z
+        ub_z = z
 
     cdef double S = pdf_V(x - lb_t, v, V, a, lb_z, err, 0) 
     cdef double z_tag, t_tag, y
@@ -266,6 +270,7 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
+    S = S / ((ub_t-lb_t)+(ub_z-lb_z)) #the right function if pdf_V()/Z or pdf_V()/T 
 
    
     if logp==1:
@@ -288,7 +293,7 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 
     S = simpson_1D(x, v, V, a, z, lb_t, err, 0, lb_z, ub_z, nZ, 0, 0 , 0)
     print "in simpson_2D (0), S0: %f" %S
-    print "in simpson_2D,  v: %f, V: %f, z: %f, lb_z: %f, ub_z: %f, t: %f, lb_t: %f, ub_t: %f a: %f" % (v,V,z,lb_z,ub_z,t,lb_t,ub_t,a)
+    print "in simpson_2D,  x: %f, v: %f, V: %f, z: %f, lb_z: %f, ub_z: %f, t: %f, lb_t: %f, ub_t: %f a: %f" % (x, v,V,z,lb_z,ub_z,t,lb_t,ub_t,a)
 
     for i_t  from 1 <= i_t <= nT:
         t_tag = lb_t + ht * i_t
@@ -299,6 +304,7 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
+    S = S/ (ub_t-lb_t)
 
     if logp==1:
         return log(ht * S / 3)
@@ -312,7 +318,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
     if Z>0 and T>0:
         print "Z: %f, T:%f" %(Z,T)
     #check if parpameters are vaild
-    if z<0 or z>1 or a<0 or ((fabs(x)-(t+T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0):
+    if z<0 or z>1 or a<0 or ((fabs(x)-(t+T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
         if logp==1:
             return -np.Inf
         else:
