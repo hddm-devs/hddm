@@ -292,13 +292,10 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
     ht = (ub_t-lb_t)/nT
 
     S = simpson_1D(x, v, V, a, z, lb_t, err, 0, lb_z, ub_z, nZ, 0, 0 , 0)
-    print "in simpson_2D (0), S0: %f" %S
-    print "in simpson_2D,  x: %f, v: %f, V: %f, z: %f, lb_z: %f, ub_z: %f, t: %f, lb_t: %f, ub_t: %f a: %f" % (x, v,V,z,lb_z,ub_z,t,lb_t,ub_t,a)
 
     for i_t  from 1 <= i_t <= nT:
         t_tag = lb_t + ht * i_t
         y = simpson_1D(x, v, V, a, z, t_tag, err, 0, lb_z, ub_z, nZ, 0, 0 , 0)
-        print "in simpson_2D (%d), y: %f" %(i_t,y)
         if i_t&1: #check if i is odd
             S += (4 * y)
         else:
@@ -315,8 +312,6 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int logp = 0, int nT= 10, int nZ=10):
     """pull pdf"""
-    if Z>0 and T>0:
-        print "Z: %f, T:%f" %(Z,T)
     #check if parpameters are vaild
     if z<0 or z>1 or a<0 or ((fabs(x)-(t+T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
         if logp==1:
@@ -347,7 +342,6 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
         if (T==0): #V=0,Z=$,T=0
             return  simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
         else:      #V=0,Z=$,T=$
-            print "going to enter simpson_2D"
             return  simpson_2D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2. , nT)
     
     
