@@ -348,13 +348,22 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, int logp=0):
-    cdef unsigned int size = x.shape[0]
-    cdef unsigned int i
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
     for i from 0 <= i < size:
         y[i] = pdf_sign(x[i], v, a, z, t, err, logp)
     return y
 
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_simple(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err):
+    cdef Py_ssize_t i
+    cdef double y = 0
+    for i from 0 <= i < x.shape[0]:
+        y += pdf_sign(x[i], v, a, z, t, err, 1)
+    return y
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function

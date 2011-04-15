@@ -9,9 +9,7 @@ import hddm
 
 def wiener_like_simple(value, v, z, t, a):
     """Log-likelihood for the simple DDM"""
-    probs = hddm.wfpt.pdf_array(value, v, a, z, t, err=.0001, logp=1)
-    return np.sum(probs)
-    #return hddm.wfpt.wiener_like_simple(value, v=v, z=z, t=t, a=a, err=.0001)
+    return hddm.wfpt.wiener_like_simple(value, v, a, z, t, err=.0001)
 
 @pm.randomwrap
 def wiener_simple(v, z, t, a, size=None):
@@ -56,7 +54,7 @@ WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Proces
 
 @pm.randomwrap
 def wiener_full(v, z, t, a, V, Z, T, size=None):
-    return hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':0, 'V':0, 'T':0}, samples=size)
+    return hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}, samples=size)
 
 def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
     """Log-likelihood for the full DDM using the sampling method"""
