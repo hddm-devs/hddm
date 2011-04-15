@@ -376,8 +376,56 @@ class TestWfptFull(unittest.TestCase):
             res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res,5)        
-               
+            np.testing.assert_array_almost_equal(my_res, res,5)
+            
+        
+    def test_failure_mode(self):
+        
+        rt = 0.6
+        for i in range(2):
+            rt = rt * -1
+            v = 1
+            V = 1
+            a = 1.5
+            z = 0.5
+            Z = 0.2
+            t = 0.2
+            T = 0.1
+            nT = 10; nZ =10
+    
+           
+            z = 1.1
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            z = -0.1
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            z = 0.5
+            
+            z = 0.1
+            Z = 0.25
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            z = 0.5
+        
+        
+            a = -0.1
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            a = 1.5
+            
+            t = 0.7
+            T = 0
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)            
+            t = 0.5
+            T = 0.3
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            t = -0.3
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)          
+            t = 0.1
+            T = 0.3
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            t = 0.2
+            T = 0.1
+        
+        
+
 
 class TestLBA(unittest.TestCase):
     def runTest(self):
