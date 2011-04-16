@@ -13,7 +13,7 @@ def flip_errors(data):
     
     # Copy data
     data = np.array(data)
-    # Flip sign for lower boundary responses
+    # Flip sign for lower boundary response
     idx = data['response'] == 0
     data['rt'][idx] = -data['rt'][idx]
     
@@ -744,20 +744,19 @@ def plot_rt_fit(model, bins=50, range=(-5.,5.)):
 
         # Plot data
         x_data = np.linspace(range[0], range[1], bins)
-        data_histo = np.histogram(data['rt'], bins=bins, range=range)[0]
-        plt.plot(x_data, hddm.utils.scale(data_histo), color='b', lw=2., label='data')
+        empirical_dens = histogram(data['rt'], bins=bins, range=range, density=True)[0]
+        plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
         # Plot analytical
-        analytical = hddm.wfpt.pdf_array(x,
-                                         np.mean(params['v'].trace()),
-                                         np.mean(params['a'].trace()),
-                                         np.mean(params['z'].trace()),
-                                         np.mean(params['t'].trace()),
-                                         err=0.0001)
+        analytical_dens = hddm.wfpt.pdf_array(x,
+                                              np.mean(params['v'].trace()),
+                                              np.mean(params['a'].trace()),
+                                              np.mean(params['z'].trace()),
+                                              np.mean(params['t'].trace()),
+                                              err=0.0001)
 
-        plt.plot(x, hddm.utils.scale(analytical), '--', color='g', label='estimate', lw=2.)
+        plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
-        [ytick.set_visible(False) for ytick in plt.yticks()[1]] # Turn y ticks off
         plt.xlim(range)
         plt.title(param_name)
         if i==0:
