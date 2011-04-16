@@ -145,7 +145,7 @@ class Base(object):
         elif param == 'T':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=1.,
+                              upper=self.param_ranges['%s_upper'%param[0]],
                               value=init_val)
         else:
             return pm.Uniform("%s%s"%(param, tag),
@@ -181,7 +181,7 @@ class Base(object):
                                       mu=parent_mean,
                                       tau=parent_tau,
                                       a=0,
-                                      b=all_params['z'][subj_idx]/2.,
+                                      b=1.,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
@@ -190,7 +190,7 @@ class Base(object):
                                       mu=parent_mean,
                                       tau=parent_tau,
                                       a=0,
-                                      b=all_params['t'][subj_idx]/2.,
+                                      b=self.param_ranges['T_upper'],
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
