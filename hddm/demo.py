@@ -120,6 +120,7 @@ class DDMPlot(HasTraits):
     plot_histogram = Bool(False)
     plot_simple = Bool(True)
     plot_full_mc = Bool(False)
+    plot_full_interp = Bool(True)
     plot_lba = Bool(False)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
@@ -130,6 +131,7 @@ class DDMPlot(HasTraits):
     x_analytical = Property(Array)
     
     full_mc = Property(Array)
+    full_intrp = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
 
@@ -147,6 +149,7 @@ class DDMPlot(HasTraits):
                 Item('plot_drifts'),
                 Item('plot_simple'),
                 Item('plot_full_mc'),
+                Item('plot_full_interp'),
                 Item('plot_lba'),
                 Item('plot_data'),
 #                Item('plot_density'),
@@ -242,6 +245,22 @@ class DDMPlot(HasTraits):
                                   self.ddm.ter, .001)
         return pdf
 
+    @timer
+    def _get_full_intrp(self):
+        full_pdf = lambda x: hddm.wfpt.full_pdf(x,
+                                                v=self.ddm.v,
+                                                V=self.ddm.sv,
+                                                a=self.ddm.a,
+                                                z=self.ddm.z,
+                                                Z=self.ddm.sz,
+                                                t=self.ddm.ter,
+                                                T=self.ddm.ster,
+                                                err=1e-4)
+
+        pdf = np.array(map(full_pdf, self.x_analytical))
+        
+        return pdf
+
 
     @timer
     def _get_lba(self):
@@ -308,6 +327,9 @@ class DDMPlot(HasTraits):
 
         if self.plot_lba:
             self.plot_histo(x_anal, self.lba, color='k')
+
+        if self.plot_full_interp:
+            self.plot_histo(x_anal, self.full_intrp, color='y')
 
         if self.plot_density_dist:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
