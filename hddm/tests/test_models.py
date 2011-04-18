@@ -74,7 +74,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
     print model.summary()
     return model
 
-def check_model(model, params_true, assert_=True):
+def check_model(model, params_true, assert_=True, equal_to_digits=1, err_bound=0.01):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
     err=[]
 
@@ -91,7 +91,9 @@ def check_model(model, params_true, assert_=True):
         print "%s: Truth: %f, Estimated: %f, Error: %f, Std: %f" % (param, truth, est, err[-1], est_std)
 
         if assert_:
-            np.testing.assert_approx_equal(est, truth, 1)
+            np.testing.assert_approx_equal(est, truth, equal_to_digits)
+            assert err[-1] < err_bound
+
     print "Summed error: %f" % np.sum(err)
     return np.sum(err)
 
@@ -114,7 +116,7 @@ class TestSingle(unittest.TestCase):
         super(TestSingle, self).__init__(*args, **kwargs)
         self.data, self.params_true = gen_rand_data()
         self.data_subj, self.params_true_subj = gen_rand_subj_data(samples=300)
-        self.data_basic, self.params_true_basic = gen_rand_data(samples=2000, no_var=True)
+        self.data_basic, self.params_true_basic = gen_rand_data(samples=5000, no_var=True)
         
         self.assert_ = True
         
@@ -154,7 +156,34 @@ class TestSingle(unittest.TestCase):
         check_model(model, self.params_true, assert_=assert_)
 
         return model
-    
+
+    def test_full_interp_subjs_V_T_Z(self, assert_=True):
+        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.75, 'T':.6},
+                                                    samples=300)
+        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True)
+        model.mcmc(samples=self.samples, burn=self.burn)
+        check_model(model, params_true, assert_=assert_)
+
+        return model
+
+    def test_full_interp_subjs_T(self, assert_=True):
+        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':0,'Z':0.,'T':.6},
+                                                    samples=300)
+        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','V'])
+        model.mcmc(samples=self.samples, burn=self.burn)
+        check_model(model, params_true, assert_=assert_)
+
+        return model
+
+    def test_full_interp_subjs_V(self, assert_=True):
+        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':0, 'T':0},
+                                                    samples=300)
+        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','T'])
+        model.mcmc(samples=self.samples, burn=self.burn)
+        check_model(model, params_true, assert_=assert_)
+
+        return model
+
     def test_lba(self):
         model = hddm.model.HDDM(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
         model.mcmc(samples=self.samples, burn=self.burn)

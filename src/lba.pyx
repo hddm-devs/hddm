@@ -4,8 +4,6 @@
 # on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
 #
-# This implementation is about 170 times faster than the matlab
-# reference version.
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
 # GPLv3

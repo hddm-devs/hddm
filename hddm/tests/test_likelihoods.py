@@ -198,11 +198,12 @@ class TestWfpt(unittest.TestCase):
             z = .5*rand()
             z_nonorm = a*z
             rt = rand()*4 + t
-            err = 10*(-3- ceil(rand()*20))
+            err = 10*(np.ceil(rand()*20))
             # Test if equal up to the 9th decimal.
-            res = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=1), np.log(res), 9)
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf(rt, v, a, z, err,logp=0), res, 9)
+            matlab_wfpt = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
+            python_wfpt = hddm.wfpt.pdf(rt, v, a, z, err)
+            print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
+            np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
             
     def test_simple(self):
         params_novar = {}
@@ -285,7 +286,7 @@ class TestWfpt(unittest.TestCase):
             
     def test_pdf_V(self):
         """Test if our wfpt pdf_V implementation yields the right results"""       
-        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v_i, a, z, err, 0) *norm.pdf(v_i,v,V)
+        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf(value, v_i, a, z, err) *norm.pdf(v_i,v,V)
 
         for i in range(50):
             V = rand()*0.4+0.1
@@ -297,15 +298,10 @@ class TestWfpt(unittest.TestCase):
             err = 10**(-3- np.ceil(rand()*12))
             # Test if equal up to the 9th decimal.
             res =  quad(func, -np.inf,np.inf,args = (rt,err,v,V,z,a), epsrel=1e-10, epsabs=1e-10)[0]
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=0), res)        
-            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err, logp=1), np.log(res)) 
-
+            np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err), res)
 
 class TestWfptFull(unittest.TestCase):
-
-    
     def test_full_pdf(self):
-          
         for i in range(200):
             V = rand()*0.4+0.1
             v = (rand()-.5)*4            
@@ -316,7 +312,7 @@ class TestWfptFull(unittest.TestCase):
             err = 10**-15
             Z = rand()*0.3
             z = .5*rand()+Z/2  
-            logp = np.floor(rand()*2)
+
             nZ = 4+int(rand()*5)*2 
             nT = 4+int(rand()*5)*2 
 
@@ -327,48 +323,37 @@ class TestWfptFull(unittest.TestCase):
             
             for vvv in range(2):
                 #test pdf
-                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
+                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
                 
                 #test pdf + Z
-                my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err, nT=nT, nZ=nZ)
                 hZ = Z/nZ
                 for j in range(nZ+1):
                     z_tag = z-Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err,logp=0, nT=nT, nZ=nZ)/Z             
-                if logp:
-                    res[1+vvv*4] = np.log(simps(y_z, x=None, dx=hZ))
-                else:
-                    res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
+                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)/Z             
+                res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
                     
                 #test pdf + T
-                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ)
                 hT = T/nT
                 for j in range(nT+1):
                     t_tag = t-T/2. + hT*j
-                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)/T      
-                if logp:
-                    res[2+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
-                else:
-                   res[2+vvv*4] = simps(y_t, x=None, dx=hT)
+                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err, nT=nT, nZ=nZ)/T      
+                res[2+vvv*4] = simps(y_t, x=None, dx=hT)
              
                 #test pdf + Z + T
-                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err, nT=nT, nZ=nZ)
                 hT = T/nT
                 hZ = Z/nZ
                 for j_t in range(nT+1):
                     t_tag = t-T/2. + hT*j_t
                     for j_z in range(nZ+1):
                         z_tag = z-Z/2. + hZ*j_z
-                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err,logp=0, nT=nT, nZ=nZ)/Z/T    
+                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=nT, nZ=nZ)/Z/T    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                if logp:
-                    res[3+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
-                else:
-                   res[3+vvv*4] = simps(y_t, x=None, dx=hT)
+                res[3+vvv*4] = simps(y_t, x=None, dx=hT)
                 
-           # my_res[2] = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,T=T,err=err,logp=logp, nZ=nZ, nT=nT)
-            #res[2] =  hddm.pdf_sign(rt, v, a, z, err,logp=logp)
             print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
             print my_res
             print res
@@ -395,34 +380,31 @@ class TestWfptFull(unittest.TestCase):
     
            
             z = 1.1
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             z = -0.1
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             z = 0.5
             
             z = 0.1
             Z = 0.25
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             z = 0.5
         
         
             a = -0.1
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             a = 1.5
             
             t = 0.7
             T = 0
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)            
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)            
             t = -0.3
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)          
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)          
             t = 0.1
             T = 0.3
-            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10,logp=0, nT=10, nZ=10)==0)
+            self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             t = 0.2
             T = 0.1
-        
-        
-
 
 class TestLBA(unittest.TestCase):
     def runTest(self):
