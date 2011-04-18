@@ -2,13 +2,13 @@
 Introduction
 ************
 
-:Date: September 11, 2010
-:Author: Thomas Wiecki
+:Date: April 18, 2011
+:Author: Thomas V. Wiecki, Imri Sofer
 :Contact: thomas_wiecki@brown.edu
 :Web site: http://code.google.com/p/hddm
 :Copyright: This document has been placed in the public domain.
 :License: PyMC is released under the GPLv3.
-:Version: 0.1
+:Version: 0.1alpha
 
 Purpose
 =======
