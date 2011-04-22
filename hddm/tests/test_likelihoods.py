@@ -177,8 +177,6 @@ class TestWfpt(unittest.TestCase):
         self.range_=(-4,4)
         self.samples=5000
         self.x = np.linspace(self.range_[0], self.range_[1], self.bins)
-        
-        
        
     def runTest(self):
         pass
@@ -205,7 +203,7 @@ class TestWfpt(unittest.TestCase):
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
             
-    def test_simple(self):
+    def test_simple_array(self):
         params_novar = {}
         params_novar['v'] = (rand()-.5)*1.5
         params_novar['t'] = rand()*.5
@@ -218,11 +216,11 @@ class TestWfpt(unittest.TestCase):
         simulated_pdf = hddm.utils.histogram(samples_novar, bins=self.bins, range=self.range_, density=True)[0]
 
         analytical_pdf = hddm.wfpt.pdf_array(self.x,
-                                           params_novar['v'],
-                                           params_novar['a'],
-                                           params_novar['z'],
-                                           params_novar['t'],
-                                           err=0.0001, logp=0)
+                                             params_novar['v'],
+                                             params_novar['a'],
+                                             params_novar['z'],
+                                             params_novar['t'],
+                                             err=0.0001, logp=0)
 
         diff = np.mean(abs(simulated_pdf - analytical_pdf))
         print 'mean err: %f' % diff
@@ -231,6 +229,25 @@ class TestWfpt(unittest.TestCase):
         self.assertTrue(diff < 0.03)
         #it's very problematic to test agreement between bins
         #np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
+
+    def test_simple_summed_logp(self):
+        v = (rand()-.5)*1.5
+        t = rand()*.5
+        a = 1.5+rand()
+        z = .5
+
+        # Test for if sum is the same
+
+        # Generate random valid RTs
+        rts = t + rand(5000)*2
+        p = [hddm.wfpt.pdf_sign(rt, v, a, z, t, 1e-4) for rt in rts]
+        summed_logp = np.sum(np.log(p))
+
+        self.assertTrue(summed_logp == hddm.wfpt.wiener_like_simple(np.array(rts), v, a, z, t, 1e-4)), "Summed logp does not match"
+
+        self.assertTrue(-np.Inf == hddm.wfpt.wiener_like_simple(np.array([1.,2.,3.,0.]), v, a, z, t+.1, 1e-4)), "wiener_like_simple should have returned -np.Inf"
+        
+            
         
     def test_full_mc_simulated(self):
         """Test for systematic deviations in full_mc by comparing to simulated pdf distribution.

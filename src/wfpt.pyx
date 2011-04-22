@@ -27,6 +27,8 @@ cdef extern from "math.h":
     double floor(double)
     double fabs(double)
 
+cdef double infinity = np.inf
+
 # Define data type
 DTYPE = np.double
 ctypedef double DTYPE_t
@@ -244,21 +246,32 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_simple(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err):
     cdef Py_ssize_t i
-    cdef double y = 0
+    cdef double p
+    cdef sum_logp = 0
     for i from 0 <= i < x.shape[0]:
-        y += log(pdf_sign(x[i], v, a, z, t, err))
-    return y
+        p = pdf_sign(x[i], v, a, z, t, err)
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+        sum_logp += log(p)
+        
+    return sum_logp
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_intrp(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double a, double z, double Z, double t, double T, double err, int nT= 10, int nZ=10):
     cdef Py_ssize_t i
-    cdef double y
+    cdef double p
+    cdef sum_logp = 0
     
-    y = 0
     for i from 0 <= i < x.shape[0]:
-        y += log(full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ))
-    return y
+        p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ)
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+        sum_logp += log(p)
+        
+    return sum_logp
 
 
 @cython.wraparound(False)
