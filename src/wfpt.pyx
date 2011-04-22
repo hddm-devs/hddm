@@ -315,12 +315,13 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 	 
 
 cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z, double t, double err,
-								 double lb_z, double ub_z, double lb_t, double ub_t, double epsilon,				 
+								 double lb_z, double ub_z, double lb_t, double ub_t, double ZT, double epsilon,				 
 								 double S, double f_beg, double f_end, double f_mid, int bottom):
 	
 	cdef double z_c, z_d, z_e, t_c, t_d, t_e, h
 	cdef double fd, fe
 	cdef double Sleft, Sright, S2
+	print "in AdaptiveSimpsAux: lb_z: %f, ub_z: %f, lb_t %f, ub_t %f, f_beg: %f, f_end: %f, bottom: %d" % (lb_z, ub_z, lb_t, ub_t, f_beg, f_end, bottom)
    
 	
 	if (ub_t-lb_t) == 0: #integration over Z
@@ -341,8 +342,8 @@ cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double 
 		z_d = z
 		z_e = z
 	
-	fd = pdf_V(x - t_d, v, V, a, z_d, err, 0)
-	fe = pdf_V(x - t_e, v, V, a, z_e, err, 0)
+	fd = pdf_V(x - t_d, v, V, a, z_d, err, 0)/ZT
+	fe = pdf_V(x - t_e, v, V, a, z_e, err, 0)/ZT
 						 
 	
 	Sleft = (h/12)*(f_beg + 4*fd + f_mid);
@@ -351,10 +352,10 @@ cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double 
 	if (bottom <= 0 or fabs(S2 - S) <= 15*epsilon):												
 		return S2 + (S2 - S)/15;		 
 	return adaptiveSimpsonsAux(x, v, V, a, z, t, err,
-								 lb_z, z_c, lb_t, t_c, epsilon/2,				  
+								 lb_z, z_c, lb_t, t_c, ZT, epsilon/2,				  
 								 Sleft, f_beg, f_mid, fd, bottom-1) + \
 			adaptiveSimpsonsAux(x, v, V, a, z, t, err,
-								 z_c, ub_z, t_c, ub_t, epsilon/2,				  
+								 z_c, ub_z, t_c, ub_t, ZT, epsilon/2,				  
 								 Sright, f_mid, f_end, fe, bottom-1)
  
 cpdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z, double t, double err, 
@@ -371,17 +372,18 @@ cpdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double 
 		h = (ub_t-lb_t)
 		lb_z = z
 		ub_z = z
-		
+	
+	cdef double ZT = h
 	cdef double c_t = (lb_t + ub_t)/2.
 	cdef double c_z = (lb_z + ub_z)/2.
  
 	cdef double f_beg, f_end, f_mid, S	
-	f_beg = pdf_V(x - lb_t, v, V, a, lb_z, err, 0)
-	f_end = pdf_V(x - ub_t, v, V, a, ub_z, err, 0)
-	f_mid = pdf_V(x - c_t, v, V, a, c_z, err, 0)														   
+	f_beg = pdf_V(x - lb_t, v, V, a, lb_z, err, 0)/ZT
+	f_end = pdf_V(x - ub_t, v, V, a, ub_z, err, 0)/ZT
+	f_mid = pdf_V(x - c_t, v, V, a, c_z, err, 0)/ZT														   
 	S = (h/6)*(f_beg + 4*f_mid + f_end)																  
 	cdef double res =  adaptiveSimpsonsAux(x, v, V, a, z, t, err,
-								 lb_z, ub_z, lb_t, ub_t, epsilon,				  
+								 lb_z, ub_z, lb_t, ub_t, ZT, epsilon,				  
 								 S, f_beg, f_end, f_mid, maxRecursionDepth)
 	if logp:
 		return log(res)
@@ -392,7 +394,7 @@ cpdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double 
 
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-					 double t, double T, double err, int logp = 0, int nT= 10, int nZ=10):
+					 double t, double T, double err, int logp = 0, int nT= 10, int nZ=10, int use_adaptive = 1):
 	"""pull pdf"""
 	# Check if parpameters are valid
 	if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
@@ -418,8 +420,11 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
 		if (T==0): #V=0,Z=0,T=0
 			return pdf_V(x - t, v, V, a, z, err, logp) 
 		else:	   #V=0,Z=0,T=$
-			return adaptiveSimpsons_1D(x,  v, V, a, z, t, err, logp, z, z, t-T/2., t+T/2., err, 4)
-			#return simpson_1D(x, v, V, a, z, t, err, logp, z,	 z,	 0, t-T/2., t+T/2., nT)
+			if use_adaptive>0:
+				print "use_adaptive: %d" % use_adaptive 
+				return adaptiveSimpsons_1D(x,  v, V, a, z, t, err, logp, z, z, t-T/2., t+T/2., err, use_adaptive)
+			else:
+				return simpson_1D(x, v, V, a, z, t, err, logp, z,	 z,	 0, t-T/2., t+T/2., nT)
 			
 	else: #Z=$ 
 		if (T==0): #V=0,Z=$,T=0

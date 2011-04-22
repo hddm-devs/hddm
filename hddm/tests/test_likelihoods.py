@@ -303,6 +303,37 @@ class TestWfpt(unittest.TestCase):
 
 class TestWfptFull(unittest.TestCase):
 
+
+    def test_adaptive(self):
+          
+        for i in range(200):
+            V = rand()*0.4+0.1
+            v = (rand()-.5)*4            
+            T = rand()*0.3
+            t = rand()*.5+(T/2)
+            a = 1.5+rand()          
+            rt = (rand()*4 + t) * np.sign(rand())
+            err = 10**-6
+            Z = rand()*0.3
+            z = .5*rand()+Z/2  
+            logp = 0#np.floor(rand()*2)
+            nZ = 4+int(rand()*5)*2 
+            nT = 4+int(rand()*5)*2 
+
+            my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=10)
+            res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=0)
+            
+            print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
+            print my_res
+            print res
+            if np.isinf(my_res):
+                my_res = 100
+            if np.isinf(res):
+                res = 100            
+            self.assertTrue(not np.isnan(my_res)), "Found NaN in the results"
+            self.assertTrue(not np.isnan(res)), "Found NaN in the simulated results"                                                                                    
+            np.testing.assert_array_almost_equal(my_res, res,5)
+
     
     def test_full_pdf(self):
           
@@ -313,7 +344,7 @@ class TestWfptFull(unittest.TestCase):
             t = rand()*.5+(T/2)
             a = 1.5+rand()          
             rt = (rand()*4 + t) * np.sign(rand())
-            err = 10**-15
+            err = 10**-6
             Z = rand()*0.3
             z = .5*rand()+Z/2  
             logp = np.floor(rand()*2)
@@ -342,7 +373,7 @@ class TestWfptFull(unittest.TestCase):
                     res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
                     
                 #test pdf + T
-                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=4)
                 hT = T/nT
                 for j in range(nT+1):
                     t_tag = t-T/2. + hT*j
@@ -376,7 +407,7 @@ class TestWfptFull(unittest.TestCase):
             res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res,5)
+            np.testing.assert_array_almost_equal(my_res, res,4)
             
         
     def test_failure_mode(self):
