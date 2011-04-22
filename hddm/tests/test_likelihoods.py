@@ -313,12 +313,12 @@ class TestWfptFull(unittest.TestCase):
             t = rand()*.5+(T/2)
             a = 1.5+rand()          
             rt = (rand()*4 + t) * np.sign(rand())
-            err = 10**-6
+            err = 10**-9
             Z = rand()*0.3
             z = .5*rand()+Z/2  
             logp = 0#np.floor(rand()*2)
-            nZ = 4+int(rand()*5)*2 
-            nT = 4+int(rand()*5)*2 
+            nZ = 20
+            nT = 20
 
             my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=10)
             res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=0)
@@ -332,7 +332,7 @@ class TestWfptFull(unittest.TestCase):
                 res = 100            
             self.assertTrue(not np.isnan(my_res)), "Found NaN in the results"
             self.assertTrue(not np.isnan(res)), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res,5)
+            np.testing.assert_array_almost_equal(my_res, res,6)
 
     
     def test_full_pdf(self):
@@ -344,12 +344,12 @@ class TestWfptFull(unittest.TestCase):
             t = rand()*.5+(T/2)
             a = 1.5+rand()          
             rt = (rand()*4 + t) * np.sign(rand())
-            err = 10**-6
+            err = 10**-8
             Z = rand()*0.3
             z = .5*rand()+Z/2  
-            logp = np.floor(rand()*2)
-            nZ = 4+int(rand()*5)*2 
-            nT = 4+int(rand()*5)*2 
+            logp = 0
+            nZ = 40 
+            nT = 40 
 
             my_res = np.zeros(8)
             res = np.zeros(8)
@@ -407,7 +407,7 @@ class TestWfptFull(unittest.TestCase):
             res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res,4)
+            np.testing.assert_array_almost_equal(my_res, res,5)
             
         
     def test_failure_mode(self):
