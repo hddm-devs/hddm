@@ -227,7 +227,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
     
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, int logp=0):
+def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, bint logp=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
@@ -263,7 +263,7 @@ def wiener_like_full_intrp(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, do
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int logp=0, multi=None):
+def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, bint logp=0, multi=None):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
@@ -287,7 +287,7 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, int l
         return y
 
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, int logp=0, unsigned int reps=10):
+def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, bint logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
     cdef unsigned int rep, i
     
