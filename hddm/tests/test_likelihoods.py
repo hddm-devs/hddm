@@ -348,8 +348,8 @@ class TestWfptFull(unittest.TestCase):
             Z = rand()*0.3
             z = .5*rand()+Z/2  
             logp = 0
-            nZ = 40 
-            nT = 40 
+            nZ = 60 
+            nT = 60 
 
             my_res = np.zeros(8)
             res = np.zeros(8)
