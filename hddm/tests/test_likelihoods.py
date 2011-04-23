@@ -317,8 +317,8 @@ class TestWfptFull(unittest.TestCase):
             Z = rand()*0.3
             z = .5*rand()+Z/2  
             logp = 0#np.floor(rand()*2)
-            nZ = 20
-            nT = 20
+            nZ = 60
+            nT = 60
 
             my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=10)
             res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=0)
@@ -358,7 +358,7 @@ class TestWfptFull(unittest.TestCase):
             
             for vvv in range(2):
                 #test pdf
-                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=4)
                 res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
                 
                 #test pdf + Z
@@ -384,7 +384,7 @@ class TestWfptFull(unittest.TestCase):
                    res[2+vvv*4] = simps(y_t, x=None, dx=hT)
              
                 #test pdf + Z + T
-                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=4)
                 hT = T/nT
                 hZ = Z/nZ
                 for j_t in range(nT+1):
