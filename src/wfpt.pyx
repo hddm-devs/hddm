@@ -463,7 +463,7 @@ cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double 
 
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-					 double t, double T, double err, int logp = 0, int nT= 10, int nZ=10, int use_adaptive = 1):
+					 double t, double T, double err, int logp = 0, int nT= 10, int nZ=10, bint use_adaptive = 1):
 	"""pull pdf"""
 	# Check if parpameters are valid
 	if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
@@ -490,19 +490,19 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
 			return pdf_V(x - t, v, V, a, z, err, logp) 
 		else:	   #V=0,Z=0,T=$
 			if use_adaptive>0:
-				return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z, z, t-T/2., t+T/2., err, use_adaptive)
+				return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z, z, t-T/2., t+T/2., err, nT)
 			else:
 				return simpson_1D(x, v, V, a, z, t, err, logp, z,	 z,	 0, t-T/2., t+T/2., nT)
 			
 	else: #Z=$ 
 		if (T==0): #V=0,Z=$,T=0
-			if use_adaptive>0:
-				return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t, t, err, use_adaptive)
+			if use_adaptive:
+				return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t, t, err, nZ)
 			else:
 				return	simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
 		else:	   #V=0,Z=$,T=$
-			if use_adaptive>0:
-				return adaptiveSimpsons_2D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t-T/2., t+T/2., err, use_adaptive, use_adaptive)
+			if use_adaptive:
+				return adaptiveSimpsons_2D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t-T/2., t+T/2., err, nZ, nT)
 			else:
 				return	simpson_2D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2. , nT)
 	
