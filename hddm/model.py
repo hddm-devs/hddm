@@ -35,7 +35,6 @@ class Base(object):
             
         # Set function map
         self._models = {'simple': self._get_simple,
-                        'simple_gpu': self._get_simple_gpu,
                         'full_mc': self._get_full_mc,
                         'full_intrp': self._get_full_intrp,
                         'full': self._get_full,
@@ -102,7 +101,7 @@ class Base(object):
 
 
     def get_param_names(self):
-        if self.model_type == 'simple' or self.model_type == 'simple_gpu':
+        if self.model_type == 'simple':
             return ('a', 'v', 'z', 't')
         elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
             names = set(['a', 'v', 'V', 'z', 'Z', 't', 'T'])
@@ -156,7 +155,7 @@ class Base(object):
     def get_tau_param(self, param_name, all_params, tag):
         return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos=None, plot=False):
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 
@@ -228,30 +227,6 @@ class Base(object):
                                                  observed=True)
 
 
-    def _get_simple_gpu(self, name, data, params, idx=None):
-        import pycuda.autoinit
-        import pycuda.driver as drv
-        import pycuda.gpuarray as gpuarray
-
-        if idx is None:
-            return hddm.likelihoods.WienerGPUSingle(name,
-                                                    value=data['rt'].flatten(),
-                                                    v=params['v'], 
-                                                    t=params['t'], 
-                                                    a=params['a'], 
-                                                    z=params['z'],
-                                                    gpu=gpuarray.to_gpu(data['rt'].flatten()),
-                                                    observed=True)
-        else:
-            return hddm.likelihoods.WienerGPUSingle(name,
-                                                    value=data['rt'].flatten(),
-                                                    v=params['v'][idx], 
-                                                    t=params['t'][idx], 
-                                                    a=params['a'][idx],
-                                                    z=params['z'][idx],
-                                                    gpu=gpuarray.to_gpu(data['rt'].flatten()),
-                                                    observed=True)
-
     def _get_full_mc(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerFullMc(name,
                              value=data['rt'].flatten(),
@@ -273,8 +248,6 @@ class Base(object):
                 return params[node_name]
             else:
                 return params[node_name][idx]
-                
-
 
     def _get_full_intrp(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerFullIntrp(name,
@@ -292,30 +265,28 @@ class Base(object):
     def _get_full(self, name, data, params, idx=None):
         if idx is None:
             trials = data.shape[0]
-            ddm[i] = np.empty(trials, dtype=object)
-            z_trial = np.empty(trials, dtype=object)
-            v_trial = np.empty(trials, dtype=object)
-            ter_trial = np.empty(trials, dtype=object)
-            for trl in range(trials):
-                z_trial[trl] = hddm.likelihoods.CenterUniform("z%i"%trl,
-                                             cent=params['z'],
-                                             width=params['Z'],
-                                             plot=False, observed=False, trace=False)
-                v_trial[trl] = pm.Normal("v%i"%trl,
-                                         mu=params['v'],
-                                         tau=1/(params['V']**2),
-                                         plot=False, observed=False, trace=False)
-                ter_trial[trl] = hddm.likelihoods.CenterUniform("t%i"%trl,
-                                               cent=params['t'],
-                                               width=params['T'],
-                                               plot=False, observed=False, trace=False)
-                ddm[i][trl] = hddm.likelihoods.Wiener2("ddm_%i_%i"%(trl, i),
-                                      value=data['rt'].flatten()[trl],
-                                      v=v_trial[trl],
-                                      t=ter_trial[trl], 
-                                      a=param['a'],
-                                      z=z_trial[trl],
-                                      observed=True, trace=False)
+
+            z_trials = hddm.likelihoods.CenterUniform("z_trls",
+                                                     cent=[params['z'] for i in range(trials)],
+                                                     width=[params['Z'] for i in range(trials)],
+                                                     plot=False, observed=False, trace=False)
+            v_trials = pm.Normal("v_trls",
+                                     mu=[params['v'] for i in range(trials)],
+                                     tau=[1/(params['V']**2) for i in range(trials)],
+                                     plot=False, observed=False, trace=False)
+
+            ter_trials = hddm.likelihoods.CenterUniform("t_trl",
+                                                       cent=[params['t'] for i in range(trials)],
+                                                       width=[params['T'] for i in range(trials)],
+                                                       plot=False, observed=False, trace=False)
+
+            ddm = hddm.likelihoods.Wiener2(name,
+                                           value=data['rt'],
+                                           v=v_trial,
+                                           t=ter_trial, 
+                                           a=[param['a'] for i in range(trials)],
+                                           z=z_trial,
+                                           observed=True, trace=False)
 
             return ddm
 
@@ -378,6 +349,37 @@ class Base(object):
 class HDDM(Base):
     pass
 
+@kabuki.hierarchical
+class HDDMContaminant(Base):
+    param_names = ('a', 'v', 'z', 't', 'pi', 'gamma')
+
+    def get_observed(self, model_name, data, params, idx=None):
+        return hddm.likelihoods.WienerSimpleContaminant(model_name,
+                                                        value=data['rt'],
+                                                        cont_x=params['pi'][idx],
+                                                        cont_y=params['gamma'][idx],
+                                                        v=params['v'][idx],
+                                                        t=params['t'][idx],
+                                                        a=params['a'][idx],
+                                                        z=params['z'][idx],
+                                                        observed=True)
+
+    def get_root_param(self, param_name, all_params, tag, data, pos=None):
+        if param_name == 'pi':
+            return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
+        elif param_name == 'gamma':
+            return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
+        else:
+            return super(self.__class__, self).get_root_param(param_name, all_params, tag, pos=pos)
+
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+        if param_name == 'pi':
+            return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
+        elif param_name == 'gamma':
+            return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
+        else:
+            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos=None, plot=False)
+    
 
 @kabuki.hierarchical
 class HDDMOneRegressor(Base):

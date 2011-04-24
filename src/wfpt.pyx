@@ -9,6 +9,7 @@
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
 # GPLv3
+
 from copy import copy
 import numpy as np
 cimport numpy as np
@@ -32,6 +33,7 @@ cdef double infinity = np.inf
 # Define data type
 DTYPE = np.double
 ctypedef double DTYPE_t
+
 
 cdef double PI = 3.1415926535897
 cdef double PIs = 9.869604401089358 # PI^2
@@ -153,7 +155,7 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
     cdef double z_tag, t_tag, y
     cdef int i
               
-    for i  from 1 <= i <= n:        
+    for i from 1 <= i <= n:        
         z_tag = lb_z + hz * i
         t_tag = lb_t + ht * i
         y = pdf_V(x - t_tag, v, V, a, z_tag, err)
@@ -176,7 +178,6 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
     cdef double t_tag, y
     cdef int i_t
 
-
     ht = (ub_t-lb_t)/nT
 
     S = simpson_1D(x, v, V, a, z, lb_t, err, lb_z, ub_z, nZ, 0, 0, 0)
@@ -196,14 +197,14 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int nT=5, int nZ=5):
-    """pull pdf"""
+    """full pdf"""
     # Check if parpameters are valid
     if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
         return 0
 
     # transform x,v,z if x is upper bound response
     if x > 0:
-        v= -v
+        v = -v
         z = 1.-z
     
     x = fabs(x)
@@ -233,6 +234,7 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
+
     for i from 0 <= i < size:
         y[i] = pdf_sign(x[i], v, a, z, t, err)
 
@@ -240,6 +242,7 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
         return np.log(y)
     else:
         return y
+
 
 
 @cython.wraparound(False)
@@ -253,6 +256,41 @@ def wiener_like_simple(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
             return -infinity
+        sum_logp += log(p)
+        
+    return sum_logp
+
+cdef inline double prob_boundary(double x, double v, double a, double z, double t, double err):
+    """Probability of hitting upper boundary."""
+    p = (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
+    if x > 0:
+        return p
+    else:
+        return 1-p
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bint, ndim=1] cont_x, np.ndarray[bint, ndim=1] cont_y, double v, double a, double z, double t, double t_min, double t_max, double err):
+    """Wiener likelihood function where RTs could come from a
+    separate, uniform contaminant distribution.
+
+    Reference: Lee, Vandekerckhove, Navarro, & Tuernlinckx (2007)
+    """
+    cdef Py_ssize_t i
+    cdef double p
+    cdef sum_logp = 0
+    for i from 0 <= i < x.shape[0]:
+        if cont_x[i] == 1:
+            p = pdf_sign(x[i], v, a, z, t, err)
+        elif cont_y[i] == 0:
+            p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
+        else:
+            p = .5 * 1./(t_max-t_min)
+        #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+
         sum_logp += log(p)
         
     return sum_logp

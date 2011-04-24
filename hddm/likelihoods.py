@@ -23,6 +23,15 @@ WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        dtype=np.float,
                                        mv=True)
 
+def wiener_like_simple_contaminant(value, cont_x, cont_y, v, a, z, t, err=.0001):
+    """Log-likelihood for the simple DDM including contaminants"""
+    return hddm.wfpt.wiener_like_simple_contaminant(value, np.array(cont_x, dtype=int), np.array(cont_y, dtype=int), v, a, z, t, 0, 7, 1e-4)
+
+WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                       logp=wiener_like_simple_contaminant,
+                                       dtype=np.float,
+                                       mv=True)
+
 def pdf_array_multi_py(x, v, a, z, t, multi=None, err=0.0001, logp=1):
     size = x.shape[0]
     y = np.empty(size, dtype=np.float)

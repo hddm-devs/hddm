@@ -25,6 +25,20 @@ def effect(base, effects):
 def return_fixed(value=.5):
     return value
 
+def post_pred_simple(v, a, z, t, x=None):
+    """Posterior predictive likelihood."""
+    if x is None:
+        x = np.linspace(-5,5,100)
+    trace_len = len(a)
+
+    p = np.zeros(100, dtype=np.float)
+
+    for i in range(trace_len):
+        p += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], .001)
+    
+    return p/trace_len
+        
+
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
     Compute the histogram of a set of data.
