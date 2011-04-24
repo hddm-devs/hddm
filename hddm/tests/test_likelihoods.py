@@ -196,7 +196,7 @@ class TestWfpt(unittest.TestCase):
             z = .5*rand()
             z_nonorm = a*z
             rt = rand()*4 + t
-            err = 10*(np.ceil(rand()*20))
+            err = 10*(-3- ceil(rand()*20))
             # Test if equal up to the 9th decimal.
             matlab_wfpt = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
             python_wfpt = hddm.wfpt.pdf(rt, v, a, z, err)
@@ -318,6 +318,39 @@ class TestWfpt(unittest.TestCase):
             np.testing.assert_array_almost_equal(hddm.wfpt.pdf_V(rt, v=v, V=V, a=a, z=z, err=err), res)
 
 class TestWfptFull(unittest.TestCase):
+
+
+    def test_adaptive(self):
+          
+        for i in range(200):
+            V = rand()*0.4+0.1
+            v = (rand()-.5)*4            
+            T = rand()*0.3
+            t = rand()*.5+(T/2)
+            a = 1.5+rand()          
+            rt = (rand()*4 + t) * np.sign(rand())
+            err = 10**-9
+            Z = rand()*0.3
+            z = .5*rand()+Z/2  
+            logp = 0#np.floor(rand()*2)
+            nZ = 60
+            nT = 60
+
+            my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=5, nZ=5, use_adaptive=1)
+            res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ, use_adaptive=0)
+            
+            print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
+            print my_res
+            print res
+            if np.isinf(my_res):
+                my_res = 100
+            if np.isinf(res):
+                res = 100            
+            self.assertTrue(not np.isnan(my_res)), "Found NaN in the results"
+            self.assertTrue(not np.isnan(res)), "Found NaN in the simulated results"                                                                                    
+            np.testing.assert_array_almost_equal(my_res, res,6)
+
+    
     def test_full_pdf(self):
         for i in range(200):
             V = rand()*0.4+0.1
@@ -326,12 +359,11 @@ class TestWfptFull(unittest.TestCase):
             t = rand()*.5+(T/2)
             a = 1.5+rand()          
             rt = (rand()*4 + t) * np.sign(rand())
-            err = 10**-15
+            err = 10**-8
             Z = rand()*0.3
             z = .5*rand()+Z/2  
-
-            nZ = 4+int(rand()*5)*2 
-            nT = 4+int(rand()*5)*2 
+            nZ = 60 
+            nT = 60 
 
             my_res = np.zeros(8)
             res = np.zeros(8)
@@ -341,23 +373,23 @@ class TestWfptFull(unittest.TestCase):
             for vvv in range(2):
                 #test pdf
                 my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
-                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
+                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=0, nZ=0)
                 
                 #test pdf + Z
                 my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err, nT=nT, nZ=nZ)
                 hZ = Z/nZ
                 for j in range(nZ+1):
                     z_tag = z-Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)/Z             
-                res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
+                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err, nT=0, nZ=0)/Z                             
+                    res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
                     
                 #test pdf + T
                 my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ)
                 hT = T/nT
                 for j in range(nT+1):
                     t_tag = t-T/2. + hT*j
-                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err, nT=nT, nZ=nZ)/T      
-                res[2+vvv*4] = simps(y_t, x=None, dx=hT)
+                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/T      
+                    res[2+vvv*4] = simps(y_t, x=None, dx=hT)
              
                 #test pdf + Z + T
                 my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err, nT=nT, nZ=nZ)
@@ -367,9 +399,9 @@ class TestWfptFull(unittest.TestCase):
                     t_tag = t-T/2. + hT*j_t
                     for j_z in range(nZ+1):
                         z_tag = z-Z/2. + hZ*j_z
-                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=nT, nZ=nZ)/Z/T    
+                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/Z/T    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                res[3+vvv*4] = simps(y_t, x=None, dx=hT)
+                    res[3+vvv*4] = simps(y_t, x=None, dx=hT)
                 
             print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
             print my_res
