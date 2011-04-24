@@ -9,7 +9,6 @@ from copy import copy
 import hddm
 import kabuki
 
-#@kabuki.hierarchical
 class Base(object):
     """
     This class can generate different hddms:
@@ -67,7 +66,7 @@ class Base(object):
                 
             if not init:
                 # Default param ranges
-                self.init_params = {'t':0.1, 'T':0, 'z':0.5, 'Z':0}
+                self.init_params = {'t':0.1, 'T':0.1, 'z':0.5, 'Z':0.1}
             else:
                 # Compute ranges based on EZ method
                 param_ranges = hddm.utils.EZ_param_ranges(self.data)
@@ -209,139 +208,86 @@ class Base(object):
                                       value=init_val)
 
     def _get_simple(self, name, data, params, idx=None):
-        if idx is None:
-            return hddm.likelihoods.WienerSimple(name,
-                                                 value=data['rt'].flatten(), 
-                                                 v=params['v'], 
-                                                 t=params['t'], 
-                                                 a=params['a'], 
-                                                 z=params['z'],
-                                                 observed=True)
-        else:
-            return hddm.likelihoods.WienerSimple(name,
-                                                 value=data['rt'].flatten(), 
-                                                 v=params['v'][idx], 
-                                                 t=params['t'][idx], 
-                                                 a=params['a'][idx], 
-                                                 z=params['z'][idx],
-                                                 observed=True)
-
+        return hddm.likelihoods.WienerSimple(name,
+                                             value=data['rt'].flatten(), 
+                                             v=params['v'], 
+                                             t=params['t'], 
+                                             a=params['a'], 
+                                             z=params['z'],
+                                             observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerFullMc(name,
                              value=data['rt'].flatten(),
-                             z = self._get_idx_node('z',params,idx),
-                             t = self._get_idx_node('t',params,idx),
-                             v = self._get_idx_node('v',params,idx),
-                             a = self._get_idx_node('a',params,idx),       
-                             Z = self._get_idx_node('Z',params,idx),
-                             T = self._get_idx_node('T',params,idx),
-                             V = self._get_idx_node('V',params,idx),
+                             z = self._get_idx_node('z',params),
+                             t = self._get_idx_node('t',params),
+                             v = self._get_idx_node('v',params),
+                             a = self._get_idx_node('a',params),       
+                             Z = self._get_idx_node('Z',params),
+                             T = self._get_idx_node('T',params),
+                             V = self._get_idx_node('V',params),
                              observed=True)
-
     
-    def _get_idx_node(self, node_name, params, idx):
+    def _get_idx_node(self, node_name, params):
         if node_name in self.exclude:
             return 0
         else:
-            if idx is None:
-                return params[node_name]
-            else:
-                return params[node_name][idx]
+            return params[node_name]
 
     def _get_full_intrp(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerFullIntrp(name,
                              value=data['rt'].flatten(),
-                             z = self._get_idx_node('z',params,idx),
-                             t = self._get_idx_node('t',params,idx),
-                             v = self._get_idx_node('v',params,idx),
-                             a = self._get_idx_node('a',params,idx),       
-                             Z = self._get_idx_node('Z',params,idx),
-                             T = self._get_idx_node('T',params,idx),
-                             V = self._get_idx_node('V',params,idx),
+                             z = self._get_idx_node('z',params),
+                             t = self._get_idx_node('t',params),
+                             v = self._get_idx_node('v',params),
+                             a = self._get_idx_node('a',params),       
+                             Z = self._get_idx_node('Z',params),
+                             T = self._get_idx_node('T',params),
+                             V = self._get_idx_node('V',params),
                              observed=True)
 
 
     def _get_full(self, name, data, params, idx=None):
+        trials = data.shape[0]
+        
         if idx is None:
-            trials = data.shape[0]
-
-            z_trials = hddm.likelihoods.CenterUniform("z_trls",
-                                                     cent=[params['z'] for i in range(trials)],
-                                                     width=[params['Z'] for i in range(trials)],
-                                                     plot=False, observed=False, trace=False)
-            v_trials = pm.Normal("v_trls",
-                                     mu=[params['v'] for i in range(trials)],
-                                     tau=[1/(params['V']**2) for i in range(trials)],
-                                     plot=False, observed=False, trace=False)
-
-            ter_trials = hddm.likelihoods.CenterUniform("t_trl",
-                                                       cent=[params['t'] for i in range(trials)],
-                                                       width=[params['T'] for i in range(trials)],
-                                                       plot=False, observed=False, trace=False)
-
-            ddm = hddm.likelihoods.Wiener2(name,
-                                           value=data['rt'],
-                                           v=v_trial,
-                                           t=ter_trial, 
-                                           a=[param['a'] for i in range(trials)],
-                                           z=z_trial,
-                                           observed=True, trace=False)
-
-            return ddm
-
+            tag = ''
         else:
-            trials = data.shape[0]
-            ddm = np.empty(trials, dtype=object)
-            z_trial = np.empty(trials, dtype=object)
-            v_trial = np.empty(trials, dtype=object)
-            ter_trial = np.empty(trials, dtype=object)
-            for trl in range(trials):
-                z_trial[trl] = hddm.likelihoods.CenterUniform("z%i"%trl,
-                                             cent=params['z'],
-                                             width=params['Z'],
-                                             plot=False, observed=False)
-                v_trial[trl] = pm.Normal("v_%i"%trl,
-                                         mu=params['v'],
-                                         tau=1/(params['V']**2),
-                                         plot=False, observed=False)
-                ter_trial[trl] = hddm.likelihoods.CenterUniform("t%i"%trl,
-                                               cent=params['t'],
-                                               width=params['T'],
-                                               plot=False, observed=False)
-                ddm[trl] = hddm.likelihoods.Wiener2("ddm%i"%trl,
-                                   value=data['rt'].flatten()[trl],
-                                   v=v_trial[trl],
-                                   t=ter_trial[trl],
-                                   a=param['a'],
-                                   z=z_trial[trl],
-                                   observed=True)
+            tag = str(idx)
 
-            return ddm
+        z_trials = hddm.likelihoods.CenterUniform("z_trls%s"%tag,
+                                                  center=[params['z'] for i in range(trials)],
+                                                  width=[params['Z'] for i in range(trials)])
+
+        v_trials = pm.Normal("v_trls%s"%tag,
+                             mu=[params['v'] for i in range(trials)],
+                             tau=[params['V']**-2 for i in range(trials)])
+        
+        ter_trials = hddm.likelihoods.CenterUniform("t_trls%s"%tag,
+                                                    center=[params['t'] for i in range(trials)],
+                                                    width=[params['T'] for i in range(trials)])
+
+        ddm = hddm.likelihoods.WienerSingleTrial(name,
+                                                 value=data['rt'],
+                                                 v=v_trials,
+                                                 t=ter_trials, 
+                                                 a=[params['a'] for i in range(trials)],
+                                                 z=z_trials,
+                                                 observed=True)
+
+        return [ddm, ter_trials, v_trials, z_trials]
 
     def _get_lba(self, name, data, params, idx=None):
-        if idx is None:
-            return hddm.likelihoods.LBA(name,
-                                        value=data['rt'].flatten(),
-                                        a=params['a'],
-                                        z=params['z'],
-                                        t=params['t'],
-                                        v0=params['v0'],
-                                        v1=params['v1'],
-                                        V=params['V'],
-                                        normalize_v=self.normalize_v,
-                                        observed=True)
-        else:
-            return hddm.likelihoods.LBA(name,
-                                        value=data['rt'].flatten(),
-                                        a=params['a'][idx],
-                                        z=params['z'][idx],
-                                        t=params['t'][idx],
-                                        v0=params['v0'][idx],
-                                        v1=params['v1'][idx],
-                                        V=params['V'][idx],
-                                        normalize_v=self.normalize_v,
-                                        observed=True)    
+        return hddm.likelihoods.LBA(name,
+                                    value=data['rt'].flatten(),
+                                    a=params['a'],
+                                    z=params['z'],
+                                    t=params['t'],
+                                    v0=params['v0'],
+                                    v1=params['v1'],
+                                    V=params['V'],
+                                    normalize_v=self.normalize_v,
+                                    observed=True)
 
 
 
@@ -356,12 +302,12 @@ class HDDMContaminant(Base):
     def get_observed(self, model_name, data, params, idx=None):
         return hddm.likelihoods.WienerSimpleContaminant(model_name,
                                                         value=data['rt'],
-                                                        cont_x=params['pi'][idx],
-                                                        cont_y=params['gamma'][idx],
-                                                        v=params['v'][idx],
-                                                        t=params['t'][idx],
-                                                        a=params['a'][idx],
-                                                        z=params['z'][idx],
+                                                        cont_x=params['pi'],
+                                                        cont_y=params['gamma'],
+                                                        v=params['v'],
+                                                        t=params['t'],
+                                                        a=params['a'],
+                                                        z=params['z'],
                                                         observed=True)
 
     def get_root_param(self, param_name, all_params, tag, data, pos=None):
@@ -378,7 +324,7 @@ class HDDMContaminant(Base):
         elif param_name == 'gamma':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         else:
-            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, pos=None, plot=False)
+            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False)
     
 
 @kabuki.hierarchical

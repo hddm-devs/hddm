@@ -98,35 +98,35 @@ WienerFullMcMultiThresh = pm.stochastic_from_dist(name="Wiener Diffusion Process
                                        mv=True)
 
         
-def wiener_like2(value, v, a, z, t):
+def wiener_like_single_trial(value, v, a, z, t):
     """Log-likelihood of the DDM for one RT point."""
-    prob = hddm.wfpt.pdf_sign(x=value, v=v, a=a, z=z, t=t, err=0.0001, logp=1)
-    
-    #if prob == -np.Inf:
-    #    print value, t, v, a, z
+    prob = hddm.wfpt.wiener_like_full(value, np.asarray(v), np.asarray(a), np.asarray(z), np.asarray(t), err=0.001)
     return prob
 
-Wiener2 = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                  logp=wiener_like2,
-                                  random=wiener_simple,
-                                  dtype=np.float,
-                                  mv=False)
+WienerSingleTrial = pm.stochastic_from_dist(name="Wiener Diffusion Process",
+                                            logp=wiener_like_single_trial,
+                                            random=wiener_simple,
+                                            dtype=np.float,
+                                            mv=True)
 
 
 def centeruniform_like(value, center, width):
     R"""Likelihood of centered uniform"""
-    return pm.uniform_like(value, lower=center-(width/2.), upper=center+(width/2.))
+    return pm.uniform_like(value,
+                           lower=np.asarray(center)-(np.asarray(width)/2.), 
+                           upper=np.asarray(center)+(np.asarray(width)/2.))
 
 @pm.randomwrap
 def centeruniform(center, width, size=1):
     R"""Sample from centered uniform"""
-    return np.random.uniform(size=size, low=center-(width/2.), high=center+(width/2.))
+    return np.random.uniform(low=np.asarray(center)-(np.asarray(width)/2.), 
+                             high=np.asarray(center)+(np.asarray(width)/2.))
 
 CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
                                         logp=centeruniform_like,
                                         random=centeruniform,
                                         dtype=np.float,
-                                        mv=False)
+                                        mv=True)
 
 
 def get_avg_likelihood(x, params):

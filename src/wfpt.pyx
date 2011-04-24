@@ -397,6 +397,23 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
         return y
 
 
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] v, np.ndarray[DTYPE_t, ndim=1] a, np.ndarray[DTYPE_t, ndim=1] z, np.ndarray[DTYPE_t, ndim=1] t, err):
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
+    cdef double p
+    cdef double sum_logp = 0
+
+    for i from 0 <= i < size:
+        p = pdf_sign(x[i], v[i], a[i], z[i], t[i], err)
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+        sum_logp += log(p)
+
+    return sum_logp
+
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
@@ -438,7 +455,7 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bin
         elif cont_y[i] == 0:
             p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
         else:
-            p = .5 * 1./(t_max-t_min)
+            p = np.random.rand()<.5 * 1./(t_max-t_min)
         #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
