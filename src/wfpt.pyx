@@ -194,8 +194,157 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
     return (ht * S / 3)
      
 
+
+
+cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z, double t, double pdf_err,
+                                 double lb_z, double ub_z, double lb_t, double ub_t, double ZT, double simps_err,                
+                                 double S, double f_beg, double f_end, double f_mid, int bottom):
+    
+    cdef double z_c, z_d, z_e, t_c, t_d, t_e, h
+    cdef double fd, fe
+    cdef double Sleft, Sright, S2
+    #print "in AdaptiveSimpsAux: lb_z: %f, ub_z: %f, lb_t %f, ub_t %f, f_beg: %f, f_end: %f, bottom: %d" % (lb_z, ub_z, lb_t, ub_t, f_beg, f_end, bottom)
+   
+    
+    if (ub_t-lb_t) == 0: #integration over Z
+        h = ub_z - lb_z
+        z_c = (ub_z + lb_z)/2.
+        z_d = (lb_z + z_c)/2.
+        z_e = (z_c  + ub_z)/2.
+        t_c = t
+        t_d = t
+        t_e = t
+    
+    else: #integration over t
+        h = ub_t - lb_t
+        t_c = (ub_t + lb_t)/2.
+        t_d = (lb_t + t_c)/2.
+        t_e = (t_c  + ub_t)/2.
+        z_c = z
+        z_d = z
+        z_e = z
+    
+    fd = pdf_V(x - t_d, v, V, a, z_d, pdf_err, 0)/ZT
+    fe = pdf_V(x - t_e, v, V, a, z_e, pdf_err, 0)/ZT
+                         
+    
+    Sleft = (h/12)*(f_beg + 4*fd + f_mid);
+    Sright = (h/12)*(f_mid + 4*fe + f_end);
+    S2 = Sleft + Sright;                                                                       
+    if (bottom <= 0 or fabs(S2 - S) <= 15*simps_err):                                               
+        return S2 + (S2 - S)/15;         
+    return adaptiveSimpsonsAux(x, v, V, a, z, t, pdf_err,
+                                 lb_z, z_c, lb_t, t_c, ZT, simps_err/2,               
+                                 Sleft, f_beg, f_mid, fd, bottom-1) + \
+            adaptiveSimpsonsAux(x, v, V, a, z, t, pdf_err,
+                                 z_c, ub_z, t_c, ub_t, ZT, simps_err/2,               
+                                 Sright, f_mid, f_end, fe, bottom-1)
+ 
+cpdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z, double t, 
+                              int logp, double lb_z, double ub_z, 
+                              double lb_t, double ub_t, double total_err, int maxRecursionDepth):
+
+    cdef double h
+    
+    if (ub_t - lb_t) == 0: #integration over z
+        lb_t = t
+        ub_t = t
+        h = ub_z - lb_z
+    else: #integration over t
+        h = (ub_t-lb_t)
+        lb_z = z
+        ub_z = z
+    
+    cdef double ZT = h
+    cdef double c_t = (lb_t + ub_t)/2.
+    cdef double c_z = (lb_z + ub_z)/2.
+ 
+    cdef double f_beg, f_end, f_mid, S  
+    cdef double pdf_err = total_err/(2*ZT)
+    cdef double simps_err = total_err/2
+    f_beg = pdf_V(x - lb_t, v, V, a, lb_z, pdf_err, 0)/ZT
+    f_end = pdf_V(x - ub_t, v, V, a, ub_z, pdf_err, 0)/ZT
+    f_mid = pdf_V(x - c_t, v, V, a, c_z, pdf_err, 0)/ZT                                                        
+    S = (h/6)*(f_beg + 4*f_mid + f_end)                                                               
+    cdef double res =  adaptiveSimpsonsAux(x, v, V, a, z, t, pdf_err,
+                                 lb_z, ub_z, lb_t, ub_t, ZT, simps_err,               
+                                 S, f_beg, f_end, f_mid, maxRecursionDepth)
+    if logp:
+        return log(res)
+    else:
+        return res
+        
+        
+cdef double adaptiveSimpsonsAux_2D(double x, double v, double V, double a, double z, double t, double err_1d,
+                                 double lb_z, double ub_z, double lb_t, double ub_t, double T, double err_2d,                 
+                                 double S, double f_beg, double f_end, double f_mid, int maxRecursionDepth_Z, int bottom):
+
+    cdef double fd, fe
+    cdef double Sleft, Sright, S2
+    #print "in AdaptiveSimpsAux_2D: lb_z: %f, ub_z: %f, lb_t %f, ub_t %f, f_beg: %f, f_end: %f, bottom: %d" % (lb_z, ub_z, lb_t, ub_t, f_beg, f_end, bottom)
+    
+    cdef double t_c = (ub_t + lb_t)/2.
+    cdef double t_d = (lb_t + t_c)/2.
+    cdef double t_e = (t_c  + ub_t)/2.
+    cdef double h = ub_t - lb_t
+    
+    fd = adaptiveSimpsons_1D(x, v, V, a, z, t_d, 0, lb_z, ub_z, 
+                              0, 0, err_1d, maxRecursionDepth_Z)/T
+    fe = adaptiveSimpsons_1D(x, v, V, a, z, t_e, 0, lb_z, ub_z, 
+                              0, 0, err_1d, maxRecursionDepth_Z)/T
+                         
+    
+    Sleft = (h/12)*(f_beg + 4*fd + f_mid);
+    Sright = (h/12)*(f_mid + 4*fe + f_end);
+    S2 = Sleft + Sright;                                                                       
+    if (bottom <= 0 or fabs(S2 - S) <= 15*err_2d):                                              
+        return S2 + (S2 - S)/15;
+        
+    return adaptiveSimpsonsAux_2D(x, v, V, a, z, t, err_1d,
+                                 lb_z, ub_z, lb_t, t_c, T, err_2d/2,                  
+                                 Sleft, f_beg, f_mid, fd, maxRecursionDepth_Z, bottom-1) + \
+            adaptiveSimpsonsAux_2D(x, v, V, a, z, t, err_1d,
+                                 lb_z, ub_z, t_c, ub_t, T, err_2d/2,                  
+                                 Sright, f_mid, f_end, fe, maxRecursionDepth_Z, bottom-1)
+                             
+                                 
+        
+cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double z, double t,  
+                              int logp, double lb_z, double ub_z, 
+                              double lb_t, double ub_t, double total_err, int maxRecursionDepth_Z, maxRecursionDepth_T):
+
+    cdef double h = (ub_t-lb_t)
+    
+    cdef double T = (ub_t - lb_t)
+    cdef double c_t = (lb_t + ub_t)/2.
+    cdef double c_z = (lb_z + ub_z)/2.
+ 
+    cdef double f_beg, f_end, f_mid, S
+    cdef double err_1d = 2./3*total_err
+    cdef double err_2d = 1./3*total_err
+    
+    f_beg = adaptiveSimpsons_1D(x, v, V, a, z, lb_t, 0, lb_z, ub_z, 
+                              0, 0, err_1d, maxRecursionDepth_Z)/T
+                              
+    f_end = adaptiveSimpsons_1D(x, v, V, a, z, ub_t, 0, lb_z, ub_z, 
+                              0, 0, err_1d, maxRecursionDepth_Z)/T
+    f_mid = adaptiveSimpsons_1D(x, v, V, a, z, (lb_t+ub_t)/2, 0, lb_z, ub_z, 
+                              0, 0, err_1d, maxRecursionDepth_Z)/T                                                         
+    S = (h/6)*(f_beg + 4*f_mid + f_end)                                                               
+    cdef double res =  adaptiveSimpsonsAux_2D(x, v, V, a, z, t, err_1d,
+                                 lb_z, ub_z, lb_t, ub_t, T, err_2d,               
+                                 S, f_beg, f_end, f_mid, maxRecursionDepth_Z, maxRecursionDepth_T)
+    if logp:
+        return log(res)
+    else:
+        return res
+        
+
+
+
+
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-                     double t, double T, double err, int nT=5, int nZ=5):
+                     double t, double T, double err, int logp = 0, int nT= 10, int nZ=10, bint use_adaptive = 1):
     """pull pdf"""
     # Check if parpameters are valid
     if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
@@ -218,13 +367,22 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
         if (T==0): #V=0,Z=0,T=0
             return pdf_V(x - t, v, V, a, z, err) 
         else:      #V=0,Z=0,T=$
-            return simpson_1D(x, v, V, a, z, t, err, z, z, 0, t-T/2., t+T/2., nT)
+            if use_adaptive>0:
+                return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z, z, t-T/2., t+T/2., err, nT)
+            else:
+                return simpson_1D(x, v, V, a, z, t, err, logp, z,    z,  0, t-T/2., t+T/2., nT)
             
     else: #Z=$ 
         if (T==0): #V=0,Z=$,T=0
-            return  simpson_1D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., nZ, t, t , 0)
+            if use_adaptive:
+                return adaptiveSimpsons_1D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t, t, err, nZ)
+            else:
+                return  simpson_1D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t, t , 0)
         else:      #V=0,Z=$,T=$
-            return  simpson_2D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2., nT)
+            if use_adaptive:
+                return adaptiveSimpsons_2D(x,  v, V, a, z, t, logp, z-Z/2., z+Z/2., t-T/2., t+T/2., err, nZ, nT)
+            else:
+                return  simpson_2D(x, v, V, a, z, t, err, logp, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2. , nT)
     
     
 @cython.wraparound(False)
