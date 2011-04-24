@@ -336,8 +336,8 @@ class TestWfptFull(unittest.TestCase):
             nZ = 60
             nT = 60
 
-            my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=5, nZ=5, use_adaptive=1)
-            res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ, use_adaptive=0)
+            my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=5, nZ=5, use_adaptive=1)
+            res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ, use_adaptive=0)
             
             print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
             print my_res
@@ -362,7 +362,6 @@ class TestWfptFull(unittest.TestCase):
             err = 10**-8
             Z = rand()*0.3
             z = .5*rand()+Z/2  
-            logp = 0
             nZ = 60 
             nT = 60 
 
@@ -373,45 +372,36 @@ class TestWfptFull(unittest.TestCase):
             
             for vvv in range(2):
                 #test pdf
-                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
-                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err,logp=logp, nT=0, nZ=0)
+                my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
+                res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=0, nZ=0)
                 
                 #test pdf + Z
-                my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[1+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err, nT=nT, nZ=nZ)
                 hZ = Z/nZ
                 for j in range(nZ+1):
                     z_tag = z-Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err,logp=0, nT=0, nZ=0)/Z             
-                if logp:
-                    res[1+vvv*4] = np.log(simps(y_z, x=None, dx=hZ))
-                else:
+                    y_z[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err, nT=0, nZ=0)/Z                             
                     res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
                     
                 #test pdf + T
-                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[2+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ)
                 hT = T/nT
                 for j in range(nT+1):
                     t_tag = t-T/2. + hT*j
-                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err,logp=0, nT=0, nZ=0)/T      
-                if logp:
-                    res[2+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
-                else:
-                   res[2+vvv*4] = simps(y_t, x=None, dx=hT)
+                    y_t[j] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/T      
+                    res[2+vvv*4] = simps(y_t, x=None, dx=hT)
              
                 #test pdf + Z + T
-                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err,logp=logp, nT=nT, nZ=nZ)
+                my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err, nT=nT, nZ=nZ)
                 hT = T/nT
                 hZ = Z/nZ
                 for j_t in range(nT+1):
                     t_tag = t-T/2. + hT*j_t
                     for j_z in range(nZ+1):
                         z_tag = z-Z/2. + hZ*j_z
-                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err,logp=0, nT=0, nZ=0)/Z/T    
+                        y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/Z/T    
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
-                if logp:
-                    res[3+vvv*4] = np.log(simps(y_t, x=None, dx=hT))
-                else:
-                   res[3+vvv*4] = simps(y_t, x=None, dx=hT)
+                    res[3+vvv*4] = simps(y_t, x=None, dx=hT)
                 
             print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
             print my_res
