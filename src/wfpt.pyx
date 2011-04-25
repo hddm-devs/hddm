@@ -21,6 +21,7 @@ cdef extern from "gsl/gsl_randist.h":
 
 #cdef extern from "gsl/gsl_integration.h":
 #    double 
+
 cdef extern from "math.h":
     double sin(double)
     double cos(double)
@@ -127,7 +128,7 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
 
 cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err):
     """Wiener likelihood function for two response types. Lower bound
-    responses have negative t, upper boundary response have positive t"""
+    responses have negative t, upper boundary response have positive t."""
     if z<0 or z>1 or a<0:
         return 0
 
@@ -404,10 +405,6 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
         sum_logp += log(p)
 
     return sum_logp
-
-
-cpdef inline double normal(double mu, double sigma):
-    return 
 
 cpdef double pdf_Z_norm_sign(double rt, double v_anti, double a, double z_mean, double z_std, double t, double err)
     func_z = lambda z, rt, v, a, t, z_mean, z_std, err: hddm.wfpt.pdf_sign(rt, v, a, z, t, err) * (gsl_ran_gaussian_pdf(z, z_std)+z_mean)
