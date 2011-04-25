@@ -16,6 +16,11 @@ cimport numpy as np
 
 cimport cython
 
+cdef extern from "gsl/gsl_randist.h":
+    double gsl_ran_gaussian_pdf(double x, double sigma)
+
+#cdef extern from "gsl/gsl_integration.h":
+#    double 
 cdef extern from "math.h":
     double sin(double)
     double cos(double)
@@ -396,6 +401,47 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
 
     for i from 0 <= i < size:
         p = pdf_sign(x[i], v[i], a[i], z[i], t[i], err)
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+        sum_logp += log(p)
+
+    return sum_logp
+
+
+cpdef inline double normal(double mu, double sigma):
+    return 
+
+cpdef double pdf_Z_norm_sign(double rt, double v_anti, double a, double z_mean, double z_std, double t, double err)
+    func_z = lambda z, rt, v, a, t, z_mean, z_std, err: hddm.wfpt.pdf_sign(rt, v, a, z, t, err) * (gsl_ran_gaussian_pdf(z, z_std)+z_mean)
+
+    return quad(func_z, 0, a, args = (rt, v, a, t, z_mean, z_std, err))
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v_pro, double v_anti, double a, double z, double t, double t_switch, double err):
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t i
+    cdef double p
+    cdef double sum_logp = 0
+
+    for i from 0 <= i < size:
+        if instruct[i] == 0: 
+            # Prosaccade trial
+            p = pdf_sign(rt[i], v_pro, a, z, t, err)
+        else:
+            # Antisaccade trial
+            if x[i] < t+t_switch:
+                # Frontal mechanism is not yet online
+                p = pdf_sign(rt[i], v_pro, a, z, t, err)
+            else:
+                # Executive control is online
+                # Calculate mean and std of drift density when executive control sets in
+                z_anti_mean = (rt[i] - t - t_switch) * v_pro + (z*a)
+                z_anti_std = sqrt(rt[i] - t - t_switch)
+                # Set this drift density to the new starting point for the 2nd drift
+                p = pdf_Z_norm_sign(rt[i], v_anti, a, z_anti_mean, z_anti_std, t+t_switch, err)
+            
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
             return -infinity
