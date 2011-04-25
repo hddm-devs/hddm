@@ -444,7 +444,7 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bin
         elif cont_y[i] == 0:
             p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
         else:
-            p = np.random.rand()<.5 * 1./(t_max-t_min)
+            p = .5 * 1./(t_max-t_min)
         #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
