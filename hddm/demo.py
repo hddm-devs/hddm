@@ -124,7 +124,7 @@ class DDMPlot(HasTraits):
     plot_lba = Bool(False)
     plot_drifts = Bool(False)
     plot_data = Bool(False)
-    plot_density = Bool(False)
+    plot_density = Bool(True)
     plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
     
@@ -152,7 +152,7 @@ class DDMPlot(HasTraits):
                 Item('plot_full_interp'),
                 Item('plot_lba'),
                 Item('plot_data'),
-#                Item('plot_density'),
+                Item('plot_density'),
 #                Item('plot_density_dist'),
                 Item('plot_mean_rt'),
 		Item('go'),
@@ -163,6 +163,7 @@ class DDMPlot(HasTraits):
     
     def __init__(self, data=None, params=None):
 	super(DDMPlot, self).__init__()
+        plt.hot()
 
         # Create plot    
         self.num_axes = 3
@@ -338,13 +339,14 @@ class DDMPlot(HasTraits):
             self.plot_histo(t, np.concatenate((dens_lower[::-1], dens_upper)), color='k')
                 
         if self.plot_density:
-            plt.hot()
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             # Compute normal density
-            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
+            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=(np.sqrt((t-self.ddm.ter+.001))*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
             ## Normalize density
-            #dens_norm = dens / np.max(dens, axis=0)
+            dens_max = np.max(dens, axis=0)
+            dens_max[dens_max == 0] = 1.
+            dens_norm = dens / dens_max
             self.figure.axes[1].contourf(x,y,dens_norm)
 
         if self.plot_drifts:
@@ -356,7 +358,7 @@ class DDMPlot(HasTraits):
                 else:
                     duration = reached_thresh[0]
                 self.figure.axes[1].plot(t[:duration],
-                                         self.ddm.drifts[k][:duration], 'b')
+                                         self.ddm.drifts[k][:duration], 'b', alpha=.5)
     
         self.set_figure()
 

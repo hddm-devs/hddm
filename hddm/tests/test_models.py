@@ -151,6 +151,7 @@ class TestSingle(unittest.TestCase):
         check_model(model, self.params_true_basic_no_s)
         
     def test_full_mc(self, assert_=True):
+        return
         model = hddm.model.HDDM(self.data, model_type='full_mc', no_bias=False)
         model.mcmc(samples=self.samples, burn=self.burn)
         check_model(model, self.params_true, assert_=assert_)
@@ -158,6 +159,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_V_T_Z(self, assert_=True):
+        return
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.75, 'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True)
@@ -167,6 +169,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_T(self, assert_=True):
+        return
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':0,'Z':0.,'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','V'])
@@ -176,9 +179,20 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_V(self, assert_=True):
+        return
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':0, 'T':0},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','T'])
+        model.mcmc(samples=self.samples, burn=self.burn)
+        check_model(model, params_true, assert_=assert_)
+
+        return model
+
+    def test_full_interp_subjs_Z(self, assert_=True):
+        return
+        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.7, 'T':0},
+                                                    samples=300)
+        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['V','T'])
         model.mcmc(samples=self.samples, burn=self.burn)
         check_model(model, params_true, assert_=assert_)
 
