@@ -9,7 +9,7 @@ from copy import copy
 import hddm
 import kabuki
 
-class Base(object):
+class Base(kabuki.Hierarchical):
     """
     This class can generate different hddms:
     - simple DDM (without inter-trial variabilities)
@@ -18,16 +18,16 @@ class Base(object):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None):
+    def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, init=False, exclude_inter_var_params=None, **kwargs):
+        super(Base, self).__init__(data, **kwargs)
+
         self.trace_subjs = trace_subjs
+        self.no_bias = no_bias
 
         if model_type is None:
             self.model_type = 'simple'
         else:
             self.model_type = model_type
-        
-        self.no_bias = no_bias
-        self.fix_sv = fix_sv
         
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
@@ -36,68 +36,40 @@ class Base(object):
         self._models = {'simple': self._get_simple,
                         'full_mc': self._get_full_mc,
                         'full_intrp': self._get_full_intrp,
-                        'full': self._get_full,
-                        'lba':self._get_lba}
+                        'full': self._get_full}
 
-        if self.model_type != 'lba':
-            self.param_ranges = {'a_lower': .5,
-                                 'a_upper': 4.5,
-                                 'z_lower': .0,
-                                 'z_upper': 1.,
-                                 't_lower': .1,
-                                 't_upper': 2.,
-                                 'v_lower': -6.,
-                                 'v_upper': 6.,
-                                 'V_lower': 0.,
-                                 'V_upper': 3.,
-                                 'T_lower': 0.,
-                                 'T_upper': 1.,
-                                 'Z_lower': 0.,
-                                 'Z_upper': 1.,
-                                 'e_lower': -.3,
-                                 'e_upper': .3
-                                 }
-
-            if exclude_inter_var_params is None:
-                self.exclude = []
-            else:
-                self.exclude = exclude_inter_var_params
-
-                
-            if not init:
-                # Default param ranges
-                self.init_params = {'t':0.1, 'T':0.1, 'z':0.5, 'Z':0.1}
-            else:
-                # Compute ranges based on EZ method
-                param_ranges = hddm.utils.EZ_param_ranges(self.data)
-                # Overwrite set parameters
-                for param,value in param_ranges.iteritems():
-                    self.param_ranges[param] = value
-                self.init_params = hddm.utils.EZ_subjs(self.data)
-                
-            self.normalize_v = False
-            self.fix_sv = None
-            
+        if exclude_inter_var_params is None:
+            self.exclude = []
         else:
-            # LBA model
-            self.normalize_v = normalize_v
-            self.init_params = {}
-            
-            self.param_ranges = {'a_lower': .2,
-                                 'a_upper': 4.,
-                                 'v_lower': 0.1,
-                                 'v_upper': 3.,
-                                 'z_lower': .0,
-                                 'z_upper': 2.,
-                                 't_lower': .05,
-                                 't_upper': 2.,
-                                 'V_lower': .2,
-                                 'V_upper': 2.}
-            
-            if self.normalize_v:
-                self.param_ranges['v_lower'] = 0.
-                self.param_ranges['v_upper'] = 1.
+            self.exclude = exclude_inter_var_params
 
+        self.param_ranges = {'a_lower': .5,
+                             'a_upper': 4.5,
+                             'z_lower': .0,
+                             'z_upper': 1.,
+                             't_lower': .1,
+                             't_upper': 2.,
+                             'v_lower': -6.,
+                             'v_upper': 6.,
+                             'V_lower': 0.,
+                             'V_upper': 3.,
+                             'T_lower': 0.,
+                             'T_upper': 1.,
+                             'Z_lower': 0.,
+                             'Z_upper': 1.,
+                             'e_lower': -.3,
+                             'e_upper': .3}
+
+        if not init:
+            # Default param ranges
+            self.init_params = {'t':0.1, 'T':0.1, 'z':0.5, 'Z':0.1}
+        else:
+            # Compute ranges based on EZ method
+            param_ranges = hddm.utils.EZ_param_ranges(self.data)
+            # Overwrite set parameters
+            for param,value in param_ranges.iteritems():
+                self.param_ranges[param] = value
+            self.init_params = hddm.utils.EZ_subjs(self.data)
 
     def get_param_names(self):
         if self.model_type == 'simple':
@@ -107,8 +79,6 @@ class Base(object):
             for ex in self.exclude:
                 names.remove(ex)
             return tuple(names)
-        elif self.model_type == 'lba':
-            return ('a', 'z', 't', 'V', 'v0', 'v1')
         else:
             raise ValueError('Model %s not recognized' % self.model_type)
 
@@ -125,16 +95,14 @@ class Base(object):
             init_val = self.init_params[param]
         else:
             init_val = None
-            
-        if param == 'V' and self.fix_sv is not None: # drift rate variability
-            return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
-
-        elif param == 'z' and self.no_bias: # starting point position (bias)
+        
+        if param == 'z' and self.no_bias: # starting point position (bias)
             return pm.Deterministic(hddm.utils.return_fixed,
                                     'z%s'%tag,
                                     'z%s'%tag,
                                     parents={},
                                     plot=False)
+
         elif param == 'Z':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
@@ -163,11 +131,7 @@ class Base(object):
         else:
             init_val = None
 
-        if param_name.startswith('V') and self.fix_sv is not None:
-            return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
-                             plot=plot, trace=self.trace_subjs)
-
-        elif param_name.startswith('z') and self.no_bias:
+        if param_name.startswith('z') and self.no_bias:
             return pm.Deterministic(hddm.utils.return_fixed,
                                     param_full_name,
                                     param_full_name,
@@ -218,15 +182,15 @@ class Base(object):
 
     def _get_full_mc(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerFullMc(name,
-                             value=data['rt'].flatten(),
-                             z = self._get_idx_node('z',params),
-                             t = self._get_idx_node('t',params),
-                             v = self._get_idx_node('v',params),
-                             a = self._get_idx_node('a',params),       
-                             Z = self._get_idx_node('Z',params),
-                             T = self._get_idx_node('T',params),
-                             V = self._get_idx_node('V',params),
-                             observed=True)
+                                             value=data['rt'].flatten(),
+                                             z = self._get_idx_node('z',params),
+                                             t = self._get_idx_node('t',params),
+                                             v = self._get_idx_node('v',params),
+                                             a = self._get_idx_node('a',params),       
+                                             Z = self._get_idx_node('Z',params),
+                                             T = self._get_idx_node('T',params),
+                                             V = self._get_idx_node('V',params),
+                                             observed=True)
     
     def _get_idx_node(self, node_name, params):
         if node_name in self.exclude:
@@ -277,7 +241,39 @@ class Base(object):
 
         return [ddm, ter_trials, v_trials, z_trials]
 
-    def _get_lba(self, name, data, params, idx=None):
+
+
+
+#@kabuki.hierarchical
+class HDDM(Base):
+    pass
+
+class HLBA(Base):
+    param_names = ('a', 'z', 't', 'V', 'v0', 'v1')
+
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None, **kwargs):
+        super(self.__class__, self).__init__(data, **kwargs)
+
+        # LBA model
+        self.normalize_v = normalize_v
+        self.init_params = {}
+            
+        self.param_ranges = {'a_lower': .2,
+                             'a_upper': 4.,
+                             'v_lower': 0.1,
+                             'v_upper': 3.,
+                             'z_lower': .0,
+                             'z_upper': 2.,
+                             't_lower': .05,
+                             't_upper': 2.,
+                             'V_lower': .2,
+                             'V_upper': 2.}
+            
+        if self.normalize_v:
+            self.param_ranges['v_lower'] = 0.
+            self.param_ranges['v_upper'] = 1.
+
+    def get_observed(self, name, data, params, idx=None):
         return hddm.likelihoods.LBA(name,
                                     value=data['rt'].flatten(),
                                     a=params['a'],
@@ -289,13 +285,25 @@ class Base(object):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
+    def get_root_param(self, param, all_params, tag, pos=None):
+        """Create and return a prior distribution for [param]. [tag] is
+        used in case of dependent parameters.
+        """
+        if param == 'V' and self.fix_sv is not None: # drift rate variability
+            return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
+        else:
+            return super(self.__class__, self).get_root_param(self, param, all_params, tag, pos=None)
 
+    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+        param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
 
-@kabuki.hierarchical
-class HDDM(Base):
-    pass
-
-@kabuki.hierarchical
+        if param_name.startswith('V') and self.fix_sv is not None:
+            return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
+                             plot=plot, trace=self.trace_subjs)
+        else:
+            return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos, plot)
+    
+#@kabuki.hierarchical
 class HDDMContaminant(Base):
     param_names = ('a', 'v', 'z', 't', 'pi', 'gamma')
 
@@ -327,7 +335,7 @@ class HDDMContaminant(Base):
             return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False)
     
 
-@kabuki.hierarchical
+#@kabuki.hierarchical
 class HDDMOneRegressor(Base):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
@@ -399,7 +407,7 @@ class HDDMOneRegressor(Base):
 
         return model, params_subj, data
 
-@kabuki.hierarchical
+#@kabuki.hierarchical
 class HDDMTwoRegressor(Base):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
