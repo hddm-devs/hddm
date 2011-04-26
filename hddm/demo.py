@@ -54,15 +54,18 @@ class DDM(HasTraits):
     # Paremeters
     z = Range(0,1.,.5)
     sz = Range(0,1.,.0)
-    v = Range(-3,3.,.5)
+    v = Range(-3,3.,-2.)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
     ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
+    switch = Bool(True)
+    t_switch = Range(0,2.,.9)
+    v_switch = Range(-3.,3.,1.)
     intra_sv = Range(0.,10.,1.)
     urgency = Range(.1,10.,1.)
     
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'urgency'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -84,13 +87,17 @@ class DDM(HasTraits):
     iter_plot = Int(30)
     # Number of histogram bins
     bins = Int(100)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot', 'switch')
 
     def _get_dt(self):
         return self.steps / self.T
 
     def _get_params_dict(self):
-        return {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
+        d = {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
+        if self.switch:
+            d['v_switch'] = self.v_switch
+            d['t_switch'] = self.t_switch
+        return d
 
     @cached_property
     def _get_drifts(self):
@@ -127,6 +134,7 @@ class DDMPlot(HasTraits):
     plot_density = Bool(True)
     plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
+    plot_switch = Bool(True)
     
     x_analytical = Property(Array)
     
@@ -134,6 +142,7 @@ class DDMPlot(HasTraits):
     full_intrp = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
+    switch = Property(Array)
 
     x_raster = Int(100)
 
@@ -247,6 +256,20 @@ class DDMPlot(HasTraits):
         return pdf
 
     @timer
+    def _get_switch(self):
+        switch_pdf = lambda x: hddm.wfpt.switch_pdf(x,
+                                                    1.,
+                                                    self.ddm.v,
+                                                    self.ddm.v_switch,
+                                                    self.ddm.a,
+                                                    self.ddm.z,
+                                                    self.ddm.ter,
+                                                    self.ddm.t_switch,
+                                                    1e-4)
+        pdf = np.array(map(switch_pdf, self.x_analytical))
+        return pdf
+    
+    @timer
     def _get_full_intrp(self):
         full_pdf = lambda x: hddm.wfpt.full_pdf(x,
                                                 v=self.ddm.v,
@@ -326,6 +349,10 @@ class DDMPlot(HasTraits):
         if self.plot_simple:
             self.plot_histo(x_anal, self.simple, color='b')
 
+        # Plot analytical simple likelihood function
+        if self.plot_switch:
+            self.plot_histo(x_anal, self.switch, color='r')
+            
         if self.plot_lba:
             self.plot_histo(x_anal, self.lba, color='k')
 
@@ -342,7 +369,9 @@ class DDMPlot(HasTraits):
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             # Compute normal density
-            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=(np.sqrt((t-self.ddm.ter+.001))*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
+            t_rel = (t-self.ddm.ter)
+            t_rel[t_rel<0] = 0 # Set t smaller than ter to 0
+            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=(np.sqrt(t_rel)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
             ## Normalize density
             dens_max = np.max(dens, axis=0)
             dens_max[dens_max == 0] = 1.
@@ -367,8 +396,19 @@ class DDMPlot(HasTraits):
     def set_figure(self):
         # Set axes limits
         # TODO: Fix boundary now that we are using true densities
-        self.figure.axes[0].set_ylim((0,1.05))
-        self.figure.axes[2].set_ylim((-1.05, 0))
+        total_max = 1.
+        if len(self.figure.axes[0].get_lines()) != 0:
+            for line in self.figure.axes[0].get_lines():
+                max_point = np.max(line.get_ydata())
+                if max_point > total_max:
+                    total_max = max_point
+            for line in self.figure.axes[2].get_lines():
+                max_point = np.abs(np.min(line.get_ydata()))
+                if max_point > total_max:
+                    total_max = max_point
+        print total_max
+        self.figure.axes[0].set_ylim((0,total_max))
+        self.figure.axes[2].set_ylim((-total_max, 0))
         self.figure.axes[0].set_xlim((0, self.ddm.T))
         self.figure.axes[2].set_xlim((0, self.ddm.T))
         self.figure.axes[1].set_ylim((0, self.ddm.a))
@@ -377,8 +417,8 @@ class DDMPlot(HasTraits):
         for ax in self.ax1, self.ax2:
             plt.setp(ax.get_xticklabels(), visible=False)
 
-        for ax in self.ax1, self.ax3:
-            plt.setp(ax.get_yticklabels(), visible=False)
+        #for ax in self.ax3:
+        #    plt.setp(ax.get_yticklabels(), visible=False)
         self.ax3.set_xlabel('time (secs)')
 
 if __name__ == "__main__":
