@@ -54,7 +54,6 @@ def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=N
 
         return data
 
-            
 def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
@@ -65,14 +64,30 @@ def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) - params['Z']/2.)*params['a']
 
     # Draw drift rates from a normal distribution
-    if params['V'] == 0.:
-        drift_rates = np.repeat(params['v'], samples)/dt
+    if not params.has_key('t_switch'):
+        # No change in drift rate
+        if params['V'] == 0.:
+            drift_rate = np.repeat(params['v'], samples)/dt
+        else:
+            drift_rate = norm.rvs(loc=params['v'], scale=params['V'], size=samples)/dt
+        drift_rates = np.tile(drift_rate, (steps, 1))
     else:
-        drift_rates = norm.rvs(loc=params['v'], scale=params['V'], size=samples)/dt
+        # Drift rate changes during the trial
+        if params['V'] != 0:
+            raise NotImplementedError, "Inter-trial drift variability is not supported."
+        drift_rate = np.empty(steps, dtype=np.float)
+        switch_pos = (params['t']+params['t_switch'])*dt
+        if switch_pos > steps:
+            drift_rate[:] = params['v']
+        else:
+            drift_rate[:int(switch_pos)] = params['v']
+            drift_rate[int(switch_pos)+1:] = params['v_switch']
+        drift_rates = np.tile(drift_rate, (samples,1))/dt
 
     # Generate samples from a normal distribution and
     # add the drift rates
-    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt)*intra_sv, size=(samples, steps))/dt  + np.tile(drift_rates, (steps, 1)).T
+    print drift_rates.shape
+    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt)*intra_sv, size=(samples, steps))/dt  + drift_rates
     # Go through every line and zero out the non-decision component
     for i in range(int(samples)):
         step_sizes[i,:start_delays[i]] = 0

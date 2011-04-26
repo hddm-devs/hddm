@@ -16,11 +16,7 @@ cimport numpy as np
 
 cimport cython
 
-cdef extern from "gsl/gsl_randist.h":
-    double gsl_ran_gaussian_pdf(double x, double sigma)
-
-#cdef extern from "gsl/gsl_integration.h":
-#    double 
+include "gsl/gsl.pxi"
 
 cdef extern from "math.h":
     double sin(double)
@@ -358,7 +354,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
             if use_adaptive>0:
                 return adaptiveSimpsons_1D(x,  v, V, a, z, t, err, z, z, t-T/2., t+T/2., simps_err, nT)
             else:
-                return simpson_1D(x, v, V, a, z, t, err, z,    z,  0, t-T/2., t+T/2., nT)
+                return simpson_1D(x, v, V, a, z, t, err, z, z, 0, t-T/2., t+T/2., nT)
             
     else: #Z=$
         if (T==0): #V=0,Z=$,T=0
@@ -406,37 +402,73 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
 
     return sum_logp
 
-cpdef double pdf_Z_norm_sign(double rt, double v_anti, double a, double z_mean, double z_std, double t, double err)
-    func_z = lambda z, rt, v, a, t, z_mean, z_std, err: hddm.wfpt.pdf_sign(rt, v, a, z, t, err) * (gsl_ran_gaussian_pdf(z, z_std)+z_mean)
 
-    return quad(func_z, 0, a, args = (rt, v, a, t, z_mean, z_std, err))
+ctypedef double * double_ptr
+ctypedef void * void_ptr
+
+cdef double wfpt_gsl(double z, void * params):
+    cdef double rt, v, a, t, f
+    rt = (<double_ptr> params)[0]
+    v = (<double_ptr> params)[1]
+    a = (<double_ptr> params)[2]
+    t = (<double_ptr> params)[3]
+    z_mean = (<double_ptr> params)[4]
+    z_std = (<double_ptr> params)[5]
+    f = pdf_sign(rt, v, a, z, t, 1e-4) * (gsl_ran_gaussian_pdf(z, z_std) + z_mean)
+    return f
+
+cdef double pdf_Z_norm_sign(double rt, double v_anti, double a, double z_mean, double z_std, double t, double err):
+    cdef double alpha, result, error, expected
+    cdef gsl_integration_workspace * W
+    W = gsl_integration_workspace_alloc(100)
+    cdef gsl_function F
+    cdef double params[6]
+    params[0] = rt
+    params[1] = v_anti
+    params[2] = a
+    params[3] = t
+    params[4] = z_mean
+    params[5] = z_std
+
+    F.function = &wfpt_gsl
+    F.params = params
+
+    gsl_integration_qag(&F, 0, a, 0, 1e-7, 100, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_workspace_free(W)
+
+    return result
+
+cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+    cdef double p, z_switch_mean, z_switch_std
+
+    if instruct == 0: 
+        # Prosaccade trial
+        p = pdf_sign(rt, v, a, z, t, err)
+    else:
+        # Antisaccade trial
+        if rt < t+t_switch:
+            # Pre switch is not yet online
+            p = pdf_sign(rt, v, a, z, t, err)
+        else:
+            # Post switch
+            # Calculate mean and std of drift density when executive control sets in
+            z_switch_mean = (t_switch * v + (z*a))
+            z_switch_std = sqrt(t_switch)
+            # Set this drift density to the new starting point for the 2nd drift
+            p = pdf_Z_norm_sign(rt, v_switch, a, z_switch_mean, z_switch_std, t+t_switch, err)
+            
+    return p
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v_pro, double v_anti, double a, double z, double t, double t_switch, double err):
+def wiener_like_switch(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
 
     for i from 0 <= i < size:
-        if instruct[i] == 0: 
-            # Prosaccade trial
-            p = pdf_sign(rt[i], v_pro, a, z, t, err)
-        else:
-            # Antisaccade trial
-            if x[i] < t+t_switch:
-                # Frontal mechanism is not yet online
-                p = pdf_sign(rt[i], v_pro, a, z, t, err)
-            else:
-                # Executive control is online
-                # Calculate mean and std of drift density when executive control sets in
-                z_anti_mean = (rt[i] - t - t_switch) * v_pro + (z*a)
-                z_anti_std = sqrt(rt[i] - t - t_switch)
-                # Set this drift density to the new starting point for the 2nd drift
-                p = pdf_Z_norm_sign(rt[i], v_anti, a, z_anti_mean, z_anti_std, t+t_switch, err)
-            
-        # If one probability = 0, the log sum will be -Inf
+        p = switch_pdf(rt[i], instruct[i], v, v_switch, a, z, t, t_switch, err)
         if p == 0:
             return -infinity
         sum_logp += log(p)
