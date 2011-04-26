@@ -72,7 +72,7 @@ class Base(kabuki.Hierarchical):
             self.init_params = hddm.utils.EZ_subjs(self.data)
             
         if 'wiener_params' in kwargs:
-            self.wiener_params = kwargs['other']
+            self.wiener_params = kwargs['wiener_params']
         else:
             self.wiener_params = None
         
