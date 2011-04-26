@@ -60,7 +60,7 @@ class DDM(HasTraits):
     ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
     switch = Bool(True)
-    t_switch = Range(0,2.,.9)
+    t_switch = Range(0,2.,.3)
     v_switch = Range(-3.,3.,1.)
     intra_sv = Range(0.,10.,1.)
     urgency = Range(.1,10.,1.)
@@ -82,9 +82,9 @@ class DDM(HasTraits):
     # Time step size
     dt = Property(Float, depends_on=['T', 'steps'])
     # Number of realizations to generate.
-    num_samples = Int(1000)
+    num_samples = Int(5000)
     # Number of drifts to plot
-    iter_plot = Int(30)
+    iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(100)
     view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot', 'switch')
@@ -406,7 +406,7 @@ class DDMPlot(HasTraits):
                 max_point = np.abs(np.min(line.get_ydata()))
                 if max_point > total_max:
                     total_max = max_point
-        print total_max
+
         self.figure.axes[0].set_ylim((0,total_max))
         self.figure.axes[2].set_ylim((-total_max, 0))
         self.figure.axes[0].set_xlim((0, self.ddm.T))

@@ -406,37 +406,66 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
 ctypedef double * double_ptr
 ctypedef void * void_ptr
 
-cdef double wfpt_gsl(double z, void * params):
-    cdef double rt, v, a, t, f
+cdef double wfpt_gsl(double x, void * params):
+    cdef double rt, v, v_switch, a, z, t, t_switch, f
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
-    a = (<double_ptr> params)[2]
-    t = (<double_ptr> params)[3]
-    z_mean = (<double_ptr> params)[4]
-    z_std = (<double_ptr> params)[5]
-    f = pdf_sign(rt, v, a, z, t, 1e-4) * (gsl_ran_gaussian_pdf(z, z_std) + z_mean)
+    v_switch = (<double_ptr> params)[2]
+    a = (<double_ptr> params)[3]
+    z = (<double_ptr> params)[4]
+    t = (<double_ptr> params)[5]
+    t_switch = (<double_ptr> params)[6]
+    
+    f = pdf_sign(rt, v, a, x, t+t_switch, 1e-4) * drift_dens(x, t+t_switch, v, a, z*a)
+    #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
-cdef double pdf_Z_norm_sign(double rt, double v_anti, double a, double z_mean, double z_std, double t, double err):
+cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
-    W = gsl_integration_workspace_alloc(100)
+    W = gsl_integration_workspace_alloc(1000)
     cdef gsl_function F
-    cdef double params[6]
+    cdef double params[7]
     params[0] = rt
-    params[1] = v_anti
-    params[2] = a
-    params[3] = t
-    params[4] = z_mean
-    params[5] = z_std
+    params[1] = v
+    params[2] = v_switch
+    params[3] = a
+    params[4] = z
+    params[5] = t
+    params[6] = t_switch
 
     F.function = &wfpt_gsl
     F.params = params
 
-    gsl_integration_qag(&F, 0, a, 0, 1e-7, 100, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_qag(&F, 0, a, 0, 1e-7, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
     gsl_integration_workspace_free(W)
 
     return result
+
+cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
+    # Ratcliff 1980 Equation 12
+    return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PI**2)/a**2)*t)
+
+cdef inline double drift_dens(double x, double t, double v, double a, double z):
+    cdef int N=100
+    cdef int i
+    cdef double terms[100]
+    cdef double sum_accel, err
+    cdef double summed = 0
+    cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
+    
+    for i from 1 <= i <= N:
+        terms[i] = drift_dens_term(x, t, v, a, z, i)
+        summed += terms[i]
+
+    #gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
+    #gsl_sum_levin_u_free(w)
+
+    #print summed-sum_accel
+    #print err
+
+    return exp(v*(x-z)) * summed
+    
 
 cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef double p, z_switch_mean, z_switch_std
@@ -446,7 +475,7 @@ cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, 
         p = pdf_sign(rt, v, a, z, t, err)
     else:
         # Antisaccade trial
-        if rt < t+t_switch:
+        if fabs(rt) < t+t_switch:
             # Pre switch is not yet online
             p = pdf_sign(rt, v, a, z, t, err)
         else:
@@ -455,7 +484,7 @@ cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, 
             z_switch_mean = (t_switch * v + (z*a))
             z_switch_std = sqrt(t_switch)
             # Set this drift density to the new starting point for the 2nd drift
-            p = pdf_Z_norm_sign(rt, v_switch, a, z_switch_mean, z_switch_std, t+t_switch, err)
+            p = pdf_Z_norm_sign(rt, v, v_switch, a, z, t, t_switch, err)
             
     return p
 
