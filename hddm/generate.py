@@ -16,12 +16,30 @@ except:
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=None):
+def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=None, strict_size=False):
+    def _gen_rts():
+        # Function that always returns a time a threshold was crossed
+        rts = np.empty(samples, np.float) # init
+        for i in xrange(samples):
+            not_crossed_boundary = True
+            while(not_crossed_boundary): # if threshold not crossed, redraw
+                drift = simulate_drifts(params, 1, steps, T)
+                thresh = find_thresholds(drift, params['a'])
+                if len(thresh) != 0:
+                    not_crossed_boundary = False
+            rts[i] = thresh[0]
+        return rts
+
     if samples is None:
         samples = 1
     dt = steps / T
-    drifts = simulate_drifts(params, samples, steps, T)
-    rts = find_thresholds(drifts, params['a'])/dt
+
+    if strict_size:
+        rts = _gen_rts()/dt
+    else:
+        drifts = simulate_drifts(params, samples, steps, T)
+        rts = find_thresholds(drifts, params['a'])/dt
+
     if not structured:
         return rts
     else:
@@ -35,7 +53,8 @@ def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=N
         data['rt'] = rts
 
         return data
-    
+
+            
 def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     dt = steps / T
     # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
