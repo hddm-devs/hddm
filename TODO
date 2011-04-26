@@ -1,0 +1,6 @@
+* Find influence of integration and wfpt error on parameter estimation (Imri)
+* Change adaptive Simpsons to work on arbitrary functions (Thomas)
+* Test 2D and 3D recovery of parameters in full model (Imri)
+* Test recovery of tau parameter (Thomas)
+* Get full expanded model to work and converge (Thomas + Imri)
+* Get contaminant model to work (Thomas + Imri)

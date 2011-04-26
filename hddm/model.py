@@ -19,7 +19,7 @@ class Base(kabuki.Hierarchical):
     """
     
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, init=False, exclude_inter_var_params=None, **kwargs):
-        super(Base, self).__init__(data, **kwargs)
+        super(hddm.model.Base, self).__init__(data, **kwargs)
 
         self.trace_subjs = trace_subjs
         self.no_bias = no_bias
@@ -70,7 +70,12 @@ class Base(kabuki.Hierarchical):
             for param,value in param_ranges.iteritems():
                 self.param_ranges[param] = value
             self.init_params = hddm.utils.EZ_subjs(self.data)
-
+            
+        if 'wiener_params' in kwargs:
+            self.wiener_params = kwargs['wiener_params']
+        else:
+            self.wiener_params = None
+        
     def get_param_names(self):
         if self.model_type == 'simple':
             return ('a', 'v', 'z', 't')
@@ -199,7 +204,13 @@ class Base(kabuki.Hierarchical):
             return params[node_name]
 
     def _get_full_intrp(self, name, data, params, idx=None):
-        return hddm.likelihoods.WienerFullIntrp(name,
+        if self.wiener_params is not None:
+            wp = self.wiener_params
+            WienerFullIntrp = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'],
+                                                               use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
+        else:
+            WienerFullIntrp =  hddm.likelihoods.WienerFullIntrp
+        return WienerFullIntrp(name,
                              value=data['rt'].flatten(),
                              z = self._get_idx_node('z',params),
                              t = self._get_idx_node('t',params),
