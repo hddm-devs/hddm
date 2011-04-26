@@ -75,9 +75,9 @@ WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        dtype=np.float,
                                        mv=True)
 
-def wiener_like_full_intrp(value, v, V, z, Z, t, T, a):
+def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):
     """Log-likelihood for the full DDM using the interpolation method"""
-    return hddm.wfpt.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err=1e-10, nT = 10, nZ=10)
+    return hddm.wfpt.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ=nZ, use_adaptive,  simps_err)
 
  
 WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
