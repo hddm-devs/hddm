@@ -4,6 +4,7 @@ import platform
 import pymc as pm
 import numpy as np
 np.seterr(divide='ignore')
+from numpy.random import rand
 
 import hddm
 from scipy.stats import scoreatpercentile
@@ -59,7 +60,7 @@ def check_rejection(model, assert_ = True):
                 print msg
 
 
-def rand_simple_params(self):
+def rand_simple_params():
     params = {}
     params['V'] = 0    
     params['Z'] = 0
@@ -75,10 +76,10 @@ def test_simple(nTimes=20):
     thin = 1
     samples = 10000
     burn = 10000
-    iter = self.burn + self.samples*self.thin
+    n_iter = burn + samples*thin
     n_data = 300
     for i_time in range(nTimes):
-        params = self.rand_simple_params()
+        params = rand_simple_params()
         data,temp = hddm.generate.gen_rand_data(n_data, params)
         model = hddm.model.HDDM(data, no_bias=False)
         model.mcmc(sample=False);
