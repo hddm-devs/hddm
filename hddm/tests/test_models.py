@@ -109,15 +109,16 @@ def check_model(model, params_true, assert_=True, conf_interval = 95):
 
    
 
-def check_rejection(model, rejection_precentage = 0.2, assert_ = True):    
+def check_rejection(model, assert_ = True):    
     """ check if the rejection ratio is not too high"""
     
     for param in model.group_params:
         trace = model.group_params[param].trace()[:]
         rej =  np.sum(np.diff(trace)==0)
         rej_ratio = rej*1.0/len(trace)
-        if (rej_ratio) > rejection_precentage:
-            msg = "trace has too many rejections (%f)" % rej_ratio
+        print "rejection ratio for %s: %f" %(param, rej_ratio)
+        if (rej_ratio < 0.5) or (rej_ratio > 0.8):
+            msg = "%s still need to be tuned" % param
             if assert_:
                 assert 1==0, msg
             else:
@@ -131,7 +132,7 @@ class TestAcc(unittest.TestCase):
         super(TestAcc, self).__init__(*args, **kwargs)
         self.thin = 1
         self.samples = 10000
-        self.burn = 20000
+        self.burn = 10000
         self.iter = self.burn + self.samples*self.thin
 
 
@@ -157,7 +158,7 @@ class TestAcc(unittest.TestCase):
             [model.mcmc_model.use_step_method(pm.Metropolis, x,proposal_sd=0.001) for x in model.group_params.values()]
             model._gen_stats()
             check_model(model, params, assert_=False)
-            check_rejection(model, rejection_precentage = 0.1, assert_ = False)
+            check_rejection(model, assert_ = False)
         
 class TestMulti(unittest.TestCase):
     def runTest(self):
