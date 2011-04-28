@@ -124,14 +124,15 @@ class DDMPlot(HasTraits):
     
     figure = Instance(Figure, ())
     ddm = Instance(DDM, ())
-    plot_histogram = Bool(False)
-    plot_simple = Bool(True)
+    plot_histogram = Bool(True)
+    plot_simple = Bool(False)
     plot_full_mc = Bool(False)
-    plot_full_interp = Bool(True)
+    plot_full_interp = Bool(False)
     plot_lba = Bool(False)
-    plot_drifts = Bool(False)
+    plot_drifts = Bool(True)
     plot_data = Bool(False)
-    plot_density = Bool(True)
+    plot_density = Bool(False)
+    plot_true_density = Bool(True)
     plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
     plot_switch = Bool(True)
@@ -162,6 +163,7 @@ class DDMPlot(HasTraits):
                 Item('plot_lba'),
                 Item('plot_data'),
                 Item('plot_density'),
+                Item('plot_true_density'),
 #                Item('plot_density_dist'),
                 Item('plot_mean_rt'),
 		Item('go'),
@@ -378,6 +380,28 @@ class DDMPlot(HasTraits):
             dens_norm = dens / dens_max
             self.figure.axes[1].contourf(x,y,dens_norm)
 
+        if self.plot_true_density:
+            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            xm,ym = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
+            zm = np.zeros_like(xm) # np.zeros((t, 100), dtype=np.float)
+            #print zs
+            i = 0
+            for xs,ys in zip(xm, ym):
+                j = 0
+                for x, y in zip(xs, ys):
+                    if x <= self.ddm.ter+.05:
+                        zm[i,j] = 1.
+                    else:
+                        zm[i,j] = hddm.wfpt.drift_dens(y, x-self.ddm.ter, self.ddm.v, self.ddm.a, self.ddm.z*self.ddm.a)
+                    j+=1
+                i+=1
+            #dens_max = np.max(zm, axis=0)
+            #dens_max[dens_max == 0] = 1.
+            #dens_norm = zm/dens_max
+            #plt.plot(zm[:,70])
+            self.figure.axes[1].contourf(xm,ym,zm)
+
+                    
         if self.plot_drifts:
             t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
             for k in range(self.ddm.iter_plot):

@@ -416,10 +416,36 @@ cdef double wfpt_gsl(double x, void * params):
     t = (<double_ptr> params)[5]
     t_switch = (<double_ptr> params)[6]
     
-    f = pdf_sign(rt, v, a, x, t+t_switch, 1e-4) * drift_dens(x, t+t_switch, v, a, z*a)
+    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x, t_switch, v, a, z*a
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
+
+
+cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
+    # Ratcliff 1980 Equation 12
+    return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
+
+cpdef inline double drift_dens(double x, double t, double v, double a, double z):
+    cdef int N=40
+    cdef int i
+    cdef double terms[40]
+    cdef double sum_accel, err
+    cdef double summed = 0
+    cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
+    
+    for i from 1 <= i <= N:
+        terms[i-1] = drift_dens_term(x, t, v, a, z, i)
+        summed += terms[i-1]
+
+    #gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
+    #gsl_sum_levin_u_free(w)
+
+    #print summed,sum_accel
+    #print err
+
+    return exp(v*(x-z)) * summed
+    
 cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
@@ -442,48 +468,19 @@ cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, doub
 
     return result
 
-cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
-    # Ratcliff 1980 Equation 12
-    return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PI**2)/a**2)*t)
-
-cdef inline double drift_dens(double x, double t, double v, double a, double z):
-    cdef int N=100
-    cdef int i
-    cdef double terms[100]
-    cdef double sum_accel, err
-    cdef double summed = 0
-    cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
-    
-    for i from 1 <= i <= N:
-        terms[i] = drift_dens_term(x, t, v, a, z, i)
-        summed += terms[i]
-
-    #gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
-    #gsl_sum_levin_u_free(w)
-
-    #print summed-sum_accel
-    #print err
-
-    return exp(v*(x-z)) * summed
-    
-
 cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
-    cdef double p, z_switch_mean, z_switch_std
+    cdef double p
 
     if instruct == 0: 
         # Prosaccade trial
         p = pdf_sign(rt, v, a, z, t, err)
     else:
         # Antisaccade trial
-        if fabs(rt) < t+t_switch:
+        if fabs(rt) =< t+t_switch:
             # Pre switch is not yet online
             p = pdf_sign(rt, v, a, z, t, err)
         else:
             # Post switch
-            # Calculate mean and std of drift density when executive control sets in
-            z_switch_mean = (t_switch * v + (z*a))
-            z_switch_std = sqrt(t_switch)
-            # Set this drift density to the new starting point for the 2nd drift
             p = pdf_Z_norm_sign(rt, v, v_switch, a, z, t, t_switch, err)
             
     return p
