@@ -96,11 +96,13 @@ def check_model(model, params_true, assert_=True, conf_interval = 95):
         ub = (50 + conf_interval/2.)
         ub_score = scoreatpercentile(trace, ub)
         fell = np.sum(truth > trace)*1./len(trace) * 100
+        if lb_score==ub_score:
+            fell = 50
 
 
         print "%s: Truth: %f, Estimated: %f, lb: %f, ub: %f,  fell in: %f" % \
         (param, truth, est, lb_score, ub_score, fell)
-        if (fell <= lb) or (fell >= ub):
+        if (fell < lb) or (fell > ub):
             fail = True
             print "the true value of %s is outsize of the confidence interval !*!*!*!*!*!*!" % param
         
