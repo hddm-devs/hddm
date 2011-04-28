@@ -102,7 +102,7 @@ def check_model(model, params_true, assert_=True, conf_interval = 95):
         (param, truth, est, lb_score, ub_score, fell)
         if (fell <= lb) or (fell >= ub):
             fail = True
-            print "the true value of %s is not in the confidence interval" % param
+            print "the true value of %s is outsize of the confidence interval !*!*!*!*!*!*!" % param
         
     if assert_:
         assert (fail==False) 
@@ -128,9 +128,12 @@ class TestAcc(unittest.TestCase):
     
     
     def __init__(self, *args, **kwargs):
-        super(TestAcc, self).__init__(*args, **kwargs)     
+        super(TestAcc, self).__init__(*args, **kwargs)
+        self.thin = 1
         self.samples = 10000
-        self.burn = 5000
+        self.burn = 20000
+        self.iter = self.burn + self.samples*self.thin
+
 
     def rand_simple_params(self):
         params = {}
@@ -138,7 +141,7 @@ class TestAcc(unittest.TestCase):
         params['Z'] = 0
         params['T'] = 0
         params['v'] = (rand()-.5)*4
-        params['t'] = rand()*.5+(params['T']/2)
+        params['t'] = 0.2+rand()*0.3+(params['T']/2)
         params['a'] = 1.5+rand()
         params['z'] = .4+rand()*0.2
         return params
@@ -149,9 +152,12 @@ class TestAcc(unittest.TestCase):
             params = self.rand_simple_params()
             data,temp = hddm.generate.gen_rand_data(300, params)
             model = hddm.model.HDDM(data, no_bias=False)
-            model.mcmc(samples=self.samples, burn=self.burn)
+            model.mcmc(sample=False);
+            model.mcmc_model.sample(self.iter, burn=self.burn, thin=self.thin)
+            [model.mcmc_model.use_step_method(pm.Metropolis, x,proposal_sd=0.001) for x in model.group_params.values()]
+            model._gen_stats()
             check_model(model, params, assert_=False)
-            check_rejection(model, rejection_precentage = 0.001, assert_ = False)
+            check_rejection(model, rejection_precentage = 0.1, assert_ = False)
         
 class TestMulti(unittest.TestCase):
     def runTest(self):
