@@ -74,8 +74,8 @@ def rand_simple_params():
 
 def test_simple(nTimes=20):
     thin = 1
-    samples = 1000
-    burn = 1000
+    samples = 10000
+    burn = 10000
     n_iter = burn + samples*thin
     n_data = 300
     for i_time in range(nTimes):
