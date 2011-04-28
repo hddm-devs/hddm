@@ -86,13 +86,20 @@ def test_simple(nTimes=20):
         model = model.mcmc_model
         [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
         model.sample(n_iter, burn=burn, thin=thin)
-        check_model(model, params, assert_=False)
+        if check_model(model, params, assert_=False)==False:
+            print "model checking failed. running again"
+            model.sample(n_iter, burn=burn, thin=thin)
+            if check_model(model, params, assert_=False)==False:
+                print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
+                return data, model, params
         check_rejection(model, assert_ = False)
         check_correl(model)
+    return [None]*3
 
 def check_correl(model):
     nodes = model.stochastics
     threshold = 0.05
+    fail = False
     for node in nodes:
         t_lag = np.inf
         for lag in range(1,101):
@@ -101,7 +108,9 @@ def check_correl(model):
                 t_lag=  lag
                 break
         if t_lag < np.inf:
+            fail = True
             print "%s: correlation drop under %f after %d steps" %(node.__name__ , threshold, t_lag)
         else:
             print "%s: correlation don't drop under %f!!!!" %(node.__name__ , threshold)
-        
+    ok = not fail
+    return ok
