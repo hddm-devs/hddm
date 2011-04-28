@@ -71,7 +71,7 @@ def rand_simple_params(self):
     return params
 
 
-def test_simple(self, nTimes=20):
+def test_simple(nTimes=20):
     thin = 1
     samples = 10000
     burn = 10000
