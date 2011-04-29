@@ -352,7 +352,7 @@ class DDMPlot(HasTraits):
             self.plot_histo(x_anal, self.simple, color='b')
 
         # Plot analytical simple likelihood function
-        if self.plot_switch:
+        if self.plot_switch and self.ddm.switch:
             self.plot_histo(x_anal, self.switch, color='r')
             
         if self.plot_lba:

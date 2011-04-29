@@ -67,10 +67,10 @@ def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     if not params.has_key('t_switch'):
         # No change in drift rate
         if params['V'] == 0.:
-            drift_rate = np.repeat(params['v'], samples)/dt
+            drift_rate = np.repeat(params['v'], samples)
         else:
-            drift_rate = norm.rvs(loc=params['v'], scale=params['V'], size=samples)/dt
-        drift_rates = np.tile(drift_rate, (steps, 1))
+            drift_rate = norm.rvs(loc=params['v'], scale=params['V'], size=samples)
+        drift_rates = (np.tile(drift_rate, (steps, 1))/dt).T
     else:
         # Drift rate changes during the trial
         if params['V'] != 0:
