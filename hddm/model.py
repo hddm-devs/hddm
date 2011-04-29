@@ -20,7 +20,7 @@ class Base(kabuki.Hierarchical):
     
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
                  init=False, exclude_inter_var_params=None, wiener_params = None,
-                 init_value = None, **kwargs):
+                 init_values = None, **kwargs):
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
         self.trace_subjs = trace_subjs
@@ -73,13 +73,12 @@ class Base(kabuki.Hierarchical):
                 self.param_ranges[param] = value
             self.init_params = hddm.utils.EZ_subjs(self.data)
         
-        
-        if init_value is not None:
-            for param in init_value:
-                self.init_params[param] = init_value[param]
+        if init_values is not None:
+            for param in init_values:
+                self.init_params[param] = init_values[param]
             
         self.wiener_params = wiener_params
-        
+
         
     def get_param_names(self):
         if self.model_type == 'simple':
