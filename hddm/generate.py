@@ -130,6 +130,23 @@ def gen_rand_data(samples=500, params=None, no_var=False):
 
     return (data, params)
 
+def gen_rand_cond_data(params_set, samples_per_cond=500):
+    """Generate simulated RTs with random parameters."""
+    # Create RT data
+    n_conds = len(params_set)
+    n = samples_per_cond
+    data = np.empty(n*n_conds, dtype = ([('response', np.float), ('rt', np.float), ('cond', np.int)]))
+    counter = 0
+    for i in range(n_conds):
+        i_data = gen_rts(params_set[i], samples=n, structured=True)
+        data[counter:counter+len(i_data)]['response'] = np.sign(i_data['response'])
+        data[counter:counter+len(i_data)]['rt'] = np.abs(i_data['rt'])
+        data[counter:counter+len(i_data)]['cond'] = i
+        counter = counter + len(i_data)
+    data = data[:counter]
+    return data
+
+
 def gen_rand_correlation_data(v=.5, corr=.1):
     params = {'v': v,
               'V': .001,

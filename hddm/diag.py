@@ -1,22 +1,26 @@
 from __future__ import division
 from copy import copy
 import platform
-import pymc as pm
 import numpy as np
+import pymc as pm
 np.seterr(divide='ignore')
 from numpy.random import rand
-import sys
-
+from sys import stdout
 import hddm
 from scipy.stats import scoreatpercentile
+
+try:
+    from IPython.Debugger import Tracer; debug_here = Tracer()
+except:
+    pass
+
 
 
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
 
-    # Check for proper chain convergence
-    #check_geweke(model, assert_=True)
-    # Test for correct parameter estimation
+    
+    print "checking estimation with %d confidence interval" % conf_interval
     fail = False
     for node in model.stochastics:
         trace = node.trace()[:]
@@ -102,37 +106,72 @@ def rand_full_params(exclude):
 
 
 
-def accuracy_test(nTimes=20, model_type='simple', exclude=None):
+def test_params_on_data(params, data, model_type='simple', exclude=None, depends_on = None, conf_interval = 95):    
     thin = 1
     samples = 10000
     burn = 10000
     n_iter = burn + samples*thin
+    stdout.flush()
+    if depends_on is None:
+        depends_on = {}   
+    model = hddm.model.HDDM(data, no_bias=False, model_type=model_type, 
+                            exclude_inter_var_params=exclude, depends_on=depends_on)
+    model.mcmc(sample=False);
+    model = model.mcmc_model
+    [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
+    model.sample(n_iter, burn=burn, thin=thin)
+    ok = True
+    if check_model(model, params, assert_=False, conf_interval = conf_interval)==False:
+        print "model checking failed. running again"
+        stdout.flush()
+        model.sample(n_iter, burn=burn, thin=thin)
+        if check_model(model, params, assert_=False, conf_interval = conf_interval)==False:
+            print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
+            ok  = False
+    check_rejection(model, assert_ = False)
+    check_correl(model)
+    stdout.flush()
+    return ok, data, model, params
+
+def run_accuracy_test(nTimes=20, model_type='simple', exclude=None, stop_when_fail = True):
+    """ run accuracy test nTime times"""
     n_data = 300
     for i_time in range(nTimes):
         params = rand_params(model_type, exclude)
         data,temp = hddm.generate.gen_rand_data(n_data, params)
-        model = hddm.model.HDDM(data, no_bias=False, model_type=model_type, 
-                                exclude_inter_var_params=exclude)
-        model.mcmc(sample=False);
-        model = model.mcmc_model
-        [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
-        model.sample(n_iter, burn=burn, thin=thin)
-        if check_model(model, params, assert_=False)==False:
-            print "model checking failed. running again"
-            sys.stdout.flush()
-            model.sample(n_iter, burn=burn, thin=thin)
-            if check_model(model, params, assert_=False)==False:
-                print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
-                check_rejection(model, assert_ = False)
-                check_correl(model)
-                return data, model, params
-        check_rejection(model, assert_ = False)
-        check_correl(model)
-        sys.stdout.flush()
+        positive = sum(data['response'])
+        print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
+        print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
+        % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
+        ok, data, model, params = test_params_on_data(params, data, model_type=model_type, exclude=exclude) 
+                                             
+        if stop_when_fail and not ok:
+            return data, model, params
     return [None]*3
 
-def test_simple(nTimes=20):
-    return accuracy_test(nTimes)
+
+def colinearity_test(params, n_data,  model_type = 'simple', exclude= None, conf_interval = 10):
+    data,temp = hddm.generate.gen_rand_data(n_data, params)
+    positive = sum(data['response'])
+    print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
+    print "used params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
+     % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
+    stdout.flush()
+    ok, data, model, temp = test_params_on_data(params, data, model_type='simple', exclude=None, conf_interval=conf_interval)
+    if not ok:
+        params_1 = copy(params)
+        params_1['v'] = params['v']/2
+
+        cond_data = hddm.generate.gen_rand_cond_data([params, params_1], samples_per_cond=n_data/2)
+        ok, data, model, temp = test_params_on_data(params, cond_data, model_type='simple', 
+                                          exclude=None, depends_on  = {'v':['cond']})
+        debug_here()
+
+ 
+
+
+def run_simple_test(nTimes=20, stop_when_fail = False):
+    return run_accuracy_test(nTimes)
 
 def check_correl(model):
     nodes = model.stochastics
