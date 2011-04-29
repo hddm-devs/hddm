@@ -18,7 +18,9 @@ class Base(kabuki.Hierarchical):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, init=False, exclude_inter_var_params=None, **kwargs):
+    def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
+                 init=False, exclude_inter_var_params=None, wiener_params = None,
+                 init_value = None, **kwargs):
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
         self.trace_subjs = trace_subjs
@@ -70,11 +72,14 @@ class Base(kabuki.Hierarchical):
             for param,value in param_ranges.iteritems():
                 self.param_ranges[param] = value
             self.init_params = hddm.utils.EZ_subjs(self.data)
+        
+        
+        if init_value is not None:
+            for param in init_value:
+                self.init_params[param] = init_value[param]
             
-        if 'wiener_params' in kwargs:
-            self.wiener_params = kwargs['wiener_params']
-        else:
-            self.wiener_params = None
+        self.wiener_params = wiener_params
+        
         
     def get_param_names(self):
         if self.model_type == 'simple':

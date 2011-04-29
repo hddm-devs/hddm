@@ -3,6 +3,7 @@ from __future__ import division
 import nose
 
 import unittest
+from hddm.diag import *
 
 import numpy as np
 import numpy.testing
@@ -19,6 +20,8 @@ import hddm
 
 from hddm.likelihoods import *
 from hddm.generate import *
+from scipy.stats import scoreatpercentile
+from numpy.random import rand
 
 from nose import SkipTest
 
@@ -74,30 +77,8 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
     print model.summary()
     return model
 
-def check_model(model, params_true, assert_=True, equal_to_digits=1, err_bound=0.01):
-    """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
-    err=[]
-
-    # Check for proper chain convergence
-    #check_geweke(model, assert_=True)
-    print model.summary()
-    # Test for correct parameter estimation
-    for param in model.param_names:
-        est = model.params_est[param]
-        est_std = model.params_est_std[param]
-        truth = params_true[param]
-        err.append((est - truth)**2)
-
-        print "%s: Truth: %f, Estimated: %f, Error: %f, Std: %f" % (param, truth, est, err[-1], est_std)
-
-        if assert_:
-            np.testing.assert_approx_equal(est, truth, equal_to_digits)
-            assert err[-1] < err_bound
-
-    print "Summed error: %f" % np.sum(err)
-    return np.sum(err)
-
-    
+            
+        
 class TestMulti(unittest.TestCase):
     def runTest(self):
         pass
