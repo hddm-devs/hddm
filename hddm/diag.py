@@ -5,6 +5,7 @@ import pymc as pm
 import numpy as np
 np.seterr(divide='ignore')
 from numpy.random import rand
+import sys
 
 import hddm
 from scipy.stats import scoreatpercentile
@@ -60,6 +61,12 @@ def check_rejection(model, assert_ = True):
                 print msg
 
 
+def rand_params(model_type='simple', exclude = None):
+    if model_type=='simple':
+        return rand_simple_params()
+    elif model_type=='full_intrp':
+        return rand_full_params(exclude)
+
 def rand_simple_params():
     params = {}
     params['V'] = 0    
@@ -71,30 +78,61 @@ def rand_simple_params():
     params['z'] = .4+rand()*0.2
     return params
 
+def rand_full_params(exclude):
+    if exclude is None:
+        exclude = []
+    params = {}    
+    if 'V' in exclude:
+        params['V'] = 0
+    else:
+        params['V'] = rand()
+    if 'Z' in exclude:
+        params['Z'] = 0
+    else:
+        params['Z'] = rand* 0.3
+    if 'T' in exclude:                
+        params['T'] = 0
+    else:
+        params['T'] = rand()*0.2
+    params['v'] = (rand()-.5)*4
+    params['t'] = 0.2+rand()*0.3+(params['T']/2)
+    params['a'] = 1.5+rand()
+    params['z'] = .4+rand()*0.2
+    return params
 
-def test_simple(nTimes=20):
+
+
+def accuracy_test(nTimes=20, model_type='simple', exclude=None):
     thin = 1
     samples = 10000
     burn = 10000
     n_iter = burn + samples*thin
     n_data = 300
     for i_time in range(nTimes):
-        params = rand_simple_params()
+        params = rand_params(model_type, exclude)
         data,temp = hddm.generate.gen_rand_data(n_data, params)
-        model = hddm.model.HDDM(data, no_bias=False)
+        model = hddm.model.HDDM(data, no_bias=False, model_type=model_type, 
+                                exclude_inter_var_params=exclude)
         model.mcmc(sample=False);
         model = model.mcmc_model
         [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
         model.sample(n_iter, burn=burn, thin=thin)
         if check_model(model, params, assert_=False)==False:
             print "model checking failed. running again"
+            sys.stdout.flush()
             model.sample(n_iter, burn=burn, thin=thin)
             if check_model(model, params, assert_=False)==False:
                 print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
+                check_rejection(model, assert_ = False)
+                check_correl(model)
                 return data, model, params
         check_rejection(model, assert_ = False)
         check_correl(model)
+        sys.stdout.flush()
     return [None]*3
+
+def test_simple(nTimes=20):
+    return accuracy_test(nTimes)
 
 def check_correl(model):
     nodes = model.stochastics
