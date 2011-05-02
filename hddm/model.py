@@ -96,7 +96,7 @@ class Base(kabuki.Hierarchical):
     def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, all_params, tag, pos=None):
+    def get_root_node(self, param, all_params, tag, pos=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -128,10 +128,10 @@ class Base(kabuki.Hierarchical):
                               upper=self.param_ranges['%s_upper'%param[0]],
                               value=init_val)
 
-    def get_tau_param(self, param_name, all_params, tag):
+    def get_tau_node(self, param_name, all_params, tag):
         return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 
@@ -300,7 +300,7 @@ class HLBA(Base):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
-    def get_root_param(self, param, all_params, tag, pos=None):
+    def get_root_node(self, param, all_params, tag, pos=None):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -309,7 +309,7 @@ class HLBA(Base):
         else:
             return super(self.__class__, self).get_root_param(self, param, all_params, tag, pos=None)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
 
         if param_name.startswith('V') and self.fix_sv is not None:
@@ -333,7 +333,7 @@ class HDDMContaminant(Base):
                                                         z=params['z'],
                                                         observed=True)
 
-    def get_root_param(self, param_name, all_params, tag, data, pos=None):
+    def get_root_node(self, param_name, all_params, tag, data, pos=None):
         if param_name == 'pi':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         elif param_name == 'gamma':
@@ -341,7 +341,7 @@ class HDDMContaminant(Base):
         else:
             return super(self.__class__, self).get_root_param(param_name, all_params, tag, pos=pos)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
         if param_name == 'pi':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         elif param_name == 'gamma':
