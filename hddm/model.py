@@ -96,7 +96,7 @@ class Base(kabuki.Hierarchical):
     def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_node(self, param, all_params, tag, pos=None):
+    def get_root_node(self, param, all_params, tag):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -131,7 +131,7 @@ class Base(kabuki.Hierarchical):
     def get_tau_node(self, param_name, all_params, tag):
         return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 
@@ -300,23 +300,23 @@ class HLBA(Base):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
-    def get_root_node(self, param, all_params, tag, pos=None):
+    def get_root_node(self, param, all_params, tag):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
         if param == 'V' and self.fix_sv is not None: # drift rate variability
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
         else:
-            return super(self.__class__, self).get_root_param(self, param, all_params, tag, pos=None)
+            return super(self.__class__, self).get_root_param(self, param, all_params, tag)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
 
         if param_name.startswith('V') and self.fix_sv is not None:
             return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
                              plot=plot, trace=self.trace_subjs)
         else:
-            return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos, plot)
+            return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot)
     
 #@kabuki.hierarchical
 class HDDMContaminant(Base):
@@ -333,21 +333,21 @@ class HDDMContaminant(Base):
                                                         z=params['z'],
                                                         observed=True)
 
-    def get_root_node(self, param_name, all_params, tag, data, pos=None):
+    def get_root_node(self, param_name, all_params, tag, data):
         if param_name == 'pi':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         elif param_name == 'gamma':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         else:
-            return super(self.__class__, self).get_root_param(param_name, all_params, tag, pos=pos)
+            return super(self.__class__, self).get_root_param(param_name, all_params, tag)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         if param_name == 'pi':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         elif param_name == 'gamma':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         else:
-            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, pos=None, plot=False)
+            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
     
 
 #@kabuki.hierarchical
