@@ -114,10 +114,10 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     stdout.flush()
     if depends_on is None:
         depends_on = {}   
-    model = hddm.model.HDDM(data, no_bias=False, model_type=model_type, 
+    m_hddm = hddm.HDDM(data, no_bias=False, model_type=model_type, 
                             exclude_inter_var_params=exclude, depends_on=depends_on)
-    model.mcmc(sample=False);
-    model = model.mcmc_model
+    nodes = m_hddm.create()
+    model = pm.MCMC(nodes)    
     [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
     model.sample(n_iter, burn=burn, thin=thin)
     ok = True
@@ -150,22 +150,42 @@ def run_accuracy_test(nTimes=20, model_type='simple', exclude=None, stop_when_fa
     return [None]*3
 
 
-def colinearity_test(params, n_data,  model_type = 'simple', exclude= None, conf_interval = 10):
-    data,temp = hddm.generate.gen_rand_data(n_data, params)
-    positive = sum(data['response'])
-    print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
-    print "used params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
-     % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
-    stdout.flush()
-    ok, data, model, temp = test_params_on_data(params, data, model_type='simple', exclude=None, conf_interval=conf_interval)
-    if not ok:
-        params_1 = copy(params)
-        params_1['v'] = params['v']/2
+def str_params(params):
+    s = ''
+    keys = params.keys()
+    keys.sort(reverse=True)
+    for name in keys:
+        s = s + "%s: %.3f, " % (name, params[name])
+    s = s[:-2] + "\n"
+    return s
 
-        cond_data = hddm.generate.gen_rand_cond_data([params, params_1], samples_per_cond=n_data/2)
-        ok, data, model, temp = test_params_on_data(params, cond_data, model_type='simple', 
-                                          exclude=None, depends_on  = {'v':['cond']})
-        debug_here()
+def break_codependency(params, n_data,  n_conds = 3, model_type = 'simple', exclude= None, conf_interval = 90):
+
+    params_set = [None]*n_conds
+    params_true = copy(params)
+    all_v = np.linspace(min(0,params['v']/2) , max(params['v']*2, 3), n_conds)
+    del params_true['v']
+    for i in range(n_conds):
+        params_set[i] = copy(params)    
+        params_set[i]['v'] = all_v[i]
+        params_true['v(%d,)'%i] = all_v[i]
+    
+    
+    cond_data = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=np.ceil(n_data/n_conds))
+    positive = sum(cond_data['response'])
+    print "generated %d data_points (%d positive %d negative)" % \
+    (len(cond_data), positive, len(cond_data) - positive)
+    print "used params: %s" % str_params(params_true)     
+    stdout.flush()
+    
+    ok, data, model, temp = test_params_on_data(params_true, cond_data, model_type='simple', 
+                                      exclude=None, depends_on  = {'v':['cond']}, conf_interval=conf_interval)
+    
+    if ok:
+        print "co-dependency was broken" 
+    else:
+        print "parameters were not recovered. more constrained may be needed"
+    return ok, model
 
  
 
