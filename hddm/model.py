@@ -96,7 +96,7 @@ class Base(kabuki.Hierarchical):
     def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_node(self, param, all_params, tag):
+    def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -300,14 +300,14 @@ class HLBA(Base):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
-    def get_root_node(self, param, all_params, tag):
+    def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
         if param == 'V' and self.fix_sv is not None: # drift rate variability
             return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
         else:
-            return super(self.__class__, self).get_root_param(self, param, all_params, tag)
+            return super(self.__class__, self).get_root_param(self, param, all_params, tag, data)
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
@@ -339,7 +339,7 @@ class HDDMContaminant(Base):
         elif param_name == 'gamma':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         else:
-            return super(self.__class__, self).get_root_param(param_name, all_params, tag)
+            return super(self.__class__, self).get_root_param(param_name, all_params, tag, data)
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         if param_name == 'pi':
