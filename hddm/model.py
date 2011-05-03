@@ -129,7 +129,7 @@ class Base(kabuki.Hierarchical):
                               value=init_val)
 
     def get_tau_node(self, param_name, all_params, tag):
-        return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
+        return pm.Uniform(param_name + tag, lower=0, upper=1000)
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
