@@ -7,8 +7,5 @@
 * need to add a check for unknown kwrgs. if one enters a keyword with a typo there's \
   currently no way to detect that(Thomas)
 * change names in kabukai and hddm: (Thomas)
-	is_subj_model = is_hierarchal
-	params -> nodes
 	exclude_intr_bla_bla_ -> exclude
-* kabuki should return a dictionary (Thomas)
 * get a paper out of this (imri + Thomas)
