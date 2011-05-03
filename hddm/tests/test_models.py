@@ -71,7 +71,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
 
     data = create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
 
-    model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_subj_model=subj)
+    model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_hierarchical=subj)
     model.mcmc(retry=False)
 
     print model.summary()
@@ -192,7 +192,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_lba(self):
-        model = hddm.model.HDDM(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
+        model = hddm.model.HDDM(self.data, is_hierarchical=False, normalize_v=True, model_type='lba')
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
@@ -201,7 +201,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_lba_subj(self):
-        model = hddm.model.HDDM(self.data_subj, is_subj_model=True, normalize_v=True, model_type='lba')
+        model = hddm.model.HDDM(self.data_subj, is_hierarchical=True, normalize_v=True, model_type='lba')
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
@@ -219,21 +219,21 @@ class TestSingle(unittest.TestCase):
 
     def test_full_subj(self):
         return
-        model = hddm.model.HDDM(self.data_subj, model_type='full', is_subj_model=True, no_bias=False)
+        model = hddm.model.HDDM(self.data_subj, model_type='full', is_hierarchical=True, no_bias=False)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
         check_model(mc, self.params_true_subj)
 
     def test_subjs_no_bias(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
+        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_hierarchical=True, no_bias=True)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
         check_model(mc, self.params_true)
 
     def test_subjs_bias(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=False)
+        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_hierarchical=True, no_bias=False)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
@@ -248,7 +248,7 @@ class TestSingle(unittest.TestCase):
         return model
     
     def test_simple_subjs(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
+        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_hierarchical=True, no_bias=True)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
