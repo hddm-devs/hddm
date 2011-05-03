@@ -59,7 +59,7 @@ class DDM(HasTraits):
     ter = Range(0,2.,.3)
     ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
-    switch = Bool(True)
+    switch = Bool(False)
     t_switch = Range(0,2.,.3)
     v_switch = Range(-3.,3.,1.)
     intra_sv = Range(0.,10.,1.)
@@ -165,7 +165,7 @@ class DDMPlot(HasTraits):
                 Item('plot_density'),
                 Item('plot_true_density'),
 #                Item('plot_density_dist'),
-                Item('plot_mean_rt'),
+                Item('plot_switch'),
 		Item('go'),
 		#style='custom',
 		width=800,
