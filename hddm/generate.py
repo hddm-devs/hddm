@@ -90,11 +90,12 @@ def find_thresholds(drifts, a):
         lower = np.Inf
         if thresh_upper.shape != (0,):
             # Interpolate to find true crossing
-            x1 = thresh_upper-1
-            x2 = thresh_upper
+            cross = thresh_upper[0]
+            x1 = cross-1
+            x2 = cross
             y1 = drift[x1]
             y2 = drift[x2]
-            m = (x2-x1) / (y2-y1)
+            m = (y2-y1) / (x2-x1)
             # y = m*x + b
             b = y1 - m*x1
             upper = (a - b) / m
@@ -104,11 +105,12 @@ def find_thresholds(drifts, a):
         if thresh_lower.shape != (0,):
             # Lower RT
             # Interpolate to find true crossing
-            x1 = thresh_lower-1
-            x2 = thresh_lower
+            cross = thresh_lower[0]
+            x1 = cross-1
+            x2 = cross
             y1 = drift[x1]
             y2 = drift[x2]
-            m = (x2-x1) / (y2-y1)
+            m = (y2-y1) / (x2-x1)
             # y = m*x + b
             b = y1 - m*x1
             lower = -b / m
