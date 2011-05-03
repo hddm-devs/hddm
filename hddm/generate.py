@@ -16,7 +16,20 @@ except:
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, steps=1000, T=5., structured=False, subj_idx=None):
+def gen_rts(params, samples=1000, steps=5000, T=5., structured=False, subj_idx=None, strict_size=False):
+    def _gen_rts():
+        # Function that always returns a time a threshold was crossed
+        rts = np.empty(samples, np.float) # init
+        for i in xrange(samples):
+            not_crossed_boundary = True
+            while(not_crossed_boundary): # if threshold not crossed, redraw
+                drift = simulate_drifts(params, 1, steps, T)
+                thresh = find_thresholds(drift, params['a'])
+                if len(thresh) != 0:
+                    not_crossed_boundary = False
+            rts[i] = thresh[0]
+        return rts
+
     if samples is None:
         samples = 1
     dt = steps / T
@@ -76,14 +89,29 @@ def find_thresholds(drifts, a):
         upper = np.Inf
         lower = np.Inf
         if thresh_upper.shape != (0,):
-            # This provides the RT, append
-            upper = thresh_upper[0]
+            # Interpolate to find true crossing
+            x1 = thresh_upper-1
+            x2 = thresh_upper
+            y1 = drift[x1]
+            y2 = drift[x2]
+            m = (x2-x1) / (y2-y1)
+            # y = m*x + b
+            b = y1 - m*x1
+            upper = (a - b) / m
 
         # Check if lower bound was reached, and where
         thresh_lower = np.where((drift < 0))[0]
         if thresh_lower.shape != (0,):
             # Lower RT
-            lower = thresh_lower[0]
+            # Interpolate to find true crossing
+            x1 = thresh_lower-1
+            x2 = thresh_lower
+            y1 = drift[x1]
+            y2 = drift[x2]
+            m = (x2-x1) / (y2-y1)
+            # y = m*x + b
+            b = y1 - m*x1
+            lower = -b / m
 
         if upper == lower == np.Inf:
             # Threshold never crossed
