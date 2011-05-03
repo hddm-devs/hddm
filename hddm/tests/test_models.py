@@ -128,14 +128,18 @@ class TestSingle(unittest.TestCase):
     
     def test_basic(self):
         model = hddm.model.HDDM(self.data_basic, no_bias=True)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true_basic_no_s)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true_basic_no_s)
         
     def test_full_mc(self, assert_=True):
         return
         model = hddm.model.HDDM(self.data, model_type='full_mc', no_bias=False)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true, assert_=assert_)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true, assert_=assert_)
 
         return model
 
@@ -144,8 +148,10 @@ class TestSingle(unittest.TestCase):
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.75, 'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, params_true, assert_=assert_)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
 
         return model
 
@@ -154,8 +160,10 @@ class TestSingle(unittest.TestCase):
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':0,'Z':0.,'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','V'])
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, params_true, assert_=assert_)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
 
         return model
 
@@ -164,8 +172,10 @@ class TestSingle(unittest.TestCase):
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':0, 'T':0},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','T'])
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, params_true, assert_=assert_)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
 
         return model
 
@@ -174,57 +184,75 @@ class TestSingle(unittest.TestCase):
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.7, 'T':0},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['V','T'])
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, params_true, assert_=assert_)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
 
         return model
 
     def test_lba(self):
         model = hddm.model.HDDM(self.data, is_subj_model=False, normalize_v=True, model_type='lba')
-        model.mcmc(samples=self.samples, burn=self.burn)
-        #self.check_model(model, self.params_true_lba)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        #self.check_model(mc, self.params_true_lba)
         print model.params_est
         return model
 
     def test_lba_subj(self):
         model = hddm.model.HDDM(self.data_subj, is_subj_model=True, normalize_v=True, model_type='lba')
-        model.mcmc(samples=self.samples, burn=self.burn)
-        #self.check_model(model, self.params_true_lba)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        #self.check_model(mc, self.params_true_lba)
         print model.params_est
         return model
 
     def test_full(self):
         return
         model = hddm.model.HDDM(self.data, model_type='full', no_bias=False)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true)
 
     def test_full_subj(self):
         return
         model = hddm.model.HDDM(self.data_subj, model_type='full', is_subj_model=True, no_bias=False)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true_subj)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true_subj)
 
     def test_subjs_no_bias(self):
         model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true)
 
     def test_subjs_bias(self):
         model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=False)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true)
 
     def test_simple(self):
         model = hddm.model.HDDM(self.data_basic, model_type='simple', no_bias=True)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true_no_s)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true_no_s)
         return model
     
     def test_simple_subjs(self):
         model = hddm.model.HDDM(self.data_subj, model_type='simple', is_subj_model=True, no_bias=True)
-        model.mcmc(samples=self.samples, burn=self.burn)
-        check_model(model, self.params_true_subj_no_s)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params_true_subj_no_s)
         return model
     
     def test_chains(self):

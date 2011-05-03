@@ -179,7 +179,7 @@ class Base(kabuki.Hierarchical):
                                              v=params['v'], 
                                              t=params['t'], 
                                              a=params['a'], 
-                                             z=params['z'],
+                                             z=self._get_idx_node('z',params),
                                              observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
