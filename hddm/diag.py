@@ -185,7 +185,7 @@ def break_codependency(params, n_data,  n_conds = 3, model_type = 'simple', excl
         print "co-dependency was broken" 
     else:
         print "parameters were not recovered. more constrained may be needed"
-    return ok, model
+    return ok, data, model
 
  
 
