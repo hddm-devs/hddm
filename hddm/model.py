@@ -44,6 +44,7 @@ class Base(kabuki.Hierarchical):
             self.exclude = []
         else:
             self.exclude = exclude_inter_var_params
+            
 
         self.param_ranges = {'a_lower': .5,
                              'a_upper': 4.5,
@@ -81,15 +82,20 @@ class Base(kabuki.Hierarchical):
 
         
     def get_param_names(self):
+        simple_names = ['a', 'v', 't']
+        if not self.no_bias:
+            simple_names = simple_names + ['z']
         if self.model_type == 'simple':
-            return ('a', 'v', 'z', 't')
+            return tuple(simple_names)
         elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
-            names = set(['a', 'v', 'V', 'z', 'Z', 't', 'T'])
+            names = set(simple_names + ['V','Z','T'])
             for ex in self.exclude:
                 names.remove(ex)
+            if self.no_bias and 'Z' in names:
+                names.remove('Z')
             return tuple(names)
         else:
-            raise ValueError('Model %s not recognized' % self.model_type)
+            raise ValueError('Model %s was not recognized' % self.model_type)
 
     param_names = property(get_param_names)
     
@@ -105,14 +111,8 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
         
-        if param == 'z' and self.no_bias: # starting point position (bias)
-            return pm.Deterministic(hddm.utils.return_fixed,
-                                    'z%s'%tag,
-                                    'z%s'%tag,
-                                    parents={},
-                                    plot=False)
 
-        elif param == 'Z':
+        if param == 'Z':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
                               upper=1.,
@@ -140,14 +140,7 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
 
-        if param_name.startswith('z') and self.no_bias:
-            return pm.Deterministic(hddm.utils.return_fixed,
-                                    param_full_name,
-                                    param_full_name,
-                                    parents={},
-                                    plot=False)
-
-        elif param_name.startswith('Z'):
+        if param_name.startswith('Z'):
             return pm.TruncatedNormal(param_full_name,
                                       mu=parent_mean,
                                       tau=parent_tau,
@@ -204,6 +197,8 @@ class Base(kabuki.Hierarchical):
     def _get_idx_node(self, node_name, params):
         if node_name in self.exclude:
             return 0
+        elif node_name=='z' and self.no_bias:
+            return 0.5
         else:
             return params[node_name]
 
