@@ -123,7 +123,7 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
     i_t = time()
     model.sample(n_iter, burn=burn, thin=thin)
-    print "sampling took: %.2 seconds" % (time() - i_t)
+    print "sampling took: %.2f seconds" % (time() - i_t)
     ok = True
     if check_model(model, params, assert_=False, conf_interval = conf_interval)==False:
         print "model checking failed. running again"
@@ -132,10 +132,15 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
         if check_model(model, params, assert_=False, conf_interval = conf_interval)==False:
             print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
             ok  = False
+           
+    res = {} 
+    res['params'] = params
+    res['data'] = data
+    res['mc'] = model
     check_rejection(model, assert_ = False)
     check_correl(model)
     stdout.flush()
-    return ok, data, model, params
+    return ok, res
 
 def run_accuracy_test(nTimes=20, model_type='simple', exclude=None, stop_when_fail = True):
     """ run accuracy test nTime times"""
@@ -147,11 +152,11 @@ def run_accuracy_test(nTimes=20, model_type='simple', exclude=None, stop_when_fa
         print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
         print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
         % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
-        ok, data, model, params = test_params_on_data(params, data, model_type=model_type, exclude=exclude) 
+        ok, res = test_params_on_data(params, data, model_type=model_type, exclude=exclude) 
                                              
         if stop_when_fail and not ok:
-            return data, model, params
-    return [None]*3
+            return res
+    return {}
 
 
 def str_params(params):
@@ -182,14 +187,14 @@ def break_codependency(params, n_data,  n_conds = 3, model_type = 'simple', excl
     print "used params: %s" % str_params(params_true)     
     stdout.flush()
     
-    ok, data, model, temp = test_params_on_data(params_true, cond_data, model_type='simple', 
-                                      exclude=None, depends_on  = {'v':['cond']}, conf_interval=conf_interval)
+    ok, res = test_params_on_data(params_true, cond_data, model_type=model_type, 
+                                      exclude=exclude, depends_on  = {'v':['cond']}, conf_interval=conf_interval)
     
     if ok:
         print "co-dependency was broken" 
     else:
         print "parameters were not recovered. more constrained may be needed"
-    return ok, data, model
+    return res
 
  
 
