@@ -416,7 +416,7 @@ cdef double wfpt_gsl(double x, void * params):
     t = (<double_ptr> params)[5]
     t_switch = (<double_ptr> params)[6]
     
-    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x, t_switch, v, a, z*a
+    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x, t_switch, v, a, z*a)
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
