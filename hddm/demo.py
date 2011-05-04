@@ -335,7 +335,7 @@ class DDMPlot(HasTraits):
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
-            self.plot_histo(x, self.ddm.histo, color='g', max_perc=.99)
+            self.plot_histo(x, self.ddm.histo, color='b', max_perc=.99)
 
         # Plot normalized histograms of empirical data
         if self.plot_data:
@@ -349,7 +349,7 @@ class DDMPlot(HasTraits):
 
         # Plot analytical simple likelihood function
         if self.plot_simple:
-            self.plot_histo(x_anal, self.simple, color='b')
+            self.plot_histo(x_anal, self.simple, color='g')
 
         # Plot analytical simple likelihood function
         if self.plot_switch and self.ddm.switch:

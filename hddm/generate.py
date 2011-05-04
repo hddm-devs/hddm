@@ -99,6 +99,17 @@ def simulate_drifts(params, samples, steps, T, intra_sv=1.):
     return drifts
 
 def find_thresholds(drifts, a):
+    def interpolate_thresh(cross, boundary):
+        # Interpolate to find crossing
+        x1 = cross-1
+        x2 = cross
+        y1 = drift[x1]
+        y2 = drift[x2]
+        m = (y2-y1) / (x2-x1) # slope
+        # y = m*x + b
+        b = y1 - m*x1 # intercept
+        return (boundary - b) / m
+
     steps = drifts.shape[1]
     # Find lines over the threshold
     rts_upper = []
@@ -110,31 +121,12 @@ def find_thresholds(drifts, a):
         upper = np.Inf
         lower = np.Inf
         if thresh_upper.shape != (0,):
-            # Interpolate to find true crossing
-            cross = thresh_upper[0]
-            x1 = cross-1
-            x2 = cross
-            y1 = drift[x1]
-            y2 = drift[x2]
-            m = (y2-y1) / (x2-x1)
-            # y = m*x + b
-            b = y1 - m*x1
-            upper = (a - b) / m
+            upper = interpolate_thresh(thresh_upper[0], a)
 
         # Check if lower bound was reached, and where
         thresh_lower = np.where((drift < 0))[0]
         if thresh_lower.shape != (0,):
-            # Lower RT
-            # Interpolate to find true crossing
-            cross = thresh_lower[0]
-            x1 = cross-1
-            x2 = cross
-            y1 = drift[x1]
-            y2 = drift[x2]
-            m = (y2-y1) / (x2-x1)
-            # y = m*x + b
-            b = y1 - m*x1
-            lower = -b / m
+            lower = interpolate_thresh(thresh_lower[0], 0)
 
         if upper == lower == np.Inf:
             # Threshold never crossed
