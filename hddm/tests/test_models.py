@@ -134,7 +134,7 @@ class TestSingle(unittest.TestCase):
         check_model(mc, self.params_true_basic_no_s)
         
     def test_full_mc(self, assert_=True):
-        return
+        raise SkipTest("Disabled.")
         model = hddm.model.HDDM(self.data, model_type='full_mc', no_bias=False)
         nodes = model.create()
         mc = pm.MCMC(nodes)
@@ -144,7 +144,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_V_T_Z(self, assert_=True):
-        return
+        raise SkipTest("Disabled.")
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.75, 'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True)
@@ -156,7 +156,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_T(self, assert_=True):
-        return
+        raise SkipTest("Disabled.")
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':0,'Z':0.,'T':.6},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','V'])
@@ -168,7 +168,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_V(self, assert_=True):
-        return
+        raise SkipTest("Disabled.")
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':0, 'T':0},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','T'])
@@ -180,7 +180,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full_interp_subjs_Z(self, assert_=True):
-        return
+        raise SkipTest("Disabled.")
         data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.7, 'T':0},
                                                     samples=300)
         model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['V','T'])
@@ -210,7 +210,7 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_full(self):
-        return
+        raise SkipTest("Disabled.")
         model = hddm.model.HDDM(self.data, model_type='full', no_bias=False)
         nodes = model.create()
         mc = pm.MCMC(nodes)
@@ -218,7 +218,7 @@ class TestSingle(unittest.TestCase):
         check_model(mc, self.params_true)
 
     def test_full_subj(self):
-        return
+        raise SkipTest("Disabled.")
         model = hddm.model.HDDM(self.data_subj, model_type='full', is_hierarchical=True, no_bias=False)
         nodes = model.create()
         mc = pm.MCMC(nodes)
@@ -256,7 +256,7 @@ class TestSingle(unittest.TestCase):
         return model
     
     def test_chains(self):
-        return
+        raise SkipTest("Disabled.")
         models = run_parallel_chains(hddm.model.HDDM, [data, data], ['test1', 'test2'])
         return models
 

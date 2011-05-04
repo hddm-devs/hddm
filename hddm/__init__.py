@@ -21,6 +21,9 @@ from model import *
 from utils import plot_posteriors, plot_rt_fit
 
 import wfpt
+import wfpt_full
+import wfpt_switch
+
 #import lba
 
 from kabuki.utils import load_csv, save_csv

@@ -67,7 +67,7 @@ def wiener_full(v, z, t, a, V, Z, T, size=None):
 
 def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001, reps=10, logp=1))
+    return np.sum(hddm.wfpt_full.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001, reps=10, logp=1))
  
 WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=wiener_like_full_mc,
@@ -77,7 +77,7 @@ WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
 
 def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):
     """Log-likelihood for the full DDM using the interpolation method"""
-    return hddm.wfpt.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
+    return hddm.wfpt_full.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
 
 
 def general_WienerFullIntrp_variable(err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):
@@ -102,7 +102,7 @@ WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
 
 def wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a):
     """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt.wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a, reps=10, logp=1))
+    return np.sum(hddm.wfpt_full.wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a, reps=10, logp=1))
 
 WienerFullMcMultiThresh = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=wiener_like_full_mc_multi_thresh,
