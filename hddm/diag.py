@@ -232,7 +232,7 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
     full_params = copy(initial_params)
     params_set = [None]*n_conds
     v_0 = rand()
-    all_v = np.linspace(v_0, min(4,v_0*n_conds), n_conds)
+    all_v = np.linspace(v_0, max(4,v_0*n_conds), n_conds)
     for j in range(n_conds):
         params_set[j] = copy(initial_params)
         params_set[j]['v'] = all_v[j]
