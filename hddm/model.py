@@ -77,8 +77,11 @@ class Base(kabuki.Hierarchical):
         if init_values is not None:
             for param in init_values:
                 self.init_params[param] = init_values[param]
-            
-        self.wiener_params = wiener_params
+        
+        if wiener_params == None:
+            self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}
+        else:          
+            self.wiener_params = wiener_params
 
         
     def get_param_names(self):

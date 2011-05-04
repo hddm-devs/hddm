@@ -117,7 +117,7 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     if depends_on is None:
         depends_on = {}   
     m_hddm = hddm.HDDM(data, no_bias=False, model_type=model_type, 
-                            exclude_inter_var_params=exclude, depends_on=depends_on)
+                            exclude=exclude, depends_on=depends_on)
     nodes = m_hddm.create()
     model = pm.MCMC(nodes)    
     [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
@@ -263,7 +263,7 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
         print "working on model %d" % i_params
         
         model = hddm.model.HDDM(data, model_type='full_intrp', no_bias=False, wiener_params=all_wp[i_params], 
-                                exclude_inter_var_params = exclude, depends_on  = {'v':['cond']})#, init_value=params)
+                                exclude = exclude, depends_on  = {'v':['cond']})#, init_value=params)
         i_t = time()
         if use_db:
             dbname = 'speed.'+ str(clock()) + '.db'
