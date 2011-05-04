@@ -19,7 +19,7 @@ class Base(kabuki.Hierarchical):
     """
     
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
-                 init=False, exclude_inter_var_params=None, wiener_params = None,
+                 init=False, exclude=None, wiener_params = None,
                  init_values = None, **kwargs):
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
@@ -40,10 +40,10 @@ class Base(kabuki.Hierarchical):
                         'full_intrp': self._get_full_intrp,
                         'full': self._get_full}
 
-        if exclude_inter_var_params is None:
+        if exclude is None:
             self.exclude = []
         else:
-            self.exclude = exclude_inter_var_params
+            self.exclude = exclude
             
 
         self.param_ranges = {'a_lower': .5,
@@ -261,7 +261,7 @@ class HDDM(Base):
 class HLBA(Base):
     param_names = ('a', 'z', 't', 'V', 'v0', 'v1')
 
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None, **kwargs):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude=None, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
 
         # LBA model

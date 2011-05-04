@@ -78,7 +78,7 @@ class DDM(HasTraits):
     # Total time.
     T = Float(5.0)
     # Number of steps.
-    steps = Int(1000)
+    steps = Int(2000)
     # Time step size
     dt = Property(Float, depends_on=['T', 'steps'])
     # Number of realizations to generate.
@@ -86,7 +86,7 @@ class DDM(HasTraits):
     # Number of drifts to plot
     iter_plot = Int(50)
     # Number of histogram bins
-    bins = Int(100)
+    bins = Int(200)
     view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot', 'switch')
 
     def _get_dt(self):

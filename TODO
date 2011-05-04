@@ -4,8 +4,4 @@
 * Test recovery of tau parameter (Thomas)
 * Get full expanded model to work and converge (Thomas + Imri)
 * Get contaminant model to work (Thomas + Imri)
-* need to add a check for unknown kwrgs. if one enters a keyword with a typo there's \
-  currently no way to detect that(Thomas)
-* change names in kabukai and hddm: (Thomas)
-	exclude_intr_bla_bla_ -> exclude
 * get a paper out of this (imri + Thomas)
