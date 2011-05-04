@@ -416,7 +416,7 @@ cdef double wfpt_gsl(double x, void * params):
     t = (<double_ptr> params)[5]
     t_switch = (<double_ptr> params)[6]
     
-    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x, t_switch, v, a, z*a
+    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x*a, t_switch, v, a, z*a) * 2
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
@@ -426,7 +426,7 @@ cdef inline double drift_dens_term(double x, double t, double v, double a, doubl
     # Ratcliff 1980 Equation 12
     return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
 
-cpdef inline double drift_dens(double x, double t, double v, double a, double z):
+cpdef double drift_dens(double x, double t, double v, double a, double z):
     cdef int N=40
     cdef int i
     cdef double terms[40]
@@ -463,7 +463,7 @@ cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, doub
     F.function = &wfpt_gsl
     F.params = params
 
-    gsl_integration_qag(&F, 0, a, 0, 1e-7, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_qag(&F, 0, 1, 0, 1e-7, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
     gsl_integration_workspace_free(W)
 
     return result
@@ -476,7 +476,7 @@ cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, 
         p = pdf_sign(rt, v, a, z, t, err)
     else:
         # Antisaccade trial
-        if fabs(rt) =< t+t_switch:
+        if (fabs(rt) <= t+t_switch):
             # Pre switch is not yet online
             p = pdf_sign(rt, v, a, z, t, err)
         else:

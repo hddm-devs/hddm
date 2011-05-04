@@ -98,7 +98,7 @@ def simulate_drifts(params, samples, steps, T, intra_sv=1.):
 
     return drifts
 
-def find_thresholds(drifts, a):
+def find_thresholds(drifts, a, return_non_crossings=False):
     def interpolate_thresh(cross, boundary):
         # Interpolate to find crossing
         x1 = cross-1
@@ -114,6 +114,7 @@ def find_thresholds(drifts, a):
     # Find lines over the threshold
     rts_upper = []
     rts_lower = []
+    non_crossings = 0
     # Go through every drift individually
     for drift in drifts:
         # Check if upper bound was reached, and where
@@ -130,7 +131,7 @@ def find_thresholds(drifts, a):
 
         if upper == lower == np.Inf:
             # Threshold never crossed
-            continue
+            non_crossings += 1
 
         # Determine which one hit the threshold before
         if upper < lower:
@@ -144,7 +145,10 @@ def find_thresholds(drifts, a):
     rts_lower *= -1
     rts = np.concatenate((rts_upper, rts_lower))
 
-    return rts
+    if return_non_crossings:
+        return rts, non_crossings
+    else:
+        return rts
 
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""

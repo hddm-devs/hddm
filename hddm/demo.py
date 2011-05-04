@@ -74,6 +74,7 @@ class DDM(HasTraits):
     params_dict = Property(Dict)
 
     histo = Property(Array, depends_on=['params'])
+    non_crossings = Property(Array, depends_on=['params'])
 
     # Total time.
     T = Float(5.0)
@@ -108,12 +109,14 @@ class DDM(HasTraits):
         return hddm.generate.find_thresholds(self.drifts, self.a)
 
     @cached_property
-    def _get_rts(self):
-        return hddm.generate.find_thresholds(self.drifts, self.a)
+    def _get_non_crossings(self):
+        return hddm.generate.find_thresholds(self.drifts, self.a, return_non_crossings=True)[1]
     
     @cached_property
     def _get_histo(self):
-        return hddm.utils.histogram(self.rts/self.dt, bins=2*self.bins, range=(-self.T,self.T), density=True)[0]
+        n, bins = hddm.utils.histogram(self.rts/self.dt, bins=2*self.bins, range=(-self.T,self.T))
+        db = np.array(np.diff(bins), float)
+        return n/db/(n.sum()+self.non_crossings)
     
     def _get_params(self):
         return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
@@ -246,7 +249,7 @@ class DDMPlot(HasTraits):
                                              Z=self.ddm.sz,
                                              t=self.ddm.ter,
                                              T=self.ddm.ster,
-                                             a=self.ddm.a, err=.0001, reps=100)
+                                             a=self.ddm.a, err=1e-4, reps=100)
 
     @timer
     def _get_simple(self):
@@ -254,7 +257,7 @@ class DDMPlot(HasTraits):
                                   self.ddm.v,
                                   self.ddm.a,
                                   self.ddm.z,
-                                  self.ddm.ter, .001)
+                                  self.ddm.ter, 1e-4)
         return pdf
 
     @timer
