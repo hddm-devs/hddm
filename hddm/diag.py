@@ -23,8 +23,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     
     print "checking estimation with %d confidence interval" % conf_interval
     fail = False
-    nodes = list(model.stochastics)
-    nodes.sort()
+    nodes = sorted(model.stochastics, key=lambda x:x.__name__)    
     for node in nodes:
         trace = node.trace()[:]
         est = np.mean(trace)
