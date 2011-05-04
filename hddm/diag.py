@@ -95,7 +95,7 @@ def rand_full_params(exclude):
     if 'Z' in exclude:
         params['Z'] = 0
     else:
-        params['Z'] = rand* 0.3
+        params['Z'] = rand()* 0.3
     if 'T' in exclude:                
         params['T'] = 0
     else:
@@ -224,7 +224,6 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
     n_iter = n_samples*thin
     
     all_wp = []
-    all_wp = all_wp + [{'err': 1e-5, 'nT':3, 'nZ':3, 'use_adaptive':1, 'simps_err':1e-5}]
     all_wp = all_wp + [{'err': 1e-5, 'nT':3, 'nZ':3, 'use_adaptive':1, 'simps_err':1e-5}]
     all_wp = all_wp + [{'err': 1e-5, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-4}]
     all_wp = all_wp + [{'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}]   
