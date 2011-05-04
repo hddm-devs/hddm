@@ -16,6 +16,8 @@ cimport numpy as np
 
 cimport cython
 
+include "gsl/gsl.pxi"
+
 cdef extern from "math.h":
     double sin(double)
     double cos(double)
@@ -122,7 +124,7 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
 
 cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err):
     """Wiener likelihood function for two response types. Lower bound
-    responses have negative t, upper boundary response have positive t"""
+    responses have negative t, upper boundary response have positive t."""
     if z<0 or z>1 or a<0:
         return 0
 
@@ -352,7 +354,7 @@ cpdef double full_pdf(double x, double v, double V, double a, double z, double Z
             if use_adaptive>0:
                 return adaptiveSimpsons_1D(x,  v, V, a, z, t, err, z, z, t-T/2., t+T/2., simps_err, nT)
             else:
-                return simpson_1D(x, v, V, a, z, t, err, z,    z,  0, t-T/2., t+T/2., nT)
+                return simpson_1D(x, v, V, a, z, t, err, z, z, 0, t-T/2., t+T/2., nT)
             
     else: #Z=$
         if (T==0): #V=0,Z=$,T=0
@@ -394,6 +396,105 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
     for i from 0 <= i < size:
         p = pdf_sign(x[i], v[i], a[i], z[i], t[i], err)
         # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+        sum_logp += log(p)
+
+    return sum_logp
+
+
+ctypedef double * double_ptr
+ctypedef void * void_ptr
+
+cdef double wfpt_gsl(double x, void * params):
+    cdef double rt, v, v_switch, a, z, t, t_switch, f
+    rt = (<double_ptr> params)[0]
+    v = (<double_ptr> params)[1]
+    v_switch = (<double_ptr> params)[2]
+    a = (<double_ptr> params)[3]
+    z = (<double_ptr> params)[4]
+    t = (<double_ptr> params)[5]
+    t_switch = (<double_ptr> params)[6]
+    
+    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * drift_dens(x, t_switch, v, a, z*a
+    #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
+    return f
+
+
+
+cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
+    # Ratcliff 1980 Equation 12
+    return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
+
+cpdef inline double drift_dens(double x, double t, double v, double a, double z):
+    cdef int N=40
+    cdef int i
+    cdef double terms[40]
+    cdef double sum_accel, err
+    cdef double summed = 0
+    cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
+    
+    for i from 1 <= i <= N:
+        terms[i-1] = drift_dens_term(x, t, v, a, z, i)
+        summed += terms[i-1]
+
+    #gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
+    #gsl_sum_levin_u_free(w)
+
+    #print summed,sum_accel
+    #print err
+
+    return exp(v*(x-z)) * summed
+    
+cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+    cdef double alpha, result, error, expected
+    cdef gsl_integration_workspace * W
+    W = gsl_integration_workspace_alloc(1000)
+    cdef gsl_function F
+    cdef double params[7]
+    params[0] = rt
+    params[1] = v
+    params[2] = v_switch
+    params[3] = a
+    params[4] = z
+    params[5] = t
+    params[6] = t_switch
+
+    F.function = &wfpt_gsl
+    F.params = params
+
+    gsl_integration_qag(&F, 0, a, 0, 1e-7, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_workspace_free(W)
+
+    return result
+
+cpdef switch_pdf(DTYPE_t rt, int instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+    cdef double p
+
+    if instruct == 0: 
+        # Prosaccade trial
+        p = pdf_sign(rt, v, a, z, t, err)
+    else:
+        # Antisaccade trial
+        if fabs(rt) =< t+t_switch:
+            # Pre switch is not yet online
+            p = pdf_sign(rt, v, a, z, t, err)
+        else:
+            # Post switch
+            p = pdf_Z_norm_sign(rt, v, v_switch, a, z, t, t_switch, err)
+            
+    return p
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_switch(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t i
+    cdef double p
+    cdef double sum_logp = 0
+
+    for i from 0 <= i < size:
+        p = switch_pdf(rt[i], instruct[i], v, v_switch, a, z, t, t_switch, err)
         if p == 0:
             return -infinity
         sum_logp += log(p)

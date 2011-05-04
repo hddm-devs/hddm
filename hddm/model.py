@@ -19,7 +19,7 @@ class Base(kabuki.Hierarchical):
     """
     
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
-                 init=False, exclude_inter_var_params=None, wiener_params = None,
+                 init=False, exclude=None, wiener_params = None,
                  init_values = None, **kwargs):
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
@@ -40,10 +40,11 @@ class Base(kabuki.Hierarchical):
                         'full_intrp': self._get_full_intrp,
                         'full': self._get_full}
 
-        if exclude_inter_var_params is None:
+        if exclude is None:
             self.exclude = []
         else:
-            self.exclude = exclude_inter_var_params
+            self.exclude = exclude
+            
 
         self.param_ranges = {'a_lower': .5,
                              'a_upper': 4.5,
@@ -81,22 +82,27 @@ class Base(kabuki.Hierarchical):
 
         
     def get_param_names(self):
+        simple_names = ['a', 'v', 't']
+        if not self.no_bias:
+            simple_names = simple_names + ['z']
         if self.model_type == 'simple':
-            return ('a', 'v', 'z', 't')
+            return tuple(simple_names)
         elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
-            names = set(['a', 'v', 'V', 'z', 'Z', 't', 'T'])
+            names = set(simple_names + ['V','Z','T'])
             for ex in self.exclude:
                 names.remove(ex)
+            if self.no_bias and 'Z' in names:
+                names.remove('Z')
             return tuple(names)
         else:
-            raise ValueError('Model %s not recognized' % self.model_type)
+            raise ValueError('Model %s was not recognized' % self.model_type)
 
     param_names = property(get_param_names)
     
     def get_observed(self, *args, **kwargs):
         return self._models[self.model_type](*args, **kwargs)
     
-    def get_root_param(self, param, all_params, tag):
+    def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -105,14 +111,8 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
         
-        if param == 'z' and self.no_bias: # starting point position (bias)
-            return pm.Deterministic(hddm.utils.return_fixed,
-                                    'z%s'%tag,
-                                    'z%s'%tag,
-                                    parents={},
-                                    plot=False)
 
-        elif param == 'Z':
+        if param == 'Z':
             return pm.Uniform("%s%s"%(param, tag),
                               lower=self.param_ranges['%s_lower'%param[0]],
                               upper=1.,
@@ -128,10 +128,10 @@ class Base(kabuki.Hierarchical):
                               upper=self.param_ranges['%s_upper'%param[0]],
                               value=init_val)
 
-    def get_tau_param(self, param_name, all_params, tag):
-        return pm.Uniform(param_name + tag, lower=0, upper=1000, plot=False)
+    def get_tau_node(self, param_name, all_params, tag):
+        return pm.Uniform(param_name + tag, lower=0, upper=1000)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
         init_param_name = '%s%i'%(param_name, subj_idx)
 
@@ -140,14 +140,7 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
 
-        if param_name.startswith('z') and self.no_bias:
-            return pm.Deterministic(hddm.utils.return_fixed,
-                                    param_full_name,
-                                    param_full_name,
-                                    parents={},
-                                    plot=False)
-
-        elif param_name.startswith('Z'):
+        if param_name.startswith('Z'):
             return pm.TruncatedNormal(param_full_name,
                                       mu=parent_mean,
                                       tau=parent_tau,
@@ -186,7 +179,7 @@ class Base(kabuki.Hierarchical):
                                              v=params['v'], 
                                              t=params['t'], 
                                              a=params['a'], 
-                                             z=params['z'],
+                                             z=self._get_idx_node('z',params),
                                              observed=True)
 
     def _get_full_mc(self, name, data, params, idx=None):
@@ -204,6 +197,8 @@ class Base(kabuki.Hierarchical):
     def _get_idx_node(self, node_name, params):
         if node_name in self.exclude:
             return 0
+        elif node_name=='z' and self.no_bias:
+            return 0.5
         else:
             return params[node_name]
 
@@ -256,17 +251,13 @@ class Base(kabuki.Hierarchical):
 
         return [ddm, ter_trials, v_trials, z_trials]
 
-
-
-
-#@kabuki.hierarchical
 class HDDM(Base):
     pass
 
 class HLBA(Base):
     param_names = ('a', 'z', 't', 'V', 'v0', 'v1')
 
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude_inter_var_params=None, **kwargs):
+    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude=None, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
 
         # LBA model
@@ -300,7 +291,7 @@ class HLBA(Base):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
-    def get_root_param(self, param, all_params, tag):
+    def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
@@ -309,7 +300,7 @@ class HLBA(Base):
         else:
             return super(self.__class__, self).get_root_param(self, param, all_params, tag)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
 
         if param_name.startswith('V') and self.fix_sv is not None:
@@ -333,7 +324,7 @@ class HDDMContaminant(Base):
                                                         z=params['z'],
                                                         observed=True)
 
-    def get_root_param(self, param_name, all_params, tag, data):
+    def get_root_node(self, param_name, all_params, tag, data):
         if param_name == 'pi':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         elif param_name == 'gamma':
@@ -341,7 +332,7 @@ class HDDMContaminant(Base):
         else:
             return super(self.__class__, self).get_root_param(param_name, all_params, tag)
 
-    def get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
+    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         if param_name == 'pi':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         elif param_name == 'gamma':
