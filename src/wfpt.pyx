@@ -420,8 +420,6 @@ cdef double wfpt_gsl(double x, void * params):
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
-
-
 cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
     # Ratcliff 1980 Equation 12
     return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)

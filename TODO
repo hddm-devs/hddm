@@ -1,4 +1,4 @@
-* Find influence of integration and wfpt error on parameter estimation (Imri)
+* add quad so we can work with arbitrary functions (Thomas)
 * Change adaptive Simpsons to work on arbitrary functions (Thomas)
 * Test 2D and 3D recovery of parameters in full model (Imri)
 * Test recovery of tau parameter (Thomas)
