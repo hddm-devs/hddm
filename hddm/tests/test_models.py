@@ -90,7 +90,6 @@ class TestMulti(unittest.TestCase):
     def test_diff_a_subj(self, samples=1000):
         m = diff_model('a', subj=True, change=-.5, samples=samples)
         return m
-        
     
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):

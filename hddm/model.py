@@ -497,6 +497,38 @@ class HDDMTwoRegressor(Base):
 
         return model, params_subj, data
 
+
+class HDDMSwitch(Base):
+    param_names = ('a', 'z', 't', 't_switch', 'v', 'v_switch')
+
+    def __init__(self, data, no_bias=True, **kwargs):
+        super(self.__class__, self).__init__(data, **kwargs)
+
+        self.init_params = {}
+            
+        self.param_ranges = {'a_lower': .2,
+                             'a_upper': 4.,
+                             'v_lower': 0.1,
+                             'v_upper': 3.,
+                             'z_lower': .0,
+                             'z_upper': 2.,
+                             't_lower': .05,
+                             't_upper': 2.,
+                             'V_lower': .2,
+                             'V_upper': 2.}
+
+    def get_observed(self, name, data, params, idx=None):
+        return hddm.likelihoods.LBA(name,
+                                    value=data['rt'].flatten(),
+                                    a=params['a'],
+                                    z=params['z'],
+                                    t=params['t'],
+                                    v0=params['v0'],
+                                    v1=params['v1'],
+                                    V=params['V'],
+                                    normalize_v=self.normalize_v,
+                                    observed=True)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
