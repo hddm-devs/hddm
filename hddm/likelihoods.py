@@ -121,6 +121,15 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
                                         mv=True)
 
 
+def wiener_like_antisaccade(value, instruct, v, v_switch, a, z, t, t_switch, err=1e-4):
+    """Log-likelihood for the simple DDM including contaminants"""
+    return hddm.wfpt_switch.wiener_like_antisaccade(value, np.asarray(instruct), v, v_switch, a, z, t, t_switch, err)
+
+WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                            logp=wiener_like_antisaccade,
+                                            dtype=np.float,
+                                            mv=True)
+
 ################################
 # Linear Ballistic Accumulator
 

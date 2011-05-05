@@ -13,6 +13,31 @@ except:
     pass
 
 
+def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T=5., subj_idx=None):
+    # Generate prosaccade trials
+    pro_params = copy(params)
+    del pro_params['t_switch']
+    del pro_params['v_switch']
+    
+    rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', np.int), ('subj_idx', np.int)])
+
+    pro_rts = gen_rts(pro_params, samples=samples_pro, steps=steps, T=T, subj_idx=subj_idx)
+    anti_rts = gen_rts(params, samples=samples_anti, steps=steps, T=T, subj_idx=subj_idx)
+
+    rts['instruct'][:samples_pro] = 0
+    rts['instruct'][samples_pro:] = 1
+    rts['response'][:samples_pro] = np.array((pro_rts > 0), float)
+    rts['response'][samples_pro:] = np.array((anti_rts > 0), float)
+    rts['rt'][:samples_pro] = np.abs(pro_rts)
+    rts['rt'][samples_pro:] = np.abs(anti_rts)
+    
+    if subj_idx is not None:
+        rts['subj_idx'] = subj_idx
+    
+    return rts
+    
+
+    
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################

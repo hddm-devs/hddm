@@ -15,8 +15,6 @@ try:
 except:
     pass
 
-
-
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
 
@@ -222,7 +220,6 @@ def check_correl(model):
     return ok
 
 def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
-    
     burn = 10000
     thin = 1
     n_samples = 10000

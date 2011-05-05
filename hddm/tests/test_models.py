@@ -259,6 +259,33 @@ class TestSingle(unittest.TestCase):
         models = run_parallel_chains(hddm.model.HDDM, [data, data], ['test1', 'test2'])
         return models
 
+class TestAntisaccade(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(TestAntisaccade, self).__init__(*args, **kwargs)
+        self.params = {'v':-2.,
+                       'v_switch': 2.,
+                       'a': 2.5,
+                       't': .3,
+                       't_switch': .3,
+                       'z':.5,
+                       'T': 0, 'Z':0, 'V':0}
+
+        self.data = hddm.generate.gen_antisaccade_rts(params=self.params)
+        self.assert_ = True
+
+        self.samples = 10000
+        self.burn = 5000
+
+    def runTest(self):
+        return
+    
+    def test_pure_switch(self):
+        model = hddm.model.HDDMAntisaccade(self.data, no_bias=True, is_hierarchical=False)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, self.params)
+
     
 if __name__=='__main__':
     pass

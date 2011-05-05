@@ -498,36 +498,45 @@ class HDDMTwoRegressor(Base):
         return model, params_subj, data
 
 
-class HDDMSwitch(Base):
-    param_names = ('a', 'z', 't', 't_switch', 'v', 'v_switch')
+class HDDMAntisaccade(Base):
+    param_names = ('v', 'v_switch', 'a', 'z', 't', 't_switch')
 
-    def __init__(self, data, no_bias=True, **kwargs):
+    def __init__(self, data, no_bias=True, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
+        
+        if 'instruct' not in self.data.dtype.names:
+            raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.init_params = {}
-            
-        self.param_ranges = {'a_lower': .2,
-                             'a_upper': 4.,
-                             'v_lower': 0.1,
-                             'v_upper': 3.,
+        if not init:
+            # Default param ranges
+            self.init_params = {'t':0.1, 'z':0.5, 'v':-2., 'v_switch':1, 't_switch':.2}
+
+        self.param_ranges = {'a_lower': .5,
+                             'a_upper': 4.5,
                              'z_lower': .0,
-                             'z_upper': 2.,
-                             't_lower': .05,
-                             't_upper': 2.,
-                             'V_lower': .2,
-                             'V_upper': 2.}
-
+                             'z_upper': 1.,
+                             't_lower': .1,
+                             't_upper': 1.,
+                             't_switch_lower': .05,
+                             't_switch_upper': 1.,
+                             'v_lower': -6.,
+                             'v_upper': 0.,
+                             'v_switch_lower': 0.,
+                             'v_switch_upper': 6.,
+                             'e_lower': -.3,
+                             'e_upper': .3}
+            
     def get_observed(self, name, data, params, idx=None):
-        return hddm.likelihoods.LBA(name,
-                                    value=data['rt'].flatten(),
-                                    a=params['a'],
-                                    z=params['z'],
-                                    t=params['t'],
-                                    v0=params['v0'],
-                                    v1=params['v1'],
-                                    V=params['V'],
-                                    normalize_v=self.normalize_v,
-                                    observed=True)
+        return hddm.likelihoods.WienerAntisaccade(name,
+                                                  value=data['rt'],
+                                                  instruct=data['instruct'],
+                                                  v=params['v'],
+                                                  v_switch=params['v_switch'],
+                                                  a=params['a'],
+                                                  z=params['z'],
+                                                  t=params['t'],
+                                                  t_switch=params['t_switch'],
+                                                  observed=True)
 
 if __name__ == "__main__":
     import doctest

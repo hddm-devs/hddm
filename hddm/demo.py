@@ -135,7 +135,7 @@ class DDMPlot(HasTraits):
     plot_drifts = Bool(True)
     plot_data = Bool(False)
     plot_density = Bool(False)
-    plot_true_density = Bool(True)
+    plot_true_density = Bool(False)
     plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
     plot_switch = Bool(True)
@@ -262,15 +262,14 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_switch(self):
-        switch_pdf = lambda x: hddm.wfpt.switch_pdf(x,
-                                                    1.,
-                                                    self.ddm.v,
-                                                    self.ddm.v_switch,
-                                                    self.ddm.a,
-                                                    self.ddm.z,
-                                                    self.ddm.ter,
-                                                    self.ddm.t_switch,
-                                                    1e-4)
+        switch_pdf = lambda x: hddm.wfpt_switch.switch_pdf(x,
+                                                           self.ddm.v,
+                                                           self.ddm.v_switch,
+                                                           self.ddm.a,
+                                                           self.ddm.z,
+                                                           self.ddm.ter,
+                                                           self.ddm.t_switch,
+                                                           1e-4)
         pdf = np.array(map(switch_pdf, self.x_analytical))
         return pdf
     
@@ -395,7 +394,7 @@ class DDMPlot(HasTraits):
                     if x <= self.ddm.ter+.05:
                         zm[i,j] = 1.
                     else:
-                        zm[i,j] = hddm.wfpt.drift_dens(y, x-self.ddm.ter, self.ddm.v, self.ddm.a, self.ddm.z*self.ddm.a)
+                        zm[i,j] = hddm.wfpt_switch.drift_dens(y, x-self.ddm.ter, self.ddm.v, self.ddm.a, self.ddm.z*self.ddm.a)
                     j+=1
                 i+=1
             #dens_max = np.max(zm, axis=0)
