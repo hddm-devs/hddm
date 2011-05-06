@@ -347,7 +347,7 @@ class HDDMContaminant(Base):
         elif param_name == 'gamma':
             return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
         else:
-            return super(self.__class__, self).get_root_param(param_name, all_params, tag)
+            return super(self.__class__, self).get_root_node(param_name, all_params, tag, data)
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
         if param_name == 'pi':
@@ -355,7 +355,7 @@ class HDDMContaminant(Base):
         elif param_name == 'gamma':
             return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
         else:
-            return super(self.__class__, self).get_subj_param(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
+            return super(self.__class__, self).get_child_node(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
     
 
 #@kabuki.hierarchical

@@ -1,3 +1,10 @@
+
+
+CHANGE KABUKI SO WE ACTUALLY WRITE THE CONTAMINATE MODEL!!!!! (Thomas)
+(There is actually no way to write it proparly in kabuki - it's either a group model
+and then all the parameters has subject and group distribution, or it's a subject model and
+then x,y nodes are not created.
+
 * add quad so we can work with arbitrary functions (Thomas)
 * Change adaptive Simpsons to work on arbitrary functions (Thomas)
 * Test 2D and 3D recovery of parameters in full model (Imri)
@@ -5,3 +12,6 @@
 * Get full expanded model to work and converge (Thomas + Imri)
 * Get contaminant model to work (Thomas + Imri)
 * get a paper out of this (imri + Thomas)
+
+* change t_min and t_max in likelihood.py (imri)
+* wp should affect collCont model (Imri)

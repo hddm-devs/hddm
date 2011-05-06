@@ -317,6 +317,37 @@ def wiener_like_full(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[DTYPE_t, ndim=1] 
 
     return sum_logp
 
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full_collCont(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bint, ndim=1] cont_x, double gamma, double v, double V, double a, double z, double Z, 
+                     double t, double T, double t_min, double t_max, double err=1e-4, int nT=2, int nZ=2, bint use_adaptive = 1, double simps_err = 1e-3):
+    """Wiener likelihood function where RTs could come from a
+    separate, uniform contaminant distribution.
+
+    Reference: Lee, Vandekerckhove, Navarro, & Tuernlinckx (2007)
+    """
+    return 0
+#    cdef Py_ssize_t i
+#    cdef double p
+#    cdef sum_logp = 0
+#    for i from 0 <= i < x.shape[0]:
+#        if cont_x[i] == 1:
+#            p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
+#        elif cont_y[i] == 0:
+#            p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
+#        else:
+#            p = .5 * 1./(t_max-t_min)
+#        #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
+#        # If one probability = 0, the log sum will be -Inf
+#        if p == 0:
+#            return -infinity
+#
+#        sum_logp += log(p)
+#        
+#    return sum_logp
+
+
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, bint logp=0, unsigned int reps=10):
     cdef unsigned int num_resps = x.shape[0]
