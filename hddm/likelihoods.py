@@ -25,12 +25,32 @@ WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
 
 def wiener_like_simple_contaminant(value, cont_x, cont_y, v, a, z, t, err=.0001):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt.wiener_like_simple_contaminant(value, np.array(cont_x, dtype=int), np.array(cont_y, dtype=int), v, a, z, t, 0, 7, 1e-4)
+    return hddm.wfpt.wiener_like_simple_contaminant(value, cont_x, cont_y, v, a, z, t, 0, 7, err)
 
 WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        logp=wiener_like_simple_contaminant,
                                        dtype=np.float,
                                        mv=True)
+
+def wiener_like_simple_collCont(value, cont_x, cont_y, v, a, z, t, err=.0001):
+    """Log-likelihood for the simple DDM including contaminants"""
+    return hddm.wfpt.wiener_like_simple_collCont(value, cont_x, cont_y, v, a, z, t, 0, 7, err)
+
+WienerSimpleCollCont = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                       logp=wiener_like_simple_contaminant,
+                                       dtype=np.float,
+                                       mv=True)
+
+
+def wiener_like_full_collCont(value, cont_x, gamma, v, V, a, z, Z, t, T, err=.0001):
+    """Log-likelihood for the DDM with collapsed contaminants"""
+    return hddm.wfpt.wiener_like_full_collCont(value, cont_x, gamma, v, V, a, z, Z, t, T, 0, 7, err)
+
+WienerFullCollCont = pm.stochastic_from_dist(name="Wiener CollCont Diffusion Process",
+                                       logp=wiener_like_full_collCont,
+                                       dtype=np.float,
+                                       mv=True)
+
 
 def wiener_like_simple_multi(value, v, a, z, t, multi=None):
     """Log-likelihood for the simple DDM"""

@@ -5,3 +5,6 @@
 * Get full expanded model to work and converge (Thomas + Imri)
 * Get contaminant model to work (Thomas + Imri)
 * get a paper out of this (imri + Thomas)
+
+* change t_min and t_max and likelihood.py (imri)
+* wp should affect collCont model

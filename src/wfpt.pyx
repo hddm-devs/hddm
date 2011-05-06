@@ -126,7 +126,7 @@ def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, doubl
 def wiener_like_simple(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err):
     cdef Py_ssize_t i
     cdef double p
-    cdef sum_logp = 0
+    cdef double sum_logp = 0
     for i from 0 <= i < x.shape[0]:
         p = pdf_sign(x[i], v, a, z, t, err)
         # If one probability = 0, the log sum will be -Inf
@@ -136,13 +136,9 @@ def wiener_like_simple(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double
         
     return sum_logp
 
-cdef inline double prob_boundary(double x, double v, double a, double z, double t, double err):
+cdef inline double prob_ub(double v, double a, double z):
     """Probability of hitting upper boundary."""
-    p = (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
-    if x > 0:
-        return p
-    else:
-        return 1-p
+    return (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
@@ -154,22 +150,66 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bin
     """
     cdef Py_ssize_t i
     cdef double p
-    cdef sum_logp = 0
+    cdef double sum_logp = 0
+    cdef int n_cont  = x.shape[0] - np.sum(x)
+    cdef int n_guess = np.sum(cont_y[cont_x == False])
+    cdef int late_pos = 0
+    
     for i from 0 <= i < x.shape[0]:
         if cont_x[i] == 1:
-            p = pdf_sign(x[i], v, a, z, t, err)
-        elif cont_y[i] == 0:
-            p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
-        else:
-            p = .5 * 1./(t_max-t_min)
-        #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
+            p = pdf_sign(x[i], v, a, z, t, err)      
+        elif cont_y[i] == 0 and x[i]>0:
+            late_pos += 1
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
             return -infinity
 
         sum_logp += log(p)
-        
+    
+    # add the log likelihood of the contaminations
+    #first the guesses
+    sum_logp += n_guess*log(0.5 * 1./(t_max-t_min))    
+    #then the positive prob_boundary 
+    sum_logp += late_pos*log(prob_ub(v, a, z) * 1./(t_max-t_min))
+    #and the negative prob_boundary
+    cdef int late_neg = n_cont - n_guess - late_pos
+    sum_logp += late_neg*log((1-prob_ub(v, a, z)) * 1./(t_max-t_min))
+    
     return sum_logp
+
+def wiener_like_simple_collCont(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bint, ndim=1] cont_x, double gamma, double v, double a, double z, double t, double t_min, double t_max, double err):
+    """Wiener likelihood function where RTs could come from a
+    separate, uniform contaminant distribution.
+
+    Reference: Lee, Vandekerckhove, Navarro, & Tuernlinckx (2007)
+    """
+    cdef Py_ssize_t i
+    cdef double p
+    cdef double sum_logp = 0
+    cdef int n_cont = x.shape[0] - np.sum(x)
+    cdef int pos_cont = 0
+    
+    for i from 0 <= i < x.shape[0]:
+        if cont_x[i] == 1:
+            p = pdf_sign(x[i], v, a, z, t, err)      
+        elif x[i]>0:
+            pos_cont += 1
+        # If one probability = 0, the log sum will be -Inf
+        if p == 0:
+            return -infinity
+
+        sum_logp += log(p)
+    
+    # add the log likelihood of the contaminations
+    #first the guesses
+    sum_logp += n_cont*log(gamma*(0.5 * 1./(t_max-t_min)))     
+    #then the positive prob_boundary 
+    sum_logp += pos_cont*log((1-gamma) * prob_ub(v, a, z) * 1./(t_max-t_min))
+    #and the negative prob_boundary
+    sum_logp += (n_cont - pos_cont)*log((1-gamma)*(1-prob_ub(v, a, z)) * 1./(t_max-t_min))
+    
+    return sum_logp
+
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
