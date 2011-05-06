@@ -36,7 +36,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
             fell = 50
 
 
-        print "%s: Truth: %f, Estimated: %f, lb: %f, ub: %f,  fell in: %f" % \
+        print "%s: Truth: %6.3f, Estimated: %6.3f, lb: %6.3f, ub: %6.3f,  fell in: %.2f" % \
         (name, truth, est, lb_score, ub_score, fell)
         if (fell < lb) or (fell > ub):
             fail = True
@@ -56,7 +56,7 @@ def check_rejection(model, assert_ = True):
         trace = node.trace()[:]
         rej =  np.sum(np.diff(trace)==0)
         rej_ratio = rej*1.0/len(trace)
-        print "rejection ratio for %s: %f" %(name, rej_ratio)
+        print "rejection ratio for %s: %.3f" %(name, rej_ratio)
         if (rej_ratio < 0.5) or (rej_ratio > 0.8):
             msg = "%s still need to be tuned" % name
             if assert_:
