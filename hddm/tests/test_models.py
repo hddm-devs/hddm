@@ -270,11 +270,11 @@ class TestAntisaccade(unittest.TestCase):
                        'z':.5,
                        'T': 0, 'Z':0, 'V':0}
 
-        self.data = hddm.generate.gen_antisaccade_rts(params=self.params)
+        self.data = hddm.generate.gen_antisaccade_rts(params=self.params, samples_pro=50, samples_anti=100)
         self.assert_ = True
 
-        self.samples = 10000
-        self.burn = 5000
+        self.samples = 1000
+        self.burn = 500
 
     def runTest(self):
         return

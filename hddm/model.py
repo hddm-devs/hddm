@@ -85,26 +85,25 @@ class Base(kabuki.Hierarchical):
 
         
     def get_param_names(self):
-        simple_names = ['a', 'v', 't']
+        names = [('a',True), ('v',True), ('t',True)]
         if not self.no_bias:
-            simple_names = simple_names + ['z']
+            names.append(('z', True))
         if self.model_type == 'simple':
-            return tuple(simple_names)
+            pass
         elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
-            names = set(simple_names + ['V','Z','T'])
+            names += [('V',True),('Z',True),('T',True)]
             for ex in self.exclude:
-                names.remove(ex)
+                names.remove((ex, True))
             if self.no_bias and 'Z' in names:
-                names.remove('Z')
-            return tuple(names)
+                names.remove(('Z', True))
         else:
             raise ValueError('Model %s was not recognized' % self.model_type)
+        
+        names.append(('wfpt', False)) # Append likelihood parameter
+        return tuple(names)
 
     param_names = property(get_param_names)
-    
-    def get_observed(self, *args, **kwargs):
-        return self._models[self.model_type](*args, **kwargs)
-    
+
     def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
@@ -176,6 +175,14 @@ class Base(kabuki.Hierarchical):
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
 
+
+    
+    def get_rootless_child(self, param_name, tag, data, params, idx=None):
+        if param_name.startswith('wfpt'):
+            return self._models[self.model_type](param_name+tag, data, params, idx)
+        else:
+            raise KeyError, "Rootless parameter named %s not found." % param_name
+        
     def _get_simple(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerSimple(name,
                                              value=data['rt'].flatten(), 
@@ -258,7 +265,7 @@ class HDDM(Base):
     pass
 
 class HLBA(Base):
-    param_names = ('a', 'z', 't', 'V', 'v0', 'v1')
+    param_names = (('a',True), ('z',True), ('t',True), ('V',True), ('v0',True), ('v1',True), ('lba',False))
 
     def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude=None, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
@@ -282,8 +289,8 @@ class HLBA(Base):
             self.param_ranges['v_lower'] = 0.
             self.param_ranges['v_upper'] = 1.
 
-    def get_observed(self, name, data, params, idx=None):
-        return hddm.likelihoods.LBA(name,
+    def get_rootless_child(self, name, tag, data, params, idx=None):
+        return hddm.likelihoods.LBA(name+tag,
                                     value=data['rt'].flatten(),
                                     a=params['a'],
                                     z=params['z'],
@@ -314,18 +321,25 @@ class HLBA(Base):
     
 #@kabuki.hierarchical
 class HDDMContaminant(Base):
-    param_names = ('a', 'v', 'z', 't', 'pi', 'gamma')
+    param_names = (('a',True), ('v',True), ('z',True), ('t',True), ('pi',True), ('gamma',True), ('x', False), ('y', False), ('wfpt', False))
 
-    def get_observed(self, model_name, data, params, idx=None):
-        return hddm.likelihoods.WienerSimpleContaminant(model_name,
-                                                        value=data['rt'],
-                                                        cont_x=params['pi'],
-                                                        cont_y=params['gamma'],
-                                                        v=params['v'],
-                                                        t=params['t'],
-                                                        a=params['a'],
-                                                        z=params['z'],
-                                                        observed=True)
+    def get_rootless_child(self, name, tag, data, params, idx=None):
+        if name.startswith('wfpt'):
+            return hddm.likelihoods.WienerSimpleContaminant(name+tag,
+                                                            value=data['rt'],
+                                                            cont_x=params['x'],
+                                                            cont_y=params['y'],
+                                                            v=params['v'],
+                                                            t=params['t'],
+                                                            a=params['a'],
+                                                            z=params['z'],
+                                                            observed=True)
+        elif name.startswith('x'):
+            return blah
+        elif name.startswith('y'):
+            return blub
+        else:
+            raise KeyError, "Rootless child parameter %s not found" %name
 
     def get_root_node(self, param_name, all_params, tag, data):
         if param_name == 'pi':
@@ -385,9 +399,9 @@ class HDDMOneRegressor(Base):
         super(self.__class__, self).__init__(*args, **kwargs)
         
     def get_param_names(self):
-        param_names = super(self.__class__, self).get_param_names()
-        param_names += ('e')
-        return param_names
+        param_names = list(super(self.__class__, self).get_param_names())
+        param_names += ('e', True)
+        return tuple(param_names)
 
     def get_model(self, model_name, data, params, idx=None):
         """Generate the HDDM."""
@@ -416,7 +430,6 @@ class HDDMOneRegressor(Base):
 
         return model, params_subj, data
 
-#@kabuki.hierarchical
 class HDDMTwoRegressor(Base):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
@@ -458,15 +471,14 @@ class HDDMTwoRegressor(Base):
         else:
             raise ValueError, "Provide e2_data parameter"
 
-
         self.effect_id = 0
 
         super(self.__class__, self).__init__(*args, **kwargs)
         
     def get_param_names(self):
-        param_names = super(self.__class__, self).get_param_names()
+        param_names = list(super(self.__class__, self).get_param_names())
         param_names += ('e1','e2', 'e_inter')
-        return param_names
+        return tuple(param_names)
 
     def get_model(self, model_name, data, params, idx=None):
         """Generate the HDDM."""
@@ -499,7 +511,12 @@ class HDDMTwoRegressor(Base):
 
 
 class HDDMAntisaccade(Base):
-    param_names = ('v', 'v_switch', 'a', 'z', 't', 't_switch')
+    param_names = (('v',True),
+                   ('v_switch', True),
+                   ('a', True),
+                   ('z', True),
+                   ('t', True),
+                   ('t_switch', True))
 
     def __init__(self, data, no_bias=True, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
@@ -517,17 +534,17 @@ class HDDMAntisaccade(Base):
                              'z_upper': 1.,
                              't_lower': .1,
                              't_upper': 1.,
-                             't_switch_lower': .05,
+                             't_switch_lower': .1,
                              't_switch_upper': 1.,
-                             'v_lower': -6.,
+                             'v_lower': -3.,
                              'v_upper': 0.,
                              'v_switch_lower': 0.,
-                             'v_switch_upper': 6.,
+                             'v_switch_upper': 3.,
                              'e_lower': -.3,
                              'e_upper': .3}
             
-    def get_observed(self, name, data, params, idx=None):
-        return hddm.likelihoods.WienerAntisaccade(name,
+    def get_rootless_child(self, name, tag, data, params, idx=None):
+        return hddm.likelihoods.WienerAntisaccade(name+tag,
                                                   value=data['rt'],
                                                   instruct=data['instruct'],
                                                   v=params['v'],

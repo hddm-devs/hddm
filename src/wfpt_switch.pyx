@@ -36,29 +36,29 @@ cdef double wfpt_gsl(double x, void * params):
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
-cdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
+cpdef inline double drift_dens_term(double x, double t, double v, double a, double z, int n):
     # Ratcliff 1980 Equation 12
     return 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
 
 cpdef double drift_dens(double x, double t, double v, double a, double z):
-    cdef int N=30
+    cdef int N=40
     cdef int i
-    cdef double terms[30]
-    cdef double sum_accel, err
+    cdef double terms[40]
+    #cdef double sum_accel, err
     cdef double summed = 0
-    cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
+    #cdef gsl_sum_levin_u_workspace * w = gsl_sum_levin_u_alloc(N)
     
     for i from 1 <= i <= N:
         terms[i-1] = drift_dens_term(x, t, v, a, z, i)
         summed += terms[i-1]
 
-    gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
-    gsl_sum_levin_u_free(w)
+    #gsl_sum_levin_u_accel(terms, N, w, &sum_accel, &err)
+    #gsl_sum_levin_u_free(w)
 
     #print summed,sum_accel
     #print err
 
-    return exp(v*(x-z)) * sum_accel
+    return exp(v*(x-z)) * summed
     
 cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
@@ -66,6 +66,7 @@ cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, doub
     W = gsl_integration_workspace_alloc(1000)
     cdef gsl_function F
     cdef double params[7]
+    cdef size_t neval
     params[0] = rt
     params[1] = v
     params[2] = v_switch
@@ -77,7 +78,9 @@ cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, doub
     F.function = &wfpt_gsl
     F.params = params
 
-    gsl_integration_qag(&F, 0, 1, 0, 1e-4, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_qag(&F, 0, 1, 1e-3, 1e-3, 1000, GSL_INTEG_GAUSS41, W, &result, &error)
+    #gsl_integration_qng(&F, 0, 1, 1e-2, 1e-2, &result, &error, &neval)
+    #print neval
     gsl_integration_workspace_free(W)
 
     return result
