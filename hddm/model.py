@@ -77,6 +77,7 @@ class Base(kabuki.Hierarchical):
         else:          
             self.wiener_params = wiener_params
 
+        self.param_names = self.get_param_names()
         
     def get_param_names(self):
         names = [('a',True), ('v',True), ('t',True)]
@@ -96,7 +97,7 @@ class Base(kabuki.Hierarchical):
         names.append(('wfpt', False)) # Append likelihood parameter
         return tuple(names)
 
-    param_names = property(get_param_names)
+
 
     def get_root_node(self, param, all_params, tag, data):
         """Create and return a prior distribution for [param]. [tag] is
@@ -108,8 +109,8 @@ class Base(kabuki.Hierarchical):
             init_val = None
         
         return pm.Uniform("%s%s"%(param, tag),
-                          lower=self.param_ranges['%s_lower'%param[0]],
-                          upper=self.param_ranges['%s_upper'%param[0]],
+                          lower=self.param_ranges['%s_lower'%param],
+                          upper=self.param_ranges['%s_upper'%param],
                           value=init_val)
 
     def get_tau_node(self, param_name, all_params, tag):
@@ -284,11 +285,10 @@ class HLBA(Base):
         else:
             return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot)
     
-#@kabuki.hierarchical
 class HDDMContaminant(Base):
     
     def __init__(self, *args, **kwargs):
-        BASE.__init__(*args, **kwargs)
+        Base.__init__(self, *args, **kwargs)
         self.param_names = (('a',True), ('v',True), ('z',True), ('t',True), \
                             ('pi',True), ('gamma',True), ('x', False), ('wfpt', False))
         self.param_ranges['pi_lower'] = 0.001;
