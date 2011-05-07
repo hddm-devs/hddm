@@ -21,6 +21,7 @@ class Base(kabuki.Hierarchical):
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
                  init=False, exclude=None, wiener_params = None,
                  init_values = None, **kwargs):
+        
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
         self.trace_subjs = trace_subjs
@@ -33,18 +34,11 @@ class Base(kabuki.Hierarchical):
         
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
-            
-        # Set function map
-        self._models = {'simple': self._get_simple,
-                        'full_mc': self._get_full_mc,
-                        'full_intrp': self._get_full_intrp,
-                        'full': self._get_full}
 
         if exclude is None:
             self.exclude = []
         else:
             self.exclude = exclude
-            
 
         self.param_ranges = {'a_lower': .5,
                              'a_upper': 4.5,
@@ -90,7 +84,7 @@ class Base(kabuki.Hierarchical):
             names.append(('z', True))
         if self.model_type == 'simple':
             pass
-        elif self.model_type == 'full_mc' or self.model_type == 'full' or self.model_type== 'full_intrp':
+        elif self.model_type.startswith('full'):
             names += [('V',True),('Z',True),('T',True)]
             for ex in self.exclude:
                 names.remove((ex, True))
@@ -113,22 +107,10 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
         
-
-        if param == 'Z':
-            return pm.Uniform("%s%s"%(param, tag),
-                              lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=1.,
-                              value=init_val)
-        elif param == 'T':
-            return pm.Uniform("%s%s"%(param, tag),
-                              lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=self.param_ranges['%s_upper'%param[0]],
-                              value=init_val)
-        else:
-            return pm.Uniform("%s%s"%(param, tag),
-                              lower=self.param_ranges['%s_lower'%param[0]],
-                              upper=self.param_ranges['%s_upper'%param[0]],
-                              value=init_val)
+        return pm.Uniform("%s%s"%(param, tag),
+                          lower=self.param_ranges['%s_lower'%param[0]],
+                          upper=self.param_ranges['%s_upper'%param[0]],
+                          value=init_val)
 
     def get_tau_node(self, param_name, all_params, tag):
         return pm.Uniform(param_name + tag, lower=0, upper=1000)
@@ -142,25 +124,7 @@ class Base(kabuki.Hierarchical):
         else:
             init_val = None
 
-        if param_name.startswith('Z'):
-            return pm.TruncatedNormal(param_full_name,
-                                      mu=parent_mean,
-                                      tau=parent_tau,
-                                      a=0,
-                                      b=1.,
-                                      plot=plot, trace=self.trace_subjs,
-                                      value=init_val)
-
-        elif param_name.startswith('T'):
-            return pm.TruncatedNormal(param_full_name,
-                                      mu=parent_mean,
-                                      tau=parent_tau,
-                                      a=0,
-                                      b=self.param_ranges['T_upper'],
-                                      plot=plot, trace=self.trace_subjs,
-                                      value=init_val)
-
-        elif param_name.startswith('e') or param_name.startswith('v'):
+        if param_name.startswith('e') or param_name.startswith('v'):
             return pm.Normal(param_full_name,
                              mu=parent_mean,
                              tau=parent_tau,
@@ -174,12 +138,15 @@ class Base(kabuki.Hierarchical):
                                       mu=parent_mean, tau=parent_tau,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
-
-
     
     def get_rootless_child(self, param_name, tag, data, params, idx=None):
         if param_name.startswith('wfpt'):
-            return self._models[self.model_type](param_name+tag, data, params, idx)
+            if self.model_type == 'simple':
+                return self._get_simple(param_name+tag, data, params, idx)
+            elif self.model_type == 'full_intrp':
+                return self._get_full_mc(param_name+tag, data, params, idx)
+            else:
+                raise KeyError, "Model type %s not found." % self.model_type
         else:
             raise KeyError, "Rootless parameter named %s not found." % param_name
         
@@ -192,26 +159,6 @@ class Base(kabuki.Hierarchical):
                                              z=self._get_idx_node('z',params),
                                              observed=True)
 
-    def _get_full_mc(self, name, data, params, idx=None):
-        return hddm.likelihoods.WienerFullMc(name,
-                                             value=data['rt'].flatten(),
-                                             z = self._get_idx_node('z',params),
-                                             t = self._get_idx_node('t',params),
-                                             v = self._get_idx_node('v',params),
-                                             a = self._get_idx_node('a',params),       
-                                             Z = self._get_idx_node('Z',params),
-                                             T = self._get_idx_node('T',params),
-                                             V = self._get_idx_node('V',params),
-                                             observed=True)
-    
-    def _get_idx_node(self, node_name, params):
-        if node_name in self.exclude:
-            return 0
-        elif node_name=='z' and self.no_bias:
-            return 0.5
-        else:
-            return params[node_name]
-
     def _get_full_intrp(self, name, data, params, idx=None):
         if self.wiener_params is not None:
             wp = self.wiener_params
@@ -219,6 +166,7 @@ class Base(kabuki.Hierarchical):
                                                                use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
         else:
             WienerFullIntrp =  hddm.likelihoods.WienerFullIntrp
+            
         return WienerFullIntrp(name,
                              value=data['rt'].flatten(),
                              z = self._get_idx_node('z',params),
@@ -230,40 +178,57 @@ class Base(kabuki.Hierarchical):
                              V = self._get_idx_node('V',params),
                              observed=True)
 
-
-    def _get_full(self, name, data, params, idx=None):
-        trials = data.shape[0]
-        
-        if idx is None:
-            tag = ''
+    def _get_idx_node(self, node_name, params):
+        if node_name in self.exclude:
+            return 0
+        elif node_name=='z' and self.no_bias:
+            return 0.5
         else:
-            tag = str(idx)
+            return params[node_name]
 
-        z_trials = hddm.likelihoods.CenterUniform("z_trls%s"%tag,
-                                                  center=[params['z'] for i in range(trials)],
-                                                  width=[params['Z'] for i in range(trials)])
 
-        v_trials = pm.Normal("v_trls%s"%tag,
-                             mu=[params['v'] for i in range(trials)],
-                             tau=[params['V']**-2 for i in range(trials)])
-        
-        ter_trials = hddm.likelihoods.CenterUniform("t_trls%s"%tag,
-                                                    center=[params['t'] for i in range(trials)],
-                                                    width=[params['T'] for i in range(trials)])
-
-        ddm = hddm.likelihoods.WienerSingleTrial(name,
-                                                 value=data['rt'],
-                                                 v=v_trials,
-                                                 t=ter_trials, 
-                                                 a=[params['a'] for i in range(trials)],
-                                                 z=z_trials,
-                                                 observed=True)
-
-        return [ddm, ter_trials, v_trials, z_trials]
 
 class HDDM(Base):
     pass
 
+class HDDMFullExtended(Base):
+    def get_param_names(self):
+        self.model_type = 'full_expanded'
+        names = list(super(self.__class__, self).get_param_names())
+        names.remove(('wfpt', False))
+        names += [('z_trls', False), ('v_trls', False), ('t_trls', False), ('wfpt', False)]
+        return names
+
+    def get_rootless_child(self, param_name, tag, data, params, idx=None):
+        trials = data.shape[0]
+
+        if param_name.startswith('z_trls'):
+            return hddm.likelihoods.CenterUniform("z_trls%s"%tag,
+                                                  center=[params['z'] for i in range(trials)],
+                                                  width=[params['Z'] for i in range(trials)])
+
+        elif param_name.startswith('v_trls'):
+            return pm.Normal("v_trls%s"%tag,
+                             mu=[params['v'] for i in range(trials)],
+                             tau=[params['V']**-2 for i in range(trials)])
+
+        elif param_name.startswith('t_trls'):
+            return hddm.likelihoods.CenterUniform("t_trls%s"%tag,
+                                                  center=[params['t'] for i in range(trials)],
+                                                  width=[params['T'] for i in range(trials)])
+
+        elif param_name.startswith('wfpt'):
+            return hddm.likelihoods.WienerSingleTrial(name+tag,
+                                                      value=data['rt'],
+                                                      v=params['v_trls'],
+                                                      t=params['t_trls'], 
+                                                      a=[params['a'] for i in range(trials)],
+                                                      z=params['z_trls'],
+                                                      observed=True)
+
+        else:
+            raise KeyError, "Rootless child node named %s not found." % param_name
+        
 class HLBA(Base):
     param_names = (('a',True), ('z',True), ('t',True), ('V',True), ('v0',True), ('v1',True), ('lba',False))
 
