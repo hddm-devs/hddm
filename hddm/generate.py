@@ -36,8 +36,6 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
     
     return rts
     
-
-    
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
@@ -157,6 +155,7 @@ def find_thresholds(drifts, a, return_non_crossings=False):
         if upper == lower == np.Inf:
             # Threshold never crossed
             non_crossings += 1
+            continue
 
         # Determine which one hit the threshold before
         if upper < lower:

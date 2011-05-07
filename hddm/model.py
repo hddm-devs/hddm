@@ -308,7 +308,7 @@ class HDDMContaminant(Base):
                                                             z=params['z'],
                                                             observed=True)
         elif name.startswith('x'):
-            return pm.Bernoulli('x', params['pi'], size=len(data['rt']))        
+            return pm.Bernoulli(name+tag, p=params['pi'], size=len(data['rt']))        
         else:
             raise KeyError, "Rootless child parameter %s not found" %name
 
@@ -317,7 +317,7 @@ class HDDMContaminant(Base):
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
             return super(self.__class__, self).get_child_node(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
-    
+        
 
 #@kabuki.hierarchical
 class HDDMOneRegressor(Base):
