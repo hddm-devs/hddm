@@ -321,40 +321,36 @@ class HLBA(Base):
     
 #@kabuki.hierarchical
 class HDDMContaminant(Base):
-    param_names = (('a',True), ('v',True), ('z',True), ('t',True), ('pi',True), ('gamma',True), ('x', False), ('y', False), ('wfpt', False))
-
+    
+    def __init__(self, *args, **kwargs):
+        BASE.__init__(*args, **kwargs)
+        self.param_names = (('a',True), ('v',True), ('z',True), ('t',True), \
+                            ('pi',True), ('gamma',True), ('x', False), ('wfpt', False))
+        self.param_ranges['pi_lower'] = 0.001;
+        self.param_ranges['pi_upper'] = 0.2;
+        self.param_ranges['gamma_lower'] = 0.001;
+        self.param_ranges['gamma_upper'] = 0.999;
+        
     def get_rootless_child(self, name, tag, data, params, idx=None):
         if name.startswith('wfpt'):
             return hddm.likelihoods.WienerSimpleContaminant(name+tag,
                                                             value=data['rt'],
                                                             cont_x=params['x'],
-                                                            cont_y=params['y'],
+                                                            gamma=params['gamma'],
                                                             v=params['v'],
                                                             t=params['t'],
                                                             a=params['a'],
                                                             z=params['z'],
                                                             observed=True)
         elif name.startswith('x'):
-            return blah
-        elif name.startswith('y'):
-            return blub
+            return pm.Bernoulli('x', params['pi'], size=len(data['rt']))        
         else:
             raise KeyError, "Rootless child parameter %s not found" %name
 
     def get_root_node(self, param_name, all_params, tag, data):
-        if param_name == 'pi':
-            return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
-        elif param_name == 'gamma':
-            return pm.Uniform('%s%s'%(param_name,tag), lower=0, upper=1)
-        else:
             return super(self.__class__, self).get_root_node(param_name, all_params, tag, data)
 
     def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
-        if param_name == 'pi':
-            return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
-        elif param_name == 'gamma':
-            return pm.Bernoulli('%s%s%i'%(param_name, tag, subj_idx), p=[parent_mean for i in range(len(data))])
-        else:
             return super(self.__class__, self).get_child_node(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
     
 
