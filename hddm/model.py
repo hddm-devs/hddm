@@ -300,7 +300,7 @@ class HDDMContaminant(Base):
         if name.startswith('wfpt'):
             return hddm.likelihoods.WienerSimpleContaminant(name+tag,
                                                             value=data['rt'],
-                                                            cont_x=params['x'],
+                                                            cont_x=self.child_nodes['x'],
                                                             gamma=params['gamma'],
                                                             v=params['v'],
                                                             t=params['t'],
