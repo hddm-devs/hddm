@@ -109,7 +109,6 @@ def simulate_drifts(params, samples, steps, T, intra_sv=1.):
 
     # Generate samples from a normal distribution and
     # add the drift rates
-    print drift_rates.shape
     step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt)*intra_sv, size=(samples, steps))/dt  + drift_rates
     # Go through every line and zero out the non-decision component
     for i in range(int(samples)):
@@ -201,21 +200,27 @@ def gen_rand_data(samples=500, params=None, no_var=False):
 
     return (data, params)
 
-def gen_rand_cond_data(params_set, samples_per_cond=500):
+def gen_rand_cond_data(params_set=None, samples_per_cond=100):
     """Generate simulated RTs with random parameters."""
     # Create RT data
+    if params_set is None:
+        params_set = [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
+                      {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
     n_conds = len(params_set)
     n = samples_per_cond
-    data = np.empty(n*n_conds, dtype = ([('response', np.float), ('rt', np.float), ('cond', np.int)]))
+    data = np.empty(n*n_conds, dtype = ([('response', np.float), ('rt', np.float), ('cond', np.int), ('cond2', np.int)]))
     counter = 0
     for i in range(n_conds):
-        i_data = gen_rts(params_set[i], samples=n, structured=True)
+        i_data = gen_rts(params_set[i], samples=n, structured=True, strict_size=True)
         data[counter:counter+len(i_data)]['response'] = np.sign(i_data['response'])
         data[counter:counter+len(i_data)]['rt'] = np.abs(i_data['rt'])
         data[counter:counter+len(i_data)]['cond'] = i
-        counter = counter + len(i_data)
+        data[counter:counter+len(i_data):2]['cond2'] = i+1
+        data[counter+1:counter+len(i_data):2]['cond2'] = i+2
+        counter += len(i_data)
     data = data[:counter]
-    return data
+
+    return data, params_set
 
 
 def gen_rand_correlation_data(v=.5, corr=.1):
