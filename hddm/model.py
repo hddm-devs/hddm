@@ -301,6 +301,7 @@ class HDDMContaminant(Base):
             return hddm.likelihoods.WienerSimpleContaminant(name+tag,
                                                             value=data['rt'],
                                                             cont_x=params['x'],
+                                                            gamma=params['gamma'],
                                                             v=params['v'],
                                                             t=params['t'],
                                                             a=params['a'],
