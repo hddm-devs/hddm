@@ -18,7 +18,7 @@ setup(
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     install_requires=['NumPy >=1.3.0', 'PyMC >=2.1alpha', 'kabuki', 'matplotlib', 'scipy'],
     setup_requires=['NumPy >=1.3.0', 'PyMC >=2.1alpha', 'cython', 'kabuki', 'matplotlib', 'scipy'],
-    include_dirs = [np.get_include(), '/usr/local/include/gsl', '/usr/local/include'],
+    include_dirs = [np.get_include(), '/usr/include/gsl', '/usr/local/include/gsl', '/usr/local/include'],
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("wfpt", ["src/wfpt.pyx"]),
                    Extension("wfpt_switch", ["src/wfpt_switch.pyx"], libraries=['gsl','gslcblas']),

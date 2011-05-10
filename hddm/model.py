@@ -9,6 +9,8 @@ from copy import copy
 import hddm
 import kabuki
 
+from kabuki.hierarchical import Parameter
+
 class Base(kabuki.Hierarchical):
     """
     This class can generate different hddms:
@@ -22,8 +24,6 @@ class Base(kabuki.Hierarchical):
                  init=False, exclude=None, wiener_params = None,
                  init_values = None, **kwargs):
         
-        super(hddm.model.Base, self).__init__(data, **kwargs)
-
         self.trace_subjs = trace_subjs
         self.no_bias = no_bias
 
@@ -76,56 +76,59 @@ class Base(kabuki.Hierarchical):
             self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}
         else:          
             self.wiener_params = wiener_params
-
-        self.param_names = self.get_param_names()
         
-    def get_param_names(self):
-        names = [('a',True), ('v',True), ('t',True)]
+        self.params = self.get_params()
+        super(hddm.model.Base, self).__init__(data, **kwargs)
+
+    def get_params(self):
+        params = [Parameter('a',True), 
+                 Parameter('v',True), 
+                 Parameter('t',True)]
         if not self.no_bias:
-            names.append(('z', True))
+            params.append(Parameter('z', True))
         if self.model_type == 'simple':
             pass
         elif self.model_type.startswith('full'):
-            names += [('V',True),('Z',True),('T',True)]
+            params += [Parameter('V',True), 
+                       Parameter('Z',True), 
+                       Parameter('T',True)]
             for ex in self.exclude:
-                names.remove((ex, True))
+                params.remove(Parameter(ex, True))
             if self.no_bias and 'Z' in names:
-                names.remove(('Z', True))
+                params.remove(Parameter('Z', True))
         else:
             raise ValueError('Model %s was not recognized' % self.model_type)
         
-        names.append(('wfpt', False)) # Append likelihood parameter
-        return tuple(names)
-
-
-
-    def get_root_node(self, param, all_params, tag, data):
+        params.append(Parameter('wfpt', False)) # Append likelihood parameter
+        return params
+    
+    def get_root_node(self, param, tag):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
-        if param in self.init_params:
-            init_val = self.init_params[param]
+        if param.name in self.init_params:
+            init_val = self.init_params[param.name]
         else:
             init_val = None
         
-        return pm.Uniform("%s%s"%(param, tag),
-                          lower=self.param_ranges['%s_lower'%param],
-                          upper=self.param_ranges['%s_upper'%param],
+        return pm.Uniform("%s%s"%(param.name, tag),
+                          lower=self.param_ranges['%s_lower'%param.name],
+                          upper=self.param_ranges['%s_upper'%param.name],
                           value=init_val)
 
-    def get_tau_node(self, param_name, all_params, tag):
-        return pm.Uniform(param_name + tag, lower=0, upper=1000)
+    def get_tau_node(self, param, tag):
+        return pm.Uniform(param.name + tag, lower=0, upper=1000)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
-        param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
-        init_param_name = '%s%i'%(param_name, subj_idx)
+    def get_child_node(self, param, parent_mean, parent_tau, subj_idx, tag, data, plot=False):
+        param_full_name = '%s%s%i'%(param.name, tag, subj_idx)
+        init_param_name = '%s%i'%(param.name, subj_idx)
 
         if init_param_name in self.init_params:
             init_val = self.init_params[init_param_name]
         else:
             init_val = None
 
-        if param_name.startswith('e') or param_name.startswith('v'):
+        if param.name.startswith('e') or param.name.startswith('v'):
             return pm.Normal(param_full_name,
                              mu=parent_mean,
                              tau=parent_tau,
@@ -134,22 +137,22 @@ class Base(kabuki.Hierarchical):
 
         else:
             return pm.TruncatedNormal(param_full_name,
-                                      a=self.param_ranges['%s_lower'%param_name],
-                                      b=self.param_ranges['%s_upper'%param_name],
+                                      a=self.param_ranges['%s_lower'%param.name],
+                                      b=self.param_ranges['%s_upper'%param.name],
                                       mu=parent_mean, tau=parent_tau,
                                       plot=plot, trace=self.trace_subjs,
                                       value=init_val)
     
-    def get_rootless_child(self, param_name, tag, data, params, idx=None):
-        if param_name.startswith('wfpt'):
+    def get_rootless_child(self, param, tag, data, params, idx=None):
+        if param.name.startswith('wfpt'):
             if self.model_type == 'simple':
-                return self._get_simple(param_name+tag, data, params, idx)
+                return self._get_simple(param.name+tag, data, params, idx)
             elif self.model_type == 'full_intrp':
-                return self._get_full_mc(param_name+tag, data, params, idx)
+                return self._get_full_mc(param.name+tag, data, params, idx)
             else:
                 raise KeyError, "Model type %s not found." % self.model_type
         else:
-            raise KeyError, "Rootless parameter named %s not found." % param_name
+            raise KeyError, "Rootless parameter named %s not found." % param.name
         
     def _get_simple(self, name, data, params, idx=None):
         return hddm.likelihoods.WienerSimple(name,
@@ -195,10 +198,13 @@ class HDDM(Base):
 class HDDMFullExtended(Base):
     def get_param_names(self):
         self.model_type = 'full_expanded'
-        names = list(super(self.__class__, self).get_param_names())
-        names.remove(('wfpt', False))
-        names += [('z_trls', False), ('v_trls', False), ('t_trls', False), ('wfpt', False)]
-        return names
+        params = list(super(self.__class__, self).get_param_names())
+        params.pop()
+        params += [Parameter('z_trls', False),
+                  Parameter('v_trls', False),
+                  Parameter('t_trls', False), 
+                  Parameter('wfpt', False)]
+        return params
 
     def get_rootless_child(self, param_name, tag, data, params, idx=None):
         trials = data.shape[0]
@@ -286,11 +292,17 @@ class HLBA(Base):
             return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot)
     
 class HDDMContaminant(Base):
-    
     def __init__(self, *args, **kwargs):
         Base.__init__(self, *args, **kwargs)
-        self.param_names = (('a',True), ('v',True), ('z',True), ('t',True), \
-                            ('pi',True), ('gamma',True), ('x', False), ('wfpt', False))
+        self.params = (Parameter('a',True), 
+                       Parameter('v',True), 
+                       Parameter('z',True), 
+                       Parameter('t',True),
+                       Parameter('pi',True), 
+                       Parameter('gamma',True),
+                       Parameter('x', False), 
+                       Parameter('wfpt', False))
+
         self.param_ranges['pi_lower'] = 0.001;
         self.param_ranges['pi_upper'] = 0.2;
         self.param_ranges['gamma_lower'] = 0.001;

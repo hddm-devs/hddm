@@ -111,7 +111,7 @@ class DDM(HasTraits):
     @cached_property
     def _get_non_crossings(self):
         return hddm.generate.find_thresholds(self.drifts, self.a, return_non_crossings=True)[1]
-    
+
     @cached_property
     def _get_histo(self):
         n, bins = hddm.utils.histogram(self.rts/self.dt, bins=2*self.bins, range=(-self.T,self.T))

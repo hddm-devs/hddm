@@ -37,8 +37,6 @@ ctypedef double DTYPE_t
 int_DTYPE = np.int
 ctypedef int int_DTYPE_t
 
-
-
 cdef double PI = 3.1415926535897
 cdef double PIs = 9.869604401089358 # PI^2
     
