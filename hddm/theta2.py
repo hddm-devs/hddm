@@ -68,9 +68,9 @@ class Theta(hddm.model.Base):
         params += [Parameter('e_theta', True), 
                    Parameter('e_dbs', True), 
                    Parameter('e_inter', True), 
-                   ParameterEffect('e_inst', False)]
+                   Parameter('e_inst', False)]
         for effect_on in self.effect_on:
-            p = Parameter('e_inst', False)
+            p = Parameter('e_inst'+effect_on, False)
             p.effect_on = effect_on
             param.append(p)
 
