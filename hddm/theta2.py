@@ -59,58 +59,55 @@ class Theta(hddm.model.Base):
         else:
             self.theta_col = theta_col
 
-        self.effect_id = 0
-
         super(self.__class__, self).__init__(data, **kwargs)
 
     def get_params(self):
-        params = super(self.__class__, self).get_params()
-        params += [Parameter('e_theta', True), 
-                   Parameter('e_dbs', True), 
-                   Parameter('e_inter', True), 
-                   Parameter('e_inst', False)]
+        params = [Parameter('e_theta', True, lower=-3., upper=3., init=0), 
+                   Parameter('e_dbs', True, lower=-3., upper=3., init=0),
+                   Parameter('e_inter', True, lower=-3., upper=3., init=0)]
         for effect_on in self.effect_on:
-            p = Parameter('e_inst'+effect_on, False)
-            p.effect_on = effect_on
-            param.append(p)
+            p = Parameter('e_inst'+effect_on, False, vars={'effect_on':effect_on})
+            params.append(p)
 
-        return param_names
+        params += super(self.__class__, self).get_params()
 
-    def get_rootless_child(self, param, tag, data, idx=None):
+        return params
+
+    def get_rootless_child(self, param, params):
         """Generate the HDDM."""
-        data_pts = len(data)
-        
         if param.name.startswith('e_inst'):
-            return pm.Deterministic(effect2, param.name+tag, param.name+tag,
-                                    parents={'base':params[param.effect_on],
+            return pm.Deterministic(effect2, param.full_name, param.full_name,
+                                    parents={'base':params[param.vars['effect_on']],
                                              'e1':params['e_theta'],
                                              'e2':params['e_dbs'],
                                              'e_inter':params['e_inter'],
-                                             'data_e1':data['theta'],
-                                             'data_e2':data[self.dbs]}, trace=True)
+                                             'data_e1':param.data['theta'],
+                                             'data_e2':param.data[self.dbs]}, trace=True)
+
+        
+        for effect in self.effect_on:
+            params[effect] = params['e_inst'+effect]
 
         if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(model_name,
-                                                       value=data['rt'],
+            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
+                                                       value=param.data['rt'],
                                                        v=params['v'],
                                                        a=params['a'],
-                                                       z=params['z'],
+                                                       z=self._get_node('z',params),
                                                        t=params['t'],
-                                                       multi=params['e_inst'],
+                                                       multi=self.effect_on,
                                                        observed=True)
         elif self.model_type == 'full_mc':
-            model = hddm.likelihoods.WienerFullMcMultiThresh(model_name,
-                                                             value=data['rt'],
-                                                             v=params_subj['v'],
-                                                             V=params_subj['V'],
-                                                             z=params_subj['z'],
-                                                             Z=params_subj['Z'],
-                                                             t=params_subj['t'],
-                                                             T=params_subj['T'],
-                                                             a=params_subj['a'],
+            model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
+                                                             value=param.data['rt'],
+                                                             v=params['v'],
+                                                             V=self._get_node('V', params),
+                                                             z=self._get_node('z', params),
+                                                             Z=self._get_node('Z', params),
+                                                             t=params['t'],
+                                                             T=self._get_node('T', params),
+                                                             a=params['a'],
                                                              observed=True)
-            
-
         return model
 
 def effect2(base, e1, e2, e_inter, data_e1, data_e2):
@@ -132,7 +129,6 @@ def effect1_nozero(base, e1, data):
     return value
 
 
-@kabuki.hierarchical
 class ThetaNoDBS(hddm.model.Base):
     def __init__(self, data, effect_on=('a',), theta_col=None, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
@@ -170,57 +166,48 @@ class ThetaNoDBS(hddm.model.Base):
         else:
             self.theta_col = theta_col
 
-        self.effect_id = 0
         super(self.__class__, self).__init__(data, **kwargs)
         
     def get_param_names(self):
-        param_names = super(self.__class__, self).get_param_names()
-        param_names += ('e_theta',)
-        return param_names
+        params = super(self.__class__, self).get_params()
+        params.append(Parameter('e_theta', True, lower=-3., upper=3., init=0))
+        return params
 
-    param_names = property(get_param_names)
-    
-    def get_observed(self, model_name, data, params, idx=None):
+    def get_rootless_child(self, param, params):
         """Generate the HDDM."""
-        data = copy(data)
-        params_subj = {}
-        for name, param in params.iteritems():
-            params_subj[name] = param[idx]
-        self.effect_id += 1
-
-        for effect in self.effect_on:
-            # Create actual effect on base values, result is a matrix.
-            name = 'e_inst_%s_%i_%i'%(effect,idx,self.effect_id)
+        if param.name.startswith('e_inst'):
             if effect == 't':
                 func = effect1_nozero
             else:
                 func = effect1
-            params_subj[effect] = pm.Deterministic(func, name, name, parents={'base': params_subj[effect],
-                                                                              'e1': params_subj['e_theta'],
-                                                                              'data': data[self.theta_col]}, trace=True)
+            return pm.Deterministic(func, param.full_name, param.full_name, 
+                                    parents={'base': params[param.vars['effect_on']],
+                                             'e1': params['e_theta'],
+                                             'data': param.data[self.theta_col]}, trace=True)
+
+        for effect in self.effect_on:
+            params[effect] = params['e_inst'+effect]
 
         if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(model_name,
-                                                       value=data['rt'],
-                                                       v=params_subj['v'],
-                                                       a=params_subj['a'],
-                                                       z=params_subj['z'],
-                                                       t=params_subj['t'],
+            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
+                                                       value=param.data['rt'],
+                                                       v=params['v'],
+                                                       a=params['a'],
+                                                       z=self._get_node('z',params),
+                                                       t=params['t'],
                                                        multi=self.effect_on,
                                                        observed=True)
-
         elif self.model_type == 'full_mc':
-            model = hddm.likelihoods.WienerFullMcMultiThresh(model_name,
-                                                             value=data['rt'],
-                                                             v=params_subj['v'],
-                                                             V=params_subj['V'],                                                             
-                                                             z=params_subj['z'],
-                                                             Z=params_subj['Z'],
-                                                             t=params_subj['t'],
-                                                             T=params_subj['T'],
-                                                             a=params_subj['a'],
+            model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
+                                                             value=param.data['rt'],
+                                                             v=params['v'],
+                                                             V=self._get_node('V', params),
+                                                             z=self._get_node('z', params),
+                                                             Z=self._get_node('Z', params),
+                                                             t=params['t'],
+                                                             T=self._get_node('T', params),
+                                                             a=params['a'],
                                                              observed=True)
-
         return model
 
 def load_scalp_data(continuous=True, remove_outliers=.4, shift_theta=False):

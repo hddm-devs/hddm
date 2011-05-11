@@ -40,27 +40,8 @@ class Base(kabuki.Hierarchical):
         else:
             self.exclude = exclude
 
-        self.param_ranges = {'a_lower': .5,
-                             'a_upper': 4.5,
-                             'z_lower': .0,
-                             'z_upper': 1.,
-                             't_lower': .1,
-                             't_upper': 2.,
-                             'v_lower': -6.,
-                             'v_upper': 6.,
-                             'V_lower': 0.,
-                             'V_upper': 3.,
-                             'T_lower': 0.,
-                             'T_upper': 1.,
-                             'Z_lower': 0.,
-                             'Z_upper': 1.,
-                             'e_lower': -.3,
-                             'e_upper': .3}
-
-        if not init:
-            # Default param ranges
-            self.init_params = {'t':0.1, 'T':0.1, 'z':0.5, 'Z':0.1}
-        else:
+        if init:
+            raise NotImplemented, "TODO"
             # Compute ranges based on EZ method
             param_ranges = hddm.utils.EZ_param_ranges(self.data)
             # Overwrite set parameters
@@ -69,9 +50,8 @@ class Base(kabuki.Hierarchical):
             self.init_params = hddm.utils.EZ_subjs(self.data)
         
         if init_values is not None:
-            for param in init_values:
-                self.init_params[param] = init_values[param]
-        
+            raise NotImplemented, "TODO"
+
         if wiener_params == None:
             self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}
         else:          
@@ -81,89 +61,75 @@ class Base(kabuki.Hierarchical):
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
     def get_params(self):
-        params = [Parameter('a',True), 
-                 Parameter('v',True), 
-                 Parameter('t',True)]
+        params = [Parameter('a',True, lower=.5, upper=4.5),
+                  Parameter('v',True, lower=-6., upper=6.), 
+                  Parameter('t',True, lower=.1, upper=2., init=.1)]
         if not self.no_bias:
-            params.append(Parameter('z', True))
+            params.append(Parameter('z', True, lower=0., upper=1., init=.5))
         if self.model_type == 'simple':
             pass
         elif self.model_type.startswith('full'):
-            params += [Parameter('V',True), 
-                       Parameter('Z',True), 
-                       Parameter('T',True)]
-            for ex in self.exclude:
-                params.remove(Parameter(ex, True))
-            if self.no_bias and 'Z' in names:
-                params.remove(Parameter('Z', True))
+            if 'V' not in self.exclude:
+                params.append(Parameter('V',True, lower=0., upper=6.))
+            if 'Z' not in self.exclude and not self.no_bias:
+                params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
+            if 'T' not in self.exclude:
+                params.append(Parameter('T',True, lower=0., upper=1., init=.1))
         else:
             raise ValueError('Model %s was not recognized' % self.model_type)
         
         params.append(Parameter('wfpt', False)) # Append likelihood parameter
         return params
     
-    def get_root_node(self, param, tag):
-        """Create and return a prior distribution for [param]. [tag] is
-        used in case of dependent parameters.
+    def get_root_node(self, param):
+        """Create and return a prior distribution for [param].
         """
-        if param.name in self.init_params:
-            init_val = self.init_params[param.name]
-        else:
-            init_val = None
-        
-        return pm.Uniform("%s%s"%(param.name, tag),
-                          lower=self.param_ranges['%s_lower'%param.name],
-                          upper=self.param_ranges['%s_upper'%param.name],
-                          value=init_val)
+        return pm.Uniform(param.full_name,
+                          lower=param.lower,
+                          upper=param.upper,
+                          value=param.init)
 
-    def get_tau_node(self, param, tag):
-        return pm.Uniform(param.name + tag, lower=0, upper=1000)
+    def get_tau_node(self, param):
+        return pm.Uniform(param.full_name, lower=0, upper=10)
 
-    def get_child_node(self, param, parent_mean, parent_tau, subj_idx, tag, data, plot=False):
-        param_full_name = '%s%s%i'%(param.name, tag, subj_idx)
-        init_param_name = '%s%i'%(param.name, subj_idx)
-
-        if init_param_name in self.init_params:
-            init_val = self.init_params[init_param_name]
-        else:
-            init_val = None
-
+    def get_child_node(self, param, plot=False):
         if param.name.startswith('e') or param.name.startswith('v'):
-            return pm.Normal(param_full_name,
-                             mu=parent_mean,
-                             tau=parent_tau,
+            return pm.Normal(param.full_name,
+                             mu=param.root,
+                             tau=param.tau**-2,
                              plot=plot, trace=self.trace_subjs,
-                             value=init_val)
+                             value=param.init)
 
         else:
-            return pm.TruncatedNormal(param_full_name,
-                                      a=self.param_ranges['%s_lower'%param.name],
-                                      b=self.param_ranges['%s_upper'%param.name],
-                                      mu=parent_mean, tau=parent_tau,
+            return pm.TruncatedNormal(param.full_name,
+                                      a=param.lower,
+                                      b=param.upper,
+                                      mu=param.root, 
+                                      tau=param.tau**-2,
                                       plot=plot, trace=self.trace_subjs,
-                                      value=init_val)
+                                      value=param.init)
     
-    def get_rootless_child(self, param, tag, data, params, idx=None):
+    def get_rootless_child(self, param, params):
         if param.name.startswith('wfpt'):
             if self.model_type == 'simple':
-                return self._get_simple(param.name+tag, data, params, idx)
+                return self._get_simple(param.full_name, param.data, params)
             elif self.model_type == 'full_intrp':
-                return self._get_full_mc(param.name+tag, data, params, idx)
+                return self._get_full_mc(param.full_name, param.data, params)
             else:
                 raise KeyError, "Model type %s not found." % self.model_type
         else:
             raise KeyError, "Rootless parameter named %s not found." % param.name
         
-    def _get_simple(self, name, data, params, idx=None):
+    def _get_simple(self, name, data, params):
         return hddm.likelihoods.WienerSimple(name,
-                                             value=data['rt'].flatten(), 
+                                             value=data['rt'].flatten(),
                                              v=params['v'], 
-                                             t=params['t'], 
                                              a=params['a'], 
-                                             z=self._get_idx_node('z',params),
+                                             z=self._get_node('z',params),
+                                             t=params['t'], 
                                              observed=True)
 
-    def _get_full_intrp(self, name, data, params, idx=None):
+    def _get_full_intrp(self, name, data, params):
         if self.wiener_params is not None:
             wp = self.wiener_params
             WienerFullIntrp = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'],
@@ -173,16 +139,16 @@ class Base(kabuki.Hierarchical):
             
         return WienerFullIntrp(name,
                              value=data['rt'].flatten(),
-                             z = self._get_idx_node('z',params),
-                             t = self._get_idx_node('t',params),
-                             v = self._get_idx_node('v',params),
-                             a = self._get_idx_node('a',params),       
-                             Z = self._get_idx_node('Z',params),
-                             T = self._get_idx_node('T',params),
-                             V = self._get_idx_node('V',params),
+                             v = params['v'],
+                             a = params['a'],
+                             z = self._get_node('z',params),
+                             t = params['t'],
+                             Z = self._get_node('Z',params),
+                             T = self._get_node('T',params),
+                             V = self._get_node('V',params),
                              observed=True)
 
-    def _get_idx_node(self, node_name, params):
+    def _get_node(self, node_name, params):
         if node_name in self.exclude:
             return 0
         elif node_name=='z' and self.no_bias:
