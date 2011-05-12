@@ -90,24 +90,25 @@ class Theta(hddm.model.Base):
 
         if self.model_type == 'simple':
             model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'],
+                                                       value=param.data['rt'].flatten(),
                                                        v=params['v'],
                                                        a=params['a'],
                                                        z=self._get_node('z',params),
                                                        t=params['t'],
                                                        multi=self.effect_on,
                                                        observed=True)
-        elif self.model_type == 'full_mc':
-            model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
-                                                             value=param.data['rt'],
-                                                             v=params['v'],
-                                                             V=self._get_node('V', params),
-                                                             z=self._get_node('z', params),
-                                                             Z=self._get_node('Z', params),
-                                                             t=params['t'],
-                                                             T=self._get_node('T', params),
-                                                             a=params['a'],
-                                                             observed=True)
+        elif self.model_type == 'full':
+            model = hddm.likelihoods.WienerFullMulti(param.full_name,
+                                                     value=param.data['rt'].flatten(),
+                                                     v=params['v'],
+                                                     V=self._get_node('V', params),
+                                                     z=self._get_node('z', params),
+                                                     Z=self._get_node('Z', params),
+                                                     t=params['t'],
+                                                     T=self._get_node('T', params),
+                                                     a=params['a'],
+                                                     multi=self.effect_on,
+                                                     observed=True)
         return model
 
 def effect2(base, e1, e2, e_inter, data_e1, data_e2):
@@ -197,7 +198,7 @@ class ThetaNoDBS(hddm.model.Base):
                                                        t=params['t'],
                                                        multi=self.effect_on,
                                                        observed=True)
-        elif self.model_type == 'full_mc':
+        elif self.model_type == 'full':
             model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
                                                              value=param.data['rt'],
                                                              v=params['v'],
@@ -207,6 +208,7 @@ class ThetaNoDBS(hddm.model.Base):
                                                              t=params['t'],
                                                              T=self._get_node('T', params),
                                                              a=params['a'],
+                                                             multi=self.effect_on,
                                                              observed=True)
         return model
 
@@ -375,12 +377,12 @@ def run_model(name, params, load=False):
     data = params.pop('data')
 
     if name.startswith('PD'):
-        m = Theta(data, **params).create()
+        m = pm.MCMC(Theta(data, **params).create())
     else:
         if params.has_key('effect_on'):
-            m = ThetaNoDBS(data, **params).create()
+            m = pm.MCMC(ThetaNoDBS(data, **params).create())
         else:
-            m = hddm.model.HDDM(data, **params).create()
+            m = pm.MCMC(hddm.model.HDDM(data, **params).create())
     
     dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
 
@@ -497,20 +499,6 @@ def controller(samples=200, burn=15, reps=5):
             break
 
     return results
-    
-def plot_cavanagh_model(m):
-    # Find average min and max values of theta
-    theta_min = np.mean([np.min(m.data['theta'][m.data['subj_idx'] == i]) for i in range(m.num_subjs)])
-    theta_max = np.mean([np.max(m.data['theta'][m.data['subj_idx'] == i]) for i in range(m.num_subjs)])
-    
-    a = m.params_est['a']
-    effect = m.params_est['e_theta_a_HC']
-
-    a_low = a + effect*theta_min
-    a_high = a + effect*theta_max
-
-    plot_cavanagh(a_low=a_low, a_high=a_high, v=np.mean([m.params_est['v_LL'], m.params_est['v_WW']]), ter=m.params_est['ter'], tag='v_high', plot_ontop=True)
-    #plot_cavanagh(a_low=a_low, a_high=a_high, v=m.params_est['v_WL'], ter=m.params_est['ter'], tag='v_low')
 
 def add_median_fields(data):
     theta_median = np.empty(data.shape, dtype=[('theta_split','S8')])
@@ -557,83 +545,6 @@ def load_csv_jim(*args, **kwargs):
     data = add_median_fields(data)
 
     return data[data['rt'] > .4]
-    
-def plot_cavanagh(a_low=1.5, a_high=3, v=.5, ter=0.3, tag=None, plot_dual=True, plot_ontop=False, plot_error=True):
-    import brownian
-    if tag is None:
-        tag = ''
-    x = np.linspace(-5.,5.,1000)
-    
-    y_low = hddm.pdf_array(x=x, a=a_low, z=a_low/2., v=v, ter=ter, err=.000001)
-    y_high = hddm.pdf_array(x=x, a=a_high, z=a_high/2., v=v, ter=ter, err=.000001)
-
-    y_low_scaled = y_low
-    y_high_scaled = y_high
-    #y_low_scaled, y_high_scaled = brownian.scale_multi(y_low, y_high)
-    # plt.figure()
-    # plt.plot(x, y_low, lw=2., label='low threshold')
-    # plt.plot(x, y_high, lw=2., label='high threshold')
-
-    # plt.legend(loc=0)
-    # plt.xlabel('time (s)')
-    # plt.ylabel('likelihood')
-    # plt.title('Drift diffusion model reaction time distribution')
-    # plt.savefig('rt_dist_mirrored%s.png'%tag)
-
-    xlim_upper = 3.5
-    if plot_dual:
-        plt.figure()
-        plt.subplot(211)
-        plt.title('Low threshold')
-        plt.plot(x[x>0], y_low_scaled[x>0], 'g', label='correct', lw=2)
-        plt.plot(-x[x<0], y_low_scaled[x<0], 'r', label='errors', lw=2)
-        plt.legend(loc=0)
-        plt.xlim(0, xlim_upper)
-        plt.ylim(0, np.max(np.abs(y_low))+.0)
-        plt.subplot(212)
-        plt.title('High threshold')
-        plt.plot(x[x>0], y_high_scaled[x>0], 'g', label='correct', lw=2)
-        plt.plot(-x[x<0], y_high_scaled[x<0], 'r', label='errors', lw=2)
-        plt.legend(loc=0)
-        plt.xlim(0, xlim_upper)
-        plt.ylim(0, np.max(np.abs(y_low))+.0)
-        plt.savefig('rt_dual%s.png'%tag)
-        plt.savefig('rt_dual%s.pdf'%tag)
-
-
-    if plot_ontop:
-        plt.figure()
-        plt.title('Drift diffusion model reaction time distribution')
-        plt.plot(x[x>0], y_low_scaled[x>0], 'g--', label='low threshold correct', lw=2)
-        plt.plot(-x[x<0], y_low_scaled[x<0], 'r--', label='low threshold error', lw=2)
-        plt.plot(x[x>0], y_high_scaled[x>0], 'g', label='high threshold correct', lw=2)
-        plt.plot(-x[x<0], y_high_scaled[x<0], 'r', label='high threshold error', lw=2)
-        plt.legend(loc=0)
-        plt.xlabel('time (s)')
-        plt.ylabel('likelihood')
-        plt.savefig('rt_dist%s.png'%tag)
-        plt.savefig('rt_dist%s.pdf'%tag)
-
-    if plot_error:
-        plt.figure()
-        plt.subplot(211)
-        plt.title('Correct')
-        plt.plot(x[x>0], y_high_scaled[x>0], 'g', label='high theta/threshold', lw=2)
-        plt.plot(x[x>0], y_low_scaled[x>0], 'g--', label='low theta/threshold', lw=2)
-        plt.legend(loc=0)
-        plt.xlim(0, xlim_upper)
-        plt.ylim(0, np.max(np.abs(y_low_scaled))+.0)
-        plt.subplot(212)
-        plt.title('Error')
-        plt.plot(-x[x<0], y_high_scaled[x<0], 'r', label='high theta/threshold', lw=2)
-        plt.plot(-x[x<0], y_low_scaled[x<0], 'r--', label='low theta/threshold', lw=2)
-        plt.legend(loc=0)
-        plt.xlim(0, xlim_upper)
-        plt.ylim(0, np.max(np.abs(y_low_scaled))+.0)
-        plt.savefig('rt_dual_error%s.png'%tag)
-        plt.savefig('rt_dual_error%s.pdf'%tag)
-        plt.xlabel('time (secs)')
-        plt.ylabel('likelihood')
 
 if __name__=='__main__':
     #import sys

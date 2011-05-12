@@ -248,7 +248,7 @@ def gen_rand_correlation_data(v=.5, corr=.1):
 
     return np.concatenate(all_data)
     
-def _add_noise(params_subj, noise=.01):
+def _add_noise(params_subj, noise=.1):
     """Add individual noise to each parameter."""
     params_subj = copy(params_subj)
     for param, value in params_subj.iteritems():
@@ -257,7 +257,7 @@ def _add_noise(params_subj, noise=.01):
 
     return params_subj
 
-def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.01, tag=None):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
     # Set global parameters
     #z = rnd(loc=1, scale=2)

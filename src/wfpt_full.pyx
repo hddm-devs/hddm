@@ -261,7 +261,7 @@ cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double 
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
                      double t, double T, double err, int nT=4, int nZ=4, bint use_adaptive = 1, double simps_err = 1e-5):
-    """pull pdf"""
+    """full pdf"""
 
     # Check if parpameters are valid
     if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
@@ -381,3 +381,25 @@ def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, doubl
         return (probs/reps)
     else:
         return np.log(probs/reps)
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, v, V, a, z, Z, t, T, double err, multi=None):
+    cdef unsigned int size = x.shape[0]
+    cdef unsigned int i
+    cdef double p = 0
+
+    if multi is None:
+        return wiener_like_full_intrp(x, v, V, a, z, Z, t, T, err)
+    else:
+        params = {'v':v, 'z':z, 't':t, 'a':a, 'V':V, 'Z':Z, 'T':T}
+        params_iter = copy(params)
+        for i from 0 <= i < size:
+            for param in multi:
+                params_iter[param] = params[param][i]
+                
+            p += log(full_pdf(x[i], params_iter['v'],
+                              params_iter['V'], params_iter['a'], params_iter['z'],
+                              params_iter['Z'], params_iter['t'], params_iter['T'],
+                              err))
+        return p

@@ -180,14 +180,13 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] value, np.ndarray
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, bint logp=0, multi=None):
+def wiener_like_simple_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, multi=None):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
-    cdef np.ndarray[DTYPE_t, ndim=1] y = np.empty(size, dtype=DTYPE)
-    cdef double prob
+    cdef double p = 0
 
     if multi is None:
-        return pdf_array(x, v=v, a=a, z=z, t=t, err=err, logp=logp)
+        return wiener_like_simple(x, v, a, z, t, err)
     else:
         params = {'v':v, 'z':z, 't':t, 'a':a}
         params_iter = copy(params)
@@ -195,11 +194,7 @@ def pdf_array_multi(np.ndarray[DTYPE_t, ndim=1] x, v, a, z, t, double err, bint 
             for param in multi:
                 params_iter[param] = params[param][i]
                 
-            prob = pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err)
-            if logp==1:
-                y[i] = log(prob)
-            else:
-                y[i] = prob
+            p += log(pdf_sign(x[i], params_iter['v'], params_iter['a'], params_iter['z'], params_iter['t'], err))
                 
-        return y
+        return p
 

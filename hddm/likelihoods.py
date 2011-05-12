@@ -45,12 +45,20 @@ WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion 
 
 def wiener_like_simple_multi(value, v, a, z, t, multi=None):
     """Log-likelihood for the simple DDM"""
-    return np.sum(hddm.wfpt.pdf_array_multi(value, v, a, z, t, .001, logp=1, multi=multi))
+    return hddm.wfpt.wiener_like_simple_multi(value, v, a, z, t, .001, multi=multi)
             
 WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                             logp=wiener_like_simple_multi,
-                                            dtype=np.float,
-                                            mv=True)
+                                            dtype=np.float)
+
+def wiener_like_full_multi(value, v, V, a, z, Z, t, T, multi=None):
+    """Log-likelihood for the simple DDM"""
+    return hddm.wfpt_full.wiener_like_full_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
+            
+WienerFullMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                          logp=wiener_like_full_multi,
+                                          dtype=np.float)
+
 @pm.randomwrap
 def wiener_full(v, z, t, a, V, Z, T, size=None):
     return hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}, samples=size)
@@ -90,17 +98,6 @@ WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
 
 
 
-def wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a):
-    """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt_full.wiener_like_full_mc_multi_thresh(value, v, V, z, Z, t, T, a, reps=10, logp=1))
-
-WienerFullMcMultiThresh = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                       logp=wiener_like_full_mc_multi_thresh,
-                                       random=wiener_full,
-                                       dtype=np.float,
-                                       mv=True)
-
-        
 def wiener_like_single_trial(value, v, a, z, t):
     """Log-likelihood of the DDM for one RT point."""
     prob = hddm.wfpt.wiener_like_full(value, np.asarray(v), np.asarray(a), np.asarray(z), np.asarray(t), err=0.001)

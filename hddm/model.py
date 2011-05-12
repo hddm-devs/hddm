@@ -71,7 +71,7 @@ class Base(kabuki.Hierarchical):
         elif self.model_type.startswith('full'):
             if 'V' not in self.exclude:
                 params.append(Parameter('V',True, lower=0., upper=6.))
-            if 'Z' not in self.exclude and not self.no_bias:
+            if 'Z' not in self.exclude:
                 params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
             if 'T' not in self.exclude:
                 params.append(Parameter('T',True, lower=0., upper=1., init=.1))
