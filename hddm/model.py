@@ -164,43 +164,41 @@ class HDDM(Base):
 class HDDMFullExtended(Base):
     def get_param_names(self):
         self.model_type = 'full_expanded'
-        params = list(super(self.__class__, self).get_param_names())
-        params.pop()
-        params += [Parameter('z_trls', False),
+        params = [Parameter('z_trls', False),
                   Parameter('v_trls', False),
-                  Parameter('t_trls', False), 
-                  Parameter('wfpt', False)]
+                  Parameter('t_trls', False)]
+        params += list(super(self.__class__, self).get_param_names())
+
         return params
 
-    def get_rootless_child(self, param_name, tag, data, params, idx=None):
-        trials = data.shape[0]
+    def get_rootless_child(self, param, params):
+        trials = len(param.data)
 
-        if param_name.startswith('z_trls'):
-            return hddm.likelihoods.CenterUniform("z_trls%s"%tag,
+        if param.name.startswith('z_trls'):
+            return hddm.likelihoods.CenterUniform(param.full_name,
                                                   center=[params['z'] for i in range(trials)],
                                                   width=[params['Z'] for i in range(trials)])
 
-        elif param_name.startswith('v_trls'):
-            return pm.Normal("v_trls%s"%tag,
+        elif param.name.startswith('v_trls'):
+            return pm.Normal(param.full_name,
                              mu=[params['v'] for i in range(trials)],
                              tau=[params['V']**-2 for i in range(trials)])
 
-        elif param_name.startswith('t_trls'):
-            return hddm.likelihoods.CenterUniform("t_trls%s"%tag,
+        elif param.name.startswith('t_trls'):
+            return hddm.likelihoods.CenterUniform(param.full_name,
                                                   center=[params['t'] for i in range(trials)],
                                                   width=[params['T'] for i in range(trials)])
 
-        elif param_name.startswith('wfpt'):
-            return hddm.likelihoods.WienerSingleTrial(name+tag,
-                                                      value=data['rt'],
+        elif param.name.startswith('wfpt'):
+            return hddm.likelihoods.WienerSingleTrial(param.full_name,
+                                                      value=param.data['rt'],
                                                       v=params['v_trls'],
                                                       t=params['t_trls'], 
                                                       a=[params['a'] for i in range(trials)],
                                                       z=params['z_trls'],
                                                       observed=True)
-
         else:
-            raise KeyError, "Rootless child node named %s not found." % param_name
+            raise KeyError, "Rootless child node named %s not found." % param.name
         
 class HLBA(Base):
     param_names = (('a',True), ('z',True), ('t',True), ('V',True), ('v0',True), ('v1',True), ('lba',False))
@@ -227,9 +225,9 @@ class HLBA(Base):
             self.param_ranges['v_lower'] = 0.
             self.param_ranges['v_upper'] = 1.
 
-    def get_rootless_child(self, name, tag, data, params, idx=None):
-        return hddm.likelihoods.LBA(name+tag,
-                                    value=data['rt'].flatten(),
+    def get_rootless_child(self, param, params):
+        return hddm.likelihoods.LBA(param.full_name,
+                                    value=param.data['rt'],
                                     a=params['a'],
                                     z=params['z'],
                                     t=params['t'],
@@ -239,23 +237,21 @@ class HLBA(Base):
                                     normalize_v=self.normalize_v,
                                     observed=True)
 
-    def get_root_node(self, param, all_params, tag, data):
+    def get_root_node(self, param):
         """Create and return a prior distribution for [param]. [tag] is
         used in case of dependent parameters.
         """
-        if param == 'V' and self.fix_sv is not None: # drift rate variability
-            return pm.Lambda("V%s"%tag, lambda x=self.fix_sv: x)
+        if param.name == 'V' and self.fix_sv is not None: # drift rate variability
+            return pm.Lambda(param.full_name, lambda x=self.fix_sv: x)
         else:
-            return super(self.__class__, self).get_root_param(self, param, all_params, tag)
+            return super(self.__class__, self).get_root_param(self, param)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
-        param_full_name = '%s%s%i'%(param_name, tag, subj_idx)
-
-        if param_name.startswith('V') and self.fix_sv is not None:
-            return pm.Lambda(param_full_name, lambda x=parent_mean: parent_mean,
+    def get_child_node(self, param, plot=False):
+        if param.name.startswith('V') and self.fix_sv is not None:
+            return pm.Lambda(param.full_name, lambda x=param.root: x,
                              plot=plot, trace=self.trace_subjs)
         else:
-            return super(self.__class__, self).get_subj_param(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot)
+            return super(self.__class__, self).get_child_node(param, plot=plot)
     
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
