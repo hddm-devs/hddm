@@ -259,25 +259,20 @@ class HLBA(Base):
     
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
-        Base.__init__(self, *args, **kwargs)
-        self.params = (Parameter('a',True), 
-                       Parameter('v',True), 
-                       Parameter('z',True), 
-                       Parameter('t',True),
-                       Parameter('pi',True), 
-                       Parameter('gamma',True),
+        super(HDDMContaminant, self).__init__(self, *args, **kwargs)
+        self.params = (Parameter('a',True, lower=.5, upper=4.5),
+                       Parameter('v',True, lower=-6., upper=6.), 
+                       Parameter('z',True, lower=0., upper=1., init=.5), 
+                       Parameter('t',True, lower=.1, upper=2., init=.1),
+                       Parameter('pi',True, lower=0.001, upper=0.2),
+                       Parameter('gamma',True, lower=0.001, upper=0.999),
                        Parameter('x', False), 
                        Parameter('wfpt', False))
 
-        self.param_ranges['pi_lower'] = 0.001;
-        self.param_ranges['pi_upper'] = 0.2;
-        self.param_ranges['gamma_lower'] = 0.001;
-        self.param_ranges['gamma_upper'] = 0.999;
-        
-    def get_rootless_child(self, name, tag, data, params, idx=None):
-        if name.startswith('wfpt'):
-            return hddm.likelihoods.WienerSimpleContaminant(name+tag,
-                                                            value=data['rt'],
+    def get_rootless_child(self, param, params):
+        if param.name.startswith('wfpt'):
+            return hddm.likelihoods.WienerSimpleContaminant(param.full_name,
+                                                            value=param.data['rt'],
                                                             cont_x=params['x'],
                                                             gamma=params['gamma'],
                                                             v=params['v'],
@@ -285,19 +280,12 @@ class HDDMContaminant(Base):
                                                             a=params['a'],
                                                             z=params['z'],
                                                             observed=True)
-        elif name.startswith('x'):
-            return pm.Bernoulli(name+tag, p=params['pi'], size=len(data['rt']))        
+        elif param.name.startswith('x'):
+            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt'])) 
         else:
             raise KeyError, "Rootless child parameter %s not found" %name
 
-    def get_root_node(self, param_name, all_params, tag, data):
-            return super(self.__class__, self).get_root_node(param_name, all_params, tag, data)
 
-    def get_child_node(self, param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False):
-            return super(self.__class__, self).get_child_node(param_name, parent_mean, parent_tau, subj_idx, all_params, tag, data, plot=False)
-        
-
-#@kabuki.hierarchical
 class HDDMOneRegressor(Base):
     def __init__(self, *args, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
