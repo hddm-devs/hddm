@@ -157,15 +157,15 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] value, np.ndarray
     cdef int pos_cont = 0
     
     for i from 0 <= i < value.shape[0]:
-        if cont_x[i] == 1:
-            p = pdf_sign(value[i], v, a, z, t, err)      
+        if cont_x[i] == 0:
+            p = pdf_sign(value[i], v, a, z, t, err)
+            if p == 0:
+                return -infinity
+            sum_logp += log(p)      
         elif value[i]>0:
             pos_cont += 1
         # If one probability = 0, the log sum will be -Inf
-        if p == 0:
-            return -infinity
-
-        sum_logp += log(p)
+        
     
     # add the log likelihood of the contaminations
     #first the guesses

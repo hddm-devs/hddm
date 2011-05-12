@@ -25,7 +25,7 @@ WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
 
 def wiener_like_simple_contaminant(value, cont_x, gamma, v, a, z, t, err=.0001):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt.wiener_like_simple_contaminant(value, cont_x, gamma, v, a, z, t, 0, 7, err)
+    return hddm.wfpt.wiener_like_simple_contaminant(value, cont_x.astype(np.int32), gamma, v, a, z, t, 0, 7, err)
 
 WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        logp=wiener_like_simple_contaminant,
