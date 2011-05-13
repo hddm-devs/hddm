@@ -114,7 +114,7 @@ class Base(kabuki.Hierarchical):
             if self.model_type == 'simple':
                 return self._get_simple(param.full_name, param.data, params)
             elif self.model_type == 'full_intrp':
-                return self._get_full_mc(param.full_name, param.data, params)
+                return self._get_full_intrp(param.full_name, param.data, params)
             else:
                 raise KeyError, "Model type %s not found." % self.model_type
         else:
