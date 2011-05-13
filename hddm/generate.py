@@ -4,6 +4,7 @@ import numpy as np
 import numpy.lib.recfunctions as rec
 from scipy.stats import uniform, norm
 from copy import copy
+import random
 
 import hddm
 
@@ -184,6 +185,24 @@ def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, f
 
     return data
 
+
+def add_contaminate_data(data, params):
+    t_max = max(data['rt'])+1.5;
+    pi = params['pi']
+    gamma = params['gamma']
+    n_cont = int(len(data)*pi)
+    n_unif = int(n_cont*gamma)
+    n_other = n_cont - n_unif
+    l_data = range(len(data))
+    cont_idx = random.sample(l_data,n_cont)
+    unif_idx = cont_idx[:n_unif]
+    other_idx = cont_idx[n_unif:]
+    data[unif_idx]['rt']  = uniform.rvs(0,t_max,n_unif)
+    data[other_idx]['rt']  = uniform.rvs(0,t_max,n_other)
+    return data
+
+
+
 def gen_rand_data(samples=500, params=None, no_var=False):
     """Generate simulated RTs with random parameters."""
     #z = np.random.normal(loc=1, scale=2)
@@ -197,7 +216,9 @@ def gen_rand_data(samples=500, params=None, no_var=False):
 
     # Create RT data
     data = gen_rts(params, samples=samples, structured=True)
-
+    if params.has_key('pi'):
+        add_contaminate_data(data, params)
+    
     return (data, params)
 
 def gen_rand_cond_data(params_set=None, samples_per_cond=100):
@@ -218,7 +239,9 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100):
         data[counter:counter+len(i_data):2]['cond2'] = i+1
         data[counter+1:counter+len(i_data):2]['cond2'] = i+2
         counter += len(i_data)
-    data = data[:counter]
+    if params_set[0].has_key('pi'):
+        add_contaminate_data(data, params_set[0])
+
 
     return data, params_set
 

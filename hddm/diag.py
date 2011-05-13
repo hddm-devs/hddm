@@ -21,7 +21,8 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     
     print "checking estimation with %d confidence interval" % conf_interval
     fail = False
-    nodes = sorted(model.stochastics, key=lambda x:x.__name__)    
+    nodes = sorted(model.stochastics, key=lambda x:x.__name__)
+    nodes = filter(lambda x:x.shape == (), nodes)    
     for node in nodes:
         trace = node.trace()[:]
         est = np.mean(trace)
@@ -67,11 +68,16 @@ def check_rejection(model, assert_ = True):
 
 def rand_params(model_type='simple', exclude = None):
     if model_type=='simple':
-        return rand_simple_params()
+        return rand_simple_params(exclude)
     elif model_type=='full_intrp':
         return rand_full_params(exclude)
+    elif model_type=='simple_cont':
+        return rand_simple_cont_params(exclude)
+    
 
-def rand_simple_params():
+def rand_simple_params(exclude):
+    if exclude is None:
+        exclude = []
     params = {}
     params['V'] = 0    
     params['Z'] = 0
@@ -79,10 +85,14 @@ def rand_simple_params():
     params['v'] = (rand()-.5)*4
     params['t'] = 0.2+rand()*0.3+(params['T']/2)
     params['a'] = 1.5+rand()
-    params['z'] = .4+rand()*0.2
+    if 'z' in exclude:
+        params['z'] = 0
+    else:
+        params['z'] = .4+rand()*0.2
     return params
 
 def rand_full_params(exclude):
+    params = rand_simple_params(exclude)
     if exclude is None:
         exclude = []
     params = {}    
@@ -98,12 +108,13 @@ def rand_full_params(exclude):
         params['T'] = 0
     else:
         params['T'] = rand()*0.2
-    params['v'] = (rand()-.5)*4
-    params['t'] = 0.2+rand()*0.3+(params['T']/2)
-    params['a'] = 1.5+rand()
-    params['z'] = .4+rand()*0.2
     return params
 
+def rand_simple_cont_params(exclude):
+    params = rand_simple_params(exclude)
+    params['pi'] = max(rand()*0.1,0.01)
+    params['gamma'] = rand()
+    return params
 
 
 def test_params_on_data(params, data, model_type='simple', exclude=None, depends_on = None, conf_interval = 95):    
@@ -113,12 +124,15 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     n_iter = burn + samples*thin
     stdout.flush()
     if depends_on is None:
-        depends_on = {}   
-    m_hddm = hddm.HDDM(data, no_bias=False, model_type=model_type, 
+        depends_on = {}
+    if 'cont' in model_type:
+        m_hddm = hddm.HDDMContaminant(data, no_bias=False, depends_on=depends_on)
+    else:
+        m_hddm = hddm.HDDM(data, no_bias=False, model_type=model_type, 
                             exclude=exclude, depends_on=depends_on)
     nodes = m_hddm.create()
     model = pm.MCMC(nodes)    
-    [model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
+    #[model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
     i_t = time()
     model.sample(n_iter, burn=burn, thin=thin)
     print "sampling took: %.2f seconds" % (time() - i_t)
@@ -166,8 +180,9 @@ def str_params(params):
     s = s[:-2] + "\n"
     return s
 
-def break_codependency(params, n_data,  n_conds = 3, model_type = 'simple', exclude= None, conf_interval = 90):
 
+def gen_cond_data_and_params(n_data,  n_conds = 3, model_type = 'simple', exclude= None):
+    params = rand_params(model_type, exclude)
     params_set = [None]*n_conds
     params_true = copy(params)
     all_v = np.linspace(min(0,params['v']/2) , max(params['v']*2, 3), n_conds)
@@ -178,30 +193,21 @@ def break_codependency(params, n_data,  n_conds = 3, model_type = 'simple', excl
         params_true['v(%d,)'%i] = all_v[i]
     
     
-    cond_data = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=np.ceil(n_data/n_conds))
+    cond_data, temp = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=int(n_data/n_conds))
     positive = sum(cond_data['response'])
     print "generated %d data_points (%d positive %d negative)" % \
     (len(cond_data), positive, len(cond_data) - positive)
     print "used params: %s" % str_params(params_true)     
     stdout.flush()
-    
-    ok, res = test_params_on_data(params_true, cond_data, model_type=model_type, 
-                                      exclude=exclude, depends_on  = {'v':['cond']}, conf_interval=conf_interval)
-    
-    if ok:
-        print "co-dependency was broken" 
-    else:
-        print "parameters were not recovered. more constrained may be needed"
-    return res
+    return cond_data, params_true
 
- 
 
 
 def run_simple_test(nTimes=20, stop_when_fail = False):
     return run_accuracy_test(nTimes)
 
 def check_correl(model):
-    nodes = model.stochastics
+    nodes = filter(lambda x:x.shape == (), model.stochastics)
     threshold = 0.05
     fail = False
     for node in nodes:

@@ -153,7 +153,7 @@ def wiener_like_simple_contaminant(np.ndarray[DTYPE_t, ndim=1] value, np.ndarray
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
-    cdef int n_cont = value.shape[0] - np.sum(value)
+    cdef int n_cont = np.sum(cont_x)
     cdef int pos_cont = 0
     
     for i from 0 <= i < value.shape[0]:

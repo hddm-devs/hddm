@@ -255,15 +255,19 @@ class HLBA(Base):
     
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
-        super(HDDMContaminant, self).__init__(self, *args, **kwargs)
+        super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = (Parameter('a',True, lower=.5, upper=4.5),
                        Parameter('v',True, lower=-6., upper=6.), 
                        Parameter('z',True, lower=0., upper=1., init=.5), 
                        Parameter('t',True, lower=.1, upper=2., init=.1),
-                       Parameter('pi',True, lower=0.001, upper=0.2),
-                       Parameter('gamma',True, lower=0.001, upper=0.999),
+                       Parameter('pi',True, lower=1e-4, upper=0.2),
+                       Parameter('gamma',True, lower=1e-4, upper=1-1e-4),
                        Parameter('x', False), 
+                       Parameter('dummy_gamma',False),
+                       Parameter('dummy_pi',False),
                        Parameter('wfpt', False))
+        self.t_min = 0
+        self.t_max = max(self.data['rt'])
 
     def get_rootless_child(self, param, params):
         if param.name.startswith('wfpt'):
@@ -275,9 +279,15 @@ class HDDMContaminant(Base):
                                                             t=params['t'],
                                                             a=params['a'],
                                                             z=params['z'],
+                                                            t_min=self.t_min,
+                                                            t_max=self.t_max,
                                                             observed=True)
         elif param.name.startswith('x'):
-            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt'])) 
+            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']))
+        elif param.name.startswith('dummy_gamma'):
+            return pm.Bernoulli(param.full_name, params['gamma'], value=[True,False], observed=True)
+        elif param.name.startswith('dummy_pi'):
+            return pm.Bernoulli(param.full_name, params['pi'], value=[True], observed=True)
         else:
             raise KeyError, "Rootless child parameter %s not found" %name
 
