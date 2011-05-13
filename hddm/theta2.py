@@ -10,207 +10,6 @@ import os
 from ordereddict import OrderedDict
 
 import hddm
-import kabuki
-
-from kabuki.hierarchical import Parameter
-
-class Theta(hddm.model.Base):
-    def __init__(self, data, effect_on=('a',), effect_coding=True, on_as_1=False, theta_col=None, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depend_on <list>: separate stimulus distributions for these parameters.
-        effect_coding <bool>: True: effects coding (default)
-                      False: dummy coding
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        self.effect_on = effect_on
-        self.effect_coding = effect_coding
-        self.on_as_1 = on_as_1
-
-        if self.effect_coding:
-            if self.on_as_1:
-                self.dbs = 'dbs_effect'
-            else:
-                self.dbs = 'dbs_effect_inv'
-        else:
-            if self.on_as_1:
-                self.dbs = 'dbs'
-            else:
-                self.dbs = 'dbs_inv'
-            
-        if theta_col is None:
-            self.theta_col = 'theta'
-        else:
-            self.theta_col = theta_col
-
-        super(self.__class__, self).__init__(data, **kwargs)
-
-    def get_params(self):
-        params = [Parameter('e_theta', True, lower=-3., upper=3., init=0), 
-                   Parameter('e_dbs', True, lower=-3., upper=3., init=0),
-                   Parameter('e_inter', True, lower=-3., upper=3., init=0)]
-        for effect_on in self.effect_on:
-            p = Parameter('e_inst'+effect_on, False, vars={'effect_on':effect_on})
-            params.append(p)
-
-        params += super(self.__class__, self).get_params()
-
-        return params
-
-    def get_rootless_child(self, param, params):
-        """Generate the HDDM."""
-        if param.name.startswith('e_inst'):
-            return pm.Deterministic(effect2, param.full_name, param.full_name,
-                                    parents={'base':params[param.vars['effect_on']],
-                                             'e1':params['e_theta'],
-                                             'e2':params['e_dbs'],
-                                             'e_inter':params['e_inter'],
-                                             'data_e1':param.data['theta'],
-                                             'data_e2':param.data[self.dbs]}, trace=True)
-
-        
-        for effect in self.effect_on:
-            params[effect] = params['e_inst'+effect]
-
-        if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'].flatten(),
-                                                       v=params['v'],
-                                                       a=params['a'],
-                                                       z=self._get_node('z',params),
-                                                       t=params['t'],
-                                                       multi=self.effect_on,
-                                                       observed=True)
-        elif self.model_type == 'full':
-            model = hddm.likelihoods.WienerFullMulti(param.full_name,
-                                                     value=param.data['rt'].flatten(),
-                                                     v=params['v'],
-                                                     V=self._get_node('V', params),
-                                                     z=self._get_node('z', params),
-                                                     Z=self._get_node('Z', params),
-                                                     t=params['t'],
-                                                     T=self._get_node('T', params),
-                                                     a=params['a'],
-                                                     multi=self.effect_on,
-                                                     observed=True)
-        return model
-
-def effect2(base, e1, e2, e_inter, data_e1, data_e2):
-    """2-regressor effect distribution
-    """
-    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter
-
-def effect1(base, e1, data):
-    """Effect distribution.
-    """
-    return base + e1 * data
-
-def effect1_nozero(base, e1, data):
-    """Effect distribution where values <0 will be set to 0.
-    """
-    value = base + e1 * data
-    value[value < 0] = 0.
-    value[value > .4] = .4
-    return value
-
-
-class ThetaNoDBS(hddm.model.Base):
-    def __init__(self, data, effect_on=('a',), theta_col=None, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depend_on <list>: separate stimulus distributions for these parameters.
-        dbs_global <bool>: True: Only one global effect distribution for dbs.
-                           False: One dbs effect distribution for each stimulus.
-        effect_coding <bool>: True: effects coding (default)
-                      False: dummy coding
-        single_effect <bool>: True: effects do not depend on stimuli
-                              False: only one effect distribution for all stimuli (but separate for dbs, theta and interaction) (default)
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        self.effect_on = effect_on
-        
-        if theta_col is None:
-            self.theta_col = 'theta'
-        else:
-            self.theta_col = theta_col
-
-        super(self.__class__, self).__init__(data, **kwargs)
-        
-    def get_param_names(self):
-        params = super(self.__class__, self).get_params()
-        params.append(Parameter('e_theta', True, lower=-3., upper=3., init=0))
-        return params
-
-    def get_rootless_child(self, param, params):
-        """Generate the HDDM."""
-        if param.name.startswith('e_inst'):
-            if effect == 't':
-                func = effect1_nozero
-            else:
-                func = effect1
-            return pm.Deterministic(func, param.full_name, param.full_name, 
-                                    parents={'base': params[param.vars['effect_on']],
-                                             'e1': params['e_theta'],
-                                             'data': param.data[self.theta_col]}, trace=True)
-
-        for effect in self.effect_on:
-            params[effect] = params['e_inst'+effect]
-
-        if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'],
-                                                       v=params['v'],
-                                                       a=params['a'],
-                                                       z=self._get_node('z',params),
-                                                       t=params['t'],
-                                                       multi=self.effect_on,
-                                                       observed=True)
-        elif self.model_type == 'full':
-            model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
-                                                             value=param.data['rt'],
-                                                             v=params['v'],
-                                                             V=self._get_node('V', params),
-                                                             z=self._get_node('z', params),
-                                                             Z=self._get_node('Z', params),
-                                                             t=params['t'],
-                                                             T=self._get_node('T', params),
-                                                             a=params['a'],
-                                                             multi=self.effect_on,
-                                                             observed=True)
-        return model
 
 def load_scalp_data(continuous=True, remove_outliers=.4, shift_theta=False):
     import numpy.lib.recfunctions as rec
@@ -266,28 +65,6 @@ def load_scalp_data(continuous=True, remove_outliers=.4, shift_theta=False):
     all_data['dbs_inv'] = 1-all_data['dbs']
         
     return all_data
-
-def elderly_data(data, remove_outliers=.4):
-    # Remove outliers
-    if remove_outliers:
-        data = data[data['rt']>remove_outliers]
-    # Set names for stim, theta and dbs
-    data['conf'][data['stim'] == '1'] = 'HC'
-    data['conf'][data['stim'] == '2'] = 'HC'
-    data['conf'][data['stim'] == '3'] = 'LC'
-    data['stim'][data['stim'] == '1'] = 'WW'
-    data['stim'][data['stim'] == '2'] = 'LL'
-    data['stim'][data['stim'] == '3'] = 'WL'
-
-    # Hack
-    data['conf'][data['stim'] == "'1'"] = 'HC'
-    data['conf'][data['stim'] == "'2'"] = 'HC'
-    data['conf'][data['stim'] == "'3'"] = 'LC'
-    data['stim'][data['stim'] == "'1'"] = 'WW'
-    data['stim'][data['stim'] == "'2'"] = 'LL'
-    data['stim'][data['stim'] == "'3'"] = 'WL'
-
-    return data
 
 def load_intraop_data(continuous=True):
     subjs = range(1,9)
@@ -376,26 +153,25 @@ def run_model(name, params, load=False):
 
     data = params.pop('data')
 
-    if name.startswith('PD'):
-        m = pm.MCMC(Theta(data, **params).create())
-    else:
-        if params.has_key('effect_on'):
-            m = pm.MCMC(ThetaNoDBS(data, **params).create())
-        else:
-            m = pm.MCMC(hddm.model.HDDM(data, **params).create())
-    
     dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
 
+    if params.has_key('effect_on'):
+        m = pm.MCMC(hddm.model.HDDMRegressor(data, **params).create(), db='hdf5', dbname=dbname)
+    else:
+        m = pm.MCMC(hddm.model.HDDM(data, **params).create(), db='hdf5', dbname=dbname)
+    
     if not load:
         try:
             os.remove(dbname)
         except OSError:
             pass
-        m.mcmc(samples=30000, burn=25000, dbname=dbname)
+        m.sample(samples=30000, burn=25000)
+        m.db.close()
         print "*************************************\nModel: %s\n%s" %(name, m.summary())
         return m.summary()
     else:
         print "Loading %s" %name
+        m = pm.database.hdf5.load(dbname)
         m.mcmc_load_from_db(dbname=dbname)
         return m
 
@@ -437,7 +213,7 @@ def create_models_nodbs(data, full=False):
                 models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['rt_split']}})
                 models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
 
-                
+    
     models.append({'data': data, 'depends_on':{'v':['stim'], 'a':['theta_split']}})
     models.append({'data': data, 'depends_on':{'v':['conf'], 'a':['theta_split']}})
     
@@ -545,6 +321,23 @@ def load_csv_jim(*args, **kwargs):
     data = add_median_fields(data)
 
     return data[data['rt'] > .4]
+
+def set_proposals(mc, tau=.1, effect=.1, a=.5, v=.5):
+    for var in mc.variables:
+        if var.__name__.endswith('tau'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
+        if var.__name__.startswith('e1') or var.__name__.startswith('e2') or var.__name__.startswith('e_inter'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = effect)
+        if var.__name__.startswith('a'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = a)
+        if var.__name__.startswith('v'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = v)
+    return
+
 
 if __name__=='__main__':
     #import sys

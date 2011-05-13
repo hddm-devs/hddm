@@ -58,6 +58,7 @@ class Base(kabuki.Hierarchical):
             self.wiener_params = wiener_params
         
         self.params = self.get_params()
+
         super(hddm.model.Base, self).__init__(data, **kwargs)
 
     def get_params(self):
@@ -90,7 +91,7 @@ class Base(kabuki.Hierarchical):
                           value=param.init)
 
     def get_tau_node(self, param):
-        return pm.Uniform(param.full_name, lower=0, upper=10)
+        return pm.Uniform(param.full_name, lower=0., upper=1., value=.1)
 
     def get_child_node(self, param, plot=False):
         if param.name.startswith('e') or param.name.startswith('v'):
@@ -151,7 +152,7 @@ class Base(kabuki.Hierarchical):
     def _get_node(self, node_name, params):
         if node_name in self.exclude:
             return 0
-        elif node_name=='z' and self.no_bias:
+        elif node_name=='z' and self.no_bias and 'z' not in params:
             return 0.5
         else:
             return params[node_name]
@@ -291,158 +292,6 @@ class HDDMContaminant(Base):
         else:
             raise KeyError, "Rootless child parameter %s not found" %name
 
-
-class HDDMOneRegressor(Base):
-    def __init__(self, *args, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depends_on <list>: separate stimulus distributions for these parameters.
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        if kwargs.has_key('effect_on'):
-            self.effect_on = kwargs['effect_on']
-            del kwargs['effect_on']
-        else:
-            self.effect_on = []
-
-        if kwargs.has_key('e_data'):
-            self.e1_data = kwargs['e_data']
-            del kwargs['e_data']
-        else:
-            raise ValueError, "Provide e_data parameter"
-
-        self.effect_id = 0
-
-        super(self.__class__, self).__init__(*args, **kwargs)
-        
-    def get_param_names(self):
-        param_names = list(super(self.__class__, self).get_param_names())
-        param_names += ('e', True)
-        return tuple(param_names)
-
-    def get_model(self, model_name, data, params, idx=None):
-        """Generate the HDDM."""
-        data = copy(data)
-        params_subj = {}
-        for name, param in params.iteritems():
-            params_subj[name] = param[idx]
-        self.effect_id += 1
-
-        for effect in self.effect_on:
-            # Create actual effect on base values, result is a matrix.
-            params_subj[effect] = pm.Lambda('e_inst_%s_%i_%i'%(effect,idx,self.effect_id),
-                                            lambda base=params_subj[effect],
-                                            e=params_subj['e']:
-                                            base + data[self.e_data]*e,
-                                            plot=False)
-
-        model = hddm.likelihoods.WienerSimpleMulti(model_name,
-                                                   value=data['rt'],
-                                                   v=params_subj['v'],
-                                                   t=params_subj['t'],
-                                                   a=params_subj['a'],
-                                                   z=params_subj['z'],
-                                                   multi=self.effect_on,
-                                                   observed=True)
-
-        return model, params_subj, data
-
-class HDDMTwoRegressor(Base):
-    def __init__(self, *args, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depends_on <list>: separate stimulus distributions for these parameters.
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = HDDM_regress_multi(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        if kwargs.has_key('effect_on'):
-            self.effect_on = kwargs['effect_on']
-            del kwargs['effect_on']
-        else:
-            self.effect_on = []
-
-        if kwargs.has_key('e1_data'):
-            self.e1_data = kwargs['e1_data']
-            del kwargs['e1_data']
-        else:
-            raise ValueError, "Provide e1_data parameter"
-
-        if kwargs.has_key('e2_data'):
-            self.e1_data = kwargs['e2_data']
-            del kwargs['e2_data']
-        else:
-            raise ValueError, "Provide e2_data parameter"
-
-        self.effect_id = 0
-
-        super(self.__class__, self).__init__(*args, **kwargs)
-        
-    def get_param_names(self):
-        param_names = list(super(self.__class__, self).get_param_names())
-        param_names += ('e1','e2', 'e_inter')
-        return tuple(param_names)
-
-    def get_model(self, model_name, data, params, idx=None):
-        """Generate the HDDM."""
-        data = copy(data)
-        params_subj = {}
-        for name, param in params.iteritems():
-            params_subj[name] = param[idx]
-        self.effect_id += 1
-
-        for effect in self.effect_on:
-            # Create actual effect on base values, result is a matrix.
-            params_subj[effect] = pm.Lambda('e_inst_%s_%i_%i'%(effect,idx,self.effect_id),
-                                            lambda base=params_subj[effect],
-                                            e1=params_subj['e1'],
-                                            e2=params_subj['e2'],
-                                            e_inter=params_subj['e_inter']:
-                                            base + data[self.e1_data]*e1 + data[self.e2_data]*e2 + data[self.e1_data]*data[e2_data]*e_inter,
-                                            plot=False)
-
-        model = hddm.likelihoods.WienerSimpleMulti(model_name,
-                                                   value=data['rt'],
-                                                   v=params_subj['v'],
-                                                   t=params_subj['t'],
-                                                   a=params_subj['a'],
-                                                   z=params_subj['z'],
-                                                   multi=self.effect_on,
-                                                   observed=True)
-
-        return model, params_subj, data
-
-
 class HDDMAntisaccade(Base):
     param_names = (('v',True),
                    ('v_switch', True),
@@ -487,6 +336,121 @@ class HDDMAntisaccade(Base):
                                                   t=params['t'],
                                                   t_switch=params['t_switch'],
                                                   observed=True)
+
+
+
+class HDDMRegressor(hddm.model.Base):
+    def __init__(self, data, e1_col, effect_on=('a',), e2_col=None, **kwargs):
+        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
+
+        Arguments:
+        ==========
+        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
+
+        Keyword Arguments:
+        ==================
+        effect_on <list>: theta and dbs effect these DDM parameters.
+        depend_on <list>: separate stimulus distributions for these parameters.
+
+        Example:
+        ========
+        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
+        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
+
+        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model.mcmc()
+        """
+        self.effect_on = effect_on
+        self.e1_col = e1_col
+
+        if e2_col is not None:
+            self.two_effect_model = True
+            self.e2_col = e2_col
+        else: 
+            self.two_effect_model = False
+        
+        super(self.__class__, self).__init__(data, **kwargs)
+        
+    def get_params(self):
+        params = [Parameter('e1', True, lower=-3., upper=3., init=0)]
+        if self.two_effect_model:
+            params.append(Parameter('e2', True, lower=-3., upper=3., init=0))
+            params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
+
+        # Add rootless nodes for effects
+        for effect_on in self.effect_on:
+            p = Parameter('e_inst'+effect_on, False, vars={'effect_on':effect_on})
+            params.append(p)
+
+        params += super(self.__class__, self).get_params()
+
+        return params
+
+    def get_rootless_child(self, param, params):
+        """Generate the HDDM."""
+        if param.name.startswith('e_inst'):
+            if param.vars['effect_on'] == 't':
+                func = effect1_nozero
+            else:
+                func = effect1
+
+            if not self.two_effect_model:
+                return pm.Deterministic(func, param.full_name, param.full_name, 
+                                        parents={'base': self._get_node(param.vars['effect_on'], params),
+                                                 'e1': params['e1'],
+                                                 'data': param.data[self.e1_col]}, trace=True)
+            else:
+                return pm.Deterministic(effect2, param.full_name, param.full_name,
+                                        parents={'base':params[param.vars['effect_on']],
+                                                 'e1':params['e1'],
+                                                 'e2':params['e2'],
+                                                 'e_inter':params['e_inter'],
+                                                 'data_e1':param.data[self.e1_col],
+                                                 'data_e2':param.data[self.e2_col]}, trace=True)
+
+        for effect in self.effect_on:
+            params[effect] = params['e_inst'+effect]
+
+        if self.model_type == 'simple':
+            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
+                                                       value=param.data['rt'],
+                                                       v=params['v'],
+                                                       a=params['a'],
+                                                       z=self._get_node('z',params),
+                                                       t=params['t'],
+                                                       multi=self.effect_on,
+                                                       observed=True)
+        elif self.model_type == 'full':
+            model = hddm.likelihoods.WienerFullMulti(param.full_name,
+                                                     value=param.data['rt'],
+                                                     v=params['v'],
+                                                     V=self._get_node('V', params),
+                                                     a=params['a'],
+                                                     z=self._get_node('z', params),
+                                                     Z=self._get_node('Z', params),
+                                                     t=params['t'],
+                                                     T=self._get_node('T', params),
+                                                     multi=self.effect_on,
+                                                     observed=True)
+        return model
+
+def effect1(base, e1, data):
+    """Effect distribution.
+    """
+    return base + e1 * data
+
+def effect1_nozero(base, e1, data):
+    """Effect distribution where values <0 will be set to 0.
+    """
+    value = base + e1 * data
+    value[value < 0] = 0.
+    value[value > .4] = .4
+    return value
+
+def effect2(base, e1, e2, e_inter, data_e1, data_e2):
+    """2-regressor effect distribution
+    """
+    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter
 
 if __name__ == "__main__":
     import doctest

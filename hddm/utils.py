@@ -38,7 +38,14 @@ def post_pred_simple(v, a, z, t, x=None):
     
     return p/trace_len
         
+def set_proposal_sd(mc, tau=.1):
+    for var in mc.variables:
+        if var.__name__.endswith('tau'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
 
+    return
+    
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
     Compute the histogram of a set of data.
@@ -286,9 +293,6 @@ def plot_savage_dickey(range=(-1,1), bins=100):
         plt.plot(x, prior_y, label='prior', lw=2.)
     plt.axvline(x=0, lw=1., color='k')
     plt.ylim(ymin=0)
-
-
-    
 
 def call_mcmc((model_class, data, dbname, rnd, kwargs)):
     # Randomize seed
