@@ -95,7 +95,6 @@ def rand_full_params(exclude):
     params = rand_simple_params(exclude)
     if exclude is None:
         exclude = []
-    params = {}    
     if 'V' in exclude:
         params['V'] = 0
     else:
