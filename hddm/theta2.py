@@ -101,81 +101,6 @@ def load_intraop_data(continuous=True):
     
     return all_data
 
-
-def worker():
-    from mpi4py import MPI
-    rank = MPI.COMM_WORLD.Get_rank()
-    proc_name = MPI.Get_processor_name()
-    status = MPI.Status()
-
-    print "Worker %i on %s: ready!" % (rank, proc_name)
-    # Send ready
-    MPI.COMM_WORLD.send([{'rank':rank, 'name':proc_name}], dest=0, tag=10)
-
-    # Start main data loop
-    while True:
-        # Get some data
-        print "Worker %i on %s: waiting for data" % (rank, proc_name)
-        recv = MPI.COMM_WORLD.recv(source=0, tag=MPI.ANY_TAG, status=status)
-        print "Worker %i on %s: received data, tag: %i" % (rank, proc_name, status.tag)
-
-        if status.tag == 2:
-            print "Worker %i on %s: received kill signal" % (rank, proc_name)
-            MPI.COMM_WORLD.send([], dest=0, tag=2)
-            return
-
-        if status.tag == 10:
-            # Run emergent
-            #print "Worker %i on %s: Running %s" % (rank, proc_name, recv)
-            #recv['debug'] = True
-            retry = 0
-            while retry < 5:
-                try:
-                    print "Running %s:\n" % recv[0]
-                    result = run_model(recv[0], recv[1])
-                    break
-                except pm.ZeroProbability:
-                    retry +=1
-            if retry == 5:
-                result = None
-                print "Job %s failed" % recv[0]
-
-        print("Worker %i on %s: finished one job" % (rank, proc_name))
-        MPI.COMM_WORLD.send((recv[0], result), dest=0, tag=15)
-
-    MPI.COMM_WORLD.send([], dest=0, tag=2)
-        
-def run_model(name, params, load=False):
-    if params.has_key('model_type'):
-        model_type = params['model_type']
-    else:
-        model_type = 'simple'
-
-    data = params.pop('data')
-
-    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
-
-    if params.has_key('effect_on'):
-        m = pm.MCMC(hddm.model.HDDMRegressor(data, **params).create(), db='hdf5', dbname=dbname)
-    else:
-        m = pm.MCMC(hddm.model.HDDM(data, **params).create(), db='hdf5', dbname=dbname)
-    
-    if not load:
-        try:
-            os.remove(dbname)
-        except OSError:
-            pass
-        m.sample(samples=30000, burn=25000)
-        m.db.close()
-        print "*************************************\nModel: %s\n%s" %(name, m.summary())
-        return m.summary()
-    else:
-        print "Loading %s" %name
-        m = pm.database.hdf5.load(dbname)
-        m.mcmc_load_from_db(dbname=dbname)
-        return m
-
-
 def create_jobs_pd():
     # Load data
     data_pd = np.recfromcsv('PD_PS.csv')
@@ -197,7 +122,7 @@ def create_models_nodbs(data, full=False):
     models = []
     model_types = ['simple']
     if full:
-        model_types.append('full_mc')
+        model_types.append('full_intrp')
         
     effects_on = ['a', 't']
     vs_on = ['stim', 'conf']
@@ -206,12 +131,12 @@ def create_models_nodbs(data, full=False):
     for effect in effects_on:
         for v_on in vs_on:
             for e_theta_on in e_thetas_on:
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on]}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on], 'a':['stim']}})
-                models.append({'data': data, 'effect_on':[effect, 'z'], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on]}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split']}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['rt_split']}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on: 'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on], 'a':['stim']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
 
     
     models.append({'data': data, 'depends_on':{'v':['stim'], 'a':['theta_split']}})
@@ -219,7 +144,7 @@ def create_models_nodbs(data, full=False):
     
     return models
 
-def load_models(pd=False, full_mc=False):
+def load_models(pd=False, full=False):
     if pd:
         jobs = create_jobs_pd()
     elif full_mc:
@@ -232,49 +157,6 @@ def load_models(pd=False, full_mc=False):
         models[name] = run_model(name, params, load=True)
 
     return models
-
-def controller(samples=200, burn=15, reps=5):
-    process_list = range(1, MPI.COMM_WORLD.Get_size())
-    rank = MPI.COMM_WORLD.Get_rank()
-    proc_name = MPI.Get_processor_name()
-    status = MPI.Status()
-
-    print "Controller %i on %s: ready!" % (rank, proc_name)
-
-    models = create_jobs_full()
-    task_iter = models.iteritems()
-    results = {}
-
-    while(True):
-        status = MPI.Status()
-        recv = MPI.COMM_WORLD.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-        print "Controller: received tag %i from %s" % (status.tag, status.source)
-        if status.tag == 15:
-            results[recv[0]] = recv[1]
-
-        if status.tag == 10 or status.tag == 15:
-            try:
-                name, task = task_iter.next()
-                print "Controller: Sending task"
-                MPI.COMM_WORLD.send((name, task), dest=status.source, tag=10)
-            except StopIteration:
-                # Task queue is empty
-                print "Controller: Task queue is empty"
-                print "Controller: Sending kill signal"
-                MPI.COMM_WORLD.send([], dest=status.source, tag=2)
-
-        elif status.tag == 2: # Exit
-            process_list.remove(status.source)
-            print 'Process %i exited' % status.source
-            print 'Processes left: ' + str(process_list)
-        else:
-            print 'Unkown tag %i with msg %s' % (status.tag, str(data))
-            
-        if len(process_list) == 0:
-            print "No processes left"
-            break
-
-    return results
 
 def add_median_fields(data):
     theta_median = np.empty(data.shape, dtype=[('theta_split','S8')])
@@ -322,7 +204,7 @@ def load_csv_jim(*args, **kwargs):
 
     return data[data['rt'] > .4]
 
-def set_proposals(mc, tau=.1, effect=.1, a=.5, v=.5):
+def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
     for var in mc.variables:
         if var.__name__.endswith('tau'):
             # Change proposal SD
@@ -338,7 +220,6 @@ def set_proposals(mc, tau=.1, effect=.1, a=.5, v=.5):
             mc.use_step_method(pm.Metropolis, var, proposal_sd = v)
     return
 
-
 if __name__=='__main__':
     #import sys
     #parse_config_file(sys.argv[1])
@@ -346,9 +227,9 @@ if __name__=='__main__':
 
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        results = controller()
+        results = hddm.mpi.controller()
         for name, model in results.iteritems():
             print "****************************************\n%s:\n%s\n" %(name, model)
     else:
-        worker()
+        hddm.mpi.worker()
         

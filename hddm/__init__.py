@@ -17,8 +17,14 @@ import model
 import likelihoods
 import generate
 import utils
+try:
+    import mpi
+except ImportError:
+    def mpi():
+        raise ImportError, "Can't import mpi"
+
 from model import *
-from utils import plot_posteriors, plot_rt_fit
+from utils import plot_posteriors, plot_post_pred
 
 import wfpt
 import wfpt_full

@@ -22,9 +22,8 @@ class Base(kabuki.Hierarchical):
     
     def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
                  init=False, exclude=None, wiener_params = None,
-                 init_values = None, **kwargs):
+                 init_values=None, **kwargs):
         
-        self.trace_subjs = trace_subjs
         self.no_bias = no_bias
 
         if model_type is None:
@@ -91,14 +90,14 @@ class Base(kabuki.Hierarchical):
                           value=param.init)
 
     def get_tau_node(self, param):
-        return pm.Uniform(param.full_name, lower=0., upper=1., value=.1)
+        return pm.Uniform(param.full_name, lower=0., upper=1., value=.1, plot=self.plot_tau)
 
-    def get_child_node(self, param, plot=False):
+    def get_child_node(self, param):
         if param.name.startswith('e') or param.name.startswith('v'):
             return pm.Normal(param.full_name,
                              mu=param.root,
                              tau=param.tau**-2,
-                             plot=plot, trace=self.trace_subjs,
+                             plot=self.plot_subjs, trace=self.trace_subjs,
                              value=param.init)
 
         else:
@@ -107,7 +106,7 @@ class Base(kabuki.Hierarchical):
                                       b=param.upper,
                                       mu=param.root, 
                                       tau=param.tau**-2,
-                                      plot=plot, trace=self.trace_subjs,
+                                      plot=self.plot_subjs, trace=self.trace_subjs,
                                       value=param.init)
     
     def get_rootless_child(self, param, params):
@@ -339,8 +338,8 @@ class HDDMAntisaccade(Base):
 
 
 
-class HDDMRegressor(hddm.model.Base):
-    def __init__(self, data, e1_col, effect_on=('a',), e2_col=None, **kwargs):
+class HDDMRegressor(Base):
+    def __init__(self, data, effects_on=None, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
         Arguments:
@@ -360,26 +359,25 @@ class HDDMRegressor(hddm.model.Base):
         model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
         model.mcmc()
         """
-        self.effect_on = effect_on
-        self.e1_col = e1_col
+        if effects_on is None:
+            self.effects_on = {'a': 'theta'}
+        else:
+            self.effects_on = effects_on
 
-        if e2_col is not None:
-            self.two_effect_model = True
-            self.e2_col = e2_col
-        else: 
-            self.two_effect_model = False
-        
         super(self.__class__, self).__init__(data, **kwargs)
         
     def get_params(self):
-        params = [Parameter('e1', True, lower=-3., upper=3., init=0)]
-        if self.two_effect_model:
-            params.append(Parameter('e2', True, lower=-3., upper=3., init=0))
-            params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
+        params = []
+        # if self.two_effect_model:
+        #     params.append(Parameter('e1', True, lower=-3., upper=3., init=0))
+        #     params.append(Parameter('e2', True, lower=-3., upper=3., init=0))
+        #     params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
 
         # Add rootless nodes for effects
-        for effect_on in self.effect_on:
-            p = Parameter('e_inst'+effect_on, False, vars={'effect_on':effect_on})
+        for effect_on, col_name in self.effects_on.iteritems():
+            params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0))
+            p = Parameter('e_inst_%s_%s'%(col_name,effect_on), False, vars={'col_name':col_name,
+                                                                            'effect_on':effect_on})
             params.append(p)
 
         params += super(self.__class__, self).get_params()
@@ -394,22 +392,21 @@ class HDDMRegressor(hddm.model.Base):
             else:
                 func = effect1
 
-            if not self.two_effect_model:
-                return pm.Deterministic(func, param.full_name, param.full_name, 
-                                        parents={'base': self._get_node(param.vars['effect_on'], params),
-                                                 'e1': params['e1'],
-                                                 'data': param.data[self.e1_col]}, trace=True)
-            else:
-                return pm.Deterministic(effect2, param.full_name, param.full_name,
-                                        parents={'base':params[param.vars['effect_on']],
-                                                 'e1':params['e1'],
-                                                 'e2':params['e2'],
-                                                 'e_inter':params['e_inter'],
-                                                 'data_e1':param.data[self.e1_col],
-                                                 'data_e2':param.data[self.e2_col]}, trace=True)
+            return pm.Deterministic(func, param.full_name, param.full_name, 
+                                    parents={'base': self._get_node(param.vars['effect_on'], params),
+                                             'e1': params['e_%s_%s'%(param.vars['col_name'], param.vars['effect_on'])],
+                                             'data': param.data[param.vars['col_name']]}, trace=True, plot=self.plot_subjs)
+            # else:
+            #     return pm.Deterministic(effect2, param.full_name, param.full_name,
+            #                             parents={'base':params[param.vars['effect_on']],
+            #                                      'e1':params['e1'],
+            #                                      'e2':params['e2'],
+            #                                      'e_inter':params['e_inter'],
+            #                                      'data_e1':param.data[self.e1_col],
+            #                                      'data_e2':param.data[self.e2_col]}, trace=True)
 
-        for effect in self.effect_on:
-            params[effect] = params['e_inst'+effect]
+        for effect_on, col_name in self.effects_on.iteritems():
+            params[effect_on] = params['e_inst_%s_%s'%(col_name, effect_on)]
 
         if self.model_type == 'simple':
             model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
@@ -418,7 +415,7 @@ class HDDMRegressor(hddm.model.Base):
                                                        a=params['a'],
                                                        z=self._get_node('z',params),
                                                        t=params['t'],
-                                                       multi=self.effect_on,
+                                                       multi=self.effects_on.keys(),
                                                        observed=True)
         elif self.model_type == 'full':
             model = hddm.likelihoods.WienerFullMulti(param.full_name,
@@ -430,7 +427,7 @@ class HDDMRegressor(hddm.model.Base):
                                                      Z=self._get_node('Z', params),
                                                      t=params['t'],
                                                      T=self._get_node('T', params),
-                                                     multi=self.effect_on,
+                                                     multi=self.effects_on.keys(),
                                                      observed=True)
         return model
 
