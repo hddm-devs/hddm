@@ -297,10 +297,7 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
         check_correl(mc)
         
         if dbname is not None:
-            model.mcmc_model.db.commit()
-            model.mcmc_model.db.close()
+            mc.db.commit()
+            mc.db.close()
 
     return i_res
-               
-    
-
