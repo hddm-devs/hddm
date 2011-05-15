@@ -70,31 +70,34 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
     
     
     rts = np.empty(samples)
-    d_scale = np.sqrt(dt)*intra_sv/dt
+    d_scale = np.sqrt(dt)*intra_sv*dt
     for i_sample in xrange(samples):
-        x = starting_points[i_sample]
+        y = starting_points[i_sample]
         crossed = False
         iter = 0
         # drifting...
-        while (not crossed):            
+        while (not crossed):
+            iter += 1            
             if params.has_key('V'):
-                drift_rate = norm.rvs(v, params['V']/dt)
+                drift_rate = norm.rvs(v, params['V'])*dt
             else:
                 drift_rate = v
-            new_x = x + norm.rvs()*d_scale + drift_rate
-            if (new_x < 0) or (new_x > a):
-                crossed = True                
-            iter += 1
+            new_y = y + norm.rvs()*d_scale + drift_rate
+            if (new_y < 0) or (new_y > a):
+                crossed = True
+            else:                                                
+                y = new_y;
         #find the boundary interception
-        m = (new_x - x)  # slope
-        b = iter - m*new_x # intercept
-        if new_x < 0:
-            rt = (0 - b) / m
+        m = (new_y - y)  # slope
+        # y = m*x + b
+        b = new_y - m*iter # intercept
+        if new_y < 0:
+            rt = ((0 - b) / m)*dt
+            rt = -rt;
         else:
-            rt = (a - b) / m
+            rt = ((a - b) / m)*dt
 
         rts[i_sample] = rt + start_delay[i_sample]
-
 
     if not structured:
         return rts
