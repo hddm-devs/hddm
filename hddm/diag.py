@@ -75,7 +75,7 @@ def rand_params(model_type='simple', exclude = None):
         return rand_simple_cont_params(exclude)
     
 
-def rand_simple_params(exclude):
+def rand_simple_params(exclude = None):
     if exclude is None:
         exclude = []
     params = {}

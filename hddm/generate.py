@@ -40,29 +40,61 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, steps=5000, T=5., structured=False, subj_idx=None, strict_size=False):
-    def _gen_rts():
-        # Function that always returns a time a threshold was crossed
-        rts = np.empty(samples, np.float) # init
-        for i in xrange(samples):
-            not_crossed_boundary = True
-            while(not_crossed_boundary): # if threshold not crossed, redraw
-                drift = simulate_drifts(params, 1, steps, T)
-                thresh = find_thresholds(drift, params['a'])
-                if len(thresh) != 0:
-                    not_crossed_boundary = False
-            rts[i] = thresh[0]
-        return rts
+def _interpolate_thresh(x1, x2, t1, t2, boundary):
+        # Interpolate to find crossing
+        m = (y2-y1) / (x2-x1) # slope
+        # y = m*x + b
+        b = y1 - m*x1 # intercept
+        return (boundary - b) / m
+def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, subj_idx=None):
 
     if samples is None:
         samples = 1
-    dt = steps / T
-
-    if strict_size:
-        rts = _gen_rts()/dt
+    
+    a = params['a']
+    v = params['v']
+    
+    #create delay
+    if params.has_key('T'):
+        start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) /
+                       - params['T']/2.)
     else:
-        drifts = simulate_drifts(params, samples, steps, T)
-        rts = find_thresholds(drifts, params['a'])/dt
+        start_delay = np.ones(samples)*params['t']
+    
+    #create starting_points
+    if params.has_key('Z'):
+        starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) /
+                           - params['Z']/2.)*a
+    else:
+        starting_points = np.ones(samples)*params['z']*a
+    
+    
+    rts = np.empty(samples)
+    d_scale = np.sqrt(dt)*intra_sv/dt
+    for i_sample in xrange(samples):
+        x = starting_points[i_sample]
+        crossed = False
+        iter = 0
+        # drifting...
+        while (not crossed):            
+            if params.has_key('V'):
+                drift_rate = norm.rvs(v, params['V']/dt)
+            else:
+                drift_rate = v
+            new_x = x + norm.rvs()*d_scale + drift_rate
+            if (new_x < 0) or (new_x > a):
+                crossed = True                
+            iter += 1
+        #find the boundary interception
+        m = (new_x - x)  # slope
+        b = iter - m*new_x # intercept
+        if new_x < 0:
+            rt = (0 - b) / m
+        else:
+            rt = (a - b) / m
+
+        rts[i_sample] = rt + start_delay[i_sample]
+
 
     if not structured:
         return rts
