@@ -91,57 +91,6 @@ class TestWfpt(unittest.TestCase):
         
             
         
-    def test_full_mc_simulated(self):
-        """Test for systematic deviations in full_mc by comparing to simulated pdf distribution.
-        """
-        params = {}
-        params['v'] = (rand()-.5)*1.5
-        params['t'] = rand()*.5
-        params['a'] = 1.5+rand()
-        params['z'] = .5
-        params['V'] = rand()
-        params['T'] = rand()*(params['t']/2.)
-        params['Z'] = rand()*(params['z']/2.)
-        samples = hddm.generate.gen_rts(params, samples=self.samples)
-        empirical_pdf = hddm.utils.histogram(samples, bins=self.bins, range=self.range_, density=True)[0]
-        
-        analytical_pdf = hddm.wfpt_full.wiener_like_full_mc(self.x,
-                                                       params['v'],
-                                                       params['V'],
-                                                       params['z'],
-                                                       params['Z'],
-                                                       params['t'],
-                                                       params['T'],
-                                                       params['a'],
-                                                       reps=1000,
-                                                       err=0.0001, logp=0)
-
-        # TODO: Normalize according to integral
-        diff = np.mean(np.abs(empirical_pdf - analytical_pdf))
-        print diff
-        # Test if there are no systematic deviations
-        self.assertTrue(diff < 0.03)
-        #np.testing.assert_array_almost_equal(empirical_pdf, analytical_pdf, 1)
-
-
-    def test_full_mc(self):
-        """"""
-        values = np.array([0.3, 0.4, 0.6, 1])
-        print "testing %d data points" % (len(values))
-    
-        v=1; V=0.1; z=0.5; Z=0.1; t=0.3; T=0.1; a=1.5
-        #true values obtained by numerical integration
-        true_vals = np.log(np.array([0.019925699375943847,
-                           1.0586617338544908,
-                           1.2906014938998163,
-                           0.446972173706388]))
-        
-        y = np.empty(len(values), dtype=float)
-        for i in xrange(len(values)):
-            print values[i:i+1]
-            y[i] = sum(hddm.wfpt_full.wiener_like_full_mc(values[i:i+1], v, V, z, Z, t, T, a, err=.0001,
-                                                            reps=1000000,logp=1))
-        np.testing.assert_array_almost_equal(true_vals, y, 2)
             
     def test_pdf_V(self):
         """Test if our wfpt pdf_V implementation yields the right results"""       
