@@ -15,16 +15,33 @@ from nose import SkipTest
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
-        self.bins=50
-        self.range_=(-4,4)
-        self.samples=5000
-        self.x = np.linspace(self.range_[0], self.range_[1], self.bins)
-       
+        self.bins=5000
+        self.range_=(-7,7)
+        self.samples=10000
+        
+    def pdf_with_params(rt, params):
+        v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+        T = params['T']; a = params['a']
+        return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+                            T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+    
+    def create_wfpt_cdf(self, params):
+        x = np.linspace(self.range_[0], self.range_[1], self.bins)
+        l_cdf = [pdf_with_params(rt, params) for rt in x]
+        def cdf(rt, x=x, l_cdf=l_cdf):
+            idx = np.where(x>rt)[0][0]
+            l_cdf[idx]
+            m = (l_cdf[idx+1] - l_cdf[idx])/(x[idx+1]-x[idx])
+            b = l_cdf[idx] - m*x[idx]
+            return m*rt+b
+        return cdf
+         
+    
     def runTest(self):
         pass
 
     def test_pdf(self):
-        """Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009"""
+        # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
         try:
             import mlabwrap
         except ImportError:
@@ -45,25 +62,28 @@ class TestWfpt(unittest.TestCase):
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
             
-    def test_simple_array(self):
-        params_novar = hddm.diag.rand_simple_params()
-        samples_novar = hddm.generate.gen_rts(params_novar, samples=self.samples)
-        simulated_pdf = hddm.utils.histogram(samples_novar, bins=self.bins, range=self.range_, density=True)[0]
+   
+    def test_simulation_compare_to_analytic(self):
+        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
+        for i_exclude in excludes:
+            params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)
+            samples = hddm.generate.gen_rts(params, samples=self.samples)
+            simulated_pdf = hddm.utils.histogram(samples, bins=self.bins, range=self.range_, density=True)[0]
+    
+            v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+            T = params['T']; a = params['a']
+            tmp_full_pdf = lambda x: hddm.wfpt_full.full_pdf(x,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+                                                     T=T,err=0.001, nT=2, nZ=2, use_adaptive=1, simps_err=1e-2) 
+            analytical_pdf = [ tmp_full_pdf(x) for x in self.x]
+            
+    
+            diff = np.mean(abs(simulated_pdf - analytical_pdf))
+            print params
+            print 'mean err: %f' % diff
+            print 'max err: %f' % np.max(abs(simulated_pdf - analytical_pdf))
+            # Test if there are no systematic deviations
+            self.assertTrue(diff < 0.03)
 
-        analytical_pdf = hddm.wfpt.pdf_array(self.x,
-                                             params_novar['v'],
-                                             params_novar['a'],
-                                             params_novar['z'],
-                                             params_novar['t'],
-                                             err=0.0001, logp=0)
-
-        diff = np.mean(abs(simulated_pdf - analytical_pdf))
-        print 'mean err: %f' % diff
-        print 'max err: %f' % np.max(abs(simulated_pdf - analytical_pdf))
-        # Test if there are no systematic deviations
-        self.assertTrue(diff < 0.03)
-        #it's very problematic to test agreement between bins
-        #np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
 
     def test_simple_summed_logp(self):
         v = (rand()-.5)*1.5

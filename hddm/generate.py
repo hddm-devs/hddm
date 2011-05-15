@@ -50,7 +50,7 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
 
     if samples is None:
         samples = 1
-    
+    nn = 1000
     a = params['a']
     v = params['v']
     
@@ -70,35 +70,44 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
     
     
     rts = np.empty(samples)
-    d_scale = np.sqrt(dt)*intra_sv*dt
+    d_scale = np.sqrt(dt)*intra_sv
+    
     for i_sample in xrange(samples):
-        y = starting_points[i_sample]
         crossed = False
         iter = 0
+        y_0 = starting_points[i_sample]
         # drifting...
         while (not crossed):
-            iter += 1            
-            if params.has_key('V'):
-                drift_rate = norm.rvs(v, params['V'])*dt
+            iter += 1
+            if params.has_key('V') and params['V'] != 0:
+                drift_rates = norm.rvs(v, params['V'], size=nn)*dt
             else:
-                drift_rate = v
-            new_y = y + norm.rvs()*d_scale + drift_rate
-            if (new_y < 0) or (new_y > a):
+                drift_rates = np.ones(nn)*(v*dt)
+            random_walk = norm.rvs(0, d_scale, size=nn)
+            random_walk[0] += y_0             
+            position = np.cumsum(random_walk + drift_rates) 
+            cross_idx = np.where((position < 0) | (position > a))[0]
+            if cross_idx.shape[0]>0:
                 crossed = True
-            else:                                                
-                y = new_y;
-        #find the boundary interception
-        m = (new_y - y)  # slope
+            else:
+                y_0 = position[-1]
+
+        #find the boundary interception        
+        y2 = position[cross_idx[0]]
+        if cross_idx[0]!=0:
+            y1 = position[cross_idx[0]-1]            
+        else:
+            y1 = y_0
+        m = (y2 - y1)  # slope
         # y = m*x + b
-        b = new_y - m*iter # intercept
-        if new_y < 0:
+        b = y2 - m*((iter-1)*nn+cross_idx[0]) # intercept
+        if y2 < 0:
             rt = ((0 - b) / m)*dt
-            rt = -rt;
         else:
             rt = ((a - b) / m)*dt
-
-        rts[i_sample] = rt + start_delay[i_sample]
-
+        rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
+        # debug_here()
+        
     if not structured:
         return rts
     else:
