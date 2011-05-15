@@ -56,14 +56,14 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
     
     #create delay
     if params.has_key('T'):
-        start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) /
+        start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) \
                        - params['T']/2.)
     else:
         start_delay = np.ones(samples)*params['t']
     
     #create starting_points
     if params.has_key('Z'):
-        starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) /
+        starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) \
                            - params['Z']/2.)*a
     else:
         starting_points = np.ones(samples)*params['z']*a
