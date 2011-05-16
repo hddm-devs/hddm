@@ -78,13 +78,14 @@ def gen_rts(params, samples=1000, dt = 1e-4, intra_sv=1., structured=False, subj
         iter = 0
         y_0 = starting_points[i_sample]
         # drifting...
+        if params.has_key('V') and params['V'] != 0:
+            drift_rate = norm.rvs(v, params['V'])
+        else:
+            drift_rate = v
+        prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
+
         while (not crossed):
             iter += 1
-            if params.has_key('V') and params['V'] != 0:
-                drift_rates = norm.rvs(v, params['V'], size=nn)
-                prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*drift_rates)
-            else:
-                prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*v)
             position = ((rand(nn) < prob_up) *2 - 1) * step_size
             position[0] += y_0
             position = np.cumsum(position) 
