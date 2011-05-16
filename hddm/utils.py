@@ -695,7 +695,7 @@ def post_pred_simple(v, a, t, z=None, x=None):
     p = np.zeros(100, dtype=np.float)
 
     for i in range(trace_len):
-        p[:] += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], .001)
+        p[:] += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], 1e-4)
     
     return p/trace_len
 
@@ -708,7 +708,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             continue 
 
         plt.figure()
-        if type(node) is np.ndarray: # Subject model
+        if type(node) is np.ndarray: # Group model
             data = np.concatenate([subj_node.value for subj_node in node])
             # Walk through nodes up to the root node
             a = node[0].parents['a'].parents['mu'].trace()
