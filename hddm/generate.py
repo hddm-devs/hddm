@@ -47,7 +47,7 @@ def _interpolate_thresh(x1, x2, t1, t2, boundary):
         # y = m*x + b
         b = y1 - m*x1 # intercept
         return (boundary - b) / m
-def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, subj_idx=None):
+def gen_rts(params, samples=1000, dt = 1e-4, intra_sv=1., structured=False, subj_idx=None):
 
     if samples is None:
         samples = 1
