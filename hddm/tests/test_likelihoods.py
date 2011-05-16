@@ -9,25 +9,30 @@ import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
 from scipy.integrate import *
+from scipy.stats import kstest
 
 from nose import SkipTest
+
+def pdf_with_params(rt, params):
+    v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+    T = params['T']; a = params['a']
+    return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
 
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
         self.bins=5000
-        self.range_=(-7,7)
+        self.range_=(-10,10)
         self.samples=10000
         
-    def pdf_with_params(rt, params):
-        v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
-        T = params['T']; a = params['a']
-        return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
-                            T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+    
     
     def create_wfpt_cdf(self, params):
         x = np.linspace(self.range_[0], self.range_[1], self.bins)
         l_cdf = [pdf_with_params(rt, params) for rt in x]
+        l_cdf = np.cumsum(l_cdf)
+        l_cdf = l_cdf/l_cdf[-1]
         def cdf(rt, x=x, l_cdf=l_cdf):
             idx = np.where(x>rt)[0][0]
             l_cdf[idx]
@@ -66,23 +71,17 @@ class TestWfpt(unittest.TestCase):
     def test_simulation_compare_to_analytic(self):
         excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
         for i_exclude in excludes:
-            params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)
-            samples = hddm.generate.gen_rts(params, samples=self.samples)
-            simulated_pdf = hddm.utils.histogram(samples, bins=self.bins, range=self.range_, density=True)[0]
-    
-            v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
-            T = params['T']; a = params['a']
-            tmp_full_pdf = lambda x: hddm.wfpt_full.full_pdf(x,v=v,V=V,a=a,z=z,Z=Z,t=t, 
-                                                     T=T,err=0.001, nT=2, nZ=2, use_adaptive=1, simps_err=1e-2) 
-            analytical_pdf = [ tmp_full_pdf(x) for x in self.x]
-            
-    
-            diff = np.mean(abs(simulated_pdf - analytical_pdf))
-            print params
-            print 'mean err: %f' % diff
-            print 'max err: %f' % np.max(abs(simulated_pdf - analytical_pdf))
-            # Test if there are no systematic deviations
-            self.assertTrue(diff < 0.03)
+            ok = False
+            while not ok:
+                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
+                samples = hddm.generate.gen_rts(params, samples=self.samples)
+                if max(abs(samples))<=self.range_[1]:
+                    ok = True                
+            cdf_single = self.create_wfpt_cdf(params)
+            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
+            [D, p_value] = kstest(samples, cdf_vec)
+            print 'p_value: %f' % p_value
+            self.assertTrue(p_value > 0.1)
 
 
     def test_simple_summed_logp(self):
