@@ -25,20 +25,15 @@ def effect(base, effects):
 def return_fixed(value=.5):
     return value
 
-def post_pred_simple(v, a, z, t, x=None):
-    """Posterior predictive likelihood."""
-    if x is None:
-        x = np.linspace(-5,5,100)
-    trace_len = len(a)
 
-    p = np.zeros(100, dtype=np.float)
+def set_proposal_sd(mc, tau=.1):
+    for var in mc.variables:
+        if var.__name__.endswith('tau'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
 
-    for i in range(trace_len):
-        p += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], .001)
+    return
     
-    return p/trace_len
-        
-
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
     Compute the histogram of a set of data.
@@ -287,9 +282,6 @@ def plot_savage_dickey(range=(-1,1), bins=100):
     plt.axvline(x=0, lw=1., color='k')
     plt.ylim(ymin=0)
 
-
-    
-
 def call_mcmc((model_class, data, dbname, rnd, kwargs)):
     # Randomize seed
     np.random.seed(int(rnd))
@@ -298,63 +290,6 @@ def call_mcmc((model_class, data, dbname, rnd, kwargs)):
     model.mcmc(dbname=dbname)
     model.mcmc_model.db.close()
 
-def create_tag_names(tag, chains=None):
-    import multiprocessing
-    if chains is None:
-        chains = multiprocessing.cpu_count()
-    tag_names = []
-    # Create copies of data and the corresponding db names
-    for chain in range(chains):
-        tag_names.append("db/mcmc%s%i.pickle"% (tag,chain))
-
-    return tag_names
-
-def load_parallel_chains(model_class, data, tag, kwargs, chains=None, test_convergance=True, combine=True):
-    tag_names = create_tag_names(tag, chains=chains)
-    models = []
-    for tag_name in tag_names:
-        model = model_class(data, **kwargs)
-        model.mcmc_load_from_db(tag_name)
-        models.append(model)
-
-    if test_convergance:
-        Rhat = test_chain_convergance(models)
-        print Rhat
-    
-    if combine:
-        m = combine_chains(models, model_class, data, kwargs)
-        return m
-    
-    return models
-
-def combine_chains(models, model_class, data, kwargs):
-    """Combine multiple model runs into one final model (make sure that chains converged)."""
-    # Create model that will contain the other traces
-    m = copy(models[0])
-
-    # Loop through models and combine chains
-    for model in models[1:]:
-        m._set_traces(m.group_params, mcmc_model=model.mcmc_model, add=True)
-        m._set_traces(m.group_params_tau, mcmc_model=model.mcmc_model, add=True)
-        m._set_traces(m.subj_params, mcmc_model=model.mcmc_model, add=True)
-
-    return m
-        
-def run_parallel_chains(model_class, data, tag, load=False, cpus=None, chains=None, **kwargs):
-    import multiprocessing
-    if cpus is None:
-        cpus = multiprocessing.cpu_count()
-
-    tag_names = create_tag_names(tag, chains=chains)
-    # Parallel call
-    if not load:
-        rnds = np.random.rand(len(tag_names))*10000
-        pool = multiprocessing.Pool(processes=cpus)
-        pool.map(call_mcmc, [(model_class, data, tag_name, rnd, kwargs) for tag_name,rnd in zip(tag_names, rnds)])
-
-    models = load_parallel_chains(model_class, data, tag_names, kwargs)
-
-    return models
 
 def R_hat(samples):
     n, num_chains = samples.shape # n=num_samples
@@ -747,34 +682,67 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def plot_rt_fit(model, bins=50, range=(-5.,5.)):
-    plt.figure()
-    x = np.linspace(-5,5,100)
-    data_deps = model._get_data_depend(get_group_params=True)
+def post_pred_simple(v, a, t, z=None, x=None):
+    """Posterior predictive likelihood."""
+    trace_len = len(a)
 
-    size = int(np.ceil(np.sqrt(len(data_deps))))
-    for i,(data, params, param_name) in enumerate(data_deps):
-        plt.subplot(size,size,i+1)
+    if z is None:
+        z = np.ones(a.shape)*.5
 
+    if x is None:
+        x = np.linspace(-5,5,100)
+
+    p = np.zeros(100, dtype=np.float)
+
+    for i in range(trace_len):
+        p[:] += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], .001)
+    
+    return p/trace_len
+
+def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
+    x = np.linspace(range[0],range[1],100)
+    
+    for name, node in nodes.iteritems():
+        # Find wfpt node
+        if not name.startswith('wfpt'):
+            continue 
+
+        plt.figure()
+        if type(node) is np.ndarray: # Subject model
+            data = np.concatenate([subj_node.value for subj_node in node])
+            # Walk through nodes up to the root node
+            a = node[0].parents['a'].parents['mu'].trace()
+            v = node[0].parents['v'].parents['mu'].trace()
+            t = node[0].parents['t'].parents['mu'].trace()
+            if node[0].parents['z'] != .5: # bias model
+                z = node[0].parents['z'].parents['mu'].trace()
+            else:
+                z = None
+        else:
+            data = node.value
+            # Walk through nodes up to the root node
+            a = node.parents['a'].trace()
+            v = node.parents['v'].trace()
+            t = node.parents['t'].trace()
+            if node.parents['z'] != .5: # bias model
+                z = node.parents['z'].trace()
+            else:
+                z = None
+            
+            
         # Plot data
         x_data = np.linspace(range[0], range[1], bins)
-        empirical_dens = histogram(data['rt'], bins=bins, range=range, density=True)[0]
+        empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
         plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
-
+        
         # Plot analytical
-        analytical_dens = hddm.wfpt.pdf_array(x,
-                                              np.mean(params['v'].trace()),
-                                              np.mean(params['a'].trace()),
-                                              np.mean(params['z'].trace()),
-                                              np.mean(params['t'].trace()),
-                                              err=0.0001)
+        analytical_dens = post_pred_simple(v, a, t, z=z, x=x)
 
         plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
         plt.xlim(range)
-        plt.title(param_name)
-        if i==0:
-            plt.legend(loc=0)
+        plt.title(name)
+
 
 def plot_posteriors(model):
     """Generate posterior plots for each parameter.

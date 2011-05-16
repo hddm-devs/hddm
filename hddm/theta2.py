@@ -10,207 +10,6 @@ import os
 from ordereddict import OrderedDict
 
 import hddm
-import kabuki
-
-from kabuki.hierarchical import Parameter
-
-class Theta(hddm.model.Base):
-    def __init__(self, data, effect_on=('a',), effect_coding=True, on_as_1=False, theta_col=None, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depend_on <list>: separate stimulus distributions for these parameters.
-        effect_coding <bool>: True: effects coding (default)
-                      False: dummy coding
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        self.effect_on = effect_on
-        self.effect_coding = effect_coding
-        self.on_as_1 = on_as_1
-
-        if self.effect_coding:
-            if self.on_as_1:
-                self.dbs = 'dbs_effect'
-            else:
-                self.dbs = 'dbs_effect_inv'
-        else:
-            if self.on_as_1:
-                self.dbs = 'dbs'
-            else:
-                self.dbs = 'dbs_inv'
-            
-        if theta_col is None:
-            self.theta_col = 'theta'
-        else:
-            self.theta_col = theta_col
-
-        super(self.__class__, self).__init__(data, **kwargs)
-
-    def get_params(self):
-        params = [Parameter('e_theta', True, lower=-3., upper=3., init=0), 
-                   Parameter('e_dbs', True, lower=-3., upper=3., init=0),
-                   Parameter('e_inter', True, lower=-3., upper=3., init=0)]
-        for effect_on in self.effect_on:
-            p = Parameter('e_inst'+effect_on, False, vars={'effect_on':effect_on})
-            params.append(p)
-
-        params += super(self.__class__, self).get_params()
-
-        return params
-
-    def get_rootless_child(self, param, params):
-        """Generate the HDDM."""
-        if param.name.startswith('e_inst'):
-            return pm.Deterministic(effect2, param.full_name, param.full_name,
-                                    parents={'base':params[param.vars['effect_on']],
-                                             'e1':params['e_theta'],
-                                             'e2':params['e_dbs'],
-                                             'e_inter':params['e_inter'],
-                                             'data_e1':param.data['theta'],
-                                             'data_e2':param.data[self.dbs]}, trace=True)
-
-        
-        for effect in self.effect_on:
-            params[effect] = params['e_inst'+effect]
-
-        if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'].flatten(),
-                                                       v=params['v'],
-                                                       a=params['a'],
-                                                       z=self._get_node('z',params),
-                                                       t=params['t'],
-                                                       multi=self.effect_on,
-                                                       observed=True)
-        elif self.model_type == 'full':
-            model = hddm.likelihoods.WienerFullMulti(param.full_name,
-                                                     value=param.data['rt'].flatten(),
-                                                     v=params['v'],
-                                                     V=self._get_node('V', params),
-                                                     z=self._get_node('z', params),
-                                                     Z=self._get_node('Z', params),
-                                                     t=params['t'],
-                                                     T=self._get_node('T', params),
-                                                     a=params['a'],
-                                                     multi=self.effect_on,
-                                                     observed=True)
-        return model
-
-def effect2(base, e1, e2, e_inter, data_e1, data_e2):
-    """2-regressor effect distribution
-    """
-    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter
-
-def effect1(base, e1, data):
-    """Effect distribution.
-    """
-    return base + e1 * data
-
-def effect1_nozero(base, e1, data):
-    """Effect distribution where values <0 will be set to 0.
-    """
-    value = base + e1 * data
-    value[value < 0] = 0.
-    value[value > .4] = .4
-    return value
-
-
-class ThetaNoDBS(hddm.model.Base):
-    def __init__(self, data, effect_on=('a',), theta_col=None, **kwargs):
-        """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
-
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depend_on <list>: separate stimulus distributions for these parameters.
-        dbs_global <bool>: True: Only one global effect distribution for dbs.
-                           False: One dbs effect distribution for each stimulus.
-        effect_coding <bool>: True: effects coding (default)
-                      False: dummy coding
-        single_effect <bool>: True: effects do not depend on stimuli
-                              False: only one effect distribution for all stimuli (but separate for dbs, theta and interaction) (default)
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
-        """
-
-        # Fish out keyword arguments that should not get passed on
-        # to the parent.
-        self.effect_on = effect_on
-        
-        if theta_col is None:
-            self.theta_col = 'theta'
-        else:
-            self.theta_col = theta_col
-
-        super(self.__class__, self).__init__(data, **kwargs)
-        
-    def get_param_names(self):
-        params = super(self.__class__, self).get_params()
-        params.append(Parameter('e_theta', True, lower=-3., upper=3., init=0))
-        return params
-
-    def get_rootless_child(self, param, params):
-        """Generate the HDDM."""
-        if param.name.startswith('e_inst'):
-            if effect == 't':
-                func = effect1_nozero
-            else:
-                func = effect1
-            return pm.Deterministic(func, param.full_name, param.full_name, 
-                                    parents={'base': params[param.vars['effect_on']],
-                                             'e1': params['e_theta'],
-                                             'data': param.data[self.theta_col]}, trace=True)
-
-        for effect in self.effect_on:
-            params[effect] = params['e_inst'+effect]
-
-        if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'],
-                                                       v=params['v'],
-                                                       a=params['a'],
-                                                       z=self._get_node('z',params),
-                                                       t=params['t'],
-                                                       multi=self.effect_on,
-                                                       observed=True)
-        elif self.model_type == 'full':
-            model = hddm.likelihoods.WienerFullMcMultiThresh(param.full_name,
-                                                             value=param.data['rt'],
-                                                             v=params['v'],
-                                                             V=self._get_node('V', params),
-                                                             z=self._get_node('z', params),
-                                                             Z=self._get_node('Z', params),
-                                                             t=params['t'],
-                                                             T=self._get_node('T', params),
-                                                             a=params['a'],
-                                                             multi=self.effect_on,
-                                                             observed=True)
-        return model
 
 def load_scalp_data(continuous=True, remove_outliers=.4, shift_theta=False):
     import numpy.lib.recfunctions as rec
@@ -267,28 +66,6 @@ def load_scalp_data(continuous=True, remove_outliers=.4, shift_theta=False):
         
     return all_data
 
-def elderly_data(data, remove_outliers=.4):
-    # Remove outliers
-    if remove_outliers:
-        data = data[data['rt']>remove_outliers]
-    # Set names for stim, theta and dbs
-    data['conf'][data['stim'] == '1'] = 'HC'
-    data['conf'][data['stim'] == '2'] = 'HC'
-    data['conf'][data['stim'] == '3'] = 'LC'
-    data['stim'][data['stim'] == '1'] = 'WW'
-    data['stim'][data['stim'] == '2'] = 'LL'
-    data['stim'][data['stim'] == '3'] = 'WL'
-
-    # Hack
-    data['conf'][data['stim'] == "'1'"] = 'HC'
-    data['conf'][data['stim'] == "'2'"] = 'HC'
-    data['conf'][data['stim'] == "'3'"] = 'LC'
-    data['stim'][data['stim'] == "'1'"] = 'WW'
-    data['stim'][data['stim'] == "'2'"] = 'LL'
-    data['stim'][data['stim'] == "'3'"] = 'WL'
-
-    return data
-
 def load_intraop_data(continuous=True):
     subjs = range(1,9)
     file_prefix = 'data/stn/inoptst3_'
@@ -324,82 +101,6 @@ def load_intraop_data(continuous=True):
     
     return all_data
 
-
-def worker():
-    from mpi4py import MPI
-    rank = MPI.COMM_WORLD.Get_rank()
-    proc_name = MPI.Get_processor_name()
-    status = MPI.Status()
-
-    print "Worker %i on %s: ready!" % (rank, proc_name)
-    # Send ready
-    MPI.COMM_WORLD.send([{'rank':rank, 'name':proc_name}], dest=0, tag=10)
-
-    # Start main data loop
-    while True:
-        # Get some data
-        print "Worker %i on %s: waiting for data" % (rank, proc_name)
-        recv = MPI.COMM_WORLD.recv(source=0, tag=MPI.ANY_TAG, status=status)
-        print "Worker %i on %s: received data, tag: %i" % (rank, proc_name, status.tag)
-
-        if status.tag == 2:
-            print "Worker %i on %s: received kill signal" % (rank, proc_name)
-            MPI.COMM_WORLD.send([], dest=0, tag=2)
-            return
-
-        if status.tag == 10:
-            # Run emergent
-            #print "Worker %i on %s: Running %s" % (rank, proc_name, recv)
-            #recv['debug'] = True
-            retry = 0
-            while retry < 5:
-                try:
-                    print "Running %s:\n" % recv[0]
-                    result = run_model(recv[0], recv[1])
-                    break
-                except pm.ZeroProbability:
-                    retry +=1
-            if retry == 5:
-                result = None
-                print "Job %s failed" % recv[0]
-
-        print("Worker %i on %s: finished one job" % (rank, proc_name))
-        MPI.COMM_WORLD.send((recv[0], result), dest=0, tag=15)
-
-    MPI.COMM_WORLD.send([], dest=0, tag=2)
-        
-def run_model(name, params, load=False):
-    if params.has_key('model_type'):
-        model_type = params['model_type']
-    else:
-        model_type = 'simple'
-
-    data = params.pop('data')
-
-    if name.startswith('PD'):
-        m = pm.MCMC(Theta(data, **params).create())
-    else:
-        if params.has_key('effect_on'):
-            m = pm.MCMC(ThetaNoDBS(data, **params).create())
-        else:
-            m = pm.MCMC(hddm.model.HDDM(data, **params).create())
-    
-    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
-
-    if not load:
-        try:
-            os.remove(dbname)
-        except OSError:
-            pass
-        m.mcmc(samples=30000, burn=25000, dbname=dbname)
-        print "*************************************\nModel: %s\n%s" %(name, m.summary())
-        return m.summary()
-    else:
-        print "Loading %s" %name
-        m.mcmc_load_from_db(dbname=dbname)
-        return m
-
-
 def create_jobs_pd():
     # Load data
     data_pd = np.recfromcsv('PD_PS.csv')
@@ -421,7 +122,7 @@ def create_models_nodbs(data, full=False):
     models = []
     model_types = ['simple']
     if full:
-        model_types.append('full_mc')
+        model_types.append('full_intrp')
         
     effects_on = ['a', 't']
     vs_on = ['stim', 'conf']
@@ -430,20 +131,20 @@ def create_models_nodbs(data, full=False):
     for effect in effects_on:
         for v_on in vs_on:
             for e_theta_on in e_thetas_on:
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on]}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on], 'a':['stim']}})
-                models.append({'data': data, 'effect_on':[effect, 'z'], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on]}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split']}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['rt_split']}})
-                models.append({'data': data, 'effect_on':[effect], 'depends_on':{'v':[vs_on], 'e_theta':[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on: 'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on], 'a':['stim']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['rt_split']}})
+                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
 
-                
+    
     models.append({'data': data, 'depends_on':{'v':['stim'], 'a':['theta_split']}})
     models.append({'data': data, 'depends_on':{'v':['conf'], 'a':['theta_split']}})
     
     return models
 
-def load_models(pd=False, full_mc=False):
+def load_models(pd=False, full=False):
     if pd:
         jobs = create_jobs_pd()
     elif full_mc:
@@ -456,49 +157,6 @@ def load_models(pd=False, full_mc=False):
         models[name] = run_model(name, params, load=True)
 
     return models
-
-def controller(samples=200, burn=15, reps=5):
-    process_list = range(1, MPI.COMM_WORLD.Get_size())
-    rank = MPI.COMM_WORLD.Get_rank()
-    proc_name = MPI.Get_processor_name()
-    status = MPI.Status()
-
-    print "Controller %i on %s: ready!" % (rank, proc_name)
-
-    models = create_jobs_full()
-    task_iter = models.iteritems()
-    results = {}
-
-    while(True):
-        status = MPI.Status()
-        recv = MPI.COMM_WORLD.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-        print "Controller: received tag %i from %s" % (status.tag, status.source)
-        if status.tag == 15:
-            results[recv[0]] = recv[1]
-
-        if status.tag == 10 or status.tag == 15:
-            try:
-                name, task = task_iter.next()
-                print "Controller: Sending task"
-                MPI.COMM_WORLD.send((name, task), dest=status.source, tag=10)
-            except StopIteration:
-                # Task queue is empty
-                print "Controller: Task queue is empty"
-                print "Controller: Sending kill signal"
-                MPI.COMM_WORLD.send([], dest=status.source, tag=2)
-
-        elif status.tag == 2: # Exit
-            process_list.remove(status.source)
-            print 'Process %i exited' % status.source
-            print 'Processes left: ' + str(process_list)
-        else:
-            print 'Unkown tag %i with msg %s' % (status.tag, str(data))
-            
-        if len(process_list) == 0:
-            print "No processes left"
-            break
-
-    return results
 
 def add_median_fields(data):
     theta_median = np.empty(data.shape, dtype=[('theta_split','S8')])
@@ -546,6 +204,22 @@ def load_csv_jim(*args, **kwargs):
 
     return data[data['rt'] > .4]
 
+def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
+    for var in mc.variables:
+        if var.__name__.endswith('tau'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
+        if var.__name__.startswith('e1') or var.__name__.startswith('e2') or var.__name__.startswith('e_inter'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = effect)
+        if var.__name__.startswith('a'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = a)
+        if var.__name__.startswith('v'):
+            # Change proposal SD
+            mc.use_step_method(pm.Metropolis, var, proposal_sd = v)
+    return
+
 if __name__=='__main__':
     #import sys
     #parse_config_file(sys.argv[1])
@@ -553,9 +227,9 @@ if __name__=='__main__':
 
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        results = controller()
+        results = hddm.mpi.controller()
         for name, model in results.iteritems():
             print "****************************************\n%s:\n%s\n" %(name, model)
     else:
-        worker()
+        hddm.mpi.worker()
         

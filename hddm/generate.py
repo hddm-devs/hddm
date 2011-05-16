@@ -245,32 +245,6 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100):
 
     return data, params_set
 
-
-def gen_rand_correlation_data(v=.5, corr=.1):
-    params = {'v': v,
-              'V': .001,
-              'z': .5,
-              't': .3,
-              'T': 0.,
-              'Z':0}
-
-    all_data = []
-    a_offset = 2
-    for i in np.linspace(-1,1,10):
-        params['a'] = a_offset + i*corr
-        data = gen_rand_subj_data(num_subjs=1, params=params, samples=20, noise=.1)[0]
-        theta = np.ones(data.shape) * i
-        theta.dtype = dtype=np.dtype([('theta', np.float)])
-        stim = np.tile('test', data.shape)
-        stim.dtype = np.dtype([('stim', 'S4')])
-        
-        data = rec.append_fields(data, names=['theta', 'stim'],
-                                 data=[theta, stim],
-                                 usemask=False)
-        all_data.append(data)
-
-    return np.concatenate(all_data)
-    
 def _add_noise(params_subj, noise=.1):
     """Add individual noise to each parameter."""
     params_subj = copy(params_subj)
@@ -280,7 +254,7 @@ def _add_noise(params_subj, noise=.1):
 
     return params_subj
 
-def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None, no_var=True):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
     # Set global parameters
     #z = rnd(loc=1, scale=2)
@@ -288,6 +262,10 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=No
     #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
         params = {'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
+    if no_var:
+        params['Z'] = 0
+        params['V'] = 0
+        params['T'] = 0
 
     params_subjs = []
     #data = np.empty((samples*num_subjs, 3), dtype=np.float)
@@ -299,7 +277,6 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=No
     for i in range(num_subjs):
         params_subj = copy(params)
         params_subj = _add_noise(params_subj, noise=noise)
-
         params_subjs.append(params_subj)
 
         # Create RT data
@@ -389,13 +366,11 @@ def run_all_var_combs(num_subjs=15, samples=100, correlation=None, jobs=2, inter
 
     return results, (Vs, Zs, Ts)
 
-        
-
-def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, cor_param=None, subj_noise=.01):
+def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, cor_param=None, subj_noise=.1):
     """Generate RT data where cor_param is linearly influenced by another variable."""
     
     if params is None:
-        params = {'v': .3, 'V': 0, 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2, 'e': correlation}
+        params = {'v': .5, 'V': 0, 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2, 'e': correlation}
 
     if cor_param is None:
         cor_param = 'a'
@@ -414,7 +389,7 @@ def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, c
             data['subj_idx'][trial] = subj_idx
 
             # Calculate resulting cor_param values
-            data['cov'][trial] = np.random.randn()
+            data['cov'][trial] = np.random.rand()-.5
 
             # Calculate new param values based on covariate
             params_trial[cor_param] = data['cov'][trial] * params_subj['e'] + params_subj[cor_param]
