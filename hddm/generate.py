@@ -71,8 +71,7 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
     
     
     rts = np.empty(samples)
-    step = np.sqrt(dt)*intra_sv
-    prob_up = 0.5*()
+    step_size = np.sqrt(dt)*intra_sv
     
     for i_sample in xrange(samples):
         crossed = False
@@ -82,12 +81,13 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
         while (not crossed):
             iter += 1
             if params.has_key('V') and params['V'] != 0:
-                drift_rates = norm.rvs(v, params['V'], size=nn)*dt
+                drift_rates = norm.rvs(v, params['V'], size=nn)
+                prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*drift_rates)
             else:
-                drift_rates = np.ones(nn)*(v*dt)
-            random_walk = norm.rvs(0, d_scale, size=nn)
-            random_walk[0] += y_0             
-            position = np.cumsum(random_walk + drift_rates) 
+                prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*v)
+            position = ((rand(nn) < prob_up) *2 - 1) * step_size
+            position[0] += y_0
+            position = np.cumsum(position) 
             cross_idx = np.where((position < 0) | (position > a))[0]
             if cross_idx.shape[0]>0:
                 crossed = True
@@ -100,15 +100,14 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
             y1 = position[cross_idx[0]-1]            
         else:
             y1 = y_0
-        m = (y2 - y1)  # slope
+        m = (y2 - y1)/dt  # slope
         # y = m*x + b
-        b = y2 - m*((iter-1)*nn+cross_idx[0]) # intercept
+        b = y2 - m*((iter-1)*nn+cross_idx[0])*dt # intercept
         if y2 < 0:
-            rt = ((0 - b) / m)*dt
+            rt = ((0 - b) / m)
         else:
-            rt = ((a - b) / m)*dt
+            rt = ((a - b) / m)
         rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
-        # debug_here()
         
     if not structured:
         return rts

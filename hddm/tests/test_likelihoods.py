@@ -17,33 +17,26 @@ def pdf_with_params(rt, params):
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
     T = params['T']; a = params['a']
     return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
-                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+                        T=T,err=1e-10, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+
+def create_wfpt_cdf(params, range_ = (-10,10), bins=5000):
+    x = np.linspace(range_[0], range_[1], bins)
+    pdf = [pdf_with_params(rt, params) for rt in x]
+    l_cdf = np.cumsum(pdf)
+    l_cdf = l_cdf/l_cdf[-1]
+    def cdf(rt, x=x, l_cdf=l_cdf):
+        idx = np.where(x>rt)[0][0]
+        l_cdf[idx]
+        m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
+        b = l_cdf[idx] - m*x[idx]
+        return m*rt+b
+    return cdf
+
 
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
-        self.bins=5000
-        self.range_=(-10,10)
         self.samples=5000
-        
-    
-    
-    def create_wfpt_cdf(self, params):
-        x = np.linspace(self.range_[0], self.range_[1], self.bins)
-        pdf = [pdf_with_params(rt, params) for rt in x]
-        l_cdf = np.cumsum(pdf)
-        l_cdf = l_cdf/l_cdf[-1]
-        def cdf(rt, x=x, l_cdf=l_cdf):
-            idx = np.where(x>rt)[0][0]
-            l_cdf[idx]
-            m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
-            b = l_cdf[idx] - m*x[idx]
-            return m*rt+b
-        return cdf
-         
-    
-    def runTest(self):
-        pass
 
     def test_pdf(self):
         # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
@@ -77,7 +70,7 @@ class TestWfpt(unittest.TestCase):
                 samples = hddm.generate.gen_rts(params, samples=self.samples)
                 if max(abs(samples))<=self.range_[1]:
                     ok = True                
-            cdf_single = self.create_wfpt_cdf(params)
+            cdf_single = create_wfpt_cdf(params)
             cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
             [D, p_value] = kstest(samples, cdf_vec)
             print 'p_value: %f' % p_value
