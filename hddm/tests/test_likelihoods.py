@@ -24,19 +24,19 @@ class TestWfpt(unittest.TestCase):
         super(TestWfpt, self).__init__(*args, **kwargs)
         self.bins=5000
         self.range_=(-10,10)
-        self.samples=10000
+        self.samples=5000
         
     
     
     def create_wfpt_cdf(self, params):
         x = np.linspace(self.range_[0], self.range_[1], self.bins)
-        l_cdf = [pdf_with_params(rt, params) for rt in x]
-        l_cdf = np.cumsum(l_cdf)
+        pdf = [pdf_with_params(rt, params) for rt in x]
+        l_cdf = np.cumsum(pdf)
         l_cdf = l_cdf/l_cdf[-1]
         def cdf(rt, x=x, l_cdf=l_cdf):
             idx = np.where(x>rt)[0][0]
             l_cdf[idx]
-            m = (l_cdf[idx+1] - l_cdf[idx])/(x[idx+1]-x[idx])
+            m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
             b = l_cdf[idx] - m*x[idx]
             return m*rt+b
         return cdf

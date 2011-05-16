@@ -5,6 +5,7 @@ import numpy.lib.recfunctions as rec
 from scipy.stats import uniform, norm
 from copy import copy
 import random
+from numpy.random import rand, randn
 
 import hddm
 
@@ -70,7 +71,8 @@ def gen_rts(params, samples=1000, dt = 0.001, intra_sv=1., structured=False, sub
     
     
     rts = np.empty(samples)
-    d_scale = np.sqrt(dt)*intra_sv
+    step = np.sqrt(dt)*intra_sv
+    prob_up = 0.5*()
     
     for i_sample in xrange(samples):
         crossed = False
