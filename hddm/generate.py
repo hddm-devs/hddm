@@ -14,7 +14,7 @@ try:
 except:
     pass
 
-def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, steps=5000, T=5., subj_idx=None):
+def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4, subj_idx=None):
     if params is None:
         params = {'v':-2.,
                   'v_switch': 2.,
@@ -30,8 +30,8 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, steps=50
     
     rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', int), ('subj_idx', int)])
 
-    pro_rts = gen_rts(pro_params, samples=samples_pro, steps=steps, T=T, subj_idx=subj_idx)
-    anti_rts = gen_rts(params, samples=samples_anti, steps=steps, T=T, subj_idx=subj_idx)
+    pro_rts = gen_rts(pro_params, samples=samples_pro, dt=dt, subj_idx=subj_idx)
+    anti_rts = gen_rts(params, samples=samples_anti, dt=dt, subj_idx=subj_idx)
 
     rts['instruct'][:samples_pro] = 0
     rts['instruct'][samples_pro:] = 1
@@ -58,7 +58,7 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
     if method=='cdf_py':
         rts = gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
-        rts = gen_rts_from_simulated_drift(params, samples, dt, intra_sv)
+        rts = gen_rts_from_simulated_drift(params, samples, dt, intra_sv)[0]
     elif method=='cdf':
         rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
                                          params['Z'],params['t'],params['T'],
@@ -82,13 +82,21 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
         return data
 
 def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
-
     if samples is None:
         samples = 1
     nn = 1000
     a = params['a']
     v = params['v']
-    
+
+    if params.has_key('v_switch'):
+        switch = True
+        v_switch = params['v_switch']
+        t_switch = params['t_switch']/dt
+        # Hack so that we will always step into a switch
+        nn = int(round(t_switch))
+    else:
+        switch = False
+        
     #create delay
     if params.has_key('T'):
         start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) \
@@ -103,11 +111,12 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
     else:
         starting_points = np.ones(samples)*params['z']*a
     
-    
     rts = np.empty(samples)
     step_size = np.sqrt(dt)*intra_sv
+    drifts = []
     
     for i_sample in xrange(samples):
+        drift = np.array([])
         crossed = False
         iter = 0
         y_0 = starting_points[i_sample]
@@ -116,17 +125,25 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
             drift_rate = norm.rvs(v, params['V'])
         else:
             drift_rate = v
-        prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
+
+        prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
 
         while (not crossed):
+            # Generate nn steps
             iter += 1
-            position = ((rand(nn) < prob_up) *2 - 1) * step_size
+            if iter == 2 and switch:
+                prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*v_switch)
+            position = ((rand(nn) < prob_up)*2 - 1) * step_size
             position[0] += y_0
-            position = np.cumsum(position) 
+            position = np.cumsum(position)
+            # Find boundary crossings
             cross_idx = np.where((position < 0) | (position > a))[0]
+            drift = np.concatenate((drift, position))
             if cross_idx.shape[0]>0:
                 crossed = True
             else:
+                # If not crossed, set last position as starting point
+                # for next nn steps to continue drift
                 y_0 = position[-1]
 
         #find the boundary interception        
@@ -143,8 +160,11 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         else:
             rt = ((a - b) / m)
         rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
-    
-    return rts
+
+        delay = start_delay[i_sample]/dt
+        drifts.append(np.concatenate((np.ones(int(delay))*starting_points[i_sample], drift[:int(abs(rt)/dt)])))
+
+    return rts, drifts
     
 def pdf_with_params(rt, params):
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
@@ -154,7 +174,6 @@ def pdf_with_params(rt, params):
 
 
 def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
-    
     simple_params = copy(params)
     simple_params['t'] = 0
     simple_params['T'] = 0
@@ -177,141 +196,6 @@ def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
             
     return rts
        
-def gen_rts_from_the_wrong_drift(params, samples=1000, steps=5000, T=5., structured=False, subj_idx=None, strict_size=False):
-    def _gen_rts():
-        # Function that always returns a time a threshold was crossed
-        rts = np.empty(samples, np.float) # init
-        for i in xrange(samples):
-            not_crossed_boundary = True
-            while(not_crossed_boundary): # if threshold not crossed, redraw
-                drift = simulate_drifts(params, 1, steps, T)
-                thresh = find_thresholds(drift, params['a'])
-                if len(thresh) != 0:
-                    not_crossed_boundary = False
-            rts[i] = thresh[0]
-        return rts
-
-    if samples is None:
-        samples = 1
-    dt = steps / T
-
-    if strict_size:
-        rts = _gen_rts()/dt
-    else:
-        drifts = simulate_drifts(params, samples, steps, T)
-        rts = find_thresholds(drifts, params['a'])/dt
-
-    if not structured:
-        return rts
-    else:
-        if subj_idx is None:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
-        else:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
-            data['subj_idx'] = subj_idx
-        data['response'][rts>0] = 1.
-        data['response'][rts<0] = 0.
-        data['rt'] = rts
-
-        return data
-
-def simulate_drifts(params, samples, steps, T, intra_sv=1.):
-    dt = steps / T
-    # Draw starting delays from uniform distribution around [ter-0.5*ster, ter+0.5*ster].
-    start_delays = np.abs(uniform.rvs(loc=params['t'], scale=params['T'], size=samples) - params['T']/2.)*dt
-
-    # Draw starting points from uniform distribution around [z-0.5*sz, z+0.5*sz]
-    # Starting point is relative, so have to convert to absolute first: z*a
-    starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) - params['Z']/2.)*params['a']
-
-    # Draw drift rates from a normal distribution
-    if not params.has_key('t_switch'):
-        # No change in drift rate
-        if params['V'] == 0.:
-            drift_rate = np.repeat(params['v'], samples)
-        else:
-            drift_rate = norm.rvs(loc=params['v'], scale=params['V'], size=samples)
-        drift_rates = (np.tile(drift_rate, (steps, 1))/dt).T
-    else:
-        # Drift rate changes during the trial
-        if params['V'] != 0:
-            raise NotImplementedError, "Inter-trial drift variability is not supported."
-        drift_rate = np.empty(steps, dtype=np.float)
-        switch_pos = (params['t']+params['t_switch'])*dt
-        if switch_pos > steps:
-            drift_rate[:] = params['v']
-        else:
-            drift_rate[:int(switch_pos)] = params['v']
-            drift_rate[int(switch_pos)+1:] = params['v_switch']
-        drift_rates = np.tile(drift_rate, (samples,1))/dt
-
-    # Generate samples from a normal distribution and
-    # add the drift rates
-    step_sizes = norm.rvs(loc=0, scale=np.sqrt(dt)*intra_sv, size=(samples, steps))/dt  + drift_rates
-    # Go through every line and zero out the non-decision component
-    for i in range(int(samples)):
-        step_sizes[i,:start_delays[i]] = 0
-
-    # This computes the Brownian motion by forming the cumulative sum of
-    # the random samples. Add the starting points as a constant offset.
-    drifts = np.cumsum(step_sizes, axis=1) + np.tile(starting_points, (steps, 1)).T
-
-    return drifts
-
-def find_thresholds(drifts, a, return_non_crossings=False):
-    def interpolate_thresh(cross, boundary):
-        # Interpolate to find crossing
-        x1 = cross-1
-        x2 = cross
-        y1 = drift[x1]
-        y2 = drift[x2]
-        m = (y2-y1) / (x2-x1) # slope
-        # y = m*x + b
-        b = y1 - m*x1 # intercept
-        return (boundary - b) / m
-
-    steps = drifts.shape[1]
-    # Find lines over the threshold
-    rts_upper = []
-    rts_lower = []
-    non_crossings = 0
-    # Go through every drift individually
-    for drift in drifts:
-        # Check if upper bound was reached, and where
-        thresh_upper = np.where((drift > a))[0]
-        upper = np.Inf
-        lower = np.Inf
-        if thresh_upper.shape != (0,):
-            upper = interpolate_thresh(thresh_upper[0], a)
-
-        # Check if lower bound was reached, and where
-        thresh_lower = np.where((drift < 0))[0]
-        if thresh_lower.shape != (0,):
-            lower = interpolate_thresh(thresh_lower[0], 0)
-
-        if upper == lower == np.Inf:
-            # Threshold never crossed
-            non_crossings += 1
-            continue
-
-        # Determine which one hit the threshold before
-        if upper < lower:
-            rts_upper.append(np.float(upper))
-        else:
-            rts_lower.append(np.float(lower))
-
-    rts_upper = np.asarray(rts_upper)
-    rts_lower = np.asarray(rts_lower)
-    # Switch sign
-    rts_lower *= -1
-    rts = np.concatenate((rts_upper, rts_lower))
-
-    if return_non_crossings:
-        return rts, non_crossings
-    else:
-        return rts
-    
-
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""
     if fname is None:
