@@ -41,12 +41,6 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def _interpolate_thresh(x1, x2, t1, t2, boundary):
-        # Interpolate to find crossing
-        m = (y2-y1) / (x2-x1) # slope
-        # y = m*x + b
-        b = y1 - m*x1 # intercept
-        return (boundary - b) / m
 def gen_rts(params, samples=1000, dt = 1e-4, intra_sv=1., structured=False, subj_idx=None):
 
     if samples is None:
@@ -131,21 +125,49 @@ def pdf_with_params(rt, params):
                         T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
 
 
-def create_wfpt_cdf(params, range_ = (-10,10), bins=5000):
-    x = np.linspace(range_[0], range_[1], n_points)
+def _cdf_as_list(params, x):
     pdf = [pdf_with_params(rt, params) for rt in x]
     l_cdf = np.cumsum(pdf)
     l_cdf = l_cdf/l_cdf[-1]
-    def cdf(rt, x=x, l_cdf=l_cdf):
-        idx = np.where(x>rt)[0][0]
-        l_cdf[idx]
-        m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
-        b = l_cdf[idx] - m*x[idx]
-        return m*rt+b
-    return cdf
+    return l_cdf
 
 
-def gen_rts_using_cdf(params, samples=1000, structured=False, subj_idx=None):
+def gen_rts_using_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2, structured=False, subj_idx=None):
+    
+    simple_params = copy(params)
+    simple_params['t'] = 0
+    simple_params['T'] = 0
+    x = np.arange(range_[0], range_[1], dt)
+    pdf = [pdf_with_params(rt, simple_params) for rt in x]
+    l_cdf = np.cumsum(pdf)
+    l_cdf = l_cdf/l_cdf[-1]
+    rts = np.empty(samples, dtype=np.double)
+    f = rand(samples)
+    if params['T']!=0:
+        delay = rand(samples)*params['T'] + (params['t'] - params['T']/2.)
+    for i in xrange(samples):
+        idx = np.where(l_cdf >= f[i])[0][0]
+        rt = (x[idx]+x[idx-1])/2.
+        if params['T']==0:
+            rt = rt + np.sign(rt)*params['t']
+        else:
+            rt = rt + np.sign(rt)*delay[i]
+        rts[i] = rt
+            
+    if not structured:
+        return rts
+    else:
+        if subj_idx is None:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
+        else:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
+            data['subj_idx'] = subj_idx
+        data['response'][rts>0] = 1.
+        data['response'][rts<0] = 0.
+        data['rt'] = rts
+
+        return data
+       
     
 
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
