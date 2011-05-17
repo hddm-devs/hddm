@@ -695,9 +695,9 @@ def post_pred_simple(v, a, t, z=None, x=None):
         z = np.ones(a.shape)*.5
 
     if x is None:
-        x = np.linspace(-5,5,100)
+        x = np.arange(-5,5,0.01)
 
-    p = np.zeros(100, dtype=np.float)
+    p = np.zeros(len(x), dtype=np.float)
 
     for i in range(trace_len):
         p[:] += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], 1e-4)
@@ -705,7 +705,7 @@ def post_pred_simple(v, a, t, z=None, x=None):
     return p/trace_len
 
 def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
-    x = np.linspace(range[0],range[1],100)
+    x = np.arange(range[0],range[1],0.01)
     
     for name, node in nodes.iteritems():
         # Find wfpt node
@@ -746,7 +746,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
         plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
         plt.xlim(range)
-        plt.title(name)
+        plt.title("%s (n=%d)" %(name, len(data)))
         plt.legend()
 
     plt.show()
