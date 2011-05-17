@@ -78,10 +78,8 @@ class DDM(HasTraits):
 
     # Total time.
     T = Float(5.0)
-    # Number of steps.
-    steps = Int(2000)
     # Time step size
-    dt = Property(Float, depends_on=['T', 'steps'])
+    dt = Float(1e-4)
     # Number of realizations to generate.
     num_samples = Int(5000)
     # Number of drifts to plot
@@ -89,9 +87,6 @@ class DDM(HasTraits):
     # Number of histogram bins
     bins = Int(200)
     view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot', 'switch')
-
-    def _get_dt(self):
-        return self.steps / self.T
 
     def _get_params_dict(self):
         d = {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
@@ -102,11 +97,16 @@ class DDM(HasTraits):
 
     @cached_property
     def _get_drifts(self):
-        return hddm.generate.simulate_drifts(self.params_dict, self.num_samples, self.steps, self.T, intra_sv=self.intra_sv)
+        return hddm.generate.gen_rts_from_simulated_drift(self.params_dict, samples=self.iter_plot, dt=self.dt, intra_sv=self.intra_sv)[1]
 
     @cached_property
     def _get_rts(self):
-        return hddm.generate.find_thresholds(self.drifts, self.a)
+        if not self.switch:
+            # Use faster cdf method
+            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_ = (-5, 5))
+        else:
+            # Simulate individual drifts
+            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_ = (-5, 5), method='drift')
 
     @cached_property
     def _get_non_crossings(self):
@@ -114,9 +114,9 @@ class DDM(HasTraits):
 
     @cached_property
     def _get_histo(self):
-        n, bins = hddm.utils.histogram(self.rts/self.dt, bins=2*self.bins, range=(-self.T,self.T))
+        n, bins = hddm.utils.histogram(self.rts, bins=2*self.bins, range=(-self.T,self.T))
         db = np.array(np.diff(bins), float)
-        return n/db/(n.sum()+self.non_crossings)
+        return n/db/(n.sum())#+self.non_crossings)
     
     def _get_params(self):
         return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
@@ -237,8 +237,7 @@ class DDMPlot(HasTraits):
         
     @cached_property
     def _get_x_analytical(self):
-        time = self.ddm.steps/self.ddm.dt
-        return np.linspace(-time, time, self.x_raster)
+        return np.linspace(-self.ddm.T, self.ddm.T, self.x_raster)
 
     @timer
     def _get_full_mc(self):
@@ -330,10 +329,9 @@ class DDMPlot(HasTraits):
 	    self.figure.axes[i].clear()
 
         # Set x axis values 
-        x = np.linspace(0,self.ddm.steps/self.ddm.dt,self.ddm.bins)
+        x = np.linspace(0, self.ddm.T, self.ddm.bins)
         # Set x axis values for analyticals
-        time = self.ddm.steps/self.ddm.dt
-        x_anal = np.linspace(0, time, self.x_raster/2)
+        x_anal = np.linspace(0, self.ddm.T, self.x_raster/2)
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
@@ -341,8 +339,7 @@ class DDMPlot(HasTraits):
 
         # Plot normalized histograms of empirical data
         if self.plot_data:
-            range_ = self.ddm.steps/self.ddm.dt
-            histo = hddm.utils.histogram(self.data, bins=2*self.ddm.bins, range=(-range_,range_), dens=True)[0]
+            histo = hddm.utils.histogram(self.data, bins=2*self.ddm.bins, range=(-self.ddm.T, self.ddm.T), dens=True)[0]
             self.plot_histo(x, histo, color='y')
 
         # Plot analyitical full averaged likelihood function
@@ -364,13 +361,13 @@ class DDMPlot(HasTraits):
             self.plot_histo(x_anal, self.full_intrp, color='y')
 
         if self.plot_density_dist:
-            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            t = np.linspace(0.0, self.ddm.T, self.x_raster)
             dens_upper = sp.stats.norm.pdf(self.ddm.a, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
             dens_lower = sp.stats.norm.pdf(0., loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
             self.plot_histo(t, np.concatenate((dens_lower[::-1], dens_upper)), color='k')
                 
         if self.plot_density:
-            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            t = np.linspace(0.0, self.ddm.T, self.x_raster)
             x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             # Compute normal density
             t_rel = (t-self.ddm.ter)
@@ -383,7 +380,7 @@ class DDMPlot(HasTraits):
             self.figure.axes[1].contourf(x,y,dens_norm)
 
         if self.plot_true_density:
-            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
+            t = np.linspace(0.0, self.ddm.T, self.x_raster)
             xm,ym = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
             zm = np.zeros_like(xm) # np.zeros((t, 100), dtype=np.float)
             #print zs
@@ -403,17 +400,13 @@ class DDMPlot(HasTraits):
             #plt.plot(zm[:,70])
             self.figure.axes[1].contourf(xm,ym,zm)
 
-                    
         if self.plot_drifts:
-            t = np.linspace(0.0, self.ddm.steps/self.ddm.dt, self.ddm.steps)
-            for k in range(self.ddm.iter_plot):
-                reached_thresh = np.where((self.ddm.drifts[k] > self.ddm.a) | (self.ddm.drifts[k] < 0))[0]
-                if reached_thresh.shape == (0,):
-                    duration = -1
-                else:
-                    duration = reached_thresh[0]
-                self.figure.axes[1].plot(t[:duration],
-                                         self.ddm.drifts[k][:duration], 'b', alpha=.5)
+            t = np.linspace(0.0, 5., 5./1e-4)
+            drifts = self.ddm.drifts
+            for drift in drifts:
+                print drift
+                self.figure.axes[1].plot(t[:len(drift)],
+                                         drift, 'b', alpha=.5)
     
         self.set_figure()
 
