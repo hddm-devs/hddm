@@ -41,7 +41,34 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, dt = 1e-4, intra_sv=1., structured=False, subj_idx=None):
+
+def gen_rts(params, samples=1000, dt = 1e-2, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
+    """
+    generate rts
+    if method==cdf it uses the cdf to generate samples, dt can be 1e-2
+    if method==drift it simulates drift to generate samples, dt should be 1e-4
+    """
+    if method=='cdf':
+        rts = gen_rts_from_cdf(params, samples, range_, dt)
+    if method=='drift':
+        rts = gen_rts_from_simulated_drift(params, samples, dt, intra_sv)
+        
+
+    if not structured:
+        return rts
+    else:
+        if subj_idx is None:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
+        else:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
+            data['subj_idx'] = subj_idx
+        data['response'][rts>0] = 1.
+        data['response'][rts<0] = 0.
+        data['rt'] = rts
+
+        return data
+
+def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.)
 
     if samples is None:
         samples = 1
@@ -104,20 +131,8 @@ def gen_rts(params, samples=1000, dt = 1e-4, intra_sv=1., structured=False, subj
             rt = ((a - b) / m)
         rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
         
-    if not structured:
         return rts
-    else:
-        if subj_idx is None:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
-        else:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
-            data['subj_idx'] = subj_idx
-        data['response'][rts>0] = 1.
-        data['response'][rts<0] = 0.
-        data['rt'] = rts
-
-        return data
-
+    
 def pdf_with_params(rt, params):
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
     T = params['T']; a = params['a']
@@ -125,14 +140,7 @@ def pdf_with_params(rt, params):
                         T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
 
 
-def _cdf_as_list(params, x):
-    pdf = [pdf_with_params(rt, params) for rt in x]
-    l_cdf = np.cumsum(pdf)
-    l_cdf = l_cdf/l_cdf[-1]
-    return l_cdf
-
-
-def gen_rts_using_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2, structured=False, subj_idx=None):
+def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
     
     simple_params = copy(params)
     simple_params['t'] = 0
@@ -154,19 +162,7 @@ def gen_rts_using_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2, structured
             rt = rt + np.sign(rt)*delay[i]
         rts[i] = rt
             
-    if not structured:
-        return rts
-    else:
-        if subj_idx is None:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
-        else:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
-            data['subj_idx'] = subj_idx
-        data['response'][rts>0] = 1.
-        data['response'][rts<0] = 0.
-        data['rt'] = rts
-
-        return data
+    return rts
        
     
 
