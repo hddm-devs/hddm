@@ -383,8 +383,6 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
     cdef Py_ssize_t i, j
     cdef int idx
     
-    print x.shape[0]
-    print l_cdf.shape[0]
     l_cdf[0] = 0
     for i from 1 <= i < x.shape[0]:
         pdf = full_pdf(x[i], v, V, a, z, Z, 0, 0, 1e-4)
@@ -395,8 +393,6 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
     cdef np.ndarray[DTYPE_t, ndim=1] rts = np.empty(samples, dtype=DTYPE)
     cdef np.ndarray[DTYPE_t, ndim=1] f = np.random.rand(samples)
     cdef np.ndarray[DTYPE_t, ndim=1] delay
-    print rts.shape[0]
-    print f.shape[0]
     
     if T!=0:
         delay = (np.random.rand(samples)*T + (t - T/2.))
@@ -404,7 +400,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
         idx = np.searchsorted(l_cdf, f[i])
         rt = x[idx]
         if T==0:
-            rt = rt + np.sign(rt)*'t'
+            rt = rt + np.sign(rt)*t
         else:
             rt = rt + np.sign(rt)*delay[i]
         rts[i] = rt

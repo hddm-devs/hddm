@@ -37,6 +37,7 @@ class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
         self.samples=5000
+        self.range_ = (-10,10)
 
     def test_pdf(self):
         # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
@@ -61,16 +62,31 @@ class TestWfpt(unittest.TestCase):
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
             
    
-    def test_simulation_compare_to_analytic(self):
+    def test_compare_sampled_data_to_analytic(self):
         excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
         for i_exclude in excludes:
             ok = False
             while not ok:
                 params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
-                samples = hddm.generate.gen_rts(params, samples=self.samples)
+                samples = hddm.generate.gen_rts(params, samples=self.samples, method='cdf', dt=1e-3)
                 if max(abs(samples))<=self.range_[1]:
                     ok = True                
-            cdf_single = create_wfpt_cdf(params)
+            cdf_single = create_wfpt_cdf(params, self.range_)
+            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
+            [D, p_value] = kstest(samples, cdf_vec)
+            print 'p_value: %f' % p_value
+            self.assertTrue(p_value > 0.1)
+
+    def test_compare_drift_simulated_data_to_analytic(self):
+        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
+        for i_exclude in excludes:
+            ok = False
+            while not ok:
+                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
+                samples = hddm.generate.gen_rts(params, samples=self.samples, method='drift', dt=1e-5)
+                if max(abs(samples))<=self.range_[1]:
+                    ok = True                
+            cdf_single = create_wfpt_cdf(params, self.range_)
             cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
             [D, p_value] = kstest(samples, cdf_vec)
             print 'p_value: %f' % p_value
