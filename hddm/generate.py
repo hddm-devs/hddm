@@ -13,8 +13,15 @@ try:
 except:
     pass
 
-
-def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T=5., subj_idx=None):
+def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, steps=5000, T=5., subj_idx=None):
+    if params is None:
+        params = {'v':-2.,
+                  'v_switch': 2.,
+                  'a': 2.5,
+                  't': .3,
+                  't_switch': .3,
+                  'z':.5,
+                  'T': 0, 'Z':0, 'V':0}
     # Generate prosaccade trials
     pro_params = copy(params)
     del pro_params['t_switch']
@@ -35,7 +42,7 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
     if subj_idx is not None:
         rts['subj_idx'] = subj_idx
     
-    return rts
+    return rts, params
     
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
