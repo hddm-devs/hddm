@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 import pymc as pm
 
 import hddm
+try:
+    from IPython.Debugger import Tracer; debug_here = Tracer()
+except:
+    pass
+
 
 def flip_errors(data):
     """Flip sign for lower boundary responses."""
@@ -742,7 +747,9 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
 
         plt.xlim(range)
         plt.title(name)
+        plt.legend()
 
+    plt.show()
 
 def plot_posteriors(model):
     """Generate posterior plots for each parameter.
