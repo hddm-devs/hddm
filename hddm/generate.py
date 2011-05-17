@@ -68,7 +68,7 @@ def gen_rts(params, samples=1000, dt = 1e-2, intra_sv=1., structured=False, subj
 
         return data
 
-def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.)
+def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
 
     if samples is None:
         samples = 1
