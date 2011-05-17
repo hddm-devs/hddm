@@ -42,7 +42,7 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
 
-def gen_rts(params, samples=1000, dt = 1e-2, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
+def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-2, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
     """
     generate rts
     if method==cdf it uses the cdf to generate samples, dt can be 1e-2
@@ -130,8 +130,8 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         else:
             rt = ((a - b) / m)
         rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
-        
-        return rts
+    
+    return rts
     
 def pdf_with_params(rt, params):
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
