@@ -9,22 +9,38 @@ import hddm
 from hddm.likelihoods import *
 from hddm.generate import *
 from scipy.integrate import *
+from scipy.stats import kstest
 
 from nose import SkipTest
+
+def pdf_with_params(rt, params):
+    v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+    T = params['T']; a = params['a']
+    return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+                        T=T,err=1e-10, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+
+def create_wfpt_cdf(params, range_ = (-10,10), bins=5000):
+    x = np.linspace(range_[0], range_[1], bins)
+    pdf = [pdf_with_params(rt, params) for rt in x]
+    l_cdf = np.cumsum(pdf)
+    l_cdf = l_cdf/l_cdf[-1]
+    def cdf(rt, x=x, l_cdf=l_cdf):
+        idx = np.where(x>rt)[0][0]
+        l_cdf[idx]
+        m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
+        b = l_cdf[idx] - m*x[idx]
+        return m*rt+b
+    return cdf
+
 
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
-        self.bins=50
-        self.range_=(-4,4)
         self.samples=5000
-        self.x = np.linspace(self.range_[0], self.range_[1], self.bins)
-       
-    def runTest(self):
-        pass
+        self.range_ = (-10,10)
 
     def test_pdf(self):
-        """Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009"""
+        # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
         try:
             import mlabwrap
         except ImportError:
@@ -45,32 +61,37 @@ class TestWfpt(unittest.TestCase):
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
             
-    def test_simple_array(self):
-        params_novar = {}
-        params_novar['v'] = (rand()-.5)*1.5
-        params_novar['t'] = rand()*.5
-        params_novar['a'] = 1.5+rand()
-        params_novar['z'] = .5
-        params_novar['V'] = 0
-        params_novar['T'] = 0
-        params_novar['Z'] = 0
-        samples_novar = hddm.generate.gen_rts(params_novar, samples=self.samples)
-        simulated_pdf = hddm.utils.histogram(samples_novar, bins=self.bins, range=self.range_, density=True)[0]
+   
+    def test_compare_sampled_data_to_analytic(self):
+        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
+        for i_exclude in excludes:
+            ok = False
+            while not ok:
+                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
+                samples = hddm.generate.gen_rts(params, samples=self.samples, method='cdf', dt=1e-3)
+                if max(abs(samples))<=self.range_[1]:
+                    ok = True                
+            cdf_single = create_wfpt_cdf(params, self.range_)
+            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
+            [D, p_value] = kstest(samples, cdf_vec)
+            print 'p_value: %f' % p_value
+            self.assertTrue(p_value > 0.1)
 
-        analytical_pdf = hddm.wfpt.pdf_array(self.x,
-                                             params_novar['v'],
-                                             params_novar['a'],
-                                             params_novar['z'],
-                                             params_novar['t'],
-                                             err=0.0001, logp=0)
+    def test_compare_drift_simulated_data_to_analytic(self):
+        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
+        for i_exclude in excludes:
+            ok = False
+            while not ok:
+                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
+                samples = hddm.generate.gen_rts(params, samples=self.samples, method='drift', dt=1e-4)
+                if max(abs(samples))<=self.range_[1]:
+                    ok = True                
+            cdf_single = create_wfpt_cdf(params, self.range_)
+            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
+            [D, p_value] = kstest(samples, cdf_vec)
+            print 'p_value: %f' % p_value
+            self.assertTrue(p_value > 0.1)
 
-        diff = np.mean(abs(simulated_pdf - analytical_pdf))
-        print 'mean err: %f' % diff
-        print 'max err: %f' % np.max(abs(simulated_pdf - analytical_pdf))
-        # Test if there are no systematic deviations
-        self.assertTrue(diff < 0.03)
-        #it's very problematic to test agreement between bins
-        #np.testing.assert_array_almost_equal(simulated_pdf, analytical_pdf, 1)
 
     def test_simple_summed_logp(self):
         v = (rand()-.5)*1.5
