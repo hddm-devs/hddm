@@ -48,10 +48,15 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-2, intra_sv=1., stru
     if method==cdf it uses the cdf to generate samples, dt can be 1e-2
     if method==drift it simulates drift to generate samples, dt should be 1e-4
     """
-    if method=='cdf':
+    if method=='cdf_py':
         rts = gen_rts_from_cdf(params, samples, range_, dt)
-    if method=='drift':
+    elif method=='drift':
         rts = gen_rts_from_simulated_drift(params, samples, dt, intra_sv)
+    elif method=='cdf':
+        rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
+                                         params['Z'],params['t'],params['T'],
+                                         samples, range_[0], range_[1], dt)
+
         
 
     if not structured:
@@ -154,7 +159,7 @@ def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
     if params['T']!=0:
         delay = rand(samples)*params['T'] + (params['t'] - params['T']/2.)
     for i in xrange(samples):
-        idx = np.where(l_cdf >= f[i])[0][0]
+        idx = np.searchsorted(l_cdf, f[i])
         rt = (x[idx]+x[idx-1])/2.
         if params['T']==0:
             rt = rt + np.sign(rt)*params['t']
