@@ -20,7 +20,7 @@ def gen_antisaccade_rts(params, samples_pro=500, samples_anti=500, steps=5000, T
     del pro_params['t_switch']
     del pro_params['v_switch']
     
-    rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', np.int), ('subj_idx', np.int)])
+    rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', int), ('subj_idx', int)])
 
     pro_rts = gen_rts(pro_params, samples=samples_pro, steps=steps, T=T, subj_idx=subj_idx)
     anti_rts = gen_rts(params, samples=samples_anti, steps=steps, T=T, subj_idx=subj_idx)

@@ -101,7 +101,7 @@ def load_intraop_data(continuous=True):
     
     return all_data
 
-def create_jobs_pd():
+def create_models_pd():
     # Load data
     data_pd = np.recfromcsv('PD_PS.csv')
     data_dbs_off = data_pd[data_pd['dbs'] == 0]
@@ -109,12 +109,12 @@ def create_jobs_pd():
 
     models = OrderedDict()
     # Create PD models
-    models['PD_paper_effect_on_as_0'] = {'data': data_pd, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf'], 'e_inter':['conf']}}
-    models['PD_paper_dummy_on_as_0'] = {'data': data_pd, 'effect_coding':False, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf'], 'e_inter':['conf']}}
-    models['PD_paper_dummy_on_as_1'] = {'data': data_pd, 'effect_coding':False, 'on_as_1':True, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf'], 'e_inter':['conf']}}
-    models['PD_paper_effect_on_as_1'] = {'data': data_pd, 'on_as_1':True, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf'], 'e_inter':['conf']}}
-    models['dbs_off_PD_paper'] = {'data': data_dbs_off, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf']}}
-    models['dbs_on_PD_paper'] = {'data': data_dbs_on, 'effect_on':['a'], 'depends_on':{'v':['stim'], 'e_theta':['conf']}}
+    for dbs in ['dbs', 'dbs_effect', 'dbs_inv', 'dbs_inv_effect']:
+        models['PD_stim_v_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'v':'stim', 'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
+        models['PD_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
+
+    models['dbs_off_PD_paper'] = {'data': data_dbs_off, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
+    models['dbs_on_PD_paper'] = {'data': data_dbs_on, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
 
     return models
 
@@ -122,26 +122,43 @@ def create_models_nodbs(data, full=False):
     models = []
     model_types = ['simple']
     if full:
-        model_types.append('full_intrp')
+        model_types.append('full')
         
-    effects_on = ['a', 't']
+    effects_on = ['a', 't', 'z']
     vs_on = ['stim', 'conf']
-    e_thetas_on = ['stim', 'conf', ['stim','resp'], ['conf','resp']]
+    e_thetas_on = [['stim'], ['conf'], ['stim','resp'], ['conf','resp']]
     
-    for effect in effects_on:
-        for v_on in vs_on:
+    for model_type in model_types:
+        for effect in effects_on:
             for e_theta_on in e_thetas_on:
-                models.append({'data': data, 'effects_on':{effect_on: 'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
-                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on], 'a':['stim']}})
-                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on]}})
-                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split']}})
-                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['rt_split']}})
-                models.append({'data': data, 'effects_on':{effect_on:'theta'}, 'depends_on':{'v':[vs_on], 'e_theta_'+e_theta_on:[e_theta_on, 'rt_split'], 'a':['stim', 'rt_split']}})
+                models.append({'data': data, 
+                               'effects_on': {effect: 'theta'},
+                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
 
-    
-    models.append({'data': data, 'depends_on':{'v':['stim'], 'a':['theta_split']}})
-    models.append({'data': data, 'depends_on':{'v':['conf'], 'a':['theta_split']}})
-    
+                for v_on in vs_on:
+                    models.append({'data': data, 
+                                   'effects_on':{effect: 'theta'},
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'},
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'},
+                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type})
+
+    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type})
+    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type})
     return models
 
 def load_models(pd=False, full=False):
@@ -191,7 +208,10 @@ def add_median_fields(data):
     return data
 
 def load_csv_jim(*args, **kwargs):
-    data = np.recfromtxt(*args, dtype=[('subj_idx', '<i8'), ('stim', 'S8'), ('rt', '<f8'), ('response', '<i8'), ('theta', '<f8'), ('conf', 'S8')], delimiter=',', skip_header=True)
+    try:
+        data = np.recfromtxt(*args, dtype=[('subj_idx', '<i8'), ('stim', 'S8'), ('rt', '<f8'), ('response', '<i8'), ('theta', '<f8'), ('conf', 'S8')], delimiter=',', skip_header=True)
+    except TypeError:
+        data = np.recfromtxt(*args, dtype=[('subj_idx', '<i8'), ('stim', 'S8'), ('rt', '<f8'), ('response', '<i8'), ('theta', '<f8'), ('conf', 'S8')], delimiter=',', skiprows=1)
 
     data['stim'][data['stim'] == '1'] = 'WW'
     data['stim'][data['stim'] == '2'] = 'LL'
@@ -221,15 +241,19 @@ def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
     return
 
 if __name__=='__main__':
-    #import sys
-    #parse_config_file(sys.argv[1])
+    import sys
     from mpi4py import MPI
-
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        results = hddm.mpi.controller()
-        for name, model in results.iteritems():
-            print "****************************************\n%s:\n%s\n" %(name, model)
+        data = load_csv_jim(sys.argv[1])
+        models = create_models_nodbs(data, full=True)
+        results = hddm.mpi.controller(models)
+        print results
+        for result in results:
+            print "****************************************\n"
+            kabuki.group.print_group_stats(result)
+        #for name, model in results.iteritems():
+        #    
     else:
         hddm.mpi.worker()
         

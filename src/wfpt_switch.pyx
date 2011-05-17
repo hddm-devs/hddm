@@ -99,8 +99,8 @@ cdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, doub
     F.function = &wfpt_gsl
     F.params = params
 
-    #gsl_integration_qag(&F, 0, 1, 1e-2, 1e-2, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
-    gsl_integration_qng(&F, 0, 1, 1e-2, 1e-2, &result, &error, &neval)
+    gsl_integration_qag(&F, 0, 1, 1e-3, 1e-3, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
+    #gsl_integration_qng(&F, 0, 1, 1e-1, 1e-1, &result, &error, &neval)
     gsl_integration_workspace_free(W)
 
     return result
@@ -119,7 +119,7 @@ cpdef switch_pdf(DTYPE_t rt, double v, double v_switch, double a, double z, doub
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p

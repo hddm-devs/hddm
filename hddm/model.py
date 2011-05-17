@@ -292,49 +292,34 @@ class HDDMContaminant(Base):
             raise KeyError, "Rootless child parameter %s not found" %name
 
 class HDDMAntisaccade(Base):
-    param_names = (('v',True),
-                   ('v_switch', True),
-                   ('a', True),
-                   ('z', True),
-                   ('t', True),
-                   ('t_switch', True))
-
     def __init__(self, data, no_bias=True, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
         
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        if not init:
-            # Default param ranges
-            self.init_params = {'t':0.1, 'z':0.5, 'v':-2., 'v_switch':1, 't_switch':.2}
-
-        self.param_ranges = {'a_lower': .5,
-                             'a_upper': 4.5,
-                             'z_lower': .0,
-                             'z_upper': 1.,
-                             't_lower': .1,
-                             't_upper': 1.,
-                             't_switch_lower': .1,
-                             't_switch_upper': 1.,
-                             'v_lower': -3.,
-                             'v_upper': 0.,
-                             'v_switch_lower': 0.,
-                             'v_switch_upper': 3.,
-                             'e_lower': -.3,
-                             'e_upper': .3}
+        self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
+                       Parameter('v_switch', True, lower=0, upper=6., init=1.),
+                       Parameter('a', True, lower=1, upper=4, init=2),
+                       #Parameter('z', True, lower=0, upper=1, init=.5),
+                       Parameter('t', True, lower=0.1, upper=1., init=0.1),
+                       Parameter('t_switch', True, lower=0.05, upper=0.7, init=0.3),
+                       Parameter('wfpt', False))
             
-    def get_rootless_child(self, name, tag, data, params, idx=None):
-        return hddm.likelihoods.WienerAntisaccade(name+tag,
-                                                  value=data['rt'],
-                                                  instruct=data['instruct'],
-                                                  v=params['v'],
-                                                  v_switch=params['v_switch'],
-                                                  a=params['a'],
-                                                  z=params['z'],
-                                                  t=params['t'],
-                                                  t_switch=params['t_switch'],
-                                                  observed=True)
+    def get_rootless_child(self, param, params):
+        if param.name == 'wfpt':
+            return hddm.likelihoods.WienerAntisaccade(param.full_name,
+                                                      value=param.data['rt'],
+                                                      instruct=param.data['instruct'],
+                                                      v=params['v'],
+                                                      v_switch=params['v_switch'],
+                                                      a=params['a'],
+                                                      z=.5,
+                                                      t=params['t'],
+                                                      t_switch=params['t_switch'],
+                                                      observed=True)
+        else:
+            raise TypeError, "Parameter named %s not found." % param.name
 
 
 
@@ -360,7 +345,7 @@ class HDDMRegressor(Base):
         model.mcmc()
         """
         if effects_on is None:
-            self.effects_on = {'a': 'theta'}
+            self.effects_on = {'a': ['theta']}
         else:
             self.effects_on = effects_on
 
@@ -374,11 +359,31 @@ class HDDMRegressor(Base):
         #     params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
 
         # Add rootless nodes for effects
-        for effect_on, col_name in self.effects_on.iteritems():
-            params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0))
-            p = Parameter('e_inst_%s_%s'%(col_name,effect_on), False, vars={'col_name':col_name,
-                                                                            'effect_on':effect_on})
-            params.append(p)
+        for effect_on, col_names in self.effects_on.iteritems():
+
+
+            if type(col_names) is str:
+                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0))
+                params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
+                                        False, 
+                                        vars={'col_name':col_names,
+                                              'effect_on':effect_on,
+                                              'e':'e_%s_%s'%(col_names, effect_on)}))
+            elif len(col_names) == 2:
+                for col_name in col_names:
+                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0))
+                params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
+                                        True, lower=-3., upper=3., init=0))
+                params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
+                                        False,
+                                        vars={'col_name0': col_names[0],
+                                              'col_name1': col_names[1],
+                                              'effect_on': effect_on,
+                                              'e1':'e_%s_%s'%(col_names[0], effect_on),
+                                              'e2':'e_%s_%s'%(col_names[1], effect_on),
+                                              'inter':'e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on)}))
+            else:
+                raise NotImplementedError, "Only 1 or 2 regressors allowed per variable."
 
         params += super(self.__class__, self).get_params()
 
@@ -387,26 +392,31 @@ class HDDMRegressor(Base):
     def get_rootless_child(self, param, params):
         """Generate the HDDM."""
         if param.name.startswith('e_inst'):
-            if param.vars['effect_on'] == 't':
-                func = effect1_nozero
+            if not param.vars.has_key('inter'):
+                # No interaction
+                if param.vars['effect_on'] == 't':
+                    func = effect1_nozero
+                else:
+                    func = effect1
+            
+                return pm.Deterministic(func, param.full_name, param.full_name,
+                                        parents={'base': self._get_node(param.vars['effect_on'], params),
+                                                 'e1': params[param.vars['e']],
+                                                 'data': param.data[param.vars['col_name']]}, trace=True, plot=self.plot_subjs)
             else:
-                func = effect1
-
-            return pm.Deterministic(func, param.full_name, param.full_name, 
-                                    parents={'base': self._get_node(param.vars['effect_on'], params),
-                                             'e1': params['e_%s_%s'%(param.vars['col_name'], param.vars['effect_on'])],
-                                             'data': param.data[param.vars['col_name']]}, trace=True, plot=self.plot_subjs)
-            # else:
-            #     return pm.Deterministic(effect2, param.full_name, param.full_name,
-            #                             parents={'base':params[param.vars['effect_on']],
-            #                                      'e1':params['e1'],
-            #                                      'e2':params['e2'],
-            #                                      'e_inter':params['e_inter'],
-            #                                      'data_e1':param.data[self.e1_col],
-            #                                      'data_e2':param.data[self.e2_col]}, trace=True)
+                return pm.Deterministic(effect2, param.full_name, param.full_name,
+                                        parents={'base': params[param.vars['effect_on']],
+                                                 'e1': params[param.vars['e1']],
+                                                 'e2': params[param.vars['e2']],
+                                                 'e_inter': params[param.vars['inter']],
+                                                 'data_e1': param.data[param.vars['col_name0']],
+                                                 'data_e2': param.data[param.vars['col_name1']]}, trace=True)
 
         for effect_on, col_name in self.effects_on.iteritems():
-            params[effect_on] = params['e_inst_%s_%s'%(col_name, effect_on)]
+            if type(col_name) is str:
+                params[effect_on] = params['e_inst_%s_%s'%(col_name, effect_on)]
+            else:
+                params[effect_on] = params['e_inst_%s_%s_%s'%(col_name[0], col_name[1], effect_on)]
 
         if self.model_type == 'simple':
             model = hddm.likelihoods.WienerSimpleMulti(param.full_name,

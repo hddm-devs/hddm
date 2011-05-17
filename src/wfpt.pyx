@@ -105,9 +105,6 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
         # Upper boundary, flip v and z
         return pdf(x-t, -v, a, 1.-z, err)
 
-
-    
-    
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array(np.ndarray[DTYPE_t, ndim=1] x, double v, double a, double z, double t, double err, bint logp=0):

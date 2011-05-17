@@ -10,6 +10,7 @@ import os
 from ordereddict import OrderedDict
 
 import hddm
+import kabuki
 
 from mpi4py import MPI
 
@@ -32,21 +33,21 @@ def controller(models, samples=200, burn=15, reps=5):
 
     print "Controller %i on %s: ready!" % (rank, proc_name)
 
-    task_iter = models.iteritems()
-    results = {}
+    task_iter = iter(models)
+    results = []
 
     while(True):
         status = MPI.Status()
         recv = MPI.COMM_WORLD.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         print "Controller: received tag %i from %s" % (status.tag, status.source)
         if status.tag == 15:
-            results[recv[0]] = recv[1]
+            results.append(recv)
 
         if status.tag == 10 or status.tag == 15:
             try:
-                name, task = task_iter.next()
+                task = task_iter.next()
                 print "Controller: Sending task"
-                MPI.COMM_WORLD.send((name, task), dest=status.source, tag=10)
+                MPI.COMM_WORLD.send(task, dest=status.source, tag=10)
             except StopIteration:
                 # Task queue is empty
                 print "Controller: Task queue is empty"
@@ -94,8 +95,8 @@ def worker():
             retry = 0
             while retry < 5:
                 try:
-                    print "Running %s:\n" % recv[0]
-                    result = run_model(recv[0], recv[1])
+                    print "Running %s:\n" % recv
+                    result = run_model(recv)
                     break
                 except pm.ZeroProbability:
                     retry +=1
@@ -104,11 +105,11 @@ def worker():
                 print "Job %s failed" % recv[0]
 
         print("Worker %i on %s: finished one job" % (rank, proc_name))
-        MPI.COMM_WORLD.send((recv[0], result), dest=0, tag=15)
+        MPI.COMM_WORLD.send(result, dest=0, tag=15)
 
     MPI.COMM_WORLD.send([], dest=0, tag=2)
         
-def run_model(name, params, load=False):
+def run_model(params, load=False):
     if params.has_key('model_type'):
         model_type = params['model_type']
     else:
@@ -116,27 +117,27 @@ def run_model(name, params, load=False):
 
     data = params.pop('data')
 
-    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
+    #dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
 
     if params.has_key('effects_on'):
-        m = pm.MCMC(hddm.model.HDDMRegressor(data, **params).create(), db='hdf5', dbname=dbname)
+        mc = pm.MCMC(hddm.model.HDDMRegressor(data, **params).create())
     else:
-        m = pm.MCMC(hddm.model.HDDM(data, **params).create(), db='hdf5', dbname=dbname)
+        mc = pm.MCMC(hddm.model.HDDM(data, **params).create())
     
-    if not load:
-        try:
-            os.remove(dbname)
-        except OSError:
-            pass
-        m.sample(samples=30000, burn=25000)
-        m.db.close()
-        print "*************************************\nModel: %s\n%s" %(name, m.summary())
-        return m.summary()
-    else:
-        print "Loading %s" %name
-        m = pm.database.hdf5.load(dbname)
-        m.mcmc_load_from_db(dbname=dbname)
-        return m
+    #if not load:
+        # try:
+        #     os.remove(dbname)
+        # except OSError:
+        #     pass
+    mc.sample(30000, burn=25000)
+        #mc.db.close()
+    print "*************************************\n"
+    kabuki.group.print_group_stats(mc.stats())
+    return mc.stats()
+    # else:
+    #     #print "Loading %s" %name
+    #     db = pm.database.hdf5.load(dbname)
+    #     return db
 
 
 def load_parallel_chains(model_class, data, tag, kwargs, chains=None, test_convergance=True, combine=True):
