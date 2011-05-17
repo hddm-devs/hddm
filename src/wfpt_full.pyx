@@ -260,7 +260,7 @@ cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double 
     return res
 
 cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-                     double t, double T, double err, int nT=4, int nZ=4, bint use_adaptive = 1, double simps_err = 1e-5):
+                     double t, double T, double err, int nT=2, int nZ=2, bint use_adaptive = 1, double simps_err = 1e-3):
     """full pdf"""
 
     # Check if parpameters are valid
@@ -348,43 +348,11 @@ def wiener_like_full_collCont(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bint, nd
 #    return sum_logp
 
 
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_mc(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double z, double Z, double t, double T, double a, double err=.0001, bint logp=0, unsigned int reps=10):
-    cdef unsigned int num_resps = x.shape[0]
-    cdef unsigned int rep, i
-    
-    cdef unsigned int zero_prob = 0
-        
-    # Create samples
-    cdef np.ndarray[DTYPE_t, ndim=1] t_samples = np.random.uniform(size=reps, low=t-T/2., high=t+T/2.)
-    cdef np.ndarray[DTYPE_t, ndim=1] z_samples = np.random.uniform(size=reps, low=z-Z/2., high=z+Z/2.)
-    # np.random.normal does not work for scale=0, create special case.
-    cdef np.ndarray[DTYPE_t, ndim=1] v_samples
-    if V == 0.:
-        v_samples = np.repeat(v, reps)
-    else:
-        v_samples = np.random.normal(size=reps, loc=v, scale=V)
-
-    cdef np.ndarray[DTYPE_t, ndim=1] probs = np.zeros(num_resps, dtype=DTYPE)
-
-    # Loop through RTs and reps and add up the resulting probabilities
-    for i from 0 <= i < num_resps:
-        for rep from 0 <= rep < reps:
-            if (fabs(x[i])-t_samples[rep]) < 0:
-                probs[i] += zero_prob
-            elif a <= z_samples[rep]:
-                probs[i] += zero_prob
-            else:
-                probs[i] += pdf_sign(x[i], v_samples[rep], a, z_samples[rep], t_samples[rep], err)
-
-    if logp==0:
-        return (probs/reps)
-    else:
-        return np.log(probs/reps)
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, v, V, a, z, Z, t, T, double err, multi=None):
+def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double a, double z, \
+                           double Z, double t, double T, double err, multi=None):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
     cdef double p = 0
@@ -403,3 +371,37 @@ def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, v, V, a, z, Z, t, T, d
                               params_iter['Z'], params_iter['t'], params_iter['T'],
                               err))
         return p
+    
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t, \
+                           double T, int samples=1000, double cdf_lb = -6, double cdf_ub = 6, double dt=1e-2):
+    
+    cdef np.ndarray[DTYPE_t, ndim=1] x = np.arange(cdf_lb, cdf_ub, dt)
+    cdef np.ndarray[DTYPE_t, ndim=1] l_cdf = np.empty(x.shape[0], dtype=DTYPE)
+    cdef double pdf, rt
+    cdef Py_ssize_t i, j
+    cdef int idx
+    
+    l_cdf[0] = 0
+    for i from 1 <= i < x.shape[0]:
+        pdf = full_pdf(x[i], v, V, a, z, Z, 0, 0, 1e-4)
+        l_cdf[i] = l_cdf[i-1] + pdf
+    
+    l_cdf /= l_cdf[x.shape[0]-1]
+    
+    cdef np.ndarray[DTYPE_t, ndim=1] rts = np.empty(samples, dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=1] f = np.random.rand(samples)
+    cdef np.ndarray[DTYPE_t, ndim=1] delay
+    
+    if T!=0:
+        delay = (np.random.rand(samples)*T + (t - T/2.))
+    for i from 0 <= i < samples:
+        idx = np.searchsorted(l_cdf, f[i])
+        rt = x[idx]
+        if T==0:
+            rt = rt + np.sign(rt)*t
+        else:
+            rt = rt + np.sign(rt)*delay[i]
+        rts[i] = rt
+    return rts

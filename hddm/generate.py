@@ -5,6 +5,7 @@ import numpy.lib.recfunctions as rec
 from scipy.stats import uniform, norm
 from copy import copy
 import random
+from numpy.random import rand, randn
 
 import hddm
 
@@ -47,7 +48,136 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, steps=50
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
-def gen_rts(params, samples=1000, steps=5000, T=5., structured=False, subj_idx=None, strict_size=False):
+
+def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
+    """
+    generate rts
+    if method==cdf it uses the cdf to generate samples, dt can be 1e-2
+    if method==drift it simulates drift to generate samples, dt should be 1e-4
+    """
+    if method=='cdf_py':
+        rts = gen_rts_from_cdf(params, samples, range_, dt)
+    elif method=='drift':
+        rts = gen_rts_from_simulated_drift(params, samples, dt, intra_sv)
+    elif method=='cdf':
+        rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
+                                         params['Z'],params['t'],params['T'],
+                                         samples, range_[0], range_[1], dt)
+    elif method=='old_drift':
+        rts = gen_rts_from_the_wrong_drift(params, samples, steps=5000, T=5.)
+        
+
+    if not structured:
+        return rts
+    else:
+        if subj_idx is None:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
+        else:
+            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
+            data['subj_idx'] = subj_idx
+        data['response'][rts>0] = 1.
+        data['response'][rts<0] = 0.
+        data['rt'] = rts
+
+        return data
+
+def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
+
+    if samples is None:
+        samples = 1
+    nn = 1000
+    a = params['a']
+    v = params['v']
+    
+    #create delay
+    if params.has_key('T'):
+        start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) \
+                       - params['T']/2.)
+    else:
+        start_delay = np.ones(samples)*params['t']
+    
+    #create starting_points
+    if params.has_key('Z'):
+        starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) \
+                           - params['Z']/2.)*a
+    else:
+        starting_points = np.ones(samples)*params['z']*a
+    
+    
+    rts = np.empty(samples)
+    step_size = np.sqrt(dt)*intra_sv
+    
+    for i_sample in xrange(samples):
+        crossed = False
+        iter = 0
+        y_0 = starting_points[i_sample]
+        # drifting...
+        if params.has_key('V') and params['V'] != 0:
+            drift_rate = norm.rvs(v, params['V'])
+        else:
+            drift_rate = v
+        prob_up =  0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
+
+        while (not crossed):
+            iter += 1
+            position = ((rand(nn) < prob_up) *2 - 1) * step_size
+            position[0] += y_0
+            position = np.cumsum(position) 
+            cross_idx = np.where((position < 0) | (position > a))[0]
+            if cross_idx.shape[0]>0:
+                crossed = True
+            else:
+                y_0 = position[-1]
+
+        #find the boundary interception        
+        y2 = position[cross_idx[0]]
+        if cross_idx[0]!=0:
+            y1 = position[cross_idx[0]-1]            
+        else:
+            y1 = y_0
+        m = (y2 - y1)/dt  # slope
+        # y = m*x + b
+        b = y2 - m*((iter-1)*nn+cross_idx[0])*dt # intercept
+        if y2 < 0:
+            rt = ((0 - b) / m)
+        else:
+            rt = ((a - b) / m)
+        rts[i_sample] = (rt + start_delay[i_sample])*np.sign(y2)
+    
+    return rts
+    
+def pdf_with_params(rt, params):
+    v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+    T = params['T']; a = params['a']
+    return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+
+
+def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
+    
+    simple_params = copy(params)
+    simple_params['t'] = 0
+    simple_params['T'] = 0
+    x = np.arange(range_[0], range_[1], dt)
+    pdf = [pdf_with_params(rt, simple_params) for rt in x]
+    l_cdf = np.cumsum(pdf)
+    l_cdf = l_cdf/l_cdf[-1]
+    rts = np.empty(samples, dtype=np.double)
+    f = rand(samples)
+    if params['T']!=0:
+        delay = rand(samples)*params['T'] + (params['t'] - params['T']/2.)
+    for i in xrange(samples):
+        idx = np.searchsorted(l_cdf, f[i])
+        rt = (x[idx]+x[idx-1])/2.
+        if params['T']==0:
+            rt = rt + np.sign(rt)*params['t']
+        else:
+            rt = rt + np.sign(rt)*delay[i]
+        rts[i] = rt
+            
+    return rts
+       
+def gen_rts_from_the_wrong_drift(params, samples=1000, steps=5000, T=5., structured=False, subj_idx=None, strict_size=False):
     def _gen_rts():
         # Function that always returns a time a threshold was crossed
         rts = np.empty(samples, np.float) # init
@@ -180,6 +310,7 @@ def find_thresholds(drifts, a, return_non_crossings=False):
         return rts, non_crossings
     else:
         return rts
+    
 
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""

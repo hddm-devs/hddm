@@ -84,7 +84,7 @@ def rand_simple_params(exclude = None):
     params['T'] = 0
     params['v'] = (rand()-.5)*4
     params['t'] = 0.2+rand()*0.3+(params['T']/2)
-    params['a'] = 1.5+rand()
+    params['a'] = 1.0+rand()
     if 'z' in exclude:
         params['z'] = 0
     else:
