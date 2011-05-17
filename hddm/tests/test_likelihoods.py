@@ -83,7 +83,7 @@ class TestWfpt(unittest.TestCase):
             ok = False
             while not ok:
                 params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
-                samples = hddm.generate.gen_rts(params, samples=self.samples, method='drift', dt=1e-5)
+                samples = hddm.generate.gen_rts(params, samples=self.samples, method='drift', dt=1e-4)
                 if max(abs(samples))<=self.range_[1]:
                     ok = True                
             cdf_single = create_wfpt_cdf(params, self.range_)
