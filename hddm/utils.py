@@ -761,7 +761,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             continue 
 
         plt.figure()
-        if type(node) is np.ndarray: # Group model
+        if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
             for i, subj_node in enumerate(node):
                 data = subj_node.value
                 # Walk through nodes and collect traces
