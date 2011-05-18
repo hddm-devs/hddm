@@ -798,7 +798,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
             # Plot analytical
-            analytical_dens = pdf_of_post_pred_simple(v, a, t, z=z, x=x)
+            analytical_dens = pdf_of_post_pred(traces, x=x)
 
             plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 

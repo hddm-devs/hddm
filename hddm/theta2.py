@@ -260,6 +260,7 @@ def create_models_corr():
     data_pd_dbs_on = data_pd[data_pd['dbs'] == 1]
 
     datasets = [data_diss, data_sen, data_easy, data_pd_dbs_off, data_pd_dbs_on]
+    names = ['data_diss', 'data_sen', 'data_easy', 'data_pd_dbs_off', 'data_pd_dbs_on']
     excludes = [['T'], ['Z'], ['T','Z'], []]
     
     models = []
@@ -267,16 +268,43 @@ def create_models_corr():
     for dataset in datasets:
         models.append({'data': dataset, 
                        'effects_on':{'a': ['theta', 'conf_effect']},
-                       'depends_on':{'v': 'stim'}})
+                       'depends_on':{'v': 'stim'}, 'exclude':['T','Z']})
 
-        for exclude in excludes:
-            models.append({'data': dataset, 
-                           'effects_on':{'a': ['theta', 'conf_effect']},
-                           'depends_on':{'v': 'stim'},
-                           'model_type':'full', exclude:['T']})
+    return models, names
 
-    return models
-        
+
+def run_model(params, name=None, load=False):
+    import kabuki
+    import sys
+    dbname = name+'.db'
+
+    if params.has_key('effects_on'):
+        mc = pm.MCMC(hddm.model.HDDMRegressor(**params).create(), db='pickle', dbname=dbname)
+    else:
+        mc = pm.MCMC(hddm.model.HDDM(**params).create(), db='pickle', dbname=dbname)
+    
+    if not load:
+        try:
+            os.remove(dbname)
+        except OSError:
+            pass
+
+    mc.sample(30000, burn=25000)
+    mc.db.close()
+    print "*************************************\n"
+    kabuki.group.print_group_stats(mc.stats())
+    sys.stdout.flush()        
+    print "DIC: %f" % mc.dic
+    print "logp: %f" % mc.logp 
+    return mc
+    
+def run_correl():
+    models, names = create_models_corr()
+    results = {}
+    for model, name in zip(models,names):
+        results[name] = run_model(model, name=name)
+    
+    return results
     
 if __name__=='__main__':
     import sys
