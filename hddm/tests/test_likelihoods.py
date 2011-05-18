@@ -75,7 +75,7 @@ class TestWfpt(unittest.TestCase):
             cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
             [D, p_value] = kstest(samples, cdf_vec)
             print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.1)
+            self.assertTrue(p_value > 0.05)
 
     def test_compare_drift_simulated_data_to_analytic(self):
         excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
@@ -90,7 +90,7 @@ class TestWfpt(unittest.TestCase):
             cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
             [D, p_value] = kstest(samples, cdf_vec)
             print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.1)
+            self.assertTrue(p_value > 0.05)
 
 
     def test_simple_summed_logp(self):
