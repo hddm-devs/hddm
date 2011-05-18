@@ -949,7 +949,7 @@ def cont_report(model, cont_threshold = 0.9, plot= True):
     if plot:
         plt.show()
 
-def plot_posteriors(model):
+def plot_posteriors(model):                 
     """Generate posterior plots for each parameter.
 
     This is a wrapper for pymc.Matplot.plot()
