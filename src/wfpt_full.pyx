@@ -351,8 +351,7 @@ def wiener_like_full_collCont(np.ndarray[DTYPE_t, ndim=1] x, np.ndarray[bint, nd
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, double v, double V, double a, double z, \
-                           double Z, double t, double T, double err, multi=None):
+def wiener_like_full_multi(np.ndarray[DTYPE_t, ndim=1] x, v, V, a, z, Z, t, T, double err, multi=None):
     cdef unsigned int size = x.shape[0]
     cdef unsigned int i
     cdef double p = 0

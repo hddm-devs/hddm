@@ -31,7 +31,7 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
     rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', int), ('subj_idx', int)])
 
     pro_rts = gen_rts(pro_params, samples=samples_pro, dt=dt, subj_idx=subj_idx)
-    anti_rts = gen_rts(params, samples=samples_anti, dt=dt, subj_idx=subj_idx)
+    anti_rts = gen_rts(params, samples=samples_anti, dt=dt, subj_idx=subj_idx, method='drift')
 
     rts['instruct'][:samples_pro] = 0
     rts['instruct'][samples_pro:] = 1
@@ -55,6 +55,9 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
     if method==cdf it uses the cdf to generate samples, dt can be 1e-2
     if method==drift it simulates drift to generate samples, dt should be 1e-4
     """
+    if params.has_key('v_switch') and method != 'drift':
+        print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
+        
     if method=='cdf_py':
         rts = gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
@@ -63,9 +66,6 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
         rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
                                          params['Z'],params['t'],params['T'],
                                          samples, range_[0], range_[1], dt)
-    elif method=='old_drift':
-        rts = gen_rts_from_the_wrong_drift(params, samples, steps=5000, T=5.)
-        
 
     if not structured:
         return rts

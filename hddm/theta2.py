@@ -124,41 +124,44 @@ def create_models_nodbs(data, full=False):
     if full:
         model_types.append('full')
         
-    effects_on = ['a', 't', 'z']
+    effects_on = ['a', 't']
     vs_on = ['stim', 'conf']
-    e_thetas_on = [['stim'], ['conf'], ['stim','resp'], ['conf','resp']]
+    e_thetas_on = [['stim'], ['conf'], ['stim','response'], ['conf','response']]
     
     for model_type in model_types:
         for effect in effects_on:
             for e_theta_on in e_thetas_on:
                 models.append({'data': data, 
                                'effects_on': {effect: 'theta'},
-                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
+                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
 
                 for v_on in vs_on:
                     models.append({'data': data, 
                                    'effects_on':{effect: 'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
                     models.append({'data': data, 
                                    'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type, exclude:['T']})
                     models.append({'data': data, 
                                    'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['conf']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'},
+                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type, exclude:['T']})
 
-    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type})
+    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
     return models
 
 def load_models(pd=False, full=False):
@@ -219,6 +222,13 @@ def load_csv_jim(*args, **kwargs):
 
     data['conf'][data['conf'] == '1'] = 'HC'
     data['conf'][data['conf'] == '2'] = 'LC'
+    print data['conf'] == 'HC'
+    conf = np.array(data['conf'] == 'HC', dtype=np.float)
+    conf_effect = np.empty(data.shape, dtype=[('conf_effect',np.float)])
+    conf_effect['conf_effect'] = conf
+    
+    data = rec.append_fields(data, names=['conf_effect'],
+                             data=[conf_effect], dtypes=[np.float], usemask=False)
 
     data = add_median_fields(data)
 
