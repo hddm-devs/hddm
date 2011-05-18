@@ -789,7 +789,9 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             data = node.value
             # Walk through nodes and collect traces
             traces = {}
-            for parent_name, parent_node in node.parents.iteritems:
+            for parent_name, parent_node in node.parents.iteritems():
+                if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                        continue
                 traces[parent_name] = parent_node.trace()
             
             empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
