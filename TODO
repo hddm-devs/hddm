@@ -1,9 +1,6 @@
 * Change adaptive Simpsons to work on arbitrary functions (Thomas)
-* Test 2D and 3D recovery of parameters in full model (Imri)
-* Test recovery of tau parameter (Thomas)
 * Get full expanded model to work and converge (Thomas + Imri)
-* Get contaminant model to work (Thomas + Imri)
 * get a paper out of this (imri + Thomas)
 
-* change t_min and t_max in likelihood.py (imri)
-* wp should affect collCont model (Imri)
+* wp should affect Cont model (Imri)
+* need to change the dummy variables in Cone model (Imri)

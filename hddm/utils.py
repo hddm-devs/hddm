@@ -2,6 +2,8 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
+from scipy.stats import scoreatpercentile
+import sys
 
 import hddm
 try:
@@ -687,7 +689,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def post_pred_simple(v, a, t, z=None, x=None):
+def pdf_of_post_pred_simple(v, a, t, z=None, x=None):
     """Posterior predictive likelihood."""
     trace_len = len(a)
 
@@ -705,7 +707,7 @@ def post_pred_simple(v, a, t, z=None, x=None):
     return p/trace_len
 
 def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
-    x = np.arange(range[0],range[1],0.01)
+    x = np.arange(range[0],range[1],0.05)
     
     for name, node in nodes.iteritems():
         # Find wfpt node
@@ -741,7 +743,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
         plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
         
         # Plot analytical
-        analytical_dens = post_pred_simple(v, a, t, z=z, x=x)
+        analytical_dens = pdf_of_post_pred_simple(v, a, t, z=z, x=x)
 
         plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
@@ -750,6 +752,120 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
         plt.legend()
 
     plt.show()
+
+def hddm_parents_trace(node,idx):
+    """
+    return the parents' value of an wfpt node in index 'idx'
+    (the function is used by ppd_test)
+    """
+    params = {}
+    for name in ['a','v','t']:
+        params[name] = node.parents[name].trace()[idx]
+
+    if node.parents['z'] != .5: # bias model
+        params['z'] = node.parents['z'].trace()[idx]
+    else:
+        params['z'] = 0.5
+    
+    for name in ['V','Z','T']:
+        if node.parents.has_key(name):
+            if node.parents[name] != 0:
+                params[name] = nodes.parents[name].trace()[idx]
+            else:
+                params[name] = 0
+        else:
+            params[name] = 0
+
+    return params
+            
+def _gen_statistics():
+    """
+    generate diferent statistical tests from ppd_test
+    """
+    statistics = []
+    
+    ##accuracy test
+    test = {}
+    test['name'] = 'acc'
+    test['func'] = lambda rts: sum(rts > 0)/len(rts)
+    statistics.append(test)
+    
+    ##quantile statistics of absolute response time
+    quantiles = [10, 30, 50, 70, 90]
+    for q in quantiles:
+        test = {}
+        test['name'] = 'q%d' % q
+        test['func'] = lambda rts,q=q: scoreatpercentile(np.abs(rts), q)
+        statistics.append(test)
+        
+    return statistics
+
+def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
+    """
+    test statistics over the posterior predictive distibution
+    input:
+    nodes - set of nodes/ the mc model
+    n_times - number of samples to take out of the trace
+    confidence - confidence interval
+    stats - a set of statistics to check over the sampled data. if stats is None then a default set
+        of statistics is created
+    plot_all - should all result be ploted
+    """
+    if type(nodes) == type(pm.MCMC([])):
+        nodes = nodes._dict_container
+    
+    #get statistics    
+    if stats == None:
+        stats  = _gen_statistics()
+
+    conf_lb = ((100 - confidence)/ 2.)
+    conf_ub = (100 - conf_lb)
+    
+    # get statistics from simulated data
+    for name, node in nodes.iteritems():
+
+        # Find wfpt node
+        if not name.startswith('wfpt'):
+            continue
+
+        if verbose>0:
+            print "computing stats for %s" % name
+        
+        len_trace = len(node.parents['a'].trace())
+        thin = max(int(len_trace // n_times), 1)
+        n_times = int(len_trace // thin)
+        res = np.zeros((len(stats),n_times))
+        obs = np.zeros(len(stats))
+        #simulate data and compute stats
+        for i in xrange(n_times):
+            idx = i*thin
+            if verbose > 1 and ((i+1) % 100)==0:
+                print "created samples for %d params" % (i+1)
+            sys.stdout.flush()
+            params = hddm_parents_trace(node, idx)
+            samples = hddm.generate.gen_rts(params, len(node.value), dt=1e-3,method='cdf')
+            for i_stat in xrange(len(stats)):
+                res[i_stat][i] = stats[i_stat]['func'](samples)
+        
+
+        #compute stats of oberved data
+        for i_stat in range(len(stats)):
+            obs[i_stat] = stats[i_stat]['func'](node.value)
+        
+        #compute quantile statistic and plot it if needed
+        for i_stat in range(len(stats)):
+            plot_this = False
+            p = sum(res[i_stat] < obs[i_stat])*1./len(res[i_stat]) * 100
+            if (p < conf_lb) or (p>conf_ub):
+                print "*!*!* %s :: %s %.1f" % (name,stats[i_stat]['name'], p )
+                plot_this = True 
+            #plot that shit
+            if plot_this or plot_all:
+                pm.Matplot.gof_plot(res[i_stat], obs[i_stat], name=name, verbose=0)
+                plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
+        
+        plt.show()                        
+         
 
 def plot_posteriors(model):
     """Generate posterior plots for each parameter.
