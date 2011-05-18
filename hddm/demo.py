@@ -274,15 +274,15 @@ class DDMPlot(HasTraits):
     
     @timer
     def _get_full_intrp(self):
-        full_pdf = lambda x: hddm.wfpt.full_pdf(x,
-                                                v=self.ddm.v,
-                                                V=self.ddm.sv,
-                                                a=self.ddm.a,
-                                                z=self.ddm.z,
-                                                Z=self.ddm.sz,
-                                                t=self.ddm.ter,
-                                                T=self.ddm.ster,
-                                                err=1e-4)
+        full_pdf = lambda x: hddm.wfpt_full.full_pdf(x,
+                                                     v=self.ddm.v,
+                                                     V=self.ddm.sv,
+                                                     a=self.ddm.a,
+                                                     z=self.ddm.z,
+                                                     Z=self.ddm.sz,
+                                                     t=self.ddm.ter,
+                                                     T=self.ddm.ster,
+                                                     err=1e-4)
 
         pdf = np.array(map(full_pdf, self.x_analytical))
         
