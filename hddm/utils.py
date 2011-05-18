@@ -817,6 +817,8 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
     #get statistics    
     if stats == None:
         stats  = _gen_statistics()
+    else:
+        stats  = _gen_statistics() + stats
 
     conf_lb = ((100 - confidence)/ 2.)
     conf_ub = (100 - conf_lb)
@@ -865,7 +867,32 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
                 plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
         
         plt.show()                        
-         
+
+
+def cont_report(model, cont_threshold = 0.9, plot= True):
+    nodes = model._dict_container         
+    cont_keys = [z for z in nodes.keys() if z.startswith('x')]
+    for key in cont_keys:
+        print "*********************"
+        print "looking at %s" % key
+        node = nodes[key]
+        m = np.mean(node.trace(),0)
+        idx = np.where(m > cont_threshold)[0]
+        if idx.size > 0:
+            print "found %d outliers in %s" % (len(idx), key)            
+            wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
+            print "rt: ", wfpt.value[idx]
+            if plot:
+                plt.figure()
+                mask = np.ones(len(wfpt.value),dtype=bool)
+                mask[idx] = False
+                plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
+                plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
+                plt.title(wfpt.__name__)
+        next_outlier = max(m[m < cont_threshold])
+        print "probability of the next most probable outlier: %.2f" % next_outlier
+    if plot:
+        plt.show()
 
 def plot_posteriors(model):
     """Generate posterior plots for each parameter.
