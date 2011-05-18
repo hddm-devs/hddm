@@ -918,25 +918,34 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
                 plot_this = True 
             #plot that shit
             if plot_this or plot_all:
-                pm.Matplot.gof_plot(res[i_stat], obs[i_stat], name=name, verbose=0)
+                pm.Matplot.gof_plot(res[i_stat], obs[i_stat], nbins=30, name=name, verbose=0)
                 plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
         
         plt.show()                        
 
 
 def cont_report(model, cont_threshold = 0.9, plot= True):
-    nodes = model._dict_container         
+    """
+    create conaminate report
+    """
+    if type(nodes) == type(pm.MCMC([])):
+        nodes = nodes._dict_container
+        
     cont_keys = [z for z in nodes.keys() if z.startswith('x')]
+    
+    # loop over cont nodes
     for key in cont_keys:
         print "*********************"
         print "looking at %s" % key
         node = nodes[key]
         m = np.mean(node.trace(),0)
+        #look for outliers with high probabilty
         idx = np.where(m > cont_threshold)[0]
         if idx.size > 0:
             print "found %d outliers in %s" % (len(idx), key)            
             wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
             print "rt: ", wfpt.value[idx]
+            #plot outliers
             if plot:
                 plt.figure()
                 mask = np.ones(len(wfpt.value),dtype=bool)
@@ -944,6 +953,7 @@ def cont_report(model, cont_threshold = 0.9, plot= True):
                 plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
                 plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
                 plt.title(wfpt.__name__)
+        #report the next higest probability outlier
         next_outlier = max(m[m < cont_threshold])
         print "probability of the next most probable outlier: %.2f" % next_outlier
     if plot:
