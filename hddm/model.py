@@ -402,7 +402,7 @@ class HDDMRegressor(Base):
                 return pm.Deterministic(func, param.full_name, param.full_name,
                                         parents={'base': self._get_node(param.vars['effect_on'], params),
                                                  'e1': params[param.vars['e']],
-                                                 'data': param.data[param.vars['col_name']]}, trace=True, plot=self.plot_subjs)
+                                                 'data': param.data[param.vars['col_name']]}, trace=False, plot=self.plot_subjs)
             else:
                 return pm.Deterministic(effect2, param.full_name, param.full_name,
                                         parents={'base': params[param.vars['effect_on']],
@@ -410,7 +410,7 @@ class HDDMRegressor(Base):
                                                  'e2': params[param.vars['e2']],
                                                  'e_inter': params[param.vars['inter']],
                                                  'data_e1': param.data[param.vars['col_name0']],
-                                                 'data_e2': param.data[param.vars['col_name1']]}, trace=True)
+                                                 'data_e2': param.data[param.vars['col_name1']]}, trace=False)
 
         for effect_on, col_name in self.effects_on.iteritems():
             if type(col_name) is str:

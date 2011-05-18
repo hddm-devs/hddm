@@ -706,8 +706,54 @@ def pdf_of_post_pred_simple(v, a, t, z=None, x=None):
     
     return p/trace_len
 
+def pdf_of_post_pred(traces, x=None):
+    trace_len = len(traces['a'])
+    
+    if x is None:
+        x = np.arange(-5,5,0.01)
+
+    if not traces.has_key('z'):
+        traces['z'] = np.ones(trace_len)*.5
+
+    p = np.zeros(len(x), dtype=np.float)
+
+    if traces.has_key('V') or traces.has_key('T') or traces.has_key('Z'):
+        full_model = True
+        # Add zero traces if parameter is excluded.
+        if not traces.has_key('V'):
+            traces['V'] = np.zeros(trace_len)
+        if not traces.has_key('T'):
+            traces['T'] = np.zeros(trace_len)
+        if not traces.has_key('Z'):
+            traces['Z'] = np.zeros(trace_len)
+
+    for i in xrange(trace_len):
+        if full_model:
+            pdf_full = lambda x: hddm.wfpt_full.full_pdf(x,
+                                                         v=traces['v'][i],
+                                                         V=traces['V'][i],
+                                                         a=traces['a'][i],
+                                                         z=traces['z'][i],
+                                                         Z=traces['Z'][i],
+                                                         t=traces['t'][i],
+                                                         T=traces['T'][i],
+                                                         err=1e-4)
+
+            p[:] += map(pdf_full, x)
+            
+        else:
+            # Simple model
+            p[:] += hddm.wfpt.pdf_array(x, traces['v'][i], traces['a'][i], traces['z'][i], traces['t'][i], 1e-4)
+
+    return p/trace_len
+    
 def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
+    if type(nodes) == type(pm.MCMC([])):
+        nodes = nodes._dict_container
+        
     x = np.arange(range[0],range[1],0.05)
+    # Plot data
+    x_data = np.linspace(range[0], range[1], bins)
     
     for name, node in nodes.iteritems():
         # Find wfpt node
@@ -715,41 +761,50 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             continue 
 
         plt.figure()
-        if type(node) is np.ndarray: # Group model
-            data = np.concatenate([subj_node.value for subj_node in node])
-            # Walk through nodes up to the root node
-            a = node[0].parents['a'].parents['mu'].trace()
-            v = node[0].parents['v'].parents['mu'].trace()
-            t = node[0].parents['t'].parents['mu'].trace()
-            if node[0].parents['z'] != .5: # bias model
-                z = node[0].parents['z'].parents['mu'].trace()
-            else:
-                z = None
+        if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
+            for i, subj_node in enumerate(node):
+                data = subj_node.value
+                # Walk through nodes and collect traces
+                traces = {}
+                for parent_name, parent_node in subj_node.parents.iteritems():
+                    if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                        continue
+                    traces[parent_name] = parent_node.trace()
+
+                # Plot that shit ;)
+                plt.subplot(3, int(np.ceil(len(node)/3.)), i+1)
+
+                empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
+                plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
+                
+                # Plot analytical
+                analytical_dens = pdf_of_post_pred(traces, x=x)
+
+                plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
+
+                plt.xlim(range)
+                plt.title("%s (n=%d). idx: %i" %(name, len(data), i))
+
         else:
             data = node.value
-            # Walk through nodes up to the root node
-            a = node.parents['a'].trace()
-            v = node.parents['v'].trace()
-            t = node.parents['t'].trace()
-            if node.parents['z'] != .5: # bias model
-                z = node.parents['z'].trace()
-            else:
-                z = None
+            # Walk through nodes and collect traces
+            traces = {}
+            for parent_name, parent_node in node.parents.iteritems():
+                if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                        continue
+                traces[parent_name] = parent_node.trace()
             
-            
-        # Plot data
-        x_data = np.linspace(range[0], range[1], bins)
-        empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
-        plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
-        
-        # Plot analytical
-        analytical_dens = pdf_of_post_pred_simple(v, a, t, z=z, x=x)
+            empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
+            plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
-        plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
+            # Plot analytical
+            analytical_dens = pdf_of_post_pred_simple(v, a, t, z=z, x=x)
 
-        plt.xlim(range)
-        plt.title("%s (n=%d)" %(name, len(data)))
-        plt.legend()
+            plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
+
+            plt.xlim(range)
+            plt.title("%s (n=%d)" %(name, len(data)))
+            plt.legend()
 
     plt.show()
 

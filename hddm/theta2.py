@@ -124,41 +124,44 @@ def create_models_nodbs(data, full=False):
     if full:
         model_types.append('full')
         
-    effects_on = ['a', 't', 'z']
+    effects_on = ['a', 't']
     vs_on = ['stim', 'conf']
-    e_thetas_on = [['stim'], ['conf'], ['stim','resp'], ['conf','resp']]
+    e_thetas_on = [['stim'], ['conf'], ['stim','response'], ['conf','response']]
     
     for model_type in model_types:
         for effect in effects_on:
             for e_theta_on in e_thetas_on:
                 models.append({'data': data, 
                                'effects_on': {effect: 'theta'},
-                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
+                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
 
                 for v_on in vs_on:
                     models.append({'data': data, 
                                    'effects_on':{effect: 'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
                     models.append({'data': data, 
                                    'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type, exclude:['T']})
                     models.append({'data': data, 
                                    'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type})
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['conf']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'}, 
+                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type, exclude:['T']})
+                    models.append({'data': data, 
+                                   'effects_on':{effect:'theta'},
+                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type, exclude:['T']})
 
-    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type})
+    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
+    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
     return models
 
 def load_models(pd=False, full=False):
@@ -201,9 +204,13 @@ def add_median_fields(data):
         rt_split_cor_inc[subj_idx & inc_idx & (data['rt'] >= med_inc)] = 'slow'
         rt_split[subj_idx & (data['rt'] < med)] = 'fast'
         rt_split[subj_idx & (data['rt'] >= med)] = 'slow'
-        
-    data = rec.append_fields(data, names=('theta_split','rt_split', 'rt_split_cor_inc'),
-                             data=(theta_median,rt_split,rt_split_cor_inc), dtypes=('S8', 'S8', 'S8'), usemask=False)
+
+    conf = np.array(data['conf'] == 'HC', dtype=np.float)
+    conf_effect = np.empty(data.shape, dtype=[('conf_effect',np.float)])
+    conf_effect['conf_effect'] = conf
+    
+    data = rec.append_fields(data, names=('theta_split','rt_split', 'rt_split_cor_inc', 'conf_effect'),
+                             data=(theta_median,rt_split,rt_split_cor_inc,conf_effect), dtypes=('S8', 'S8', 'S8', np.float), usemask=False)
 
     return data
 
@@ -219,6 +226,7 @@ def load_csv_jim(*args, **kwargs):
 
     data['conf'][data['conf'] == '1'] = 'HC'
     data['conf'][data['conf'] == '2'] = 'LC'
+    print data['conf'] == 'HC'
 
     data = add_median_fields(data)
 
@@ -240,17 +248,47 @@ def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
             mc.use_step_method(pm.Metropolis, var, proposal_sd = v)
     return
 
+def create_models_corr():
+    # Load data
+    data_diss = load_csv_jim('DissData_P01.csv')
+    data_sen =  load_csv_jim('DBSC_N15_P03.csv')
+    data_easy = load_csv_jim('DBSC_N15_EASY.csv')
+    data_pd = hddm.utils.load_csv('PD_PS.csv')
+    data_pd = add_median_fields(data_pd)
+
+    data_pd_dbs_off = data_pd[data_pd['dbs'] == 0]
+    data_pd_dbs_on = data_pd[data_pd['dbs'] == 1]
+
+    datasets = [data_diss, data_sen, data_easy, data_pd_dbs_off, data_pd_dbs_on]
+    excludes = [['T'], ['Z'], ['T','Z'], []]
+    
+    models = []
+    
+    for dataset in datasets:
+        models.append({'data': dataset, 
+                       'effects_on':{'a': ['theta', 'conf_effect']},
+                       'depends_on':{'v': 'stim'}})
+
+        for exclude in excludes:
+            models.append({'data': dataset, 
+                           'effects_on':{'a': ['theta', 'conf_effect']},
+                           'depends_on':{'v': 'stim'},
+                           'model_type':'full', exclude:['T']})
+
+    return models
+        
+    
 if __name__=='__main__':
     import sys
     from mpi4py import MPI
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        data = load_csv_jim(sys.argv[1])
-        models = create_models_nodbs(data, full=True)
+        models = create_models_corr()
         results = hddm.mpi.controller(models)
         print results
-        for result in results:
+        for model,result in zip(models, results):
             print "****************************************\n"
+            print model
             kabuki.group.print_group_stats(result)
         #for name, model in results.iteritems():
         #    
