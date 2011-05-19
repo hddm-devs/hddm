@@ -110,7 +110,7 @@ def worker():
     MPI.COMM_WORLD.send([], dest=0, tag=2)
         
 def run_model(params, name=None, load=False):
-    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
+    dbname = name+'.db'
 
     if params.has_key('effects_on'):
         mc = pm.MCMC(hddm.model.HDDMRegressor(**params).create())
