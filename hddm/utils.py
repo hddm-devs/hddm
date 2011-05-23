@@ -717,6 +717,7 @@ def pdf_of_post_pred(traces, x=None):
 
     p = np.zeros(len(x), dtype=np.float)
 
+    full_model = False
     if traces.has_key('V') or traces.has_key('T') or traces.has_key('Z'):
         full_model = True
         # Add zero traces if parameter is excluded.
@@ -790,7 +791,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             # Walk through nodes and collect traces
             traces = {}
             for parent_name, parent_node in node.parents.iteritems():
-                if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
                         continue
                 traces[parent_name] = parent_node.trace()
             
@@ -924,7 +925,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         plt.show()                        
 
 
-def cont_report(model, cont_threshold = 0.9, plot= True):
+def cont_report(nodes, cont_threshold = 0.9, plot= True):
     """
     create conaminate report
     """
