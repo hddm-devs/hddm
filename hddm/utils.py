@@ -229,7 +229,7 @@ def interpolate_trace(x, trace, range=(-1,1), bins=100):
     import scipy.interpolate
 
     x_histo = np.linspace(range[0], range[1], bins)
-    histo = np.histogram(trace, bins=bins, range=range, normed=True)[0]
+    histo = histogram(trace, bins=bins, range=range, density=True)[0]
     interp = scipy.interpolate.InterpolatedUnivariateSpline(x_histo, histo)(x)
 
     return interp
@@ -517,21 +517,6 @@ def parse_config_file(fname, mcmc=False, load=False):
         
     return m
 
-def posterior_predictive_check(model, data):
-    params = copy(model.params_est)
-    if model.model_type.startswith('simple'):
-        params['sv'] = 0
-        params['sz'] = 0
-        params['ster'] = 0
-    if model.no_bias:
-        params['z'] = params['a']/2.
-        
-    data_sampled = _gen_rts_params(params)
-
-    # Check
-    return pm.discrepancy(data_sampled, data, .5)
-    
-    
 def check_geweke(model, assert_=True):
     # Test for convergence using geweke method
     for param in model.group_params.itervalues():
@@ -689,24 +674,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred_simple(v, a, t, z=None, x=None):
-    """Posterior predictive likelihood."""
-    trace_len = len(a)
-
-    if z is None:
-        z = np.ones(a.shape)*.5
-
-    if x is None:
-        x = np.arange(-5,5,0.01)
-
-    p = np.zeros(len(x), dtype=np.float)
-
-    for i in range(trace_len):
-        p[:] += hddm.wfpt.pdf_array(x, v[i], a[i], z[i], t[i], 1e-4)
-    
-    return p/trace_len
-
-def pdf_of_post_pred(traces, x=None):
+def pdf_of_post_pred(traces, x=None, interval=10):
     trace_len = len(traces['a'])
     
     if x is None:
@@ -726,8 +694,11 @@ def pdf_of_post_pred(traces, x=None):
             traces['T'] = np.zeros(trace_len)
         if not traces.has_key('Z'):
             traces['Z'] = np.zeros(trace_len)
-
-    for i in xrange(trace_len):
+    else:
+        full_model = False
+    samples = 0
+    for i in np.arange(0, trace_len, interval):
+        samples += 1
         if full_model:
             pdf_full = lambda x: hddm.wfpt_full.full_pdf(x,
                                                          v=traces['v'][i],
@@ -745,9 +716,9 @@ def pdf_of_post_pred(traces, x=None):
             # Simple model
             p[:] += hddm.wfpt.pdf_array(x, traces['v'][i], traces['a'][i], traces['z'][i], traces['t'][i], 1e-4)
 
-    return p/trace_len
+    return p/samples
     
-def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
+def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
     if type(nodes) == type(pm.MCMC([])):
         nodes = nodes._dict_container
         
@@ -778,7 +749,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
                 
                 # Plot analytical
-                analytical_dens = pdf_of_post_pred(traces, x=x)
+                analytical_dens = pdf_of_post_pred(traces, x=x, interval=interval)
 
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
@@ -798,7 +769,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
             plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
             # Plot analytical
-            analytical_dens = pdf_of_post_pred(traces, x=x)
+            analytical_dens = pdf_of_post_pred(traces, x=x, interval=interval)
 
             plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
@@ -808,6 +779,30 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.)):
 
     plt.show()
 
+def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
+    if depends_on is None:
+        depends_on = []
+
+    if type(nodes) == type(pm.MCMC([])):
+        nodes = nodes._dict_container
+    
+    for name, node in nodes.iteritems():
+        # Select x nodes that code for contaminant
+        if not name.startswith('x'):
+            continue
+        
+        # Select appropriate wfpt node
+        wfpt_node = nodes[name.replace('x', 'wfpt')]
+
+        if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
+            for cont, wfpt in zip(node, wfpt_node):
+                data = wfpt.value
+                contaminant_prob = np.mean(subj_node.trace(), axis=0)
+        else:
+            raise NotImplemented, "TODO, use group model."
+                
+        
+        
 def hddm_parents_trace(node,idx):
     """
     return the parents' value of an wfpt node in index 'idx'

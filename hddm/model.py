@@ -64,6 +64,7 @@ class Base(kabuki.Hierarchical):
         params = [Parameter('a',True, lower=.5, upper=4.5),
                   Parameter('v',True, lower=-6., upper=6.), 
                   Parameter('t',True, lower=.1, upper=2., init=.1)]
+
         if not self.no_bias:
             params.append(Parameter('z', True, lower=0., upper=1., init=.5))
         if self.model_type == 'simple':
@@ -74,7 +75,7 @@ class Base(kabuki.Hierarchical):
             if 'Z' not in self.exclude:
                 params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
             if 'T' not in self.exclude:
-                params.append(Parameter('T',True, lower=0., upper=1., init=.1))
+                params.append(Parameter('T',True, lower=0., upper=2., init=.1))
         else:
             raise ValueError('Model %s was not recognized' % self.model_type)
         
@@ -256,16 +257,18 @@ class HLBA(Base):
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
-        self.params = (Parameter('a',True, lower=.5, upper=4.5),
+        self.params = [Parameter('a',True, lower=.5, upper=4.5),
                        Parameter('v',True, lower=-6., upper=6.), 
-                       Parameter('z',True, lower=0., upper=1., init=.5), 
                        Parameter('t',True, lower=.1, upper=2., init=.1),
-                       Parameter('pi',True, lower=1e-4, upper=0.2),
+                       Parameter('pi',True, lower=1e-3, upper=0.2),
                        Parameter('gamma',True, lower=1e-4, upper=1-1e-4),
                        Parameter('x', False), 
                        Parameter('dummy_gamma',False),
                        Parameter('dummy_pi',False),
-                       Parameter('wfpt', False))
+                       Parameter('wfpt', False)]
+        if not self.no_bias:
+            self.params.append(Parameter('z',True, lower=0., upper=1., init=.5))
+            
         self.t_min = 0
         self.t_max = max(self.data['rt'])
 
@@ -278,18 +281,46 @@ class HDDMContaminant(Base):
                                                             v=params['v'],
                                                             t=params['t'],
                                                             a=params['a'],
-                                                            z=params['z'],
+                                                            z=self._get_node('z', params),
                                                             t_min=self.t_min,
                                                             t_max=self.t_max,
                                                             observed=True)
         elif param.name.startswith('x'):
-            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']))
+            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
         elif param.name.startswith('dummy_gamma'):
             return pm.Bernoulli(param.full_name, params['gamma'], value=[True,False], observed=True)
         elif param.name.startswith('dummy_pi'):
             return pm.Bernoulli(param.full_name, params['pi'], value=[True], observed=True)
         else:
-            raise KeyError, "Rootless child parameter %s not found" %name
+            raise KeyError, "Rootless child parameter %s not found" % param.name
+
+    def remove_outliers(self, cutoff=.4):
+        data_dep = self._get_data_depend()
+
+        data_out = []
+        cont = []
+        
+        # Find x param
+        for param in self.params:
+            if param.name == 'x':
+                break
+
+        for i, (data, params_dep, dep_name) in enumerate(data_dep):
+            dep_name = str(dep_name)
+            # Contaminant probability
+            print dep_name
+            for subj_idx, subj in enumerate(self._subjs):
+                data_subj = data[data['subj_idx'] == subj]
+                cont_prob = np.mean(param.child_nodes[dep_name][subj_idx].trace(), axis=0)
+            
+                no_cont = np.where(cont_prob < cutoff)[0]
+                cont.append(np.logical_not(no_cont))
+                data_out.append(data_subj[no_cont])
+
+        data_all = np.concatenate(data_out)
+        data_all['rt'] = np.abs(data_all['rt'])
+        
+        return data_all, np.concatenate(cont)
 
 class HDDMAntisaccade(Base):
     def __init__(self, data, no_bias=True, init=True, **kwargs):
@@ -324,7 +355,7 @@ class HDDMAntisaccade(Base):
 
 
 class HDDMRegressor(Base):
-    def __init__(self, data, effects_on=None, **kwargs):
+    def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
         Arguments:
@@ -345,10 +376,12 @@ class HDDMRegressor(Base):
         model.mcmc()
         """
         if effects_on is None:
-            self.effects_on = {'a': ['theta']}
+            self.effects_on = {'a': 'theta'}
         else:
             self.effects_on = effects_on
 
+        self.use_root_for_effects = use_root_for_effects
+        
         super(self.__class__, self).__init__(data, **kwargs)
         
     def get_params(self):
@@ -360,20 +393,18 @@ class HDDMRegressor(Base):
 
         # Add rootless nodes for effects
         for effect_on, col_names in self.effects_on.iteritems():
-
-
             if type(col_names) is str:
-                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0))
+                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
-                                        False, 
+                                        False,
                                         vars={'col_name':col_names,
                                               'effect_on':effect_on,
                                               'e':'e_%s_%s'%(col_names, effect_on)}))
             elif len(col_names) == 2:
                 for col_name in col_names:
-                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0))
+                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
-                                        True, lower=-3., upper=3., init=0))
+                                        True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
                                         False,
                                         vars={'col_name0': col_names[0],
@@ -398,12 +429,13 @@ class HDDMRegressor(Base):
                     func = effect1_nozero
                 else:
                     func = effect1
-            
+
                 return pm.Deterministic(func, param.full_name, param.full_name,
                                         parents={'base': self._get_node(param.vars['effect_on'], params),
                                                  'e1': params[param.vars['e']],
                                                  'data': param.data[param.vars['col_name']]}, trace=False, plot=self.plot_subjs)
             else:
+                    
                 return pm.Deterministic(effect2, param.full_name, param.full_name,
                                         parents={'base': params[param.vars['effect_on']],
                                                  'e1': params[param.vars['e1']],
