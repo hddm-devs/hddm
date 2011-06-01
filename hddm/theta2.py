@@ -101,20 +101,19 @@ def load_intraop_data(continuous=True):
     
     return all_data
 
-def create_models_pd():
+def create_models_pd(path=None):
+    if path is None:
+        path = '.'
     # Load data
-    data_pd = np.recfromcsv('PD_PS.csv')
+    data_pd = np.recfromcsv(os.path.join(path,'PD_PS.csv'))
     data_dbs_off = data_pd[data_pd['dbs'] == 0]
     data_dbs_on = data_pd[data_pd['dbs'] == 1]
 
-    models = OrderedDict()
+    models = []
     # Create PD models
-    for dbs in ['dbs', 'dbs_effect', 'dbs_inv', 'dbs_inv_effect']:
-        models['PD_stim_v_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'v':'stim', 'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
-        models['PD_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
-
-    models['dbs_off_PD_paper'] = {'data': data_dbs_off, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
-    models['dbs_on_PD_paper'] = {'data': data_dbs_on, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
+    for effect_on in ['a','v','t']:
+        for dbs in ['dbs', 'dbs_inv']:
+            models.append({'data': data_pd, 'effects_on': {effect_on:['theta',dbs]}, 'depends_on':{'v':'stim', 'e_%s_%s'%(dbs,effect_on):'conf', 'e_theta_%s'%effect_on:'conf', 'e_inter_theta_%s_%s'%(dbs,effect_on):'conf'}, 'use_root_for_effects':True, 'model_type':'full', 'exclude':['Z','T'], 'name':'PD_%s_%s'%(dbs, effect_on)})
 
     return models
 
@@ -351,8 +350,6 @@ def set_adaptive_for_effects(mc, sd=.5):
 
         mc.use_step_method(pm.AdaptiveMetropolis, child_nodes)
 
-            
-
 def create_models_corr():
     # Load data
     data_diss = load_csv_jim('DissData_P01.csv')
@@ -379,32 +376,6 @@ def create_models_corr():
 
     return models, names
 
-
-def run_model(params, name=None, load=False):
-    import kabuki
-    import sys
-    dbname = name+'.db'
-
-    if params.has_key('effects_on'):
-        mc = pm.MCMC(hddm.model.HDDMRegressor(**params).create(), db='pickle', dbname=dbname)
-    else:
-        mc = pm.MCMC(hddm.model.HDDM(**params).create(), db='pickle', dbname=dbname)
-    
-    if not load:
-        try:
-            os.remove(dbname)
-        except OSError:
-            pass
-
-    mc.sample(10000, burn=5000)
-    mc.db.close()
-    print "*************************************\n"
-    kabuki.group.print_group_stats(mc.stats())
-    print "DIC: %f" % mc.dic
-    print "logp: %f" % mc.logp
-    sys.stdout.flush()
-    return mc
-    
 def run_correl():
     models, names = create_models_corr()
     results = {}
@@ -413,8 +384,7 @@ def run_correl():
     
     return results
 
-
-def create_combined(samples=20000, burn=10000, path=None):
+def create_combined(path=None):
     datasets, names = load_datasets(path=path)
 
     models = []
@@ -422,18 +392,18 @@ def create_combined(samples=20000, burn=10000, path=None):
     # COMBINED
     models.append({'data': datasets[-1],
                    'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'V':'group'},
+                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group'},
                    'use_root_for_effects':True, 
-                   'model_type':'full', 
-                   'exclude':['Z','T'],
+                   #'model_type':'full', 
+                   #'exclude':['Z','T'],
                    'name':'combined'})
 
     models.append({'data': datasets[-1],
                    'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'V':'group', 'e_inter_theta_conf_effect_a':'group'},
+                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'e_inter_theta_conf_effect_a':'group'},
                    'use_root_for_effects':True,
-                   'model_type':'full', 
-                   'exclude':['Z','T'],
+                   #'model_type':'full', 
+                   #'exclude':['Z','T'],
                    'name':'combined'})
 
     # DBS ON
@@ -441,8 +411,8 @@ def create_combined(samples=20000, burn=10000, path=None):
                    'effects_on': {'a':['theta', 'conf_effect']}, 
                    'depends_on': {'v':'stim'},
                    'use_root_for_effects':True, 
-                   'model_type':'full', 
-                   'exclude':['Z','T'],
+                   #'model_type':'full', 
+                   #'exclude':['Z','T'],
                    'name': 'dbs_on'})
 
     # DBS OFF
@@ -450,8 +420,8 @@ def create_combined(samples=20000, burn=10000, path=None):
                    'effects_on': {'a':['theta', 'conf_effect']}, 
                    'depends_on': {'v':'stim'}, 
                    'use_root_for_effects':True, 
-                   'model_type':'full', 
-                   'exclude':['Z','T'],
+                   #'model_type':'full', 
+                   #'exclude':['Z','T'],
                    'name': 'dbs_off'})
                   
     return models
@@ -462,7 +432,8 @@ if __name__=='__main__':
     import kabuki
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        models = create_combined(path='/home/wiecki/working/projects/hddm_data/data')
+        #models = create_combined(path='/home/wiecki/working/projects/hddm_data/data')
+        models = create_models_pd(path='/users/wiecki/data')
         results = hddm.mpi.controller(models)
         print results
         for model,result in zip(models, results):

@@ -106,7 +106,7 @@ def worker():
                     retry +=1
             if retry == 5:
                 result = None
-                print "Job %s failed" % recv[0]
+                print "Job %s failed" % recv
 
         #print("Worker %i on %s: finished one job" % (rank, proc_name))
         MPI.COMM_WORLD.send(result, dest=0, tag=15)
@@ -116,7 +116,7 @@ def worker():
 def run_model(name, model, load=False):
     import sys
     
-    #dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
+    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
     dbname = name+'.db'
 
     if model.has_key('effects_on'):
@@ -130,7 +130,7 @@ def run_model(name, model, load=False):
         except OSError:
             pass
 
-    mc.sample(35000, burn=10000)
+    mc.sample(30000, burn=10000, thin=2)
     mc.db.close()
     print "*************************************\n%s"%name
     kabuki.group.print_group_stats(mc.stats())
