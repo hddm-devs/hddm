@@ -924,7 +924,6 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         
         plt.show()                        
 
-
 def cont_report(nodes, cont_threshold = 0.9, plot= True):
     """
     create conaminate report
@@ -935,6 +934,8 @@ def cont_report(nodes, cont_threshold = 0.9, plot= True):
     cont_keys = [z for z in nodes.keys() if z.startswith('x')]
     
     # loop over cont nodes
+    n_cont = 0
+    rts = np.empty(0)
     for key in cont_keys:
         print "*********************"
         print "looking at %s" % key
@@ -942,10 +943,12 @@ def cont_report(nodes, cont_threshold = 0.9, plot= True):
         m = np.mean(node.trace(),0)
         #look for outliers with high probabilty
         idx = np.where(m > cont_threshold)[0]
+        n_cont += len(idx)
         if idx.size > 0:
             print "found %d outliers in %s" % (len(idx), key)            
             wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
             print "rt: ", wfpt.value[idx]
+            rts = np.concatenate((rts, wfpt.value[idx]))
             #plot outliers
             if plot:
                 plt.figure()
@@ -959,6 +962,9 @@ def cont_report(nodes, cont_threshold = 0.9, plot= True):
         print "probability of the next most probable outlier: %.2f" % next_outlier
     if plot:
         plt.show()
+        
+    print "!!!!!**** There were %d outliers in the data ****!!!!!" % n_cont
+    return rts
 
 def plot_posteriors(model):                 
     """Generate posterior plots for each parameter.
