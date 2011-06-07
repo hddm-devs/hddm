@@ -231,13 +231,27 @@ Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 
 """)
 
 class wfpt_gen(stats.distributions.rv_continuous):
-    def _pdf(self, x, v, a, z, t):
-        return hddm.wfpt.pdf(x, v, a, z, t, err=.0001)
-    
-    def _rvs(self, v, a, z, t):
-        return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=0, V=0, T=0, size=self._size)
+    sampling_method = 'cdf'
+    dt = 1e-4
+    def _argcheck(self, *args):
+        return True
 
-wfpt = wfpt_gen(a=0, b=5, name='wfpt', longname="""Wiener likelihood function""", extradoc="""Wfpt likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+    def _pdf(self, x, v, V, a, z, Z, t, T):
+        if np.isscalar(x):
+            out = hddm.wfpt_full.full_pdf(x, v, V, a, z, Z, t, T, 1e-4)
+        else:
+            out = np.empty_like(x)
+            for i in xrange(len(x)):
+                out[i] = hddm.wfpt_full.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], 1e-4)
+        
+        return out
+
+    def _rvs(self, v, V, a, z, Z, t, T):
+        param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}
+        sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
+        return sampled_rts
+
+wfpt = wfpt_gen(name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
 Parameters:
 ***********
@@ -251,3 +265,41 @@ References:
 Fast and accurate calculations for first-passage times in Wiener diffusion models
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
+
+class wfpt_switch_gen(stats.distributions.rv_continuous):
+    def _argcheck(self, *args):
+        return True
+
+    def _pdf(self, x, v, v_switch, a, z, t, t_switch):
+        if np.isscalar(x):
+            out = hddm.wfpt_switch.switch_pdf(x, v, v_switch, a, z, t, t_switch, 1e-4)
+        else:
+            out = np.empty_like(x)
+            for i in xrange(len(x)):
+                out[i] = hddm.wfpt_switch.switch_pdf(x[i], v[i], v_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
+                
+        return out
+
+    def _rvs(self, v, v_switch, a, z, t, t_switch):
+        all_rts_generated=False
+        while(not all_rts_generated):
+            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':0}, samples_anti=self._size, samples_pro=0)[0]
+            if (len(out) == self._size):
+                all_rts_generated=True
+        return hddm.utils.flip_errors(out)['rt']
+
+wfpt_switch = wfpt_switch_gen(name='wfpt switch', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+
+Parameters:
+***********
+v: drift-rate
+a: threshold
+z: bias [0,1]
+t: non-decision time
+
+References:
+***********
+Fast and accurate calculations for first-passage times in Wiener diffusion models
+Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
+""")
+

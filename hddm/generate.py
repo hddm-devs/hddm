@@ -66,7 +66,8 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
         rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
                                          params['Z'],params['t'],params['T'],
                                          samples, range_[0], range_[1], dt)
-
+    else:
+        raise TypeError, "Sampling method %s not found." % method
     if not structured:
         return rts
     else:
@@ -172,29 +173,10 @@ def pdf_with_params(rt, params):
     return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
                         T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
 
-
-def gen_rts_from_cdf(params, samples=1000, range_ = (-6,6), dt=1e-2):
-    simple_params = copy(params)
-    simple_params['t'] = 0
-    simple_params['T'] = 0
-    x = np.arange(range_[0], range_[1], dt)
-    pdf = [pdf_with_params(rt, simple_params) for rt in x]
-    l_cdf = np.cumsum(pdf)
-    l_cdf = l_cdf/l_cdf[-1]
-    rts = np.empty(samples, dtype=np.double)
-    f = rand(samples)
-    if params['T']!=0:
-        delay = rand(samples)*params['T'] + (params['t'] - params['T']/2.)
-    for i in xrange(samples):
-        idx = np.searchsorted(l_cdf, f[i])
-        rt = (x[idx]+x[idx-1])/2.
-        if params['T']==0:
-            rt = rt + np.sign(rt)*params['t']
-        else:
-            rt = rt + np.sign(rt)*delay[i]
-        rts[i] = rt
-            
-    return rts
+def gen_rts_from_cdf(params, samples=1000):
+    v = params['v']; V = params['V']; z = params['z']; Z = params['Z']; t = params['t'];
+    T = params['T']; a = params['a']
+    return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
        
 def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
     """Generate simulated RTs with fixed parameters."""

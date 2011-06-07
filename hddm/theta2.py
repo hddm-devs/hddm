@@ -110,10 +110,13 @@ def create_models_pd(path=None):
     data_dbs_on = data_pd[data_pd['dbs'] == 1]
 
     models = []
+    effect_on = 'a'
     # Create PD models
-    for effect_on in ['a','v','t']:
+    #for effect_on in ['a','v','t']:
+    #for exclude in [['T'],['Z'],['V'], ['Z','T'], []]:
+    for exclude in [['Z']]:
         for dbs in ['dbs', 'dbs_inv']:
-            models.append({'data': data_pd, 'effects_on': {effect_on:['theta',dbs]}, 'depends_on':{'v':'stim', 'e_%s_%s'%(dbs,effect_on):'conf', 'e_theta_%s'%effect_on:'conf', 'e_inter_theta_%s_%s'%(dbs,effect_on):'conf'}, 'use_root_for_effects':True, 'model_type':'full', 'exclude':['Z','T'], 'name':'PD_%s_%s'%(dbs, effect_on)})
+            models.append({'data': data_pd, 'effects_on': {effect_on:['theta',dbs]}, 'depends_on':{'v':'stim', 'e_%s_%s'%(dbs,effect_on):'conf', 'e_theta_%s'%effect_on:'conf', 'e_inter_theta_%s_%s'%(dbs,effect_on):'conf'}, 'use_root_for_effects':True, 'model_type':'full', 'exclude':exclude, 'name':'PD_%s_%s'%(dbs, effect_on)})
 
     return models
 
@@ -253,41 +256,57 @@ def create_combined(path=None):
     datasets, names = load_datasets(path=path)
 
     models = []
-    
-    # COMBINED
-    models.append({'data': datasets[-1],
-                   'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group'},
-                   'use_root_for_effects':True, 
-                   #'model_type':'full', 
-                   #'exclude':['Z','T'],
-                   'name':'combined'})
+    for exclude in [['Z']]:
+        # COMBINED
+        models.append({'data': datasets[-1],
+                       'effects_on': {'a':['theta', 'conf_effect']},
+                       'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'T':'group', 'V':'group'},
+                       'use_root_for_effects':True, 
+                       'model_type':'full', 
+                       'exclude':exclude,
+                       'name':'combined_shared_inter'})
 
-    models.append({'data': datasets[-1],
-                   'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'e_inter_theta_conf_effect_a':'group'},
-                   'use_root_for_effects':True,
-                   #'model_type':'full', 
-                   #'exclude':['Z','T'],
-                   'name':'combined'})
+        # models.append({'data': datasets[-1],
+        #                'effects_on': {'a':'theta'}, 
+        #                'depends_on': {'v':['stim', 'group'], 'a':'group', 't':'group', 'e_theta_a':['conf', 'group'], 'T':'group', 'Z':'group'},
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name':'combined'})
 
-    # DBS ON
-    models.append({'data': datasets[-2], 
-                   'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':'stim'},
-                   'use_root_for_effects':True, 
-                   #'model_type':'full', 
-                   #'exclude':['Z','T'],
-                   'name': 'dbs_on'})
+        # models.append({'data': datasets[-1],
+        #                'effects_on': {'a':'theta'},
+        #                'depends_on': {'v':['stim', 'group'], 'a':'group', 't':'group', 'e_theta_a':'conf', 'T':'group', 'Z':'group'},
+        #                'use_root_for_effects':True,
+        #                'model_type':'full',
+        #                'exclude':exclude,
+        #                'name':'combined_shared'})
 
-    # DBS OFF
-    models.append({'data': datasets[-3], 
-                   'effects_on': {'a':['theta', 'conf_effect']}, 
-                   'depends_on': {'v':'stim'}, 
-                   'use_root_for_effects':True, 
-                   #'model_type':'full', 
-                   #'exclude':['Z','T'],
-                   'name': 'dbs_off'})
+        models.append({'data': datasets[-1],
+                       'effects_on': {'a':['theta', 'conf_effect']}, 
+                       'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'e_inter_theta_conf_effect_a':'group', 'T':'group', 'V':'group'},
+                       'use_root_for_effects':True,
+                       'model_type':'full', 
+                       'exclude':exclude,
+                       'name':'combined_inter'})
+
+        # DBS ON
+        # models.append({'data': datasets[-2], 
+        #                'effects_on': {'a':['theta', 'conf_effect']}, 
+        #                'depends_on': {'v':'stim'},
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name': 'dbs_on'})
+
+        # DBS OFF
+        # models.append({'data': datasets[-3], 
+        #                'effects_on': {'a':['theta', 'conf_effect']}, 
+        #                'depends_on': {'v':'stim'}, 
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name': 'dbs_off'})
                   
     return models
 
@@ -297,8 +316,8 @@ if __name__=='__main__':
     import kabuki
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        #models = create_combined(path='/home/wiecki/working/projects/hddm_data/data')
-        models = create_models_pd(path='/users/wiecki/data')
+        models = create_combined(path='/home/wiecki/working/projects/hddm_data/data')
+        #models = create_combined(path='/users/wiecki/data')
         results = hddm.mpi.controller(models)
         print results
         for model,result in zip(models, results):

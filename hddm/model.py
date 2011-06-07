@@ -393,7 +393,9 @@ class HDDMRegressor(Base):
 
         # Add rootless nodes for effects
         for effect_on, col_names in self.effects_on.iteritems():
-            if type(col_names) is str:
+            if type(col_names) is str or (type(col_names) is list and len(col_names) == 1):
+                if type(col_names) is list:
+                    col_names = col_names[0]
                 params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
                                         False,

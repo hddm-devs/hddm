@@ -223,7 +223,6 @@ def uniform(x, lower, upper):
 
     return y
 
-
 def interpolate_trace(x, trace, range=(-1,1), bins=100):
     """Create a histogram over a trace and interpolate to get a smoothed distribution."""
     import scipy.interpolate
@@ -234,7 +233,7 @@ def interpolate_trace(x, trace, range=(-1,1), bins=100):
 
     return interp
 
-def savage_dickey(pos, post_trace, range=(-1,1), bins=100, prior_trace=None, prior_y=None):
+def savage_dickey(pos, post_trace, range=(-.3,.3), bins=40, prior_trace=None, prior_y=None):
     """Calculate Savage-Dickey density ratio test, see Wagenmakers et
     al. 2010 at http://dx.doi.org/10.1016/j.cogpsych.2009.12.001
 
@@ -246,7 +245,7 @@ def savage_dickey(pos, post_trace, range=(-1,1), bins=100, prior_trace=None, pri
     Keyword arguments:
     ******************
     prior_trace<numpy.array>: trace of the prior distribution
-    prior_y<numpy.array>: prior density at each point (must match range and bins)
+    prior_y<numpy.array>: prior density pos
     range<(int,int)>: Range over which to interpolate and plot
     bins<int>: Over how many bins to compute the histogram over
 
@@ -261,7 +260,7 @@ def savage_dickey(pos, post_trace, range=(-1,1), bins=100, prior_trace=None, pri
     elif prior_y is not None:
         # Prior is provided as a density for each point -> interpolate to retrieve positional density
         import scipy.interpolate
-        prior_pos = scipy.interpolate.InterpolatedUnivariateSpline(x, prior_y)(pos)
+        prior_pos = prior_y #scipy.interpolate.InterpolatedUnivariateSpline(x, prior_y)(pos)
     else:
         assert ValueError, "Supply either prior_trace or prior_y keyword arguments"
 
@@ -269,9 +268,25 @@ def savage_dickey(pos, post_trace, range=(-1,1), bins=100, prior_trace=None, pri
     posterior_pos = interpolate_trace(pos, post_trace, range=range, bins=bins)
 
     # Calculate Savage-Dickey density ratio at pos
-    sav_dick = posterior_pos / prior_pos
+    sav_dick = prior_pos / posterior_pos
 
     return sav_dick
+
+def gen_stats(traces, alpha=0.05, batches=100):
+    from pymc.utils import hpd, quantiles
+    from pymc import batchsd
+
+    stats = {}
+    for name, trace_obj in traces.iteritems():
+        trace = np.squeeze(np.array(trace_obj(), float))
+        stats[name] = {'standard deviation': trace.std(0),
+                       'mean': trace.mean(0),
+                       '%s%s HPD interval' % (int(100*(1-alpha)),'%'): hpd(trace, alpha),
+                       'mc error': batchsd(trace, batches),
+                       'quantiles': quantiles(trace)}
+
+    return stats
+
 
 def plot_savage_dickey(range=(-1,1), bins=100):
     x = np.linspace(range[0], range[1], bins)
