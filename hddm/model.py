@@ -62,7 +62,7 @@ class Base(kabuki.Hierarchical):
 
     def get_params(self):
         params = [Parameter('a',True, lower=.5, upper=4.5),
-                  Parameter('v',True, lower=-6., upper=6.), 
+                  Parameter('v',True, lower=-10., upper=10.), 
                   Parameter('t',True, lower=.1, upper=2., init=.1)]
         if not self.no_bias:
             params.append(Parameter('z', True, lower=0., upper=1., init=.5))
@@ -257,7 +257,7 @@ class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = (Parameter('a',True, lower=.5, upper=4.5),
-                       Parameter('v',True, lower=-6., upper=6.), 
+                       Parameter('v',True, lower=-10., upper=10.), 
                        Parameter('z',True, lower=0., upper=1., init=.5), 
                        Parameter('t',True, lower=.1, upper=2., init=.1),
                        Parameter('pi',True, lower=1e-4, upper=0.2),

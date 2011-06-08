@@ -826,7 +826,7 @@ def hddm_parents_trace(node,idx):
     for name in ['V','Z','T']:
         if node.parents.has_key(name):
             if node.parents[name] != 0:
-                params[name] = nodes.parents[name].trace()[idx]
+                params[name] = node.parents[name].trace()[idx]
             else:
                 params[name] = 0
         else:
