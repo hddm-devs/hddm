@@ -72,9 +72,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
     data = create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
 
     model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_group_model=subj)
-    model.mcmc(retry=False)
 
-    print model.summary()
     return model
 
             
@@ -94,30 +92,6 @@ class TestMulti(unittest.TestCase):
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingle, self).__init__(*args, **kwargs)
-        self.data, self.params_true = gen_rand_data()
-        self.data_subj, self.params_true_subj = gen_rand_subj_data(samples=300)
-        self.data_basic, self.params_true_basic = gen_rand_data(samples=5000, no_var=True)
-        
-        self.assert_ = True
-        
-        self.params_true_no_s = copy(self.params_true)
-        del self.params_true_no_s['V']
-        del self.params_true_no_s['Z']
-        del self.params_true_no_s['T']
-
-        self.params_true_subj_no_s = copy(self.params_true_subj)
-        del self.params_true_subj_no_s['V']
-        del self.params_true_subj_no_s['Z']
-        del self.params_true_subj_no_s['T']
-
-        self.params_true_lba = copy(self.params_true)
-        del self.params_true_lba['Z']
-        del self.params_true_lba['T']
-
-        self.params_true_basic_no_s = copy(self.params_true_basic)
-        del self.params_true_basic_no_s['V']
-        del self.params_true_basic_no_s['Z']
-        del self.params_true_basic_no_s['T']
 
         self.samples = 10000
         self.burn = 5000
@@ -125,73 +99,59 @@ class TestSingle(unittest.TestCase):
     def runTest(self):
         return
     
-    def test_basic(self):
-        model = hddm.model.HDDM(self.data_basic, no_bias=True)
+    def test_HDDM(self, assert_=True):
+        #raise SkipTest("Disabled.")
+        includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        for include in includes:
+            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
+            model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=False)
+            nodes = model.create()
+            mc = pm.MCMC(nodes)
+            mc.sample(self.samples, burn=self.burn)
+            check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_subjs(self, assert_=True):
+        raise SkipTest("Disabled.")
+        includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        for include in includes:
+            data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
+            model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=True)
+            nodes = model.create()
+            mc = pm.MCMC(nodes)
+            mc.sample(self.samples, burn=self.burn)
+            check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended(self, assert_=True):
+        data, params_true = hddm.generate.gen_rand_data(samples=500, include='all')
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=False)
         nodes = model.create()
+        #pm.MAP(nodes).fit()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true_basic_no_s)
+        check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended_subj(self):
+        raise SkipTest("Disabled.")
+        data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=True)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(20000, burn=15000)
+        check_model(mc, params_true, assert_=assert_)
+
+        return mc
         
-    def test_full_mc(self, assert_=True):
-        raise SkipTest("Disabled.")
-        model = hddm.model.HDDM(self.data, model_type='full_mc', no_bias=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true, assert_=assert_)
-
-        return model
-
-    def test_full_interp_subjs_V_T_Z(self, assert_=True):
-        raise SkipTest("Disabled.")
-        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.75, 'T':.6},
-                                                    samples=300)
-        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-        return model
-
-    def test_full_interp_subjs_T(self, assert_=True):
-        raise SkipTest("Disabled.")
-        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':0,'Z':0.,'T':.6},
-                                                    samples=300)
-        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','V'])
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-        return model
-
-    def test_full_interp_subjs_V(self, assert_=True):
-        raise SkipTest("Disabled.")
-        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':0, 'T':0},
-                                                    samples=300)
-        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['Z','T'])
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-        return model
-
-    def test_full_interp_subjs_Z(self, assert_=True):
-        raise SkipTest("Disabled.")
-        data_subj, params_true = gen_rand_subj_data(params={'a':2,'v':.5,'z':.5,'t':.3,'V':1., 'Z':.7, 'T':0},
-                                                    samples=300)
-        model = hddm.model.HDDM(data_subj, model_type='full_intrp', no_bias=True, exclude_inter_var_params=['V','T'])
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-        return model
-
     def test_lba(self):
-        model = hddm.model.HDDM(self.data, is_group_model=False, normalize_v=True, model_type='lba')
+        raise SkipTest("Disabled.")
+        model = hddm.model.HLBA(self.data, is_group_model=False, normalize_v=True)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
@@ -200,64 +160,14 @@ class TestSingle(unittest.TestCase):
         return model
 
     def test_lba_subj(self):
-        model = hddm.model.HDDM(self.data_subj, is_group_model=True, normalize_v=True, model_type='lba')
+        raise SkipTest("Disabled.")
+        model = hddm.model.HLBA(self.data_subj, is_group_model=True, normalize_v=True)
         nodes = model.create()
         mc = pm.MCMC(nodes)
         mc.sample(self.samples, burn=self.burn)
         #self.check_model(mc, self.params_true_lba)
         print model.params_est
         return model
-
-    def test_full(self):
-        raise SkipTest("Disabled.")
-        model = hddm.model.HDDM(self.data, model_type='full', no_bias=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true)
-
-    def test_full_subj(self):
-        raise SkipTest("Disabled.")
-        model = hddm.model.HDDM(self.data_subj, model_type='full', is_group_model=True, no_bias=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true_subj)
-
-    def test_subjs_no_bias(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_group_model=True, no_bias=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true)
-
-    def test_subjs_bias(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_group_model=True, no_bias=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true)
-
-    def test_simple(self):
-        model = hddm.model.HDDM(self.data_basic, model_type='simple', no_bias=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true_no_s)
-        return model
-    
-    def test_simple_subjs(self):
-        model = hddm.model.HDDM(self.data_subj, model_type='simple', is_group_model=True, no_bias=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params_true_subj_no_s)
-        return model
-    
-    def test_chains(self):
-        raise SkipTest("Disabled.")
-        models = run_parallel_chains(hddm.model.HDDM, [data, data], ['test1', 'test2'])
-        return models
 
 class TestAntisaccade(unittest.TestCase):
     def __init__(self, *args, **kwargs):

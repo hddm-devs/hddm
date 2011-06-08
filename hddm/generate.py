@@ -14,6 +14,31 @@ try:
 except:
     pass
 
+def gen_rand_params(include=()):
+    params = {}
+    if include == 'all':
+        include = ['z','V','Z','T']
+    elif include == 'all_inter':
+        include = ['V','Z','T']
+        
+    params['V'] = rand() if 'V' in include else 0
+    params['Z'] = rand()* 0.3 if 'Z' in include else 0
+    params['T'] = rand()* 0.2 if 'T' in include else 0
+    params['z'] = .4+rand()*0.2 if 'z' in include else 0.5
+
+    # Simple parameters
+    params['v'] = (rand()-.5)*4
+    params['t'] = 0.2+rand()*0.3+(params['T']/2)
+    params['a'] = 1.0+rand()
+    
+
+    if 'pi' in include or 'gamma' in include:
+        params['pi'] = max(rand()*0.1,0.01)
+        params['gamma'] = rand()        
+    
+    return params
+
+
 def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4, subj_idx=None):
     if params is None:
         params = {'v':-2.,
@@ -178,18 +203,6 @@ def gen_rts_from_cdf(params, samples=1000):
     T = params['T']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
        
-def _gen_rts_fastdm(v=0, sv=0, z=0.5, sz=0, a=1, ter=0.3, ster=0, samples=500, fname=None, structured=True):
-    """Generate simulated RTs with fixed parameters."""
-    if fname is None:
-        fname = 'example_DDM.txt'
-    subprocess.call([sampler_exec, '-v', str(v), '-V', str(sv), '-z', str(z), '-Z', str(sz), '-a', str(a), '-t', str(ter), '-T', str(ster), '-n', str(samples), '-o', fname])
-    data = np.loadtxt(fname)
-    if structured:
-        data.dtype = np.dtype([('response', np.float), ('rt', np.float)])
-
-    return data
-
-
 def add_contaminate_data(data, params):
     t_max = max(data['rt'])+1.5;
     pi = params['pi']
@@ -205,18 +218,10 @@ def add_contaminate_data(data, params):
     data[other_idx]['rt']  = uniform.rvs(0,t_max,n_other)
     return data
 
-
-
-def gen_rand_data(samples=500, params=None, no_var=False):
+def gen_rand_data(samples=500, params=None, include=()):
     """Generate simulated RTs with random parameters."""
-    #z = np.random.normal(loc=1, scale=2)
-    #ster = np.random.uniform(loc=0, scale=.5)
-    #params_true = {'v': np.random.normal(loc=-2, scale=4), 'V': np.random.normal(loc=0, scale=.5), 'z': z, 'Z': np.random.normal(loc=0, scale=.5), 't': np.random.normal(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+np.random.normal(loc=.5, scale=3)}
     if params is None:
-        if not no_var:
-            params = {'v': .5, 'V': 0.5, 'z': .5, 'Z': 0.5, 't': .3, 'T': 0.3, 'a': 2}
-        else:
-            params = {'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}
+        params = gen_rand_params(include=include)
 
     # Create RT data
     data = gen_rts(params, samples=samples, structured=True)
@@ -258,21 +263,17 @@ def _add_noise(params_subj, noise=.1):
 
     return params_subj
 
-def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None, no_var=True):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None, include=()):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
     # Set global parameters
     #z = rnd(loc=1, scale=2)
     #ster = rnd(loc=0, scale=.5)
     #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
-        params = {'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
-    if no_var:
-        params['Z'] = 0
-        params['V'] = 0
-        params['T'] = 0
+        params = gen_rand_params(include=include)
+        #{'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
 
     params_subjs = []
-    #data = np.empty((samples*num_subjs, 3), dtype=np.float)
     resps = []
     rts = []
     subj_idx = []
