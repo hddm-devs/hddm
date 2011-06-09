@@ -250,3 +250,18 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
             mc.db.close()
 
     return i_res
+
+def check_geweke(model, assert_=True):
+    # Test for convergence using geweke method
+    for param in model.group_params.itervalues():
+        geweke = np.array(pm.geweke(param))
+        if assert_:
+            assert (np.any(np.abs(geweke[:,1]) < 2)), 'Chain of %s not properly converged'%param
+            return False
+        else:
+            if np.any(np.abs(geweke[:,1]) > 2):
+                print "Chain of %s not properly converged" % param
+                return False
+
+    return True
+

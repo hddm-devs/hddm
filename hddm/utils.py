@@ -273,6 +273,9 @@ def savage_dickey(pos, post_trace, range=(-.3,.3), bins=40, prior_trace=None, pr
     return sav_dick
 
 def gen_stats(traces, alpha=0.05, batches=100):
+    """Useful helper function to generate stats() on a loaded database object.
+    Pass the db._traces list."""
+    
     from pymc.utils import hpd, quantiles
     from pymc import batchsd
 
@@ -304,15 +307,6 @@ def plot_savage_dickey(range=(-1,1), bins=100):
     plt.axvline(x=0, lw=1., color='k')
     plt.ylim(ymin=0)
 
-def call_mcmc((model_class, data, dbname, rnd, kwargs)):
-    # Randomize seed
-    np.random.seed(int(rnd))
-
-    model = model_class(data, **kwargs)
-    model.mcmc(dbname=dbname)
-    model.mcmc_model.db.close()
-
-
 def R_hat(samples):
     n, num_chains = samples.shape # n=num_samples
     chain_means = np.mean(samples, axis=1)
@@ -342,59 +336,6 @@ def test_chain_convergance(models):
         R_hat_param[param_name] = R_hat(samples)
 
     return R_hat_param
-
-def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
-    import numpy.lib.recfunctions as rec
-    pos_stims = ('A', 'C', 'E')
-    neg_stims = ('B', 'D', 'F')
-    fname = 'Gene_tst1_RT.csv'
-    data = np.recfromcsv(fname)
-    data['subj_idx'] = data['subj_idx']-1 # Offset subj_idx to start at 0
-
-    data['rt'] = data['rt']/1000. # Time in seconds
-    # Remove outliers
-    data = data[data['rt'] > .25]
-
-    # Exclude subjects for which there is no particular gene.
-    if exclude_missing is not None:
-        if isinstance(exclude_missing, (tuple, list)):
-            for exclude in exclude_missing:
-                data = data[data[exclude] != '']
-        else:
-            data = data[data[exclude_missing] != '']
-
-    # Add convenience columns
-    # First stim and second stim
-    cond1 = np.empty(data.shape, dtype=np.dtype([('cond1','S1')]))
-    cond2 = np.empty(data.shape, dtype=np.dtype([('cond2','S1')]))
-    cond_class = np.empty(data.shape, dtype=np.dtype([('conf','S2')]))
-    contains_A = np.empty(data.shape, dtype=np.dtype([('contains_A',np.bool)]))
-    contains_B = np.empty(data.shape, dtype=np.dtype([('contains_B',np.bool)]))
-    include = np.empty(data.shape, dtype=np.bool)
-    
-    for i,cond in enumerate(data['cond']):
-        cond1[i] = cond[0]
-        cond2[i] = cond[1]
-        # Condition contains A or B, with AB trials excluded
-        contains_A[i] = (((cond[0] == 'A') or (cond[1] == 'A')) and not ((cond[0] == 'B') or (cond[1] == 'B')),)
-        contains_B[i] = (((cond[0] == 'B') or (cond[1] == 'B')) and not ((cond[0] == 'A') or (cond[1] == 'A')),)
-
-        if cond[0] in pos_stims and cond[1] in pos_stims:
-            cond_class[i] = 'WW'
-        elif cond[0] in neg_stims and cond[1] in neg_stims:
-            cond_class[i] = 'LL'
-        else:
-            cond_class[i] = 'WL'
-
-        # Exclude instructed stims
-        include[i] = cond.find(data['instructed1'][i])
-        
-    # Append rows to data
-    data = rec.append_fields(data, names=['cond1','cond2','conf', 'contains_A', 'contains_B'],
-                             data=(cond1,cond2,cond_class,contains_A,contains_B),
-                             dtypes=['S1','S1','S2','B1','B1'], usemask=False)
-
-    return data[include]
 
 def save_csv(data, fname, sep=None):
     """Save record array to fname as csv.
@@ -531,20 +472,6 @@ def parse_config_file(fname, mcmc=False, load=False):
         m.plot_posteriors
         
     return m
-
-def check_geweke(model, assert_=True):
-    # Test for convergence using geweke method
-    for param in model.group_params.itervalues():
-        geweke = np.array(pm.geweke(param))
-        if assert_:
-            assert (np.any(np.abs(geweke[:,1]) < 2)), 'Chain of %s not properly converged'%param
-            return False
-        else:
-            if np.any(np.abs(geweke[:,1]) > 2):
-                print "Chain of %s not properly converged" % param
-                return False
-
-    return True
 
 def EZ_subjs(data):
     params = {}
@@ -845,7 +772,7 @@ def hddm_parents_trace(node,idx):
             
 def _gen_statistics():
     """
-    generate diferent statistical tests from ppd_test
+    generate different statistical tests from ppd_test
     """
     statistics = []
     

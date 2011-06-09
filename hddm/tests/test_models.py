@@ -25,27 +25,6 @@ from numpy.random import rand
 
 from nose import SkipTest
 
-def analyze_regress(posterior_trace, x_range=(-.5, .5), bins=100, plot=True):
-    import scipy.interpolate
-    
-    x = np.linspace(x_range[0], x_range[1], bins)
-    #prior_dist = pm.Normal('prior', mu=0, tau=100)
-    prior_dist = pm.Uniform('prior', lower=-.5, upper=.5)
-
-    prior_trace = np.array([prior_dist.rand() for i in range(10000)])
-
-    sav_dick, prior, posterior, prior0, posterior0 = savage_dickey(prior_trace, posterior_trace, range=x_range, bins=bins)
-
-    print "Savage Dickey: %f." % (sav_dick)
-
-    prior_inter = scipy.interpolate.spline(xk=x, yk=prior, xnew=x)
-    posterior_inter = scipy.interpolate.spline(xk=x, yk=posterior, xnew=x)
-
-    plt.plot(x, prior_inter, label='prior')
-    plt.plot(x, posterior_inter, label='posterior')
-
-    return sav_dick
-
 def create_multi_data(params1, params2, samples=1000, subj=False, num_subjs=10.):
     import numpy.lib.recfunctions as rec
 
@@ -74,7 +53,6 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
     model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_group_model=subj)
 
     return model
-
             
         
 class TestMulti(unittest.TestCase):
@@ -101,7 +79,7 @@ class TestSingle(unittest.TestCase):
     
     def test_HDDM(self, assert_=True):
         #raise SkipTest("Disabled.")
-        includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
             model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=False)
@@ -168,34 +146,6 @@ class TestSingle(unittest.TestCase):
         print model.params_est
         return model
 
-class TestAntisaccade(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super(TestAntisaccade, self).__init__(*args, **kwargs)
-        self.params = {'v':-2.,
-                       'v_switch': 2.,
-                       'a': 2.5,
-                       't': .3,
-                       't_switch': .3,
-                       'z':.5,
-                       'T': 0, 'Z':0, 'V':0}
-
-        self.data = hddm.generate.gen_antisaccade_rts(params=self.params, samples_pro=100, samples_anti=500)[0]
-        self.assert_ = True
-
-        self.samples = 2000
-        self.burn = 1000
-
-    def runTest(self):
-        return
-    
-    def test_pure_switch(self):
-        model = hddm.model.HDDMAntisaccade(self.data, no_bias=True, is_group_model=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, self.params)
-
-    
 if __name__=='__main__':
     pass
     #suite = unittest.TestLoader().loadTestsFromTestCase(TestLikelihoodFuncsGPU)

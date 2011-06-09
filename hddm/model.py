@@ -274,7 +274,7 @@ class HDDMContaminant(Base):
         else:
             raise KeyError, "Rootless child parameter %s not found" % param.name
 
-    def remove_outliers(self, cutoff=.4):
+    def remove_outliers(self, cutoff=.5):
         data_dep = self._get_data_depend()
 
         data_out = []
@@ -312,7 +312,6 @@ class HDDMAntisaccade(Base):
         self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
                        Parameter('a', True, lower=1, upper=4, init=2),
-                       #Parameter('z', True, lower=0, upper=1, init=.5),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.05, upper=0.7, init=0.3),
                        Parameter('wfpt', False))
@@ -366,10 +365,6 @@ class HDDMRegressor(Base):
         
     def get_params(self):
         params = []
-        # if self.two_effect_model:
-        #     params.append(Parameter('e1', True, lower=-3., upper=3., init=0))
-        #     params.append(Parameter('e2', True, lower=-3., upper=3., init=0))
-        #     params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
 
         # Add rootless nodes for effects
         for effect_on, col_names in self.effects_on.iteritems():
