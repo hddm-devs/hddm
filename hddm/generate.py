@@ -254,36 +254,36 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100):
 
     return data, params_set
 
-def _add_noise(params_subj, noise=.1):
+def _add_noise(params_subj, noise=.1, include=()):
     """Add individual noise to each parameter."""
     params_subj = copy(params_subj)
     for param, value in params_subj.iteritems():
-        if param != 'z' and param.islower():
+        if param not in include:
             params_subj[param] = np.random.normal(loc=value, scale=noise)
 
     return params_subj
 
 def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, tag=None, include=()):
     """Generate simulated RTs of multiple subjects with fixed parameters."""
-    # Set global parameters
-    #z = rnd(loc=1, scale=2)
-    #ster = rnd(loc=0, scale=.5)
-    #self.params_true = {'v': rnd(loc=-2, scale=4), 'V': rnd(loc=0, scale=.5), 'z': z, 'Z': rnd(loc=0, scale=.5), 't': rnd(loc=ster/2., scale=ster/2.), 'T': ster, 'a': z+rnd(loc=.5, scale=3)}
     if params is None:
         params = gen_rand_params(include=include)
         #{'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
 
-    params_subjs = []
+    params_orig = copy(params)
     resps = []
     rts = []
     subj_idx = []
     data_gens = []
     # Derive individual parameters
     for i in range(num_subjs):
-        params_subj = copy(params)
-        params_subj = _add_noise(params_subj, noise=noise)
-        params_subjs.append(params_subj)
-
+        params_subj = copy(params_orig)
+        params_subj = _add_noise(params_subj, noise=noise, include=include)
+        for name, value in params_subj.iteritems():
+            params['%s%i'%(name,i)] = value
+            if name in include or name in ('v','a','t'):
+                params['%stau'%name] = noise
+                
+            
         # Create RT data
         data_gen = gen_rts(params_subj, samples=samples, structured=True, subj_idx=i)
         data_gens.append(data_gen)

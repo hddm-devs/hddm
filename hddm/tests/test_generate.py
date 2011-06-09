@@ -23,9 +23,9 @@ class TestGenerate(unittest.TestCase):
         self._test_compare_samples_to_analytic(sampler)
 
     def _test_compare_samples_to_analytic(self, sampler):
-        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
-        for i_exclude in excludes:
-            params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)
+        includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        for include in includes:
+            params = hddm.generate.gen_rand_params(include=include)
             [D, p_value] = kstest(sampler.rvs, sampler.cdf,
                                   args=(params['v'], params['V'], params['a'], params['z'], params['Z'], params['t'], params['T']),N=100)
             print 'p_value: %f' % p_value

@@ -112,11 +112,10 @@ class TestSingle(unittest.TestCase):
 
         return mc
 
-    def test_HDDM_subjs(self, assert_=True):
-        raise SkipTest("Disabled.")
-        includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+    def test_HDDM_group(self, assert_=True):
+        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
-            data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
+            data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
             model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=True)
             nodes = model.create()
             mc = pm.MCMC(nodes)

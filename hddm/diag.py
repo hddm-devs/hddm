@@ -23,6 +23,8 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     nodes = sorted(model.stochastics, key=lambda x:x.__name__)
     nodes = filter(lambda x:x.shape == (), nodes)    
     for node in nodes:
+        if node.__name__ not in params_true:
+            continue # Skip non-existent params
         trace = node.trace()[:]
         est = np.mean(trace)
         name = node.__name__
@@ -40,7 +42,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
         (name, truth, est, lb_score, ub_score, fell)
         if (fell < lb) or (fell > ub):
             fail = True
-            print "the true value of %s is outsize of the confidence interval !*!*!*!*!*!*!" % name
+            print "the true value of %s is outside of the confidence interval !*!*!*!*!*!*!" % name
         
     if assert_:
         assert (fail==False)
