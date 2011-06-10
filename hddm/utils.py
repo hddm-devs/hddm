@@ -861,7 +861,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         
         plt.show()                        
 
-def cont_report(nodes, cont_threshold = 0.9, plot= True):
+def cont_report(nodes, cont_threshold = 0.5, plot= True):
     """
     create conaminate report
     """
@@ -885,7 +885,7 @@ def cont_report(nodes, cont_threshold = 0.9, plot= True):
             print "found %d outliers in %s" % (len(idx), key)            
             wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
             for i_cont in range(len(idx)):
-                print "rt: %8.5f prob: %.2f" % (wfpt.value[idx], m[idx])
+                print "rt: %8.5f prob: %.2f" % (wfpt.value[idx[i_cont]], m[idx[i_cont]])
             rts = np.concatenate((rts, wfpt.value[idx]))
             #plot outliers
             if plot:

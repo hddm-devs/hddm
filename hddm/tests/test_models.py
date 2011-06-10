@@ -1,7 +1,7 @@
 from __future__ import division
 
 import nose
-
+import sys
 import unittest
 from hddm.diag import *
 
@@ -145,6 +145,32 @@ class TestSingle(unittest.TestCase):
         #self.check_model(mc, self.params_true_lba)
         print model.params_est
         return model
+    
+    def test_cont(self, assert_=False):
+        gammas = [1./8, 7./8]
+        params_true = gen_rand_params()
+        params_true['pi'] = 0.05
+        for gamma in gammas:
+            params_true['gamma'] = gamma
+            data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)            
+            model = hddm.model.HDDM(data, no_bias=False, is_group_model=False)
+            nodes = model.create()
+            mc = pm.MCMC(nodes)
+            mc.sample(self.samples, burn=self.burn)
+            print "Modeling without outliers"
+            sys.stdout.flush()
+            check_model(mc, params_true, assert_=assert_)                                                        
+            model = hddm.model.HDDMContaminant(data, no_bias=False, is_group_model=False)
+            nodes = model.create()
+            mc = pm.MCMC(nodes)
+            mc.sample(self.samples*2, burn=self.burn)
+            print "Modeling with outliers"
+            sys.stdout.flush()
+            check_model(mc, params_true, assert_=assert_)
+            hddm.utils.cont_report(mc, plot=False)     
+
+        return mc
+
 
 if __name__=='__main__':
     pass
