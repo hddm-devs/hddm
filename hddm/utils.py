@@ -947,7 +947,8 @@ def cont_report(nodes, cont_threshold = 0.9, plot= True):
         if idx.size > 0:
             print "found %d outliers in %s" % (len(idx), key)            
             wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
-            print "rt: ", wfpt.value[idx]
+            for i_cont in range(len(idx)):
+                print "rt: %8.5f prob: %.2f" % (wfpt.value[idx], m[idx])
             rts = np.concatenate((rts, wfpt.value[idx]))
             #plot outliers
             if plot:
