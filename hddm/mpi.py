@@ -34,6 +34,7 @@ def controller(models, samples=200, burn=15, reps=5):
     print "Controller %i on %s: ready!" % (rank, proc_name)
 
     task_iter = iter(models)
+    idx = 0
     results = []
 
     while(True):
@@ -45,14 +46,17 @@ def controller(models, samples=200, burn=15, reps=5):
 
         if status.tag == 10 or status.tag == 15:
             try:
-                task = task_iter.next()
+                model = task_iter.next()
+                name = model['name']
+                del model['name']
                 #print "Controller: Sending task"
-                MPI.COMM_WORLD.send(task, dest=status.source, tag=10)
+                MPI.COMM_WORLD.send(('%s_%i'%(name, idx), model), dest=status.source, tag=10)
+                idx += 1
             except StopIteration:
                 # Task queue is empty
                 print "Controller: Task queue is empty"
                 print "Controller: Sending kill signal"
-                MPI.COMM_WORLD.send([], dest=status.source, tag=2)
+                MPI.COMM_WORLD.send((None, None), dest=status.source, tag=2)
 
         elif status.tag == 2: # Exit
             process_list.remove(status.source)
@@ -81,7 +85,7 @@ def worker():
     while True:
         # Get some data
         #print "Worker %i on %s: waiting for data" % (rank, proc_name)
-        recv = MPI.COMM_WORLD.recv(source=0, tag=MPI.ANY_TAG, status=status)
+        name, model = MPI.COMM_WORLD.recv(source=0, tag=MPI.ANY_TAG, status=status)
         print "Worker %i on %s: received data, tag: %i" % (rank, proc_name, status.tag)
 
         if status.tag == 2:
@@ -95,27 +99,30 @@ def worker():
             retry = 0
             while retry < 5:
                 try:
-                    print "Running %s:\n" % recv
-                    result = run_model(recv)
+                    print "Running %s: %s\n" % (name, model)
+                    result = run_model(name, model)
                     break
-                except pm.ZeroProbability:
+                except (pm.ZeroProbability, ValueError):
                     retry +=1
             if retry == 5:
                 result = None
-                print "Job %s failed" % recv[0]
+                print "Job %s failed" % recv
 
         #print("Worker %i on %s: finished one job" % (rank, proc_name))
         MPI.COMM_WORLD.send(result, dest=0, tag=15)
 
     MPI.COMM_WORLD.send([], dest=0, tag=2)
         
-def run_model(params, name=None, load=False):
+def run_model(name, model, load=False):
+    import sys
+    
+    dbname = os.path.join('/','users', 'wiecki', 'scratch', 'theta', name+'.db')
     dbname = name+'.db'
 
-    if params.has_key('effects_on'):
-        mc = pm.MCMC(hddm.model.HDDMRegressor(**params).create())
+    if model.has_key('effects_on'):
+        mc = pm.MCMC(hddm.model.HDDMRegressor(**model).create(), db='pickle', dbname=dbname)
     else:
-        mc = pm.MCMC(hddm.model.HDDM(**params).create())
+        mc = pm.MCMC(hddm.model.HDDM(**model).create(), db='pickle', dbname=dbname)
     
     if not load:
         try:
@@ -123,12 +130,13 @@ def run_model(params, name=None, load=False):
         except OSError:
             pass
 
-    mc.sample(30000, burn=25000, db='pickle', dbname=dbname)
+    mc.sample(30000, burn=10000, thin=2)
     mc.db.close()
-    print "*************************************\n"
+    print "*************************************\n%s"%name
     kabuki.group.print_group_stats(mc.stats())
     print "DIC: %f" % mc.dic
-    print "logp: %f" % mc.logp 
+    print "logp: %f" % mc.logp
+    sys.stdout.flush()
     return mc.stats()
     # else:
     #     #print "Loading %s" %name

@@ -13,26 +13,6 @@ from scipy.stats import kstest
 
 from nose import SkipTest
 
-def pdf_with_params(rt, params):
-    v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
-    T = params['T']; a = params['a']
-    return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
-                        T=T,err=1e-10, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
-
-def create_wfpt_cdf(params, range_ = (-10,10), bins=5000):
-    x = np.linspace(range_[0], range_[1], bins)
-    pdf = [pdf_with_params(rt, params) for rt in x]
-    l_cdf = np.cumsum(pdf)
-    l_cdf = l_cdf/l_cdf[-1]
-    def cdf(rt, x=x, l_cdf=l_cdf):
-        idx = np.where(x>rt)[0][0]
-        l_cdf[idx]
-        m = (l_cdf[idx] - l_cdf[idx-1])/(x[idx]-x[idx-1])
-        b = l_cdf[idx] - m*x[idx]
-        return m*rt+b
-    return cdf
-
-
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
@@ -60,38 +40,6 @@ class TestWfpt(unittest.TestCase):
             python_wfpt = hddm.wfpt.pdf(rt, v, a, z, err)
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
-            
-   
-    def test_compare_sampled_data_to_analytic(self):
-        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
-        for i_exclude in excludes:
-            ok = False
-            while not ok:
-                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
-                samples = hddm.generate.gen_rts(params, samples=self.samples, method='cdf', dt=1e-3)
-                if max(abs(samples))<=self.range_[1]:
-                    ok = True                
-            cdf_single = create_wfpt_cdf(params, self.range_)
-            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
-            [D, p_value] = kstest(samples, cdf_vec)
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
-    def test_compare_drift_simulated_data_to_analytic(self):
-        excludes = [['Z','T','V'],['Z','T'],['V'],['T'],['Z']]
-        for i_exclude in excludes:
-            ok = False
-            while not ok:
-                params = hddm.diag.rand_params(model_type='full_intrp', exclude=i_exclude)            
-                samples = hddm.generate.gen_rts(params, samples=self.samples, method='drift', dt=1e-4)
-                if max(abs(samples))<=self.range_[1]:
-                    ok = True                
-            cdf_single = create_wfpt_cdf(params, self.range_)
-            cdf_vec =lambda rts:[cdf_single(x) for x in rts]        
-            [D, p_value] = kstest(samples, cdf_vec)
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
 
     def test_simple_summed_logp(self):
         v = (rand()-.5)*1.5
@@ -109,9 +57,6 @@ class TestWfpt(unittest.TestCase):
         self.assertTrue(summed_logp == hddm.wfpt.wiener_like_simple(np.array(rts), v, a, z, t, 1e-4)), "Summed logp does not match"
 
         self.assertTrue(-np.Inf == hddm.wfpt.wiener_like_simple(np.array([1.,2.,3.,0.]), v, a, z, t+.1, 1e-4)), "wiener_like_simple should have returned -np.Inf"
-        
-            
-        
             
     def test_pdf_V(self):
         """Test if our wfpt pdf_V implementation yields the right results"""       
@@ -130,8 +75,6 @@ class TestWfpt(unittest.TestCase):
             np.testing.assert_array_almost_equal(hddm.wfpt_full.pdf_V(rt, v=v, V=V, a=a, z=z, err=err), res)
 
 class TestWfptFull(unittest.TestCase):
-
-
     def test_adaptive(self):
           
         for i in range(200):

@@ -17,13 +17,14 @@ except:
 
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
-
     
     print "checking estimation with %d confidence interval" % conf_interval
     fail = False
     nodes = sorted(model.stochastics, key=lambda x:x.__name__)
     nodes = filter(lambda x:x.shape == (), nodes)    
     for node in nodes:
+        if node.__name__ not in params_true:
+            continue # Skip non-existent params
         trace = node.trace()[:]
         est = np.mean(trace)
         name = node.__name__
@@ -41,7 +42,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
         (name, truth, est, lb_score, ub_score, fell)
         if (fell < lb) or (fell > ub):
             fail = True
-            print "the true value of %s is outsize of the confidence interval !*!*!*!*!*!*!" % name
+            print "the true value of %s is outside of the confidence interval !*!*!*!*!*!*!" % name
         
     if assert_:
         assert (fail==False)
@@ -50,7 +51,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     return ok
 
 def check_rejection(model, assert_ = True):    
-    """ check if the rejection ratio is not too high"""
+    """check if the rejection ratio is not too high"""
     
     for node in model.stochastics:
         name = node.__name__
@@ -66,57 +67,8 @@ def check_rejection(model, assert_ = True):
                 print msg
 
 
-def rand_params(model_type='simple', exclude = None):
-    if model_type=='simple':
-        return rand_simple_params(exclude)
-    elif model_type=='full_intrp':
-        return rand_full_params(exclude)
-    elif model_type=='simple_cont':
-        return rand_simple_cont_params(exclude)
-    
 
-def rand_simple_params(exclude = None):
-    if exclude is None:
-        exclude = []
-    params = {}
-    params['V'] = 0    
-    params['Z'] = 0
-    params['T'] = 0
-    params['v'] = (rand()-.5)*4
-    params['t'] = 0.2+rand()*0.3+(params['T']/2)
-    params['a'] = 1.0+rand()
-    if 'z' in exclude:
-        params['z'] = 0
-    else:
-        params['z'] = .4+rand()*0.2
-    return params
-
-def rand_full_params(exclude):
-    params = rand_simple_params(exclude)
-    if exclude is None:
-        exclude = []
-    if 'V' in exclude:
-        params['V'] = 0
-    else:
-        params['V'] = rand()
-    if 'Z' in exclude:
-        params['Z'] = 0
-    else:
-        params['Z'] = rand()* 0.3
-    if 'T' in exclude:                
-        params['T'] = 0
-    else:
-        params['T'] = rand()*0.2
-    return params
-
-def rand_simple_cont_params(exclude):
-    params = rand_simple_params(exclude)
-    params['pi'] = max(rand()*0.1,0.01)
-    params['gamma'] = rand()
-    return params
-
-
-def test_params_on_data(params, data, model_type='simple', exclude=None, depends_on = None, conf_interval = 95):    
+def test_params_on_data(params, data, include=(), depends_on = None, conf_interval = 95):    
     thin = 1
     samples = 10000
     burn = 10000
@@ -124,11 +76,10 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     stdout.flush()
     if depends_on is None:
         depends_on = {}
-    if 'cont' in model_type:
+    if 'pi' in include or 'gamma' in include:
         m_hddm = hddm.HDDMContaminant(data, no_bias=False, depends_on=depends_on)
     else:
-        m_hddm = hddm.HDDM(data, no_bias=False, model_type=model_type, 
-                            exclude=exclude, depends_on=depends_on)
+        m_hddm = hddm.HDDM(data, no_bias=False, include=include, depends_on=depends_on)
     nodes = m_hddm.create()
     model = pm.MCMC(nodes)    
     #[model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
@@ -153,17 +104,17 @@ def test_params_on_data(params, data, model_type='simple', exclude=None, depends
     stdout.flush()
     return ok, res
 
-def run_accuracy_test(nTimes=20, model_type='simple', exclude=None, stop_when_fail = True):
+def run_accuracy_test(nTimes=20, include=(), stop_when_fail = True):
     """ run accuracy test nTime times"""
     n_data = 300
     for i_time in range(nTimes):
-        params = rand_params(model_type, exclude)
+        params = hddm.generate.gen_rand_params(include)
         data,temp = hddm.generate.gen_rand_data(n_data, params)
         positive = sum(data['response'])
         print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
         print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
         % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
-        ok, res = test_params_on_data(params, data, model_type=model_type, exclude=exclude) 
+        ok, res = test_params_on_data(params, data, include=include) 
                                              
         if stop_when_fail and not ok:
             return res
@@ -180,8 +131,8 @@ def str_params(params):
     return s
 
 
-def gen_cond_data_and_params(n_data,  n_conds = 3, model_type = 'simple', exclude= None):
-    params = rand_params(model_type, exclude)
+def gen_cond_data_and_params(n_data,  n_conds = 3, include = ()):
+    params = hddm.generate.gen_rand_params(include)
     params_set = [None]*n_conds
     params_true = copy(params)
     all_v = np.linspace(min(0,params['v']/2) , max(params['v']*2, 3), n_conds)
@@ -199,8 +150,6 @@ def gen_cond_data_and_params(n_data,  n_conds = 3, model_type = 'simple', exclud
     print "used params: %s" % str_params(params_true)     
     stdout.flush()
     return cond_data, params_true
-
-
 
 def run_simple_test(nTimes=20, stop_when_fail = False):
     return run_accuracy_test(nTimes)
@@ -224,7 +173,7 @@ def check_correl(model):
     ok = not fail
     return ok
 
-def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
+def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
     burn = 10000
     thin = 1
     n_samples = 10000
@@ -235,7 +184,7 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
     all_wp = all_wp + [{'err': 1e-5, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-4}]
     all_wp = all_wp + [{'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}]   
 
-    initial_params = rand_params(model_type='full_intrp', exclude = exclude)
+    initial_params = hddm.generate.gen_rand_params(include=include)
     full_params = copy(initial_params)
     params_set = [None]*n_conds
     v_0 = rand()
@@ -264,8 +213,8 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
     for i_params in range(len(all_wp)):
         print "working on model %d" % i_params
         
-        model = hddm.model.HDDM(data, model_type='full_intrp', no_bias=False, wiener_params=all_wp[i_params], 
-                                exclude = exclude, depends_on  = {'v':['cond']})#, init_value=params)
+        model = hddm.model.HDDM(data, no_bias=False, wiener_params=all_wp[i_params], 
+                                include = include, depends_on  = {'v':['cond']})#, init_value=params)
         i_t = time()
         if use_db:
             dbname = 'speed.'+ str(clock()) + '.db'
@@ -301,3 +250,18 @@ def test_acc_full_intrp(exclude = None, n_conds = 6, use_db=False):
             mc.db.close()
 
     return i_res
+
+def check_geweke(model, assert_=True):
+    # Test for convergence using geweke method
+    for param in model.group_params.itervalues():
+        geweke = np.array(pm.geweke(param))
+        if assert_:
+            assert (np.any(np.abs(geweke[:,1]) < 2)), 'Chain of %s not properly converged'%param
+            return False
+        else:
+            if np.any(np.abs(geweke[:,1]) > 2):
+                print "Chain of %s not properly converged" % param
+                return False
+
+    return True
+

@@ -20,25 +20,26 @@ class Base(kabuki.Hierarchical):
     - parameter dependent on data (e.g. drift rate is dependent on stimulus
     """
     
-    def __init__(self, data, model_type=None, trace_subjs=True, no_bias=True, 
-                 init=False, exclude=None, wiener_params = None,
+    def __init__(self, data, trace_subjs=True, no_bias=True, 
+                 init=False, include=None, wiener_params = None,
                  init_values=None, **kwargs):
-        
-        self.no_bias = no_bias
-
-        if model_type is None:
-            self.model_type = 'simple'
-        else:
-            self.model_type = model_type
         
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
 
-        if exclude is None:
-            self.exclude = []
+        if include is None:
+            self.include = set()
         else:
-            self.exclude = exclude
+            if include == 'all':
+                self.include = set(['T','V','Z'])
+            else:
+                self.include = set(include)
 
+        self.no_bias = no_bias
+        
+        if not self.no_bias:
+            self.include.add('z')
+            
         if init:
             raise NotImplemented, "TODO"
             # Compute ranges based on EZ method
@@ -64,20 +65,18 @@ class Base(kabuki.Hierarchical):
         params = [Parameter('a',True, lower=.5, upper=4.5),
                   Parameter('v',True, lower=-10., upper=10.), 
                   Parameter('t',True, lower=.1, upper=2., init=.1)]
+
         if not self.no_bias:
             params.append(Parameter('z', True, lower=0., upper=1., init=.5))
-        if self.model_type == 'simple':
-            pass
-        elif self.model_type.startswith('full'):
-            if 'V' not in self.exclude:
-                params.append(Parameter('V',True, lower=0., upper=6.))
-            if 'Z' not in self.exclude:
-                params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
-            if 'T' not in self.exclude:
-                params.append(Parameter('T',True, lower=0., upper=1., init=.1))
-        else:
-            raise ValueError('Model %s was not recognized' % self.model_type)
-        
+
+        # Include inter-trial variability parameters
+        if 'V' in self.include:
+            params.append(Parameter('V',True, lower=0., upper=6.))
+        if 'Z' in self.include:
+            params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
+        if 'T' in self.include:
+            params.append(Parameter('T',True, lower=0., upper=2., init=.1))
+
         params.append(Parameter('wfpt', False)) # Append likelihood parameter
         return params
     
@@ -111,63 +110,45 @@ class Base(kabuki.Hierarchical):
     
     def get_rootless_child(self, param, params):
         if param.name.startswith('wfpt'):
-            if self.model_type == 'simple':
-                return self._get_simple(param.full_name, param.data, params)
-            elif self.model_type == 'full_intrp':
-                return self._get_full_intrp(param.full_name, param.data, params)
+            if self.wiener_params is not None:
+                wp = self.wiener_params
+                WienerFullIntrp = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'],
+                                                                                    use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
             else:
-                raise KeyError, "Model type %s not found." % self.model_type
+                WienerFullIntrp =  hddm.likelihoods.WienerFullIntrp
+            
+            return WienerFullIntrp(param.name,
+                                   value=param.data['rt'].flatten(),
+                                   v = params['v'],
+                                   a = params['a'],
+                                   z = self._get_node('z',params),
+                                   t = params['t'],
+                                   Z = self._get_node('Z',params),
+                                   T = self._get_node('T',params),
+                                   V = self._get_node('V',params),
+                                   observed=True)
+
         else:
             raise KeyError, "Rootless parameter named %s not found." % param.name
-        
-    def _get_simple(self, name, data, params):
-        return hddm.likelihoods.WienerSimple(name,
-                                             value=data['rt'].flatten(),
-                                             v=params['v'], 
-                                             a=params['a'], 
-                                             z=self._get_node('z',params),
-                                             t=params['t'], 
-                                             observed=True)
-
-    def _get_full_intrp(self, name, data, params):
-        if self.wiener_params is not None:
-            wp = self.wiener_params
-            WienerFullIntrp = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'],
-                                                               use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
-        else:
-            WienerFullIntrp =  hddm.likelihoods.WienerFullIntrp
-            
-        return WienerFullIntrp(name,
-                             value=data['rt'].flatten(),
-                             v = params['v'],
-                             a = params['a'],
-                             z = self._get_node('z',params),
-                             t = params['t'],
-                             Z = self._get_node('Z',params),
-                             T = self._get_node('T',params),
-                             V = self._get_node('V',params),
-                             observed=True)
 
     def _get_node(self, node_name, params):
-        if node_name in self.exclude:
-            return 0
+        if node_name in self.include:
+            return params[node_name]
         elif node_name=='z' and self.no_bias and 'z' not in params:
             return 0.5
         else:
-            return params[node_name]
-
-
+            return 0
 
 class HDDM(Base):
     pass
 
 class HDDMFullExtended(Base):
-    def get_param_names(self):
-        self.model_type = 'full_expanded'
+    def get_params(self):
+        self.include = ['V','Z','T']
         params = [Parameter('z_trls', False),
                   Parameter('v_trls', False),
                   Parameter('t_trls', False)]
-        params += list(super(self.__class__, self).get_param_names())
+        params += list(super(self.__class__, self).get_params())
 
         return params
 
@@ -175,19 +156,19 @@ class HDDMFullExtended(Base):
         trials = len(param.data)
 
         if param.name.startswith('z_trls'):
-            return hddm.likelihoods.CenterUniform(param.full_name,
-                                                  center=[params['z'] for i in range(trials)],
-                                                  width=[params['Z'] for i in range(trials)])
+            return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
+                                                   center=params['z'],
+                                                   width=params['Z']) for i in range(trials)]
 
         elif param.name.startswith('v_trls'):
-            return pm.Normal(param.full_name,
-                             mu=[params['v'] for i in range(trials)],
-                             tau=[params['V']**-2 for i in range(trials)])
+            return [pm.Normal(param.full_name+str(i),
+                              mu=params['v'],
+                              tau=params['V']**-2) for i in range(trials)]
 
         elif param.name.startswith('t_trls'):
-            return hddm.likelihoods.CenterUniform(param.full_name,
-                                                  center=[params['t'] for i in range(trials)],
-                                                  width=[params['T'] for i in range(trials)])
+            return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
+                                                   center=params['t'],
+                                                   width=params['T']) for i in range(trials)]
 
         elif param.name.startswith('wfpt'):
             return hddm.likelihoods.WienerSingleTrial(param.full_name,
@@ -256,16 +237,18 @@ class HLBA(Base):
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
-        self.params = (Parameter('a',True, lower=.5, upper=4.5),
-                       Parameter('v',True, lower=-10., upper=10.), 
-                       Parameter('z',True, lower=0., upper=1., init=.5), 
+        self.params = [Parameter('a',True, lower=.5, upper=4.5),
+                       Parameter('v',True, lower=-6., upper=6.), 
                        Parameter('t',True, lower=.1, upper=2., init=.1),
-                       Parameter('pi',True, lower=1e-4, upper=0.2),
+                       Parameter('pi',True, lower=1e-3, upper=0.2),
                        Parameter('gamma',True, lower=1e-4, upper=1-1e-4),
                        Parameter('x', False), 
                        Parameter('dummy_gamma',False),
                        Parameter('dummy_pi',False),
-                       Parameter('wfpt', False))
+                       Parameter('wfpt', False)]
+        if not self.no_bias:
+            self.params.append(Parameter('z',True, lower=0., upper=1., init=.5))
+            
         self.t_min = 0
         self.t_max = max(self.data['rt'])
 
@@ -278,18 +261,46 @@ class HDDMContaminant(Base):
                                                             v=params['v'],
                                                             t=params['t'],
                                                             a=params['a'],
-                                                            z=params['z'],
+                                                            z=self._get_node('z', params),
                                                             t_min=self.t_min,
                                                             t_max=self.t_max,
                                                             observed=True)
         elif param.name.startswith('x'):
-            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']))
+            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
         elif param.name.startswith('dummy_gamma'):
             return pm.Bernoulli(param.full_name, params['gamma'], value=[True,False], observed=True)
         elif param.name.startswith('dummy_pi'):
             return pm.Bernoulli(param.full_name, params['pi'], value=[True], observed=True)
         else:
-            raise KeyError, "Rootless child parameter %s not found" %name
+            raise KeyError, "Rootless child parameter %s not found" % param.name
+
+    def remove_outliers(self, cutoff=.5):
+        data_dep = self._get_data_depend()
+
+        data_out = []
+        cont = []
+        
+        # Find x param
+        for param in self.params:
+            if param.name == 'x':
+                break
+
+        for i, (data, params_dep, dep_name) in enumerate(data_dep):
+            dep_name = str(dep_name)
+            # Contaminant probability
+            print dep_name
+            for subj_idx, subj in enumerate(self._subjs):
+                data_subj = data[data['subj_idx'] == subj]
+                cont_prob = np.mean(param.child_nodes[dep_name][subj_idx].trace(), axis=0)
+            
+                no_cont = np.where(cont_prob < cutoff)[0]
+                cont.append(np.logical_not(no_cont))
+                data_out.append(data_subj[no_cont])
+
+        data_all = np.concatenate(data_out)
+        data_all['rt'] = np.abs(data_all['rt'])
+        
+        return data_all, np.concatenate(cont)
 
 class HDDMAntisaccade(Base):
     def __init__(self, data, no_bias=True, init=True, **kwargs):
@@ -301,7 +312,6 @@ class HDDMAntisaccade(Base):
         self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
                        Parameter('a', True, lower=1, upper=4, init=2),
-                       #Parameter('z', True, lower=0, upper=1, init=.5),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.05, upper=0.7, init=0.3),
                        Parameter('wfpt', False))
@@ -324,7 +334,7 @@ class HDDMAntisaccade(Base):
 
 
 class HDDMRegressor(Base):
-    def __init__(self, data, effects_on=None, **kwargs):
+    def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
         Arguments:
@@ -345,35 +355,35 @@ class HDDMRegressor(Base):
         model.mcmc()
         """
         if effects_on is None:
-            self.effects_on = {'a': ['theta']}
+            self.effects_on = {'a': 'theta'}
         else:
             self.effects_on = effects_on
 
+        self.use_root_for_effects = use_root_for_effects
+        
         super(self.__class__, self).__init__(data, **kwargs)
         
     def get_params(self):
         params = []
-        # if self.two_effect_model:
-        #     params.append(Parameter('e1', True, lower=-3., upper=3., init=0))
-        #     params.append(Parameter('e2', True, lower=-3., upper=3., init=0))
-        #     params.append(Parameter('e_inter', True, lower=-3., upper=3., init=0))
 
         # Add rootless nodes for effects
         for effect_on, col_names in self.effects_on.iteritems():
-
-
-            if type(col_names) is str:
-                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0))
+            if type(col_names) is str or (type(col_names) is list and len(col_names) == 1):
+                if type(col_names) is list:
+                    col_names = col_names[0]
+                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
+                params.append(Parameter('error_%s_%s'%(col_names, effect_on), True, lower=0., upper=10., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
-                                        False, 
+                                        False,
                                         vars={'col_name':col_names,
                                               'effect_on':effect_on,
                                               'e':'e_%s_%s'%(col_names, effect_on)}))
             elif len(col_names) == 2:
                 for col_name in col_names:
-                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0))
+                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
+                params.append(Parameter('error_%s_%s'%(col_names, effect_on), True, lower=0, upper=10., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
-                                        True, lower=-3., upper=3., init=0))
+                                        True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
                                         False,
                                         vars={'col_name0': col_names[0],
@@ -398,12 +408,13 @@ class HDDMRegressor(Base):
                     func = effect1_nozero
                 else:
                     func = effect1
-            
+
                 return pm.Deterministic(func, param.full_name, param.full_name,
                                         parents={'base': self._get_node(param.vars['effect_on'], params),
                                                  'e1': params[param.vars['e']],
                                                  'data': param.data[param.vars['col_name']]}, trace=False, plot=self.plot_subjs)
             else:
+                    
                 return pm.Deterministic(effect2, param.full_name, param.full_name,
                                         parents={'base': params[param.vars['effect_on']],
                                                  'e1': params[param.vars['e1']],
@@ -441,23 +452,23 @@ class HDDMRegressor(Base):
                                                      observed=True)
         return model
 
-def effect1(base, e1, data):
+def effect1(base, e1, error, data):
     """Effect distribution.
     """
-    return base + e1 * data
+    return base + e1 * data + error
 
-def effect1_nozero(base, e1, data):
+def effect1_nozero(base, e1, error, data):
     """Effect distribution where values <0 will be set to 0.
     """
-    value = base + e1 * data
+    value = base + e1 * data + error
     value[value < 0] = 0.
     value[value > .4] = .4
     return value
 
-def effect2(base, e1, e2, e_inter, data_e1, data_e2):
+def effect2(base, e1, e2, e_inter, error, data_e1, data_e2):
     """2-regressor effect distribution
     """
-    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter
+    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter + error
 
 if __name__ == "__main__":
     import doctest

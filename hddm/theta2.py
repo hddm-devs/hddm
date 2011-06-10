@@ -101,68 +101,102 @@ def load_intraop_data(continuous=True):
     
     return all_data
 
-def create_models_pd():
+def load_gene_data(exclude_missing=None, exclude_inst_stims=True):
+    import numpy.lib.recfunctions as rec
+    pos_stims = ('A', 'C', 'E')
+    neg_stims = ('B', 'D', 'F')
+    fname = 'Gene_tst1_RT.csv'
+    data = np.recfromcsv(fname)
+    data['subj_idx'] = data['subj_idx']-1 # Offset subj_idx to start at 0
+
+    data['rt'] = data['rt']/1000. # Time in seconds
+    # Remove outliers
+    data = data[data['rt'] > .25]
+
+    # Exclude subjects for which there is no particular gene.
+    if exclude_missing is not None:
+        if isinstance(exclude_missing, (tuple, list)):
+            for exclude in exclude_missing:
+                data = data[data[exclude] != '']
+        else:
+            data = data[data[exclude_missing] != '']
+
+    # Add convenience columns
+    # First stim and second stim
+    cond1 = np.empty(data.shape, dtype=np.dtype([('cond1','S1')]))
+    cond2 = np.empty(data.shape, dtype=np.dtype([('cond2','S1')]))
+    cond_class = np.empty(data.shape, dtype=np.dtype([('conf','S2')]))
+    contains_A = np.empty(data.shape, dtype=np.dtype([('contains_A',np.bool)]))
+    contains_B = np.empty(data.shape, dtype=np.dtype([('contains_B',np.bool)]))
+    include = np.empty(data.shape, dtype=np.bool)
+    
+    for i,cond in enumerate(data['cond']):
+        cond1[i] = cond[0]
+        cond2[i] = cond[1]
+        # Condition contains A or B, with AB trials excluded
+        contains_A[i] = (((cond[0] == 'A') or (cond[1] == 'A')) and not ((cond[0] == 'B') or (cond[1] == 'B')),)
+        contains_B[i] = (((cond[0] == 'B') or (cond[1] == 'B')) and not ((cond[0] == 'A') or (cond[1] == 'A')),)
+
+        if cond[0] in pos_stims and cond[1] in pos_stims:
+            cond_class[i] = 'WW'
+        elif cond[0] in neg_stims and cond[1] in neg_stims:
+            cond_class[i] = 'LL'
+        else:
+            cond_class[i] = 'WL'
+
+        # Exclude instructed stims
+        include[i] = cond.find(data['instructed1'][i])
+        
+    # Append rows to data
+    data = rec.append_fields(data, names=['cond1','cond2','conf', 'contains_A', 'contains_B'],
+                             data=(cond1,cond2,cond_class,contains_A,contains_B),
+                             dtypes=['S1','S1','S2','B1','B1'], usemask=False)
+
+    return data[include]
+
+def create_models_pd(path=None):
+    if path is None:
+        path = '.'
     # Load data
-    data_pd = np.recfromcsv('PD_PS.csv')
+    data_pd = np.recfromcsv(os.path.join(path,'PD_PS.csv'))
     data_dbs_off = data_pd[data_pd['dbs'] == 0]
     data_dbs_on = data_pd[data_pd['dbs'] == 1]
 
-    models = OrderedDict()
-    # Create PD models
-    for dbs in ['dbs', 'dbs_effect', 'dbs_inv', 'dbs_inv_effect']:
-        models['PD_stim_v_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'v':'stim', 'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
-        models['PD_%s'%dbs] = {'data': data_pd, effects_on:{'a':['theta',dbs]}, 'depends_on':{'e_theta_a':'conf', 'e_inter_theta_%s_a'%dbs:'conf'}}
-
-    models['dbs_off_PD_paper'] = {'data': data_dbs_off, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
-    models['dbs_on_PD_paper'] = {'data': data_dbs_on, effects_on:{'a':'theta'}, 'depends_on':{'v':['stim'], 'e_theta_a':['conf']}}
-
-    return models
-
-def create_models_nodbs(data, full=False):
     models = []
-    model_types = ['simple']
-    if full:
-        model_types.append('full')
-        
-    effects_on = ['a', 't']
-    vs_on = ['stim', 'conf']
-    e_thetas_on = [['stim'], ['conf'], ['stim','response'], ['conf','response']]
-    
-    for model_type in model_types:
-        for effect in effects_on:
-            for e_theta_on in e_thetas_on:
-                models.append({'data': data, 
-                               'effects_on': {effect: 'theta'},
-                               'depends_on': {'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
+    effect_on = 'a'
+    # Create PD models
+    #for effect_on in ['a','v','t']:
+    #for exclude in [['T'],['Z'],['V'], ['Z','T'], []]:
+    for exclude in [['Z']]:
+        for dbs in ['dbs', 'dbs_inv']:
+            models.append({'data': data_pd, 'effects_on': {effect_on:['theta',dbs]}, 'depends_on':{'v':'stim', 'e_%s_%s'%(dbs,effect_on):'conf', 'e_theta_%s'%effect_on:'conf', 'e_inter_theta_%s_%s'%(dbs,effect_on):'conf'}, 'use_root_for_effects':True, 'model_type':'full', 'exclude':exclude, 'name':'PD_%s_%s'%(dbs, effect_on)})
 
-                for v_on in vs_on:
-                    models.append({'data': data, 
-                                   'effects_on':{effect: 'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['stim']}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on, 'a':['conf']}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split']}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on + ['rt_split'], 'a':['rt_split']}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'}, 
-                                   'depends_on':{'v':vs_on, 'e_theta_'+effect:e_theta_on +['rt_split'], 'a':['stim', 'rt_split']}, 'model_type':model_type, exclude:['T']})
-                    models.append({'data': data, 
-                                   'effects_on':{effect:'theta'},
-                                   'depends_on':{'v':vs_on,'e_theta_'+effect:e_theta_on + ['response']}, 'model_type':model_type, exclude:['T']})
-
-    models.append({'data': data, 'depends_on':{'v':'stim', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'a':'theta_split'}, 'model_type':model_type, exclude:['T']})
-    models.append({'data': data, 'depends_on':{'v':'stim', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
-    models.append({'data': data, 'depends_on':{'v':'conf', 'z':'theta_split'}, 'model_type':model_type, exclude:['T']})
     return models
+
+def load_datasets(path=None):
+    # Load data
+    if path is None:
+        path = '.'
+    data_diss = load_csv_jim(os.path.join(path, 'DissData_P01.csv'))
+    data_sen =  load_csv_jim(os.path.join(path, 'DBSC_N15_P03.csv'))
+    data_easy = load_csv_jim(os.path.join(path, 'DBSC_N15_EASY.csv'))
+    data_pd = hddm.utils.load_csv(os.path.join(path, 'PD_PS.csv'))
+    data_pd = add_median_fields(data_pd)
+
+    data_pd_dbs_off = data_pd[data_pd['dbs'] == 0]
+    data_pd_dbs_on = data_pd[data_pd['dbs'] == 1]
+
+    data_combined = np.concatenate((data_diss, data_sen))
+    group_col = np.empty(data_combined.shape, dtype=[('group', np.int)])
+    group_col['group'][:len(data_diss)] = 0
+    group_col['group'][len(data_diss):] = 1
+    data_combined = rec.append_fields(data_combined, names=['group'],
+                                      data=[group_col], dtypes=[np.int], usemask=False)
+
+    datasets = [data_diss, data_sen, data_easy, data_pd_dbs_off, data_pd_dbs_on, data_combined]
+    names = ['data_diss', 'data_sen', 'data_easy', 'data_pd_dbs_off', 'data_pd_dbs_on', 'data_combined']
+    
+    return datasets, names
 
 def load_models(pd=False, full=False):
     if pd:
@@ -208,13 +242,27 @@ def add_median_fields(data):
     conf = np.array(data['conf'] == 'HC', dtype=np.float)
     conf_effect = np.empty(data.shape, dtype=[('conf_effect',np.float)])
     conf_effect['conf_effect'] = conf
-    
-    data = rec.append_fields(data, names=('theta_split','rt_split', 'rt_split_cor_inc', 'conf_effect'),
-                             data=(theta_median,rt_split,rt_split_cor_inc,conf_effect), dtypes=('S8', 'S8', 'S8', np.float), usemask=False)
+
+    LL = np.array(data['stim'] == 'LL', dtype=np.float)
+    LL_effect = np.empty(data.shape, dtype=[('LL_effect',np.float)])
+    LL_effect['LL_effect'] = LL
+
+    WW = np.array(data['stim'] == 'WW', dtype=np.float)
+    WW_effect = np.empty(data.shape, dtype=[('WW_effect',np.float)])
+    WW_effect['WW_effect'] = WW
+
+
+    data = rec.append_fields(data, names=('theta_split','rt_split', 'rt_split_cor_inc', 'conf_effect', 'LL_effect', 'WW_effect'),
+                             data=(theta_median,rt_split,rt_split_cor_inc,conf_effect, LL_effect, WW_effect), dtypes=('S8', 'S8', 'S8', np.float, np.float, np.float), usemask=False)
 
     return data
 
 def load_csv_jim(*args, **kwargs):
+    if kwargs.has_key('cutoff'):
+        cutoff = kwargs['cutoff']
+    else:
+        cutoff = .4
+        
     try:
         data = np.recfromtxt(*args, dtype=[('subj_idx', '<i8'), ('stim', 'S8'), ('rt', '<f8'), ('response', '<i8'), ('theta', '<f8'), ('conf', 'S8')], delimiter=',', skip_header=True)
     except TypeError:
@@ -230,9 +278,9 @@ def load_csv_jim(*args, **kwargs):
 
     data = add_median_fields(data)
 
-    return data[data['rt'] > .4]
+    return data[data['rt'] > cutoff]
 
-def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
+def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5, adaptive=False):
     for var in mc.variables:
         if var.__name__.endswith('tau'):
             # Change proposal SD
@@ -240,84 +288,97 @@ def set_proposals(mc, tau=.1, effect=.01, a=.5, v=.5):
         if var.__name__.startswith('e1') or var.__name__.startswith('e2') or var.__name__.startswith('e_inter'):
             # Change proposal SD
             mc.use_step_method(pm.Metropolis, var, proposal_sd = effect)
+            
         if var.__name__.startswith('a'):
             # Change proposal SD
             mc.use_step_method(pm.Metropolis, var, proposal_sd = a)
         if var.__name__.startswith('v'):
             # Change proposal SD
             mc.use_step_method(pm.Metropolis, var, proposal_sd = v)
+
     return
 
-def create_models_corr():
-    # Load data
-    data_diss = load_csv_jim('DissData_P01.csv')
-    data_sen =  load_csv_jim('DBSC_N15_P03.csv')
-    data_easy = load_csv_jim('DBSC_N15_EASY.csv')
-    data_pd = hddm.utils.load_csv('PD_PS.csv')
-    data_pd = add_median_fields(data_pd)
+def set_adaptive_for_effects(mc, sd=.5):
+    for name, child_nodes in mc._dict_container.iteritems():
+        if not name.startswith('e') or name.startswith('e_inst'):
+            continue
 
-    data_pd_dbs_off = data_pd[data_pd['dbs'] == 0]
-    data_pd_dbs_on = data_pd[data_pd['dbs'] == 1]
+        mc.use_step_method(pm.AdaptiveMetropolis, child_nodes)
 
-    datasets = [data_diss, data_sen, data_easy, data_pd_dbs_off, data_pd_dbs_on]
-    names = ['data_diss', 'data_sen', 'data_easy', 'data_pd_dbs_off', 'data_pd_dbs_on']
-    excludes = [['T'], ['Z'], ['T','Z'], []]
-    
+def create_combined(path=None):
+    datasets, names = load_datasets(path=path)
+
     models = []
-    
-    for dataset in datasets:
-        models.append({'data': dataset, 
-                       'effects_on':{'a': ['theta', 'conf_effect']},
-                       'depends_on':{'v': 'stim'}, 'exclude':['T','Z']})
+    for exclude in [['Z']]:
+        # COMBINED
+        models.append({'data': datasets[-1],
+                       'effects_on': {'a':['theta', 'conf_effect']},
+                       'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'T':'group', 'V':'group'},
+                       'use_root_for_effects':True, 
+                       'model_type':'full', 
+                       'exclude':exclude,
+                       'name':'combined_shared_inter'})
 
-    return models, names
+        # models.append({'data': datasets[-1],
+        #                'effects_on': {'a':'theta'}, 
+        #                'depends_on': {'v':['stim', 'group'], 'a':'group', 't':'group', 'e_theta_a':['conf', 'group'], 'T':'group', 'Z':'group'},
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name':'combined'})
 
+        # models.append({'data': datasets[-1],
+        #                'effects_on': {'a':'theta'},
+        #                'depends_on': {'v':['stim', 'group'], 'a':'group', 't':'group', 'e_theta_a':'conf', 'T':'group', 'Z':'group'},
+        #                'use_root_for_effects':True,
+        #                'model_type':'full',
+        #                'exclude':exclude,
+        #                'name':'combined_shared'})
 
-def run_model(params, name=None, load=False):
-    import kabuki
-    import sys
-    dbname = name+'.db'
+        models.append({'data': datasets[-1],
+                       'effects_on': {'a':['theta', 'conf_effect']}, 
+                       'depends_on': {'v':['stim','group'], 'a':'group', 't':'group', 'e_theta_a':'group', 'e_conf_effect_a':'group', 'e_inter_theta_conf_effect_a':'group', 'T':'group', 'V':'group'},
+                       'use_root_for_effects':True,
+                       'model_type':'full', 
+                       'exclude':exclude,
+                       'name':'combined_inter'})
 
-    if params.has_key('effects_on'):
-        mc = pm.MCMC(hddm.model.HDDMRegressor(**params).create(), db='pickle', dbname=dbname)
-    else:
-        mc = pm.MCMC(hddm.model.HDDM(**params).create(), db='pickle', dbname=dbname)
-    
-    if not load:
-        try:
-            os.remove(dbname)
-        except OSError:
-            pass
+        # DBS ON
+        # models.append({'data': datasets[-2], 
+        #                'effects_on': {'a':['theta', 'conf_effect']}, 
+        #                'depends_on': {'v':'stim'},
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name': 'dbs_on'})
 
-    mc.sample(30000, burn=25000)
-    mc.db.close()
-    print "*************************************\n"
-    kabuki.group.print_group_stats(mc.stats())
-    sys.stdout.flush()        
-    print "DIC: %f" % mc.dic
-    print "logp: %f" % mc.logp 
-    return mc
-    
-def run_correl():
-    models, names = create_models_corr()
-    results = {}
-    for model, name in zip(models,names):
-        results[name] = run_model(model, name=name)
-    
-    return results
-    
+        # DBS OFF
+        # models.append({'data': datasets[-3], 
+        #                'effects_on': {'a':['theta', 'conf_effect']}, 
+        #                'depends_on': {'v':'stim'}, 
+        #                'use_root_for_effects':True, 
+        #                'model_type':'full', 
+        #                'exclude':exclude,
+        #                'name': 'dbs_off'})
+                  
+    return models
+
 if __name__=='__main__':
     import sys
     from mpi4py import MPI
+    import kabuki
     rank = MPI.COMM_WORLD.Get_rank()
     if rank == 0:
-        models = create_models_corr()
+        models = create_combined(path='/home/wiecki/working/projects/hddm_data/data')
+        #models = create_combined(path='/users/wiecki/data')
         results = hddm.mpi.controller(models)
         print results
         for model,result in zip(models, results):
             print "****************************************\n"
-            print model
+            del model['data']
             kabuki.group.print_group_stats(result)
+            sys.stdout.flush()
+
         #for name, model in results.iteritems():
         #    
     else:

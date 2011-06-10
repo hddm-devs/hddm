@@ -261,15 +261,16 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_switch(self):
-        switch_pdf = lambda x: hddm.wfpt_switch.switch_pdf(x,
-                                                           self.ddm.v,
-                                                           self.ddm.v_switch,
-                                                           self.ddm.a,
-                                                           self.ddm.z,
-                                                           self.ddm.ter,
-                                                           self.ddm.t_switch,
-                                                           1e-4)
-        pdf = np.array(map(switch_pdf, self.x_analytical))
+        switch_pdf = lambda x: hddm.wfpt_switch.wiener_like_antisaccade(np.asarray([x]),
+                                                                        np.array([1]),
+                                                                        self.ddm.v,
+                                                                        self.ddm.v_switch,
+                                                                        self.ddm.a,
+                                                                        self.ddm.z,
+                                                                        self.ddm.ter,
+                                                                        self.ddm.t_switch,
+                                                                        1e-4)
+        pdf = np.exp(np.array(map(switch_pdf, self.x_analytical)))
         return pdf
     
     @timer
@@ -404,7 +405,6 @@ class DDMPlot(HasTraits):
             t = np.linspace(0.0, 5., 5./1e-4)
             drifts = self.ddm.drifts
             for drift in drifts:
-                print drift
                 self.figure.axes[1].plot(t[:len(drift)],
                                          drift, 'b', alpha=.5)
     

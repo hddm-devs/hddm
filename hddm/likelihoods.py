@@ -33,16 +33,6 @@ WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion 
                                        mv=True)
 
 
-#def wiener_like_full_contaminant(value, cont_x, gamma, v, V, a, z, Z, t, T, err=.0001):
-#    """Log-likelihood for the DDM with collapsed contaminants"""
-#    return hddm.wfpt.wiener_like_full_collCont(value, cont_x, gamma, v, V, a, z, Z, t, T, 0, 7, err)
-#
-#WienerFullContaminant = pm.stochastic_from_dist(name="Wiener CollCont Diffusion Process",
-#                                       logp=wiener_like_full_contaminant,
-#                                       dtype=np.float,
-#                                       mv=True)
-
-
 def wiener_like_simple_multi(value, v, a, z, t, multi=None):
     """Log-likelihood for the simple DDM"""
     return hddm.wfpt.wiener_like_simple_multi(value, v, a, z, t, .001, multi=multi)
@@ -59,20 +49,6 @@ WienerFullMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process"
                                           logp=wiener_like_full_multi,
                                           dtype=np.float)
 
-@pm.randomwrap
-def wiener_full(v, z, t, a, V, Z, T, size=None):
-    return hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}, samples=size)
-
-def wiener_like_full_mc(value, v, V, z, Z, t, T, a):
-    """Log-likelihood for the full DDM using the sampling method"""
-    return np.sum(hddm.wfpt_full.wiener_like_full_mc(value, v, V, z, Z, t, T, a, err=.0001, reps=10, logp=1))
- 
-WienerFullMc = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                       logp=wiener_like_full_mc,
-                                       random=wiener_full,
-                                       dtype=np.float,
-                                       mv=True)
-
 def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):
     """Log-likelihood for the full DDM using the interpolation method"""
     return hddm.wfpt_full.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
@@ -86,26 +62,21 @@ def general_WienerFullIntrp_variable(err=1e-5, nT=5, nZ=5, use_adaptive=1, simps
     _like.__doc__ = wiener_like_full_intrp.__doc__
     return pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=_like,
-                                       random=wiener_full,
                                        dtype=np.float,
-                                       mv=True)
+                                       mv=False)
  
 WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=wiener_like_full_intrp,
-                                       random=wiener_full,
                                        dtype=np.float,
-                                       mv=True)
-
-
+                                       mv=False)
 
 def wiener_like_single_trial(value, v, a, z, t):
     """Log-likelihood of the DDM for one RT point."""
-    prob = hddm.wfpt.wiener_like_full(value, np.asarray(v), np.asarray(a), np.asarray(z), np.asarray(t), err=0.001)
+    prob = hddm.wfpt_full.wiener_like_full(value, np.asarray(v), np.asarray(a), np.asarray(z), np.asarray(t), err=1e-4)
     return prob
 
 WienerSingleTrial = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                             logp=wiener_like_single_trial,
-                                            random=wiener_simple,
                                             dtype=np.float,
                                             mv=True)
 
@@ -131,7 +102,7 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, a, z, t, t_switch, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt_switch.wiener_like_antisaccade(value, instruct, v, v_switch, a, z, t, t_switch, err)
+    return hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, a, z, t, t_switch, err)
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                             logp=wiener_like_antisaccade,
@@ -231,13 +202,27 @@ Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 
 """)
 
 class wfpt_gen(stats.distributions.rv_continuous):
-    def _pdf(self, x, v, a, z, t):
-        return hddm.wfpt.pdf(x, v, a, z, t, err=.0001)
-    
-    def _rvs(self, v, a, z, t):
-        return gen_ddm_rts(v=v, z=z, t=t, a=a, Z=0, V=0, T=0, size=self._size)
+    sampling_method = 'cdf'
+    dt = 1e-4
+    def _argcheck(self, *args):
+        return True
 
-wfpt = wfpt_gen(a=0, b=5, name='wfpt', longname="""Wiener likelihood function""", extradoc="""Wfpt likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+    def _pdf(self, x, v, V, a, z, Z, t, T):
+        if np.isscalar(x):
+            out = hddm.wfpt_full.full_pdf(x, v, V, a, z, Z, t, T, self.dt)
+        else:
+            out = np.empty_like(x)
+            for i in xrange(len(x)):
+                out[i] = hddm.wfpt_full.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
+        
+        return out
+
+    def _rvs(self, v, V, a, z, Z, t, T):
+        param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}
+        sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
+        return sampled_rts
+
+wfpt = wfpt_gen(name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
 Parameters:
 ***********
@@ -251,3 +236,41 @@ References:
 Fast and accurate calculations for first-passage times in Wiener diffusion models
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
+
+class wfpt_switch_gen(stats.distributions.rv_continuous):
+    def _argcheck(self, *args):
+        return True
+
+    def _pdf(self, x, v, v_switch, a, z, t, t_switch):
+        if np.isscalar(x):
+            out = hddm.wfpt_switch.switch_pdf(x, v, v_switch, a, z, t, t_switch, 1e-4)
+        else:
+            out = np.empty_like(x)
+            for i in xrange(len(x)):
+                out[i] = hddm.wfpt_switch.switch_pdf(x[i], v[i], v_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
+                
+        return out
+
+    def _rvs(self, v, v_switch, a, z, t, t_switch):
+        all_rts_generated=False
+        while(not all_rts_generated):
+            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':0}, samples_anti=self._size, samples_pro=0)[0]
+            if (len(out) == self._size):
+                all_rts_generated=True
+        return hddm.utils.flip_errors(out)['rt']
+
+wfpt_switch = wfpt_switch_gen(name='wfpt switch', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+
+Parameters:
+***********
+v: drift-rate
+a: threshold
+z: bias [0,1]
+t: non-decision time
+
+References:
+***********
+Fast and accurate calculations for first-passage times in Wiener diffusion models
+Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
+""")
+
