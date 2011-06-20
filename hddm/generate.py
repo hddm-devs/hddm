@@ -152,10 +152,11 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         else:
             drift_rate = v
 
-        if params.has_key('V_switch') and params['V_switch'] != 0:
-            drift_rate_switch = norm.rvs(v_switch, params['V_switch'])
-        else:
-            drift_rate_switch = v_switch
+        if params.has_key('v_switch'):
+            if params.has_key('V_switch') and params['V_switch'] != 0:
+                drift_rate_switch = norm.rvs(params['v_switch'], params['V_switch'])
+            else:
+                drift_rate_switch = params['v_switch']
 
         prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
 

@@ -86,13 +86,14 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'intra_sv', 'urgency', 'steps', 'num_samples', 'iter_plot', 'switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'num_samples', 'iter_plot', 'switch')
 
     def _get_params_dict(self):
         d = {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
         if self.switch:
             d['v_switch'] = self.v_switch
             d['t_switch'] = self.t_switch
+            d['V_switch'] = self.sv
         return d
 
     @cached_property
@@ -129,21 +130,19 @@ class DDMPlot(HasTraits):
     ddm = Instance(DDM, ())
     plot_histogram = Bool(True)
     plot_simple = Bool(False)
-    plot_full_mc = Bool(False)
-    plot_full_interp = Bool(False)
+    plot_wiener = Bool(False)
     plot_lba = Bool(False)
     plot_drifts = Bool(True)
-    plot_data = Bool(False)
-    plot_density = Bool(False)
+    #plot_data = Bool(False)
+    #plot_density = Bool(False)
     plot_true_density = Bool(False)
-    plot_density_dist = Bool(False)
+    #plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
     plot_switch = Bool(True)
     
     x_analytical = Property(Array)
     
-    full_mc = Property(Array)
-    full_intrp = Property(Array)
+    wiener = Property(Array)
     simple = Property(Array)
     lba = Property(Array)
     switch = Property(Array)
@@ -160,13 +159,11 @@ class DDMPlot(HasTraits):
 		Item('ddm'),
                 Item('plot_histogram'),
                 Item('plot_drifts'),
-                Item('plot_simple'),
-                Item('plot_full_mc'),
-                Item('plot_full_interp'),
+                Item('plot_wiener'),
                 Item('plot_lba'),
-                Item('plot_data'),
-                Item('plot_density'),
-                Item('plot_true_density'),
+                #Item('plot_data'),
+                #Item('plot_density'),
+                #Item('plot_true_density'),
 #                Item('plot_density_dist'),
                 Item('plot_switch'),
 		Item('go'),
@@ -240,53 +237,22 @@ class DDMPlot(HasTraits):
         return np.linspace(-self.ddm.T, self.ddm.T, self.x_raster)
 
     @timer
-    def _get_full_mc(self):
-        return hddm.wfpt.wiener_like_full_mc(x=self.x_analytical,
-                                             v=self.ddm.v,
-                                             V=self.ddm.sv,
-                                             z=self.ddm.z,
-                                             Z=self.ddm.sz,
-                                             t=self.ddm.ter,
-                                             T=self.ddm.ster,
-                                             a=self.ddm.a, err=1e-4, reps=100)
-
-    @timer
-    def _get_simple(self):
-        pdf = hddm.wfpt.pdf_array(self.x_analytical,
-                                  self.ddm.v,
-                                  self.ddm.a,
-                                  self.ddm.z,
-                                  self.ddm.ter, 1e-4)
-        return pdf
-
-    @timer
     def _get_switch(self):
-        switch_pdf = lambda x: hddm.wfpt_switch.wiener_like_antisaccade(np.asarray([x]),
-                                                                        np.array([1]),
-                                                                        self.ddm.v,
-                                                                        self.ddm.v_switch,
-                                                                        self.ddm.a,
-                                                                        self.ddm.z,
-                                                                        self.ddm.ter,
-                                                                        self.ddm.t_switch,
-                                                                        1e-4)
-        pdf = np.exp(np.array(map(switch_pdf, self.x_analytical)))
+        pdf = hddm.likelihoods.wfpt_switch.pdf(self.x_analytical,
+                                               self.ddm.v,
+                                               self.ddm.v_switch,
+                                               self.ddm.sv,
+                                               self.ddm.a, self.ddm.z,
+                                               self.ddm.ter,
+                                               self.ddm.t_switch)
         return pdf
     
     @timer
-    def _get_full_intrp(self):
-        full_pdf = lambda x: hddm.wfpt_full.full_pdf(x,
-                                                     v=self.ddm.v,
-                                                     V=self.ddm.sv,
-                                                     a=self.ddm.a,
-                                                     z=self.ddm.z,
-                                                     Z=self.ddm.sz,
-                                                     t=self.ddm.ter,
-                                                     T=self.ddm.ster,
-                                                     err=1e-4)
-
-        pdf = np.array(map(full_pdf, self.x_analytical))
-        
+    def _get_wiener(self):
+        pdf = hddm.likelihoods.wfpt.pdf(self.x_analytical, self.ddm.v,
+                                        self.ddm.sv, self.ddm.a,
+                                        self.ddm.z, self.ddm.sz,
+                                        self.ddm.ter, self.ddm.ster)
         return pdf
 
 
@@ -339,17 +305,9 @@ class DDMPlot(HasTraits):
             self.plot_histo(x, self.ddm.histo, color='b', max_perc=.99)
 
         # Plot normalized histograms of empirical data
-        if self.plot_data:
-            histo = hddm.utils.histogram(self.data, bins=2*self.ddm.bins, range=(-self.ddm.T, self.ddm.T), dens=True)[0]
-            self.plot_histo(x, histo, color='y')
-
-        # Plot analyitical full averaged likelihood function
-        if self.plot_full_mc:
-            self.plot_histo(x_anal, self.full_mc, color='r')
-
-        # Plot analytical simple likelihood function
-        if self.plot_simple:
-            self.plot_histo(x_anal, self.simple, color='g')
+        #if self.plot_data:
+        #    histo = hddm.utils.histogram(self.data, bins=2*self.ddm.bins, range=(-self.ddm.T, self.ddm.T), dens=True)[0]
+        #    self.plot_histo(x, histo, color='y')
 
         # Plot analytical simple likelihood function
         if self.plot_switch and self.ddm.switch:
@@ -358,27 +316,8 @@ class DDMPlot(HasTraits):
         if self.plot_lba:
             self.plot_histo(x_anal, self.lba, color='k')
 
-        if self.plot_full_interp:
-            self.plot_histo(x_anal, self.full_intrp, color='y')
-
-        if self.plot_density_dist:
-            t = np.linspace(0.0, self.ddm.T, self.x_raster)
-            dens_upper = sp.stats.norm.pdf(self.ddm.a, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
-            dens_lower = sp.stats.norm.pdf(0., loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.a*self.ddm.z)), scale=((t-self.ddm.ter)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
-            self.plot_histo(t, np.concatenate((dens_lower[::-1], dens_upper)), color='k')
-                
-        if self.plot_density:
-            t = np.linspace(0.0, self.ddm.T, self.x_raster)
-            x,y = np.meshgrid(t, np.linspace(0, self.ddm.a, 100))
-            # Compute normal density
-            t_rel = (t-self.ddm.ter)
-            t_rel[t_rel<0] = 0 # Set t smaller than ter to 0
-            dens = sp.stats.norm.pdf(y, loc=((t-self.ddm.ter)*self.ddm.v+(self.ddm.z*self.ddm.a)), scale=(np.sqrt(t_rel)*self.ddm.intra_sv + self.ddm.sz)**self.ddm.urgency)
-            ## Normalize density
-            dens_max = np.max(dens, axis=0)
-            dens_max[dens_max == 0] = 1.
-            dens_norm = dens / dens_max
-            self.figure.axes[1].contourf(x,y,dens_norm)
+        if self.plot_wiener:
+            self.plot_histo(x_anal, self.wiener, color='y')
 
         if self.plot_true_density:
             t = np.linspace(0.0, self.ddm.T, self.x_raster)
@@ -394,11 +333,6 @@ class DDMPlot(HasTraits):
                     else:
                         zm[i,j] = hddm.wfpt_switch.drift_dens(y, x-self.ddm.ter, self.ddm.v, self.ddm.a, self.ddm.z*self.ddm.a)
                     j+=1
-                i+=1
-            #dens_max = np.max(zm, axis=0)
-            #dens_max[dens_max == 0] = 1.
-            #dens_norm = zm/dens_max
-            #plt.plot(zm[:,70])
             self.figure.axes[1].contourf(xm,ym,zm)
 
         if self.plot_drifts:

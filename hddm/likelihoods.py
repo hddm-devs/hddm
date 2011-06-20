@@ -243,11 +243,14 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
 
     def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch):
         if np.isscalar(x):
-            out = hddm.wfpt_switch.switch_pdf(x, v, v_switch, V_switch, a, z, t, t_switch, 1e-4)
+            out = hddm.wfpt_switch.pdf_switch(x, v, v_switch, V_switch, a, z, t, t_switch, 1e-4)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = hddm.wfpt_switch.switch_pdf(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
+                if np.abs(x[i]) <= t[i] + t_switch[i]:
+                    out[i] = hddm.wfpt.pdf_sign(x[i], v[i], a[i], z[i], t[i], 1e-4)
+                else:
+                    out[i] = hddm.wfpt_switch.pdf_switch(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
                 
         return out
 

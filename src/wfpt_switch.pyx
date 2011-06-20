@@ -35,12 +35,13 @@ cdef double wfpt_gsl(double x, void * params):
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
     v_switch = (<double_ptr> params)[2]
-    a = (<double_ptr> params)[3]
-    z = (<double_ptr> params)[4]
-    t = (<double_ptr> params)[5]
-    t_switch = (<double_ptr> params)[6]
+    V_switch = (<double_ptr> params)[3]
+    a = (<double_ptr> params)[4]
+    z = (<double_ptr> params)[5]
+    t = (<double_ptr> params)[6]
+    t_switch = (<double_ptr> params)[7]
     
-    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens(x*a, t_switch, v, a, z*a) * a
+    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens(x*a, t_switch, v, a, z*a) * a
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
@@ -54,20 +55,21 @@ cdef double calc_drift_dens(double x, double t, double v, double a, double z):
 
     return exp(v*(x-z)) * summed
     
-cpdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
     cdef gsl_function F
-    cdef double params[7]
+    cdef double params[8]
     cdef size_t neval
     params[0] = rt
     params[1] = v
     params[2] = v_switch
-    params[3] = a
-    params[4] = z
-    params[5] = t
-    params[6] = t_switch
+    params[3] = V_switch
+    params[4] = a
+    params[5] = z
+    params[6] = t
+    params[7] = t_switch
 
     F.function = &wfpt_gsl
     F.params = params
@@ -79,7 +81,7 @@ cpdef double pdf_Z_norm_sign(double rt, double v, double v_switch, double a, dou
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -89,7 +91,7 @@ def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct,
         if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch antisaccade
             p = pdf_sign(rt[i], v, a, z, t, err)
         else: # post-switch Antisaccade
-            p = pdf_Z_norm_sign(rt[i], v, v_switch, a, z, t, t_switch, err)
+            p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, err)
         if p == 0:
             return -infinity
         sum_logp += log(p)

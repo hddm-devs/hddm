@@ -631,7 +631,6 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
     trace_len = len(traces['a'])
     p = np.zeros(len(x), dtype=np.float)
 
-<<<<<<< HEAD
     # Add default traces if needed parameter is excluded.
     if not traces.has_key('V'):
         traces['V'] = np.zeros(trace_len)
