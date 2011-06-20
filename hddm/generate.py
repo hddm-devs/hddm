@@ -43,6 +43,7 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
     if params is None:
         params = {'v':-2.,
                   'v_switch': 2.,
+                  'V_switch': .1,
                   'a': 2.5,
                   't': .3,
                   't_switch': .3,
@@ -116,6 +117,7 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         switch = True
         v_switch = params['v_switch']
         t_switch = params['t_switch']/dt
+        V_switch = params['V_switch']
         # Hack so that we will always step into a switch
         nn = int(round(t_switch))
     else:
@@ -150,13 +152,18 @@ def gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         else:
             drift_rate = v
 
+        if params.has_key('V_switch') and params['V_switch'] != 0:
+            drift_rate_switch = norm.rvs(v_switch, params['V_switch'])
+        else:
+            drift_rate_switch = v_switch
+
         prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*drift_rate)
 
         while (not crossed):
             # Generate nn steps
             iter += 1
             if iter == 2 and switch:
-                prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*v_switch)
+                prob_up = 0.5*(1+np.sqrt(dt)/intra_sv*drift_rate_switch)
             position = ((rand(nn) < prob_up)*2 - 1) * step_size
             position[0] += y_0
             position = np.cumsum(position)

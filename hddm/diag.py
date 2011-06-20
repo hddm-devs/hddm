@@ -9,6 +9,7 @@ from sys import stdout
 import hddm
 from scipy.stats import scoreatpercentile
 from time import time
+from operator import attrgetter
 
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
@@ -20,8 +21,8 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     
     print "checking estimation with %d confidence interval" % conf_interval
     fail = False
-    nodes = sorted(model.stochastics, key=lambda x:x.__name__)
-    nodes = filter(lambda x:x.shape == (), nodes)    
+    nodes = sorted(model.stochastics, key=attrgetter('__name__'))
+    nodes = filter(lambda x:x.shape == (), nodes)
     for node in nodes:
         if node.__name__ not in params_true:
             continue # Skip non-existent params

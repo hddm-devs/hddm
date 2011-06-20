@@ -21,6 +21,7 @@ cimport cython
 include "gsl/gsl.pxi"
 include "wfpt.pyx"
 
+
 ctypedef double * double_ptr
 ctypedef void * void_ptr
 
@@ -95,8 +96,11 @@ def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct,
 
     return sum_logp
 
+####################################################################
+# Functions to compute antisaccade likelihood with precomputing the
+# drift density
 
-# Global variable for density
+# Global variables for density and interpolation
 cdef double *drift_density
 cdef double *eval_dens
 cdef gsl_interp_accel *acc 
@@ -104,7 +108,7 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double a, double z, double t, double t_switch, double err, int evals=20):
+def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err, int evals=20):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -133,7 +137,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray i
         if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch
             p = pdf_sign(rt[i], v, a, z, t, err)
         else: # post-switch antisaccade
-            p = pdf_switch_precomp(rt[i], v, v_switch, a, z, t, t_switch, err)
+            p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, err)
         if p == 0:
             return -infinity
         sum_logp += log(p)
@@ -143,20 +147,21 @@ def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray i
     
     return sum_logp
 
-cdef double pdf_switch_precomp(double rt, double v, double v_switch, double a, double z, double t, double t_switch, double err):
+cdef double pdf_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
     cdef gsl_function F
-    cdef double params[7]
+    cdef double params[8]
     cdef size_t neval
     params[0] = rt
     params[1] = v
     params[2] = v_switch
-    params[3] = a
-    params[4] = z
-    params[5] = t
-    params[6] = t_switch
+    params[3] = V_switch
+    params[4] = a
+    params[5] = z
+    params[6] = t
+    params[7] = t_switch
 
     F.function = &wfpt_gsl_precomp
     F.params = params
@@ -167,17 +172,18 @@ cdef double pdf_switch_precomp(double rt, double v, double v_switch, double a, d
     return result
 
 cdef double wfpt_gsl_precomp(double x, void * params):
-    cdef double rt, v, v_switch, a, z, t, t_switch, f
+    cdef double rt, v, v_switch, V_switch, a, z, t, t_switch, f
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
     v_switch = (<double_ptr> params)[2]
-    a = (<double_ptr> params)[3]
-    z = (<double_ptr> params)[4]
-    t = (<double_ptr> params)[5]
-    t_switch = (<double_ptr> params)[6]
+    V_switch = (<double_ptr> params)[3]
+    a = (<double_ptr> params)[4]
+    z = (<double_ptr> params)[5]
+    t = (<double_ptr> params)[6]
+    t_switch = (<double_ptr> params)[7]
 
-    global drift_density, eval_dens, acc, spline
+    global acc, spline
 
-    f = pdf_sign(rt, v_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc) * a
+    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc) * a
 
     return f

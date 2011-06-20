@@ -100,9 +100,9 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
                                         mv=True)
 
 
-def wiener_like_antisaccade(value, instruct, v, v_switch, a, z, t, t_switch, err=1e-4):
+def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, a, z, t, t_switch, err)
+    return hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, err)
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                             logp=wiener_like_antisaccade,
@@ -241,20 +241,20 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _pdf(self, x, v, v_switch, a, z, t, t_switch):
+    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch):
         if np.isscalar(x):
-            out = hddm.wfpt_switch.switch_pdf(x, v, v_switch, a, z, t, t_switch, 1e-4)
+            out = hddm.wfpt_switch.switch_pdf(x, v, v_switch, V_switch, a, z, t, t_switch, 1e-4)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = hddm.wfpt_switch.switch_pdf(x[i], v[i], v_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
+                out[i] = hddm.wfpt_switch.switch_pdf(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
                 
         return out
 
-    def _rvs(self, v, v_switch, a, z, t, t_switch):
+    def _rvs(self, v, v_switch, V_switch, a, z, t, t_switch):
         all_rts_generated=False
         while(not all_rts_generated):
-            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':0}, samples_anti=self._size, samples_pro=0)[0]
+            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 'V_switch':V_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':0}, samples_anti=self._size, samples_pro=0)[0]
             if (len(out) == self._size):
                 all_rts_generated=True
         return hddm.utils.flip_errors(out)['rt']

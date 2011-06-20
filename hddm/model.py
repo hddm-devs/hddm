@@ -41,7 +41,7 @@ class Base(kabuki.Hierarchical):
             self.include.add('z')
             
         if init:
-            raise NotImplemented, "TODO"
+            raise NotImplementedError, "TODO"
             # Compute ranges based on EZ method
             param_ranges = hddm.utils.EZ_param_ranges(self.data)
             # Overwrite set parameters
@@ -50,7 +50,7 @@ class Base(kabuki.Hierarchical):
             self.init_params = hddm.utils.EZ_subjs(self.data)
         
         if init_values is not None:
-            raise NotImplemented, "TODO"
+            raise NotImplementedError, "TODO"
 
         if wiener_params == None:
             self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}
@@ -311,6 +311,7 @@ class HDDMAntisaccade(Base):
 
         self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
+                       Parameter('V_switch', True, lower=0, upper=2., init=.1),
                        Parameter('a', True, lower=1, upper=4, init=2),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.05, upper=0.7, init=0.3),
@@ -323,6 +324,7 @@ class HDDMAntisaccade(Base):
                                                       instruct=param.data['instruct'],
                                                       v=params['v'],
                                                       v_switch=params['v_switch'],
+                                                      V_switch=params['V_switch'],
                                                       a=params['a'],
                                                       z=.5,
                                                       t=params['t'],

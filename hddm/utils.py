@@ -26,13 +26,6 @@ def flip_errors(data):
     
     return data
 
-def effect(base, effects):
-    first_order = np.sum(effects)
-
-def return_fixed(value=.5):
-    return value
-
-
 def set_proposal_sd(mc, tau=.1):
     for var in mc.variables:
         if var.__name__.endswith('tau'):
@@ -201,7 +194,6 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
             return n/(n*db).sum(), bins
         else:
             return n, bins
-
 
 def difference_prior(delta):
     # See Wagenmakers et al 2010, equation 14
@@ -616,48 +608,50 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred(traces, x=None, interval=10):
-    trace_len = len(traces['a'])
-    
+def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
+    """Calculate posterior predictive probability density function.
+
+    Input:
+    ======
+
+    traces<dict>: a dictionary of traces (e.g. MCMC._dict_container).
+    pdf<func>: A pdf to generate the posterior predictive from [default=wfpt].
+    args<tuple>: Tuple of arguments to be supplied to the pdf [default=('v', 'V', 'a','z','Z', 't','T')].
+    """
+    if pdf is None:
+        pdf = wfpt.likelihoods.wfpt.pdf
+        args = ('v', 'V', 'a','z','Z', 't','T')
+        
     if x is None:
         x = np.arange(-5,5,0.01)
 
     if not traces.has_key('z'):
         traces['z'] = np.ones(trace_len)*.5
 
+    trace_len = len(traces['a'])
     p = np.zeros(len(x), dtype=np.float)
 
-    if traces.has_key('V') or traces.has_key('T') or traces.has_key('Z'):
-        full_model = True
-        # Add zero traces if parameter is excluded.
-        if not traces.has_key('V'):
-            traces['V'] = np.zeros(trace_len)
-        if not traces.has_key('T'):
-            traces['T'] = np.zeros(trace_len)
-        if not traces.has_key('Z'):
-            traces['Z'] = np.zeros(trace_len)
-    else:
-        full_model = False
+    # Add default traces if needed parameter is excluded.
+    if not traces.has_key('V'):
+        traces['V'] = np.zeros(trace_len)
+    if not traces.has_key('T'):
+        traces['T'] = np.zeros(trace_len)
+    if not traces.has_key('Z'):
+        traces['Z'] = np.zeros(trace_len)
+    if not traces.has_key('z'):
+        traces['z'] = np.ones(trace_len)*.5
+
     samples = 0
     for i in np.arange(0, trace_len, interval):
         samples += 1
-        if full_model:
-            pdf_full = lambda x: hddm.wfpt_full.full_pdf(x,
-                                                         v=traces['v'][i],
-                                                         V=traces['V'][i],
-                                                         a=traces['a'][i],
-                                                         z=traces['z'][i],
-                                                         Z=traces['Z'][i],
-                                                         t=traces['t'][i],
-                                                         T=traces['T'][i],
-                                                         err=1e-4)
-
-            p[:] += map(pdf_full, x)
+        valued_args = []
+        # Construct arguments to be passed to pdf
+        for arg in args:
+            valued_args.append(traces[arg][i])
+        pdf_full = lambda x: pdf(x, *valued_args)
+        
+        p[:] += map(pdf_full, x)
             
-        else:
-            # Simple model
-            p[:] += hddm.wfpt.pdf_array(x, traces['v'][i], traces['a'][i], traces['z'][i], traces['t'][i], 1e-4)
-
     return p/samples
     
 def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
