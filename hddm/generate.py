@@ -209,7 +209,9 @@ def gen_rts_from_cdf(params, samples=1000):
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
        
 def add_contaminate_data(data, params):
-    t_max = max(data['rt'])+1.5;
+    """ add contaminated data """
+    t_min = max(np.abs(data['rt']))+0.5
+    t_max = t_min+3;
     pi = params['pi']
     gamma = params['gamma']
     n_cont = int(len(data)*pi)
@@ -219,8 +221,18 @@ def add_contaminate_data(data, params):
     cont_idx = random.sample(l_data,n_cont)
     unif_idx = cont_idx[:n_unif]
     other_idx = cont_idx[n_unif:]
-    data[unif_idx]['rt']  = uniform.rvs(0,t_max,n_unif)
-    data[other_idx]['rt']  = uniform.rvs(0,t_max,n_other)
+    
+    # create guesses 
+    response = np.round(uniform.rvs(0,1,size=n_unif))
+    data[unif_idx]['rt']  = uniform.rvs(0,t_max,size=n_unif) * response    
+    data[unif_idx]['rt']  = response
+    
+    # create an early response
+    data[unif_idx[0]]['rt'] = min(np.abs(data['rt']))/2.
+    
+    #create late responses
+    response = (np.sign(gen_rts(params, n_other))+1) / 2
+    data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
     return data
 
 def gen_rand_data(samples=500, params=None, include=()):

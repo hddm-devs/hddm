@@ -63,7 +63,7 @@ class Base(kabuki.Hierarchical):
 
     def get_params(self):
         params = [Parameter('a',True, lower=.5, upper=4.5),
-                  Parameter('v',True, lower=-6., upper=6.), 
+                  Parameter('v',True, lower=-10., upper=10.), 
                   Parameter('t',True, lower=.1, upper=2., init=.1)]
 
         if not self.no_bias:
