@@ -26,14 +26,9 @@ except ImportError:
 from model import *
 from utils import plot_posteriors, plot_post_pred
 
-try:
-    import wfpt
-    import wfpt_full
-    import wfpt_switch
-except:
-    import wfpt32 as wfpt
-    import wfpt_full32 as wfpt_full
-    import wfpt_switch32 as wfpt_switch
+import wfpt
+import wfpt_full
+import wfpt_switch
 
 #import lba
 

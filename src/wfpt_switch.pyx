@@ -41,7 +41,7 @@ cdef double wfpt_gsl(double x, void * params):
     t = (<double_ptr> params)[6]
     t_switch = (<double_ptr> params)[7]
     
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens(x*a, t_switch, v, a, z*a) * a
+    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens(x*a, t_switch, v, a, z*a)
     #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
     return f
 
@@ -51,9 +51,9 @@ cdef double calc_drift_dens(double x, double t, double v, double a, double z):
     cdef double summed = 0
 
     for n from 1 <= n <= N:
-        summed += 2/a * sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t) # Ratcliff 1980 Equation 12
+        summed += sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t) # Ratcliff 1980 Equation 12
 
-    return exp(v*(x-z)) * summed
+    return 2 * exp(v*(x-z)) * summed
     
 cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
@@ -186,6 +186,6 @@ cdef double wfpt_gsl_precomp(double x, void * params):
 
     global acc, spline
 
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc) * a
+    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc)
 
     return f

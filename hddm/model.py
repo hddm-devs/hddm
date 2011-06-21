@@ -312,9 +312,9 @@ class HDDMAntisaccade(Base):
         self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
                        Parameter('V_switch', True, lower=0, upper=2., init=.1),
-                       Parameter('a', True, lower=1, upper=4, init=2),
+                       Parameter('a', True, lower=1, upper=10, init=2),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
-                       Parameter('t_switch', True, lower=0.05, upper=0.7, init=0.3),
+                       Parameter('t_switch', True, lower=0.01, upper=2.0, init=0.3),
                        Parameter('wfpt', False))
             
     def get_rootless_child(self, param, params):
