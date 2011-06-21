@@ -31,7 +31,7 @@ cdef extern from "stdlib.h":
     void* realloc(void* ptr, size_t size)
     
 cdef double wfpt_gsl(double x, void * params):
-    cdef double rt, v, v_switch, a, z, t, t_switch, f
+    cdef double rt, v, v_switch, a, z, t, t_switch, f, T
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
     v_switch = (<double_ptr> params)[2]
@@ -40,27 +40,42 @@ cdef double wfpt_gsl(double x, void * params):
     z = (<double_ptr> params)[5]
     t = (<double_ptr> params)[6]
     t_switch = (<double_ptr> params)[7]
-    
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens(x*a, t_switch, v, a, z*a)
-    #f = pdf_sign(rt, v, a, x, t, 1e-4) * (gsl_ran_gaussian_pdf(x, sqrt(t_switch)) + (t_switch * v + (z*a)))
+    T = (<double_ptr> params)[8]
+
+    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
+
     return f
 
-cdef double calc_drift_dens(double x, double t, double v, double a, double z):
+
+cpdef double calc_drift_dens_T(double x, double t, double v, double a, double z, double T):
+    if T < 1e-4:
+        return calc_drift_dens(x,t,v,a,z,False)
+    else:
+        return 1/T * (calc_drift_dens(x,t+T/2,v,a,z,True) - calc_drift_dens(x,t-T/2,v,a,z,True))
+
+cpdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t):
     cdef int N=35
     cdef int n
     cdef double summed = 0
 
     for n from 1 <= n <= N:
-        summed += sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t) # Ratcliff 1980 Equation 12
+        if not integrate_t:
+            # Ratcliff 1980 Equation 12
+            summed += sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
+        else:
+            # Indefinite integral over t
+            summed += sin(n*PI*z/a) * sin(n*PI*x/a) * (exp(-.5*(v**2 + (n**2*PIs)/a**2)*t) / (-0.5*PIs*n**2/a**2 - 0.5*v**2))
 
     return 2 * exp(v*(x-z)) * summed
     
-cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
+cpdef double pdf_switch(double rt, double v, double v_switch, double
+                        V_switch, double a, double z, double t, double t_switch, double T,
+                        double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
     cdef gsl_function F
-    cdef double params[8]
+    cdef double params[9]
     cdef size_t neval
     params[0] = rt
     params[1] = v
@@ -70,6 +85,7 @@ cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, d
     params[5] = z
     params[6] = t
     params[7] = t_switch
+    params[8] = T
 
     F.function = &wfpt_gsl
     F.params = params
@@ -81,7 +97,7 @@ cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, d
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
+def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -91,7 +107,7 @@ def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct,
         if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch antisaccade
             p = pdf_sign(rt[i], v, a, z, t, err)
         else: # post-switch Antisaccade
-            p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, err)
+            p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             return -infinity
         sum_logp += log(p)
@@ -110,7 +126,7 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err, int evals=20):
+def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=20):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -130,7 +146,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray i
     # Compute density
     for x from 0 <= x < evals:
         eval_dens[x] = a * (<double>x/(evals-1))
-        drift_density[x] = calc_drift_dens(eval_dens[x], t_switch, v, a, z*a)
+        drift_density[x] = calc_drift_dens_T(eval_dens[x], t_switch, v, a, z*a, T)
 
     # Init spline
     gsl_spline_init(spline, eval_dens, drift_density, evals)

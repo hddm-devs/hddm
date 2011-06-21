@@ -244,7 +244,8 @@ class DDMPlot(HasTraits):
                                                self.parameters.sv,
                                                self.parameters.a, self.parameters.z,
                                                self.parameters.ter,
-                                               self.parameters.t_switch)
+                                               self.parameters.t_switch,
+                                               self.parameters.ster)
         return pdf
     
     @timer

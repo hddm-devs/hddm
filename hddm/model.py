@@ -303,19 +303,24 @@ class HDDMContaminant(Base):
         return data_all, np.concatenate(cont)
 
 class HDDMAntisaccade(Base):
-    def __init__(self, data, no_bias=True, init=True, **kwargs):
+    def __init__(self, data, no_bias=True, init=True, include=(), **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
         
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = (Parameter('v',True, lower=-6, upper=0., init=-1.),
+        self.params = [Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
-                       Parameter('V_switch', True, lower=0, upper=2., init=.1),
                        Parameter('a', True, lower=1, upper=10, init=2),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.01, upper=2.0, init=0.3),
-                       Parameter('wfpt', False))
+                       Parameter('wfpt', False)]
+
+        if 'T' in self.include:
+            self.params.append(Parameter('T', True, lower=0, upper=1., init=0.1))
+        if 'V_switch' in self.include:
+            self.params.append(Parameter('V_switch', True, lower=0, upper=2., init=.1))
+            
             
     def get_rootless_child(self, param, params):
         if param.name == 'wfpt':
@@ -324,11 +329,12 @@ class HDDMAntisaccade(Base):
                                                       instruct=param.data['instruct'],
                                                       v=params['v'],
                                                       v_switch=params['v_switch'],
-                                                      V_switch=params['V_switch'],
+                                                      V_switch=self._get_node('V_switch',params),
                                                       a=params['a'],
                                                       z=.5,
                                                       t=params['t'],
                                                       t_switch=params['t_switch'],
+                                                      T=self._get_node('T',params),
                                                       observed=True)
         else:
             raise TypeError, "Parameter named %s not found." % param.name

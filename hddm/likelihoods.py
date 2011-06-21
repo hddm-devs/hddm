@@ -241,23 +241,23 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch):
+    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
         if np.isscalar(x):
-            out = hddm.wfpt_switch.pdf_switch(x, v, v_switch, V_switch, a, z, t, t_switch, 1e-4)
+            out = hddm.wfpt_switch.pdf_switch(x, v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
                 if np.abs(x[i]) <= t[i] + t_switch[i]:
                     out[i] = hddm.wfpt.pdf_sign(x[i], v[i], a[i], z[i], t[i], 1e-4)
                 else:
-                    out[i] = hddm.wfpt_switch.pdf_switch(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], 1e-4)
+                    out[i] = hddm.wfpt_switch.pdf_switch(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
                 
         return out
 
-    def _rvs(self, v, v_switch, V_switch, a, z, t, t_switch):
+    def _rvs(self, v, v_switch, V_switch, a, z, t, t_switch, T):
         all_rts_generated=False
         while(not all_rts_generated):
-            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 'V_switch':V_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':0}, samples_anti=self._size, samples_pro=0)[0]
+            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 'V_switch':V_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':T}, samples_anti=self._size, samples_pro=0)[0]
             if (len(out) == self._size):
                 all_rts_generated=True
         return hddm.utils.flip_errors(out)['rt']
