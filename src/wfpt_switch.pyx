@@ -4,7 +4,7 @@
 # on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
 #
-# This implementation is about 170 times faT than the matlab
+# This implementation is about 170 times faster than the matlab
 # reference version.
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
@@ -19,8 +19,7 @@ import scipy.interpolate
 cimport cython
 
 include "gsl/gsl.pxi"
-include "wfpt.pyx"
-
+include "pdf.pxi"
 
 ctypedef double * double_ptr
 ctypedef void * void_ptr
@@ -54,17 +53,17 @@ cpdef double calc_drift_dens_T(double x, double t, double v, double a, double z,
         return 1/T * (calc_drift_dens(x,t+T/2,v,a,z,True) - calc_drift_dens(x,t-T/2,v,a,z,True))
 
 cpdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t):
-    cdef int N=35
+    cdef int N=40
     cdef int n
     cdef double summed = 0
 
     for n from 1 <= n <= N:
         if not integrate_t:
             # Ratcliff 1980 Equation 12
-            summed += sin(n*PI*z/a) * sin(n*PI*x/a) * exp(-.5*(v**2 + (n**2*PIs)/a**2)*t)
+            summed += sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t)
         else:
             # Indefinite integral over t
-            summed += sin(n*PI*z/a) * sin(n*PI*x/a) * (exp(-.5*(v**2 + (n**2*PIs)/a**2)*t) / (-0.5*PIs*n**2/a**2 - 0.5*v**2))
+            summed += sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2))
 
     return 2 * exp(v*(x-z)) * summed
     
@@ -90,14 +89,14 @@ cpdef double pdf_switch(double rt, double v, double v_switch, double
     F.function = &wfpt_gsl
     F.params = params
 
-    gsl_integration_qag(&F, 0, 1, 1e-3, 1e-3, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
+    gsl_integration_qag(&F, 0, 1, 1e-2, 1e-2, 1000, GSL_INTEG_GAUSS15, W, &result, &error)
     gsl_integration_workspace_free(W)
 
     return result
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -105,11 +104,12 @@ def wiener_like_antisaccade(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct,
         
     for i from 0 <= i < size:
         if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch antisaccade
-            p = pdf_sign(rt[i], v, a, z, t, err)
+            #p = pdf_sign(rt[i], v, a, z, t, err)
+            p = full_pdf(rt[i], v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
         else: # post-switch Antisaccade
             p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
-            return -infinity
+            return -np.inf
         sum_logp += log(p)
 
     return sum_logp
@@ -126,7 +126,7 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=20):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -153,11 +153,12 @@ def wiener_like_antisaccade_precomp(np.ndarray[DTYPE_t, ndim=1] rt, np.ndarray i
 
     for i from 0 <= i < size:
         if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch
-            p = pdf_sign(rt[i], v, a, z, t, err)
+            #p = pdf_sign(rt[i], v, a, z, t, err)
+            p = full_pdf(rt[i], v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
         else: # post-switch antisaccade
             p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, err)
         if p == 0:
-            return -infinity
+            return -np.inf
         sum_logp += log(p)
 
     gsl_spline_free (spline)

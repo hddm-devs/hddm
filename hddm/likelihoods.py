@@ -248,7 +248,7 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
             out = np.empty_like(x)
             for i in xrange(len(x)):
                 if np.abs(x[i]) <= t[i] + t_switch[i]:
-                    out[i] = hddm.wfpt.pdf_sign(x[i], v[i], a[i], z[i], t[i], 1e-4)
+                    out[i] = hddm.wfpt_full.full_pdf(x[i], v[i], 0, a[i], z[i], 0, t[i], T[i], 1e-4)
                 else:
                     out[i] = hddm.wfpt_switch.pdf_switch(x[i], v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
                 
