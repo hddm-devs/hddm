@@ -53,23 +53,32 @@ cpdef double calc_drift_dens_T(double x, double t, double v, double a, double z,
         return 1/T * (calc_drift_dens(x,t+T/2,v,a,z,True) - calc_drift_dens(x,t-T/2,v,a,z,True))
 
 cpdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t):
-    cdef int N=40
-    cdef int n
+    cdef int N=30
+    cdef int n=0
+    cdef int got_zero = 0
+    cdef double term = 0
     cdef double summed = 0
 
-    for n from 1 <= n <= N:
+    #for n from 1 <= n <= N:
+    while(got_zero < 5):
         if not integrate_t:
             # Ratcliff 1980 Equation 12
-            summed += sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t)
+            term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t)
         else:
             # Indefinite integral over t
-            summed += sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2))
+            term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2))
+        # Start counting after N terms
+        if fabs(term) < 1e-6 and n > N:
+            got_zero+=1
+        
+        summed += term
+        n+=1
 
     return 2 * exp(v*(x-z)) * summed
     
-cpdef double pdf_switch(double rt, double v, double v_switch, double
-                        V_switch, double a, double z, double t, double t_switch, double T,
-                        double err):
+cpdef double pdf_post_switch(double rt, double v, double v_switch,
+                             double V_switch, double a, double z, double t,
+                             double t_switch, double T, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
@@ -94,6 +103,19 @@ cpdef double pdf_switch(double rt, double v, double v_switch, double
 
     return result
 
+cpdef pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+    cdef double p
+
+    if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
+        p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+    elif t_switch < 1e-2:
+        # Use regular likelihood
+        p = full_pdf(rt, v_switch, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+    else: # post-switch antisaccade
+        p = pdf_post_switch(rt, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+
+    return p
+
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
@@ -103,11 +125,7 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, 
     cdef double sum_logp = 0
         
     for i from 0 <= i < size:
-        if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch antisaccade
-            #p = pdf_sign(rt[i], v, a, z, t, err)
-            p = full_pdf(rt[i], v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
-        else: # post-switch Antisaccade
-            p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             return -np.inf
         sum_logp += log(p)
@@ -123,6 +141,19 @@ cdef double *drift_density
 cdef double *eval_dens
 cdef gsl_interp_accel *acc 
 cdef gsl_spline *spline
+
+cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+    cdef double p
+
+    if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
+        p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+    elif t_switch < 1e-2:
+        # Use regular likelihood
+        p = full_pdf(rt, v_switch, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+    else: # post-switch antisaccade
+        p = pdf_post_switch_precomp(rt, v, v_switch, V_switch, a, z, t, t_switch, err)
+
+    return p
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
@@ -152,11 +183,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     gsl_spline_init(spline, eval_dens, drift_density, evals)
 
     for i from 0 <= i < size:
-        if instruct[i] == 0 or (fabs(rt[i]) <= t+t_switch): # Prosaccade or pre-switch
-            #p = pdf_sign(rt[i], v, a, z, t, err)
-            p = full_pdf(rt[i], v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
-        else: # post-switch antisaccade
-            p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, err)
+        p = pdf_switch_precomp(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             return -np.inf
         sum_logp += log(p)
@@ -166,7 +193,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     
     return sum_logp
 
-cdef double pdf_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
+cdef double pdf_post_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
