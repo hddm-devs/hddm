@@ -311,14 +311,14 @@ class HDDMAntisaccade(Base):
 
         self.params = [Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
-                       Parameter('a', True, lower=1, upper=10, init=2),
+                       Parameter('a', True, lower=1, upper=5, init=2),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.01, upper=2.0, init=0.3),
                        Parameter('wfpt', False)]
 
-        if 'T' in self.include:
-            self.params.append(Parameter('T', True, lower=0, upper=1., init=0.1))
-        if 'V_switch' in self.include:
+        if 'T' in include:
+            self.params.append(Parameter('T', True, lower=0, upper=.5, init=0.1))
+        if 'V_switch' in include:
             self.params.append(Parameter('V_switch', True, lower=0, upper=2., init=.1))
             
             
