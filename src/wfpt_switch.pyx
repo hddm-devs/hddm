@@ -147,7 +147,7 @@ cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, doub
 
     if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
-    elif t_switch < 1e-2:
+    elif t_switch < 0.1:
         # Use regular likelihood
         p = full_pdf(rt, v_switch, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
     else: # post-switch antisaccade

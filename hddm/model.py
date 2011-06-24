@@ -21,25 +21,25 @@ class Base(kabuki.Hierarchical):
     """
     
     def __init__(self, data, trace_subjs=True, no_bias=True, 
-                 init=False, include=None, wiener_params = None,
+                 init=False, include=(), wiener_params = None,
                  init_values=None, **kwargs):
         
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
 
-        if include is None:
-            self.include = set()
-        else:
+        include = set(include)
+        
+        if include is not None:
             if include == 'all':
-                self.include = set(['T','V','Z'])
+                [include.add(param) for param in ('T','V','Z')]
             else:
-                self.include = set(include)
+                [include.add(param) for param in include]
 
         self.no_bias = no_bias
         
         if not self.no_bias:
-            self.include.add('z')
-            
+            include.add('z')
+
         if init:
             raise NotImplementedError, "TODO"
             # Compute ranges based on EZ method
@@ -59,25 +59,18 @@ class Base(kabuki.Hierarchical):
         
         self.params = self.get_params()
 
-        super(hddm.model.Base, self).__init__(data, **kwargs)
+        super(hddm.model.Base, self).__init__(data, include=include, **kwargs)
 
     def get_params(self):
-        params = [Parameter('a',True, lower=.5, upper=4.5),
-                  Parameter('v',True, lower=-10., upper=10.), 
-                  Parameter('t',True, lower=.1, upper=2., init=.1)]
-
-        if not self.no_bias:
-            params.append(Parameter('z', True, lower=0., upper=1., init=.5))
-
-        # Include inter-trial variability parameters
-        if 'V' in self.include:
-            params.append(Parameter('V',True, lower=0., upper=6.))
-        if 'Z' in self.include:
-            params.append(Parameter('Z',True, lower=0., upper=1., init=.1))
-        if 'T' in self.include:
-            params.append(Parameter('T',True, lower=0., upper=2., init=.1))
-
-        params.append(Parameter('wfpt', False)) # Append likelihood parameter
+        params = [Parameter('a', True, lower=.5, upper=4.5),
+                  Parameter('v', True, lower=-10., upper=10.), 
+                  Parameter('t', True, lower=.1, upper=2., init=.1),
+                  Parameter('z', True, lower=0., upper=1., init=.5, default=.5, optional=True),
+                  Parameter('V', True, lower=0., upper=6., default=0, optional=True),
+                  Parameter('Z', True, lower=0., upper=1., init=.1, default=0, optional=True),
+                  Parameter('T', True, lower=0., upper=2., init=.1, default=0, optional=True),
+                  Parameter('wfpt', False)]
+        
         return params
     
     def get_root_node(self, param):
@@ -92,7 +85,7 @@ class Base(kabuki.Hierarchical):
         return pm.Uniform(param.full_name, lower=0., upper=1., value=.1, plot=self.plot_tau)
 
     def get_child_node(self, param):
-        if param.name.startswith('e') or param.name.startswith('v'):
+        if param.name.startswith('e') or param.startswith('v'):
             return pm.Normal(param.full_name,
                              mu=param.root,
                              tau=param.tau**-2,
@@ -109,7 +102,7 @@ class Base(kabuki.Hierarchical):
                                       value=param.init)
     
     def get_rootless_child(self, param, params):
-        if param.name.startswith('wfpt'):
+        if param.name == 'wfpt':
             if self.wiener_params is not None:
                 wp = self.wiener_params
                 WienerFullIntrp = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'],
@@ -121,30 +114,24 @@ class Base(kabuki.Hierarchical):
                                    value=param.data['rt'].flatten(),
                                    v = params['v'],
                                    a = params['a'],
-                                   z = self._get_node('z',params),
+                                   z = self.get_node('z',params),
                                    t = params['t'],
-                                   Z = self._get_node('Z',params),
-                                   T = self._get_node('T',params),
-                                   V = self._get_node('V',params),
+                                   Z = self.get_node('Z',params),
+                                   T = self.get_node('T',params),
+                                   V = self.get_node('V',params),
                                    observed=True)
 
         else:
             raise KeyError, "Rootless parameter named %s not found." % param.name
 
-    def _get_node(self, node_name, params):
-        if node_name in self.include:
-            return params[node_name]
-        elif node_name=='z' and self.no_bias and 'z' not in params:
-            return 0.5
-        else:
-            return 0
 
 class HDDM(Base):
     pass
 
 class HDDMFullExtended(Base):
     def get_params(self):
-        self.include = ['V','Z','T']
+        [self.include.add(param) for param in ['V','Z','T']]
+        
         params = [Parameter('z_trls', False),
                   Parameter('v_trls', False),
                   Parameter('t_trls', False)]
@@ -155,22 +142,22 @@ class HDDMFullExtended(Base):
     def get_rootless_child(self, param, params):
         trials = len(param.data)
 
-        if param.name.startswith('z_trls'):
+        if param.name == 'z_trls':
             return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
                                                    center=params['z'],
                                                    width=params['Z']) for i in range(trials)]
 
-        elif param.name.startswith('v_trls'):
+        elif param.name == 'v_trls':
             return [pm.Normal(param.full_name+str(i),
                               mu=params['v'],
                               tau=params['V']**-2) for i in range(trials)]
 
-        elif param.name.startswith('t_trls'):
+        elif param.name == 't_trls':
             return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
                                                    center=params['t'],
                                                    width=params['T']) for i in range(trials)]
 
-        elif param.name.startswith('wfpt'):
+        elif param.name == 'wfpt':
             return hddm.likelihoods.WienerSingleTrial(param.full_name,
                                                       value=param.data['rt'],
                                                       v=params['v_trls'],
@@ -245,15 +232,14 @@ class HDDMContaminant(Base):
                        Parameter('x', False), 
                        Parameter('dummy_gamma',False),
                        Parameter('dummy_pi',False),
-                       Parameter('wfpt', False)]
-        if not self.no_bias:
-            self.params.append(Parameter('z',True, lower=0., upper=1., init=.5))
+                       Parameter('wfpt', False),
+                       Parameter('z',True, lower=0., upper=1., init=.5, default=.5, optional=True)]
             
         self.t_min = 0
         self.t_max = max(self.data['rt'])
 
     def get_rootless_child(self, param, params):
-        if param.name.startswith('wfpt'):
+        if param.name == 'wfpt':
             return hddm.likelihoods.WienerSimpleContaminant(param.full_name,
                                                             value=param.data['rt'],
                                                             cont_x=params['x'],
@@ -261,16 +247,16 @@ class HDDMContaminant(Base):
                                                             v=params['v'],
                                                             t=params['t'],
                                                             a=params['a'],
-                                                            z=self._get_node('z', params),
+                                                            z=self.get_node('z', params),
                                                             t_min=self.t_min,
                                                             t_max=self.t_max,
                                                             observed=True)
-        elif param.name.startswith('x'):
+        elif param.name == 'x':
             return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
-        elif param.name.startswith('dummy_gamma'):
-            return pm.Bernoulli(param.full_name, params['gamma'], value=[True,False], observed=True)
-        elif param.name.startswith('dummy_pi'):
-            return pm.Bernoulli(param.full_name, params['pi'], value=[True], observed=True)
+        elif param.name == 'dummy_gamma':
+            return pm.Bernoulli(param.full_name, p=params['gamma'], value=[True,False], observed=True)
+        elif param.name == 'dummy_pi':
+            return pm.Bernoulli(param.full_name, p=params['pi'], value=[True], observed=True)
         else:
             raise KeyError, "Rootless child parameter %s not found" % param.name
 
@@ -303,7 +289,7 @@ class HDDMContaminant(Base):
         return data_all, np.concatenate(cont)
 
 class HDDMAntisaccade(Base):
-    def __init__(self, data, no_bias=True, init=True, include=(), **kwargs):
+    def __init__(self, data, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
         
         if 'instruct' not in self.data.dtype.names:
@@ -313,15 +299,11 @@ class HDDMAntisaccade(Base):
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
                        Parameter('a', True, lower=1, upper=5, init=2),
                        Parameter('t', True, lower=0.1, upper=1., init=0.1),
-                       Parameter('t_switch', True, lower=0.01, upper=2.0, init=0.3),
+                       Parameter('t_switch', True, lower=0.1, upper=2.0, init=0.3),
+                       Parameter('T', True, lower=0, upper=.5, init=0.1, default=0, optional=True),
+                       Parameter('V_switch', True, lower=0, upper=2., init=.1, default=0, optional=True),
                        Parameter('wfpt', False)]
 
-        if 'T' in include:
-            self.params.append(Parameter('T', True, lower=0, upper=.5, init=0.1))
-        if 'V_switch' in include:
-            self.params.append(Parameter('V_switch', True, lower=0, upper=2., init=.1))
-            
-            
     def get_rootless_child(self, param, params):
         if param.name == 'wfpt':
             return hddm.likelihoods.WienerAntisaccade(param.full_name,
@@ -329,12 +311,12 @@ class HDDMAntisaccade(Base):
                                                       instruct=param.data['instruct'],
                                                       v=params['v'],
                                                       v_switch=params['v_switch'],
-                                                      V_switch=self._get_node('V_switch',params),
+                                                      V_switch=self.get_node('V_switch',params),
                                                       a=params['a'],
                                                       z=.5,
                                                       t=params['t'],
                                                       t_switch=params['t_switch'],
-                                                      T=self._get_node('T',params),
+                                                      T=self.get_node('T',params),
                                                       observed=True)
         else:
             raise TypeError, "Parameter named %s not found." % param.name
