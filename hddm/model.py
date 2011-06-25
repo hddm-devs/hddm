@@ -79,7 +79,8 @@ class Base(kabuki.Hierarchical):
         return pm.Uniform(param.full_name,
                           lower=param.lower,
                           upper=param.upper,
-                          value=param.init)
+                          value=param.init,
+                          verbose=param.verbose)
 
     def get_tau_node(self, param):
         return pm.Uniform(param.full_name, lower=0., upper=1., value=.1, plot=self.plot_tau)
@@ -298,9 +299,9 @@ class HDDMAntisaccade(Base):
         self.params = [Parameter('v',True, lower=-6, upper=0., init=-1.),
                        Parameter('v_switch', True, lower=0, upper=6., init=1.),
                        Parameter('a', True, lower=1, upper=5, init=2),
-                       Parameter('t', True, lower=0.1, upper=1., init=0.1),
-                       Parameter('t_switch', True, lower=0.1, upper=2.0, init=0.3),
-                       Parameter('T', True, lower=0, upper=.5, init=0.1, default=0, optional=True),
+                       Parameter('t', True, lower=0., upper=1., init=0.1),
+                       Parameter('t_switch', True, lower=0.0, upper=1.0, init=0.3),
+                       Parameter('T', True, lower=0, upper=.5, init=0, default=0, optional=True),
                        Parameter('V_switch', True, lower=0, upper=2., init=.1, default=0, optional=True),
                        Parameter('wfpt', False)]
 

@@ -59,8 +59,7 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
     cdef double term = 0
     cdef double summed = 0
 
-    #for n from 1 <= n <= N:
-    while(got_zero < 5):
+    while(got_zero < 5 or n < 60):
         if not integrate_t:
             # Ratcliff 1980 Equation 12
             term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t)
@@ -73,7 +72,10 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
         
         summed += term
         n+=1
-
+        if term == -np.inf or term == +np.inf:
+            print x, t, v, a, z, n, term
+            return 0
+        
     return 2 * exp(v*(x-z)) * summed
     
 cpdef double pdf_post_switch(double rt, double v, double v_switch,
@@ -106,6 +108,9 @@ cpdef double pdf_post_switch(double rt, double v, double v_switch,
 cpdef pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef double p
 
+    if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+        return 0
+
     if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
     elif t_switch < 1e-2:
@@ -123,12 +128,18 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, 
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
+
+    if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+        return -np.inf
         
     for i from 0 <= i < size:
         p = pdf_switch(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             return -np.inf
+        if p < 0:
+            print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T
         sum_logp += log(p)
+
 
     return sum_logp
 
@@ -145,11 +156,14 @@ cdef gsl_spline *spline
 cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef double p
 
+    if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+        return 0
+    
     if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
-    elif t_switch < 0.1:
+    elif t_switch < 0.08:
         # Use regular likelihood
-        p = full_pdf(rt, v_switch, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+        p = full_pdf(rt, v_switch, 0, a, z, 0, t+t_switch, T, 1e-4, 2, 2, True, 1e-3)
     else: # post-switch antisaccade
         p = pdf_post_switch_precomp(rt, v, v_switch, V_switch, a, z, t, t_switch, err)
 
@@ -163,6 +177,9 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     cdef Py_ssize_t x
     cdef double p
     cdef double sum_logp = 0
+
+    if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+        return -np.inf
 
     #############################
     # Precompute drift density
@@ -178,6 +195,8 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     for x from 0 <= x < evals:
         eval_dens[x] = a * (<double>x/(evals-1))
         drift_density[x] = calc_drift_dens_T(eval_dens[x], t_switch, v, a, z*a, T)
+        #if drift_density[x] == 0:
+        #    return 0
 
     # Init spline
     gsl_spline_init(spline, eval_dens, drift_density, evals)
