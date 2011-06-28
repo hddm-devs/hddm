@@ -4,6 +4,10 @@ from Cython.Distutils import build_ext
 import numpy as np
 import os
 
+from aksetup_helper import check_git_submodules
+
+check_git_submodules()
+
 gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
 
 setup(
@@ -12,7 +16,7 @@ setup(
     author="Thomas V. Wiecki",
     author_email="thomas_wiecki@brown.edu",
     url="http://code.google.com/p/hddm",
-    packages=["hddm", "hddm.tests"],
+    packages=["hddm", "hddm.tests", "hddm.kabuki"],
     package_data={"hddm":["examples/*"]},
     scripts=["scripts/hddmfit"],
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",

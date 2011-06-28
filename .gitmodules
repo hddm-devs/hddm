@@ -1,0 +1,3 @@
+[submodule "hddm/kabuki"]
+	path = hddm/kabuki
+	url = https://twiecki@github.com/twiecki/kabuki.git
