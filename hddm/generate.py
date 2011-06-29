@@ -102,7 +102,7 @@ def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., stru
             data['subj_idx'] = subj_idx
         data['response'][rts>0] = 1.
         data['response'][rts<0] = 0.
-        data['rt'] = rts
+        data['rt'] = np.abs(rts)
 
         return data
 

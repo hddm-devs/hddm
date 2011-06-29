@@ -4,10 +4,6 @@ from Cython.Distutils import build_ext
 import numpy as np
 import os
 
-from aksetup_helper import check_git_submodules
-
-check_git_submodules()
-
 gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
 
 setup(

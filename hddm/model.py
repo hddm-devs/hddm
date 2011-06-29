@@ -7,7 +7,13 @@ import matplotlib.pyplot as plt
 from copy import copy
 
 import hddm
-import kabuki
+
+try:
+    # Use system-wide kabuki if installed
+    import kabuki
+except ImportError:
+    # Otherwise take included one.
+    import hddm.kabuki as kabuki
 
 from kabuki.hierarchical import Parameter
 
@@ -128,6 +134,28 @@ class Base(kabuki.Hierarchical):
 
 class HDDM(Base):
     pass
+
+class HDDMGPU(Base):
+    def get_rootless_child(self, param, params):
+        import pycuda.driver as cuda
+        import pycuda.autoinit
+        import pycuda.gpuarray as gpuarray
+
+        if param.name == 'wfpt':
+            data = param.data['rt'].flatten().astype(np.float32)
+            data_gpu = gpuarray.to_gpu(data)
+            out_gpu = gpuarray.empty_like(data_gpu)
+            return hddm.likelihoods.WienerGPU(param.name,
+                                              value=data_gpu,
+                                              v = params['v'],
+                                              a = params['a'],
+                                              z = self.get_node('z',params),
+                                              t = params['t'],
+                                              out = out_gpu,
+                                              observed=True)
+
+        else:
+            raise KeyError, "Rootless parameter named %s not found." % param.name
 
 class HDDMFullExtended(Base):
     def get_params(self):
@@ -296,9 +324,9 @@ class HDDMAntisaccade(Base):
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = [Parameter('v',True, lower=-6, upper=0., init=-1.),
-                       Parameter('v_switch', True, lower=0, upper=6., init=1.),
-                       Parameter('a', True, lower=1, upper=5, init=2),
+        self.params = [Parameter('v',True, lower=-3, upper=0., init=-1.),
+                       Parameter('v_switch', True, lower=0, upper=3., init=1.),
+                       Parameter('a', True, lower=1.5, upper=3.5, init=2),
                        Parameter('t', True, lower=0., upper=1., init=0.1),
                        Parameter('t_switch', True, lower=0.0, upper=1.0, init=0.3),
                        Parameter('T', True, lower=0, upper=.5, init=0, default=0, optional=True),

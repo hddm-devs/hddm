@@ -5,6 +5,16 @@ import pymc as pm
 import numpy as np
 np.seterr(divide='ignore')
 
+try:
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    import pycuda.gpuarray as gpuarray
+    import pycuda.cumath as cumath
+    import wfpt_gpu
+    gpu_imported = True
+except ImportError:
+    gpu_imported = False
+
 import hddm
 
 def wiener_like_simple(value, v, z, t, a):
@@ -276,3 +286,20 @@ Fast and accurate calculations for first-passage times in Wiener diffusion model
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
 
+
+
+def wiener_like_gpu(value, v, a, z, t, out, err=1e-4):
+    """Log-likelihood for the simple DDM including contaminants"""
+    # Check if parameters are in allowed range
+    if z<0 or z>1 or t<0 or a <= 0:
+        return -np.inf
+
+    wfpt_gpu.pdf_gpu(value, float(v), float(a), float(z), float(t), err, out)
+    logp = gpuarray.sum(cumath.log(out)).get()
+    
+    return np.asscalar(logp)
+
+WienerGPU = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                    logp=wiener_like_gpu,
+                                    dtype=np.float32,
+                                    mv=False)

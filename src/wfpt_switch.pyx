@@ -58,6 +58,7 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
     cdef int got_zero = 0
     cdef double term = 0
     cdef double summed = 0
+    cdef double divisor
 
     while(got_zero < 5 or n < 60):
         if not integrate_t:
@@ -65,7 +66,10 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
             term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t)
         else:
             # Indefinite integral over t
-            term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2))
+            divisor = (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2)
+            if divisor == 0:
+                print n, a, v
+            term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / divisor)
         # Start counting after N terms
         if fabs(term) < 1e-6 and n > N:
             got_zero+=1

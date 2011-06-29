@@ -1,187 +1,12 @@
+import hddm
+
 import pycuda.driver as cuda
 import pycuda.compiler
 import pycuda.autoinit
+import pycuda.gpuarray as gpuarray
 
 import numpy as np
 import numpy.testing
-
-x = np.random.rand(100).astype(np.float32)
-
-#ctx = cl.create_some_context()
-#queue = cl.CommandQueue(ctx)
-
-#mf = cl.mem_flags
-#x_buf = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=x)
-#dest = np.float()
-#dest_buf = cl.Buffer(ctx, mf.WRITE_ONLY, dest.__sizeof__())
-
-#prg = cl.Program(ctx, """
-kernel_source = """
-    __global__ void pdf(const float *x, float const a, float const z_val, float const v_val, float const err, int const logp, float *out)
-    {
-        int idx = threadIdx.x + blockIdx.x * blockDim.x;
-        float z, v, t;
-        
-        if (x[idx] > 0) {
-            z = a - z_val;
-            v = -v_val;
-            t = x[idx];
-        }
-        else {
-            z = z_val;
-            v = v_val;
-            t = -x[idx];
-        }
-
-        float tt = t/(powf(a,2)); // use normalized time
-        float w = z/a; // convert to relative start point
-        float kl, ks, p;
-        float PI = 3.1415926535897f;
-        float PIs = 9.869604401089358f; // PI^2
-        int k, K, lower, upper;
-
-
-        // calculate number of terms needed for large t
-        if (PI*tt*err<1) { // if error threshold is set low enough
-            kl=sqrtf(-2*logf(PI*tt*err)/(PIs*tt)); // bound
-            kl=fmax(kl,1/(PI*sqrtf(tt))); // ensure boundary conditions met
-        }
-        else { // if error threshold set too high
-            kl=1/(PI*sqrtf(tt)); // set to boundary condition
-        }
-
-
-        // calculate number of terms needed for small t
-        if (2*sqrtf(2*PI*tt)*err<1) { // if error threshold is set low enough
-            ks=2+sqrtf(-2*tt*logf(2*sqrtf(2*PI*tt)*err)); // bound
-            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
-        }
-        else { // if error threshold was set too high
-            ks=2; // minimal kappa for that case
-        }
-
-        // compute f(tt|0,1,w)
-        p=0; //initialize density
-        if (ks<kl) { // if small t is better (i.e., lambda<0)
-            K=(int)(ceilf(ks)); // round to smallest integer meeting error
-            lower = (int)(-floorf((K-1)/2.));
-            upper = (int)(ceilf((K-1)/2.));
-        
-            for (k=lower; k <= upper; k++) { // loop over k
-                p=p+(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
-            }
-            p=p/sqrtf(2*PI*powf(tt,3)); // add constant term
-        }
-        else { // if large t is better...
-            K=(int)(ceilf(kl)); // round to smallest integer meeting error
-            for(k=1; k <= K; k++) {
-                p=p+k*expf(-(powf(k,2))*(PIs)*tt/2)*sinf(k*PI*w); // increment sum
-            }
-            p=p*PI; // add constant term
-        }
-        // convert to f(t|v,a,w)
-        if (logp == 0) {
-            out[idx] = p*expf(-v*a*w -(powf(v,2))*t/2.)/(powf(a,2));
-        }
-        else { 
-            out[idx] = logf(p) + (-v*a*w -(powf(v,2))*t/2.) - 2*logf(a);
-        }
-    }
-    """#).build()
-
-kernel_source_complete = """
-    __global__ void pdf(const float *x, float const *a_buf, float const *z_buf, float const *v_buf, float const err, int const logp, float *out)
-    {
-        int idx = threadIdx.x + blockIdx.x * blockDim.x;
-        float tu = x[idx];
-        float a, z, v, t;
-        // if t is negative, lower boundary, and vice versa
-        if (tu < 0) {
-            a = a_buf[idx];
-            z = z_buf[idx];
-            v = v_buf[idx];
-            t = -tu;
-        }
-        else {
-            a = a_buf[idx];
-            z = a_buf[idx] - z_buf[idx];
-            v = -v_buf[idx];
-            t = tu;
-        }
-
-        float tt = t/(powf(a,2)); // use normalized time
-        float w = z/a; // convert to relative start point
-        float kl, ks, p;
-        float PI = 3.1415926535897f;
-        float PIs = 9.869604401089358f; // PI^2
-        int k, K, lower, upper;
-
-        // calculate number of terms needed for large t
-        if (PI*tt*err<1) { // if error threshold is set low enough
-            kl=sqrtf(-2*logf(PI*tt*err)/(PIs*tt)); // bound
-            kl=fmax(kl,1/(PI*sqrtf(tt))); // ensure boundary conditions met
-        }
-        else { // if error threshold set too high
-            kl=1/(PI*sqrtf(tt)); // set to boundary condition
-        }
-
-
-        // calculate number of terms needed for small t
-        if (2*sqrtf(2*PI*tt)*err<1) { // if error threshold is set low enough
-            ks=2+sqrtf(-2*tt*logf(2*sqrtf(2*PI*tt)*err)); // bound
-            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
-        }
-        else { // if error threshold was set too high
-            ks=2; // minimal kappa for that case
-        }
-
-        // compute f(tt|0,1,w)
-        p=0; //initialize density
-        if (ks<kl) { // if small t is better (i.e., lambda<0)
-            K=(int)(ceilf(ks)); // round to smallest integer meeting error
-            lower = (int)(-floorf((K-1)/2.));
-            upper = (int)(ceilf((K-1)/2.));
-        
-            for (k=lower; k <= upper; k++) { // loop over k
-                p=p+(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
-            }
-            p=p/sqrtf(2*PI*powf(tt,3)); // add constant term
-        }
-        else { // if large t is better...
-            K=(int)(ceilf(kl)); // round to smallest integer meeting error
-            for(k=1; k <= K; k++) {
-                p=p+k*expf(-(powf(k,2))*(PIs)*tt/2)*sinf(k*PI*w); // increment sum
-            }
-            p=p*PI; // add constant term
-        }
-        // convert to f(t|v,a,w)
-        if (logp == 0) {
-            out[idx] = p*expf(-v*a*w -(powf(v,2))*t/2.)/(powf(a,2));
-        }
-        else { 
-            out[idx] = logf(p) + (-v*a*w -(powf(v,2))*t/2.) - 2*logf(a);
-        }
-    }
-    """#).build()
-
-pdf = pycuda.compiler.SourceModule(kernel_source)
-pdf_func = pdf.get_function("pdf")
-
-pdf_complete=pycuda.compiler.SourceModule(kernel_source_complete)
-pdf_func_complete = pdf_complete.get_function("pdf")
-
-
-dest_buf = np.empty_like(x)
-
-pdf_func(cuda.In(x), np.float32(2.), np.float32(1.), np.float32(.5), np.float32(0.0001), np.int16(1), cuda.Out(dest_buf), block=(x.shape[0], 1, 1))
-
-#print dest_buf
-
-dest_buf_complete = np.empty_like(x)
-
-pdf_func_complete(cuda.In(-x), cuda.In(np.ones_like(x)*2), cuda.In(np.ones_like(x)*1.), cuda.In(np.ones_like(x)*.5), np.float32(0.0001), np.int16(1), cuda.Out(dest_buf_complete), block=(x.shape[0], 1, 1))
-
-#print dest_buf_complete
 
 #print "Testing for equality"
 #np.testing.assert_array_almost_equal(dest_buf, dest_buf_complete)
@@ -189,243 +14,180 @@ pdf_func_complete(cuda.In(-x), cuda.In(np.ones_like(x)*2), cuda.In(np.ones_like(
 #x_out = np.empty_like(x)
 #cl.enqueue_read_buffer(queue, dest_buf, x_out).wait()
 
-kernel_source_complete_opt = """
-    __global__ void pdf(const float *x, float const *a_buf, float const *z_buf, float const *v_buf, float const err, int const logp, int bias_z, float *out)
-    {
-        int idx = threadIdx.x + blockIdx.x * blockDim.x;
-        float tu = x[idx];
-        float a, z, v, t;
 
-        a = a_buf[idx];
-        if (bias_z == 1) {
-            z = a/2;
+#pdf_opt=pycuda.compiler.SourceModule(kernel_source_complete_opt)
+#pdf_func_opt = pdf_opt.get_function("pdf")
+from pycuda.elementwise import ElementwiseKernel
+
+pdf_gpu_tmp = ElementwiseKernel(
+    "float *x, float v, float a, float z, float ter, float err, float *out",
+    "out[i] = pdf(x[i], v, a, z, ter, err)",
+    "wfpt_gpu",
+    preamble=
+    """
+    #include <math_constants.h>
+
+/*    __device__ float ftt_01w(double tt, double w, double err)
+    {
+    float kl, ks, p;
+    int k, K, lower, upper;
+
+    // calculate number of terms needed for large t
+    if (CUDART_PI_F*tt*err<1) { // if error threshold is set low enough
+        kl=sqrt(-2*log(CUDART_PI_F*tt*err)/(pow(CUDART_PI_F,2)*tt)); // bound
+        kl=fmax(kl,1/(CUDART_PI_F*sqrtf(tt))); // ensure boundary conditions met
+    }
+    else { // if error threshold set too high
+        kl=1./(CUDART_PI_F*sqrt(tt)); // set to boundary condition
+    }
+
+    // calculate number of terms needed for small t
+    if (2*sqrt(2*CUDART_PI_F*tt)*err<1) { // if error threshold is set low enough
+        ks=2+sqrt(-2*tt*log(2*sqrt(2*CUDART_PI_F*tt)*err)); // bound
+        ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
+    }
+    else { // if error threshold was set too high
+        ks=2; // minimal kappa for that case
+    }
+
+    // compute f(tt|0,1,w)
+    p=0; //initialize density
+    if (ks<kl) { // if small t is better (i.e., lambda<0)
+        K=(int)(ceil(ks)); // round to smallest integer meeting error
+        lower = (int)(-floor((K-1)/2.));
+        upper = (int)(ceil((K-1)/2.));
+        for(k=lower; k<=upper; k++) {// loop over k
+            p+=(w+2*k)*exp(-(pow((w+2*k),2))/2/tt); // increment sum
+        }
+        p/=sqrt(2*CUDART_PI_F*pow(tt,3)); // add constant term
+    }
+    else { // if large t is better...
+        K=(int)(ceil(kl)); // round to smallest integer meeting error
+        for (k=1; k <= K; k++) {
+            p+=k*exp(-(pow(k,2))*(pow(CUDART_PI_F,2))*tt/2)*sin(k*CUDART_PI_F*w); // increment sum
+        }
+        p*=CUDART_PI_F; // add constant term
+    }
+    return p;
+    }*/
+
+    __device__ float pdf(float x, float v_in, float a, float w_in, float ter, float err)
+    {
+        float w, v, t;
+        // if t is negative, lower boundary, and vice versa
+        if (x < 0) {
+            w = w_in;
+            v = v_in;
+            t = -x;
         }
         else {
-            z = z_buf[idx];
+            w = 1-w_in;
+            v = -v_in;
+            t = x;
         }
-        v = v_buf[idx];
-        t = tu;
-
-        // if t is negative, lower boundary, and vice versa
-        //if (t == -9999 || a<z || a<0 || z<0) {
-        //    out[idx] = -9999;
-        //    return;
-        //}
+        if (ter>t) {return (-9999.0f);}
         
-        float tt = t/(powf(a,2)); // use normalized time
-        float w = z/a; // convert to relative start point
-        float kl, ks, p;
-        float PI = 3.1415926535897f;
-        float PIs = 9.869604401089358f; // PI^2
-        int k, K, lower, upper;
+        // Subtact ter
+        //t -= ter;
 
-        // calculate number of terms needed for large t
-        if (PI*tt*err<1) { // if error threshold is set low enough
-            kl=sqrtf(-2*logf(PI*tt*err)/(PIs*tt)); // bound
-            kl=fmax(kl,1/(PI*sqrtf(tt))); // ensure boundary conditions met
-        }
-        else { // if error threshold set too high
-            kl=1/(PI*sqrtf(tt)); // set to boundary condition
-        }
-
-
-        // calculate number of terms needed for small t
-        if (2*sqrtf(2*PI*tt)*err<1) { // if error threshold is set low enough
-            ks=2+sqrtf(-2*tt*logf(2*sqrtf(2*PI*tt)*err)); // bound
-            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
-        }
-        else { // if error threshold was set too high
-            ks=2; // minimal kappa for that case
-        }
-
-        // compute f(tt|0,1,w)
-        p=0; //initialize density
-        if (ks<kl) { // if small t is better (i.e., lambda<0)
-            K=(int)(ceilf(ks)); // round to smallest integer meeting error
-            lower = (int)(-floorf((K-1)/2.));
-            upper = (int)(ceilf((K-1)/2.));
-        
-            for (k=lower; k <= upper; k++) { // loop over k
-                p=p+(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
-            }
-            p=p/sqrtf(2*PI*powf(tt,3)); // add constant term
-        }
-        else { // if large t is better...
-            K=(int)(ceilf(kl)); // round to smallest integer meeting error
-            for(k=1; k <= K; k++) {
-                p=p+k*expf(-(powf(k,2))*(PIs)*tt/2)*sinf(k*PI*w); // increment sum
-            }
-            p=p*PI; // add constant term
-        }
+        double tt = x/(powf(a,2)); // use normalized time
+        double p = 0.5f;
+        //double p = ftt_01w(tt, w, err); //get f(t|0,1,w)
+  
         // convert to f(t|v,a,w)
-        if (logp == 0) {
-            out[idx] = p*expf(-v*a*w -(powf(v,2))*t/2.)/(powf(a,2));
-        }
-        else { 
-            out[idx] = logf(p) + (-v*a*w -(powf(v,2))*t/2.) - 2*logf(a);
-        }
+        return p*expf(-v*a*w -(powf(v,2.0f))*x/2.)/(powf(a,2.0f));
     }
-    """#).build()
+    """)
 
-pdf_opt=pycuda.compiler.SourceModule(kernel_source_complete_opt)
-pdf_func_opt = pdf_opt.get_function("pdf")
-
-kernel_source_complete2 = """
-    __global__ void pdf(const float *x, float const *a_buf, float const *z_buf, float const *v_buf, float const err, int const logp, float *out)
+pdf_gpu = ElementwiseKernel(
+    "const float *x, const float v, const float a, const float z, const float ter, float err, float *out",
+    "out[i] = myfunc(x[i], v, a, z, ter, err)",
+    "wfpt_gpu",
+    preamble=
+    """
+    #include <math_constants.h>
+    __device__ float myfunc(const float x, const float v_in, const float a, const float z_in, const float ter, const float err)
     {
-        int idx = threadIdx.x;
-        float tu = x[idx];
-        float a, z, v, t;
+        float w, v, t;
         // if t is negative, lower boundary, and vice versa
-        if (tu < 0) {
-            a = a_buf[idx];
-            z = z_buf[idx];
-            v = v_buf[idx];
-            t = abs(tu);
+        if (x < 0) {
+            w = z_in;
+            v = v_in;
+            t = -x;
         }
         else {
-            a = a_buf[idx];
-            z = a_buf[idx] - z_buf[idx];
-            v = -v_buf[idx];
-            t = tu;
+            w = 1-z_in;
+            v = -v_in;
+            t = x;
         }
-
-        if (t < 0) {
-            out[idx] = -9999;
-            return;
-        }
+        if (ter>t) {return (0.0f);}
         
+        // Subtact ter
+        t -= ter;
+
         float tt = t/(powf(a,2)); // use normalized time
-        float w = z/a; // convert to relative start point
+        //float w = z; //z/a; // convert to relative start point
         float kl, ks, p;
-        float PI = 3.1415926535897f;
-        float PIs = 9.869604401089358f; // PI^2
+        float PI = CUDART_PI_F; //3.1415926535897f;
+        float PIs = powf(PI, 2); //9.869604401089358f; // PI^2
         int k, K, lower, upper;
 
-        // calculate number of terms needed for large t
-        if (PI*tt*err<1) { // if error threshold is set low enough
-            kl=sqrtf(-2*logf(PI*tt*err)/(PIs*tt)); // bound
-            kl=fmax(kl,1/(PI*sqrtf(tt))); // ensure boundary conditions met
-        }
-        else { // if error threshold set too high
-            kl=1/(PI*sqrtf(tt)); // set to boundary condition
-        }
+    // calculate number of terms needed for large t
+    if (CUDART_PI_F*tt*err<1) { // if error threshold is set low enough
+        kl=sqrtf(-2.0f*log(CUDART_PI_F*tt*err)/(powf(CUDART_PI_F,2)*tt)); // bound
+        kl=fmax(kl,1/(CUDART_PI_F*sqrtf(tt))); // ensure boundary conditions met
+    }
+    else { // if error threshold set too high
+        kl=1.0f/(CUDART_PI_F*sqrtf(tt)); // set to boundary condition
+    }
 
+    // calculate number of terms needed for small t
+    if (2*sqrtf(2*CUDART_PI_F*tt)*err<1) { // if error threshold is set low enough
+        ks=2+sqrtf(-2*tt*log(2*sqrtf(2*CUDART_PI_F*tt)*err)); // bound
+        ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
+    }
+    else { // if error threshold was set too high
+        ks=2; // minimal kappa for that case
+    }
 
-        // calculate number of terms needed for small t
-        if (2*sqrtf(2*PI*tt)*err<1) { // if error threshold is set low enough
-            ks=2+sqrtf(-2*tt*logf(2*sqrtf(2*PI*tt)*err)); // bound
-            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
+    // compute f(tt|0,1,w)
+    p=0.0f; //initialize density
+    if (ks<kl) { // if small t is better (i.e., lambda<0)
+        K=(int)(ceil(ks)); // round to smallest integer meeting error
+        lower = (int)(-floorf((K-1)/2.));
+        upper = (int)(ceilf((K-1)/2.));
+        for(k=lower; k<=upper; k++) {// loop over k
+            p+=(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
         }
-        else { // if error threshold was set too high
-            ks=2; // minimal kappa for that case
+        p/=sqrtf(2*CUDART_PI_F*powf(tt,3)); // add constant term
+    }
+    else { // if large t is better...
+        K=(int)(ceil(kl)); // round to smallest integer meeting error
+        for (k=1; k <= K; k++) {
+            p+=k*expf(-(powf(k,2))*(powf(CUDART_PI_F,2))*tt/2)*sin(k*CUDART_PI_F*w); // increment sum
         }
-
-        // compute f(tt|0,1,w)
-        p=0; //initialize density
-        if (ks<kl) { // if small t is better (i.e., lambda<0)
-            K=(int)(ceilf(ks)); // round to smallest integer meeting error
-            lower = (int)(-floorf((K-1)/2.));
-            upper = (int)(ceilf((K-1)/2.));
-        
-            for (k=lower; k <= upper; k++) { // loop over k
-                p=p+(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
-            }
-            p=p/sqrtf(2*PI*powf(tt,3)); // add constant term
-        }
-        else { // if large t is better...
-            K=(int)(ceilf(kl)); // round to smallest integer meeting error
-            for(k=1; k <= K; k++) {
-                p=p+k*expf(-(powf(k,2))*(PIs)*tt/2)*sinf(k*PI*w); // increment sum
-            }
-            p=p*PI; // add constant term
+        p*=CUDART_PI_F; // add constant term
         }
         // convert to f(t|v,a,w)
-        if (logp == 0) {
-            out[idx] = p*expf(-v*a*w -(powf(v,2))*t/2.)/(powf(a,2));
-        }
-        else { 
-            out[idx] = logf(p) + (-v*a*w -(powf(v,2))*t/2.) - 2*logf(a);
-        }
+        p *= expf(-v*a*w -(powf(v,2))*t/2)/(powf(a,2));
+        return p;
     }
-    """#).build()
+    """)
 
-kernel_source_complete_ter = """
-    __global__ void pdf(const float *x, float const *a_buf, float const *z_buf, float const *v_buf, float const *ter_buf, float const err, int const logp, float *out)
-    {
-        int idx = threadIdx.x + blockIdx.x * blockDim.x;
-        float tu = x[idx];
-        float a, z, v, t, ter;
-        // if t is negative, lower boundary, and vice versa
-        ter = ter_buf[idx];
-        a = a_buf[idx];
-        if (tu < 0) {
-            z = z_buf[idx];
-            v = v_buf[idx];
-            t = -tu;
-        }
-        else {
-            z = a_buf[idx] - z_buf[idx];
-            v = -v_buf[idx];
-            t = tu;
-        }
-        //if (ter>t) {return -9999}
-        t = t-ter;
-        
-        float tt = t/(powf(a,2)); // use normalized time
-        float w = z/a; // convert to relative start point
-        float kl, ks, p;
-        float PI = 3.1415926535897f;
-        float PIs = 9.869604401089358f; // PI^2
-        int k, K, lower, upper;
+if __name__=="__main__":
+    x = -1 * np.random.rand(10).astype(np.float32)
+    x = np.linspace(-5,5,10).astype(np.float32)
+    print x
+    x_gpu = gpuarray.to_gpu(x)
+    out_gpu = gpuarray.empty_like(x_gpu)
+    print out_gpu
 
-        // calculate number of terms needed for large t
-        if (PI*tt*err<1) { // if error threshold is set low enough
-            kl=sqrtf(-2*logf(PI*tt*err)/(PIs*tt)); // bound
-            kl=fmax(kl,1/(PI*sqrtf(tt))); // ensure boundary conditions met
-        }
-        else { // if error threshold set too high
-            kl=1/(PI*sqrtf(tt)); // set to boundary condition
-        }
+    out = hddm.likelihoods.wfpt.pdf(x, 1., 0., 2, .5, 0., 0., 0., 1e-4)
 
+    pdf_gpu(x_gpu, 1., 2., .5, 0., 1e-4, out_gpu)
 
-        // calculate number of terms needed for small t
-        if (2*sqrtf(2*PI*tt)*err<1) { // if error threshold is set low enough
-            ks=2+sqrtf(-2*tt*logf(2*sqrtf(2*PI*tt)*err)); // bound
-            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
-        }
-        else { // if error threshold was set too high
-            ks=2; // minimal kappa for that case
-        }
+    print out
+    print np.array(out_gpu.get())
 
-        // compute f(tt|0,1,w)
-        p=0; //initialize density
-        if (ks<kl) { // if small t is better (i.e., lambda<0)
-            K=(int)(ceilf(ks)); // round to smallest integer meeting error
-            lower = (int)(-floorf((K-1)/2.));
-            upper = (int)(ceilf((K-1)/2.));
-        
-            for (k=lower; k <= upper; k++) { // loop over k
-                p=p+(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
-            }
-            p=p/sqrtf(2*PI*powf(tt,3)); // add constant term
-        }
-        else { // if large t is better...
-            K=(int)(ceilf(kl)); // round to smallest integer meeting error
-            for(k=1; k <= K; k++) {
-                p=p+k*expf(-(powf(k,2))*(PIs)*tt/2)*sinf(k*PI*w); // increment sum
-            }
-            p=p*PI; // add constant term
-        }
-        // convert to f(t|v,a,w)
-        if (logp == 0) {
-            out[idx] = p*expf(-v*a*w -(powf(v,2))*t/2.)/(powf(a,2));
-        }
-        else { 
-            out[idx] = logf(p) + (-v*a*w -(powf(v,2))*t/2.) - 2*logf(a);
-        }
-    }
-    """#).build()
-
-pdf_ter=pycuda.compiler.SourceModule(kernel_source_complete_ter)
-pdf_func_ter = pdf_ter.get_function("pdf")
+#pdf = pycuda.compiler.SourceModule(kernel_source_wfpt)
+#pdf = kernel_source_wfpt.get_function("pdf")
