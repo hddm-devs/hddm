@@ -92,7 +92,7 @@ class Base(kabuki.Hierarchical):
         return pm.Uniform(param.full_name, lower=0., upper=1., value=.1, plot=self.plot_tau)
 
     def get_child_node(self, param):
-        if param.name.startswith('e') or param.startswith('v'):
+        if param.name.startswith('e') or param.name.startswith('v'):
             return pm.Normal(param.full_name,
                              mu=param.root,
                              tau=param.tau**-2,
@@ -117,7 +117,7 @@ class Base(kabuki.Hierarchical):
             else:
                 WienerFullIntrp =  hddm.likelihoods.WienerFullIntrp
             
-            return WienerFullIntrp(param.name,
+            return WienerFullIntrp(param.full_name,
                                    value=param.data['rt'].flatten(),
                                    v = params['v'],
                                    a = params['a'],
@@ -145,9 +145,10 @@ class HDDMGPU(Base):
             data = param.data['rt'].flatten().astype(np.float32)
             data_gpu = gpuarray.to_gpu(data)
             out_gpu = gpuarray.empty_like(data_gpu)
-            return hddm.likelihoods.WienerGPU(param.name,
+            return hddm.likelihoods.WienerGPU(param.full_name,
                                               value=data_gpu,
                                               v = params['v'],
+                                              V = self.get_node('V', params),
                                               a = params['a'],
                                               z = self.get_node('z',params),
                                               t = params['t'],

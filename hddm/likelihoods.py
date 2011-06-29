@@ -288,14 +288,14 @@ Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 
 
 
-def wiener_like_gpu(value, v, a, z, t, out, err=1e-4):
+def wiener_like_gpu(value, v, V, a, z, t, out, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""
     # Check if parameters are in allowed range
-    if z<0 or z>1 or t<0 or a <= 0:
+    if z<0 or z>1 or t<0 or a <= 0 or V<=0:
         return -np.inf
 
-    wfpt_gpu.pdf_gpu(value, float(v), float(a), float(z), float(t), err, out)
-    logp = gpuarray.sum(cumath.log(out)).get()
+    wfpt_gpu.pdf_gpu(value, float(v), float(V), float(a), float(z), float(t), err, out)
+    logp = gpuarray.sum(out).get() #cumath.log(out)).get()
     
     return np.asscalar(logp)
 

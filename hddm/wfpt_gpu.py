@@ -92,7 +92,7 @@ pdf_gpu = ElementwiseKernel(
         // convert to f(t|v,a,w)
         // p *= expf(-v*a*w -(powf(v,2))*t/2)/(powf(a,2));
         p *= expf((powf((a*w*V),2) - 2*a*v*w - (powf(v,2))*t)/(2*(powf(V,2))*t+2))/sqrtf((powf(V,2))*t+1)/(powf(a,2));
-        return p;
+        return logf(p);
     }""")
 
 if __name__=="__main__":
