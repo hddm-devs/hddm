@@ -101,12 +101,12 @@ pdf_gpu_tmp = ElementwiseKernel(
 
 pdf_gpu = ElementwiseKernel(
     "const float *x, const float v, const float a, const float z, const float ter, float err, float *out",
-    "out[i] = myfunc(x[i], v, a, z, ter, err)",
+    "out[i] = pdf(x[i], v, a, z, ter, err)",
     "wfpt_gpu",
     preamble=
     """
     #include <math_constants.h>
-    __device__ float myfunc(const float x, const float v_in, const float a, const float z_in, const float ter, const float err)
+    __device__ float pdf(const float x, const float v_in, const float a, const float z_in, const float ter, const float err)
     {
         float w, v, t;
         // if t is negative, lower boundary, and vice versa
@@ -122,7 +122,7 @@ pdf_gpu = ElementwiseKernel(
         }
         if (ter>t) {return (0.0f);}
         
-        // Subtact ter
+        // Subtract ter
         t -= ter;
 
         float tt = t/(powf(a,2)); // use normalized time
@@ -132,47 +132,47 @@ pdf_gpu = ElementwiseKernel(
         float PIs = powf(PI, 2); //9.869604401089358f; // PI^2
         int k, K, lower, upper;
 
-    // calculate number of terms needed for large t
-    if (CUDART_PI_F*tt*err<1) { // if error threshold is set low enough
-        kl=sqrtf(-2.0f*log(CUDART_PI_F*tt*err)/(powf(CUDART_PI_F,2)*tt)); // bound
-        kl=fmax(kl,1/(CUDART_PI_F*sqrtf(tt))); // ensure boundary conditions met
-    }
-    else { // if error threshold set too high
-        kl=1.0f/(CUDART_PI_F*sqrtf(tt)); // set to boundary condition
-    }
-
-    // calculate number of terms needed for small t
-    if (2*sqrtf(2*CUDART_PI_F*tt)*err<1) { // if error threshold is set low enough
-        ks=2+sqrtf(-2*tt*log(2*sqrtf(2*CUDART_PI_F*tt)*err)); // bound
-        ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
-    }
-    else { // if error threshold was set too high
-        ks=2; // minimal kappa for that case
-    }
-
-    // compute f(tt|0,1,w)
-    p=0.0f; //initialize density
-    if (ks<kl) { // if small t is better (i.e., lambda<0)
-        K=(int)(ceil(ks)); // round to smallest integer meeting error
-        lower = (int)(-floorf((K-1)/2.));
-        upper = (int)(ceilf((K-1)/2.));
-        for(k=lower; k<=upper; k++) {// loop over k
-            p+=(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
+        // calculate number of terms needed for large t
+        if (CUDART_PI_F*tt*err<1) { // if error threshold is set low enough
+            kl=sqrtf(-2.0f*log(CUDART_PI_F*tt*err)/(powf(CUDART_PI_F,2)*tt)); // bound
+            kl=fmax(kl,1/(CUDART_PI_F*sqrtf(tt))); // ensure boundary conditions met
         }
-        p/=sqrtf(2*CUDART_PI_F*powf(tt,3)); // add constant term
-    }
-    else { // if large t is better...
-        K=(int)(ceil(kl)); // round to smallest integer meeting error
-        for (k=1; k <= K; k++) {
-            p+=k*expf(-(powf(k,2))*(powf(CUDART_PI_F,2))*tt/2)*sin(k*CUDART_PI_F*w); // increment sum
+        else { // if error threshold set too high
+            kl=1.0f/(CUDART_PI_F*sqrtf(tt)); // set to boundary condition
         }
+    
+        // calculate number of terms needed for small t
+        if (2*sqrtf(2*CUDART_PI_F*tt)*err<1) { // if error threshold is set low enough
+            ks=2+sqrtf(-2*tt*log(2*sqrtf(2*CUDART_PI_F*tt)*err)); // bound
+            ks=fmax(ks,sqrtf(tt)+1); // ensure boundary conditions are met
+        }
+        else { // if error threshold was set too high
+            ks=2; // minimal kappa for that case
+        }
+    
+        // compute f(tt|0,1,w)
+        p=0.0f; //initialize density
+        if (ks<kl) { // if small t is better (i.e., lambda<0)
+            K=(int)(ceil(ks)); // round to smallest integer meeting error
+            lower = (int)(-floorf((K-1)/2.));
+            upper = (int)(ceilf((K-1)/2.));
+            for(k=lower; k<=upper; k++) {// loop over k
+                p+=(w+2*k)*expf(-(powf((w+2*k),2))/2/tt); // increment sum
+            }
+            p/=sqrtf(2*CUDART_PI_F*powf(tt,3)); // add constant term
+        }
+        else { // if large t is better...
+            K=(int)(ceil(kl)); // round to smallest integer meeting error
+            for (k=1; k <= K; k++) {
+                p+=k*expf(-(powf(k,2))*(powf(CUDART_PI_F,2))*tt/2)*sin(k*CUDART_PI_F*w); // increment sum
+            }
         p*=CUDART_PI_F; // add constant term
         }
+
         // convert to f(t|v,a,w)
         p *= expf(-v*a*w -(powf(v,2))*t/2)/(powf(a,2));
         return p;
-    }
-    """)
+    }""")
 
 if __name__=="__main__":
     x = -1 * np.random.rand(10).astype(np.float32)
