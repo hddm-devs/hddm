@@ -13,6 +13,21 @@ from scipy.stats import kstest
 
 from nose import SkipTest
 
+class TestGPU(unittest.TestCase):
+    def test_gpu(self):
+        v = (rand()-.5)*1.5
+        V = rand()
+        t = rand()*.5
+        a = 1.5+rand()
+        z = rand()
+        rt = np.linspace(-5,5,100)
+        err = 1e-4 #10*(-3- np.ceil(rand()*20))
+        # Test if equal up to the 9th decimal.
+        gpu_pdf = hddm.wfpt_gpu.pdf(rt, v, V, a, z, t, err)
+        python_pdf = np.log(hddm.likelihoods.wfpt.pdf(rt, v, V, a, z, 0, t, 0))
+
+        np.testing.assert_allclose(gpu_pdf, python_pdf, rtol=1e-2, atol=0)
+
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
