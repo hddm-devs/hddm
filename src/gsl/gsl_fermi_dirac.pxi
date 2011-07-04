@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_fermi_dirac.h":
+cdef extern from "gsl/gsl_sf_fermi_dirac.h":
 
   double  gsl_sf_fermi_dirac_m1(double x)
 

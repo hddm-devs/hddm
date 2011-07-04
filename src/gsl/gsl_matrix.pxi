@@ -1,4 +1,4 @@
-cdef extern from "gsl_matrix_double.h":
+cdef extern from "gsl/gsl_matrix_double.h":
 
   ctypedef struct gsl_matrix:
     size_t size1

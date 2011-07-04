@@ -1,4 +1,4 @@
-cdef extern from "gsl_poly.h":
+cdef extern from "gsl/gsl_poly.h":
 
   #  Evaluate polynomial
   double  gsl_poly_eval(double c[], int len, double x)

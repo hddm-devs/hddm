@@ -1,10 +1,10 @@
-cdef extern from "gsl_monte.h":
+cdef extern from "gsl/gsl_monte.h":
   ctypedef struct gsl_monte_function:
     double (*f)(double * x_array, size_t dim, void * params)
     size_t dim
     void * params
 
-cdef extern from "gsl_monte_plain.h":
+cdef extern from "gsl/gsl_monte_plain.h":
   ctypedef struct gsl_monte_plain_state
   
   int gsl_monte_plain_integrate ( gsl_monte_function * f, \
@@ -19,7 +19,7 @@ cdef extern from "gsl_monte_plain.h":
   
   void gsl_monte_plain_free (gsl_monte_plain_state* state)
 
-cdef extern from "gsl_monte_miser.h":
+cdef extern from "gsl/gsl_monte_miser.h":
   
   ctypedef struct gsl_monte_miser_state
   
@@ -32,7 +32,7 @@ cdef extern from "gsl_monte_miser.h":
   void gsl_monte_miser_free(gsl_monte_miser_state* state)
   
   # vegas
-cdef extern from "gsl_monte_vegas.h":
+cdef extern from "gsl/gsl_monte_vegas.h":
   cdef enum:
     GSL_VEGAS_MODE_IMPORTANCE = 1
     GSL_VEGAS_MODE_IMPORTANCE_ONLY = 0

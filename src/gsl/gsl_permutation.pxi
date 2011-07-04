@@ -1,4 +1,4 @@
-cdef extern from "gsl_permutation.h":
+cdef extern from "gsl/gsl_permutation.h":
 
   ctypedef struct gsl_permutation:
     size_t size
@@ -60,18 +60,18 @@ cdef extern from "gsl_permutation.h":
 
 
 # Applying Permutations
-cdef extern from "gsl_permute_double.h":
+cdef extern from "gsl/gsl_permute_double.h":
   int  gsl_permute(size_t * p, double * data, size_t stride, size_t n)
 
   int  gsl_permute_inverse(size_t * p, double * data, size_t stride, size_t n)
 
 
-cdef extern from "gsl_permute_vector_double.h":
+cdef extern from "gsl/gsl_permute_vector_double.h":
   int  gsl_permute_vector(gsl_permutation * p, gsl_vector * v)
 
   int  gsl_permute_vector_inverse(gsl_permutation * p, gsl_vector * v)
 
-cdef extern from "gsl_permute_vector_complex_double.h":
+cdef extern from "gsl/gsl_permute_vector_complex_double.h":
   int gsl_permute_vector_complex ( gsl_permutation * p, gsl_vector_complex * v)
 
   int gsl_permute_vector_complex_inverse ( gsl_permutation * p, gsl_vector_complex * v)

@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_coulomb.h":
+cdef extern from "gsl/gsl_sf_coulomb.h":
 
   double  gsl_sf_hydrogenicR_1(double Z, double r)
 

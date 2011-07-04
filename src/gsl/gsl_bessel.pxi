@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_bessel.h":
+cdef extern from "gsl/gsl_sf_bessel.h":
 
   double  gsl_sf_bessel_J0(double x)
 

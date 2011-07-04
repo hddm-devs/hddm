@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_coupling.h":
+cdef extern from "gsl/gsl_sf_coupling.h":
 
   double  gsl_sf_coupling_3j(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int two_mc)
 

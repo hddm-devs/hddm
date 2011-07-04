@@ -1,4 +1,4 @@
-cdef extern from "gsl_randist.h":
+cdef extern from "gsl/gsl_randist.h":
   unsigned int gsl_ran_bernoulli ( gsl_rng * r, double p)
   double gsl_ran_bernoulli_pdf ( unsigned int k, double p)
   
@@ -137,7 +137,7 @@ cdef extern from "gsl_randist.h":
   size_t gsl_ran_discrete ( gsl_rng *r,  gsl_ran_discrete_t *g)
   double gsl_ran_discrete_pdf (size_t k,  gsl_ran_discrete_t *g)
   
-cdef extern from "gsl_cdf.h": 
+cdef extern from "gsl/gsl_cdf.h": 
   double gsl_cdf_ugaussian_P ( double x)
   double gsl_cdf_ugaussian_Q ( double x)
   

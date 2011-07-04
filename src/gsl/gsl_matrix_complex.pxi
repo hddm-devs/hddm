@@ -1,4 +1,4 @@
-cdef extern from "gsl_matrix_complex_double.h":
+cdef extern from "gsl/gsl_matrix_complex_double.h":
 
   ctypedef struct gsl_matrix_complex:
     size_t size2

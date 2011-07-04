@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_ellint.h":
+cdef extern from "gsl/gsl_sf_ellint.h":
 
   double  gsl_sf_ellint_Kcomp(double k, gsl_mode_t mode)
 

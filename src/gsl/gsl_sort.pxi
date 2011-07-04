@@ -1,4 +1,4 @@
-cdef extern from "gsl_heapsort.h":
+cdef extern from "gsl/gsl_heapsort.h":
 
   ctypedef int (*gsl_comparison_fn_t) ( void * ,  void * )
   
@@ -6,7 +6,7 @@ cdef extern from "gsl_heapsort.h":
   int gsl_heapsort_index (size_t * p,  void * array, size_t count, size_t size, gsl_comparison_fn_t compare)
   
 
-cdef extern from "gsl_sort_double.h":
+cdef extern from "gsl/gsl_sort_double.h":
   void gsl_sort (double * data,  size_t stride,  size_t n)
   void gsl_sort_index (size_t * p,  double * data,  size_t stride,  size_t n)
   
@@ -17,7 +17,7 @@ cdef extern from "gsl_sort_double.h":
   int gsl_sort_largest_index (size_t * p,  size_t k,  double * src,  size_t stride,  size_t n)
   
 
-cdef extern from "gsl_sort_vector_double.h":
+cdef extern from "gsl/gsl_sort_vector_double.h":
   
   void gsl_sort_vector (gsl_vector * v)
   int gsl_sort_vector_index (gsl_permutation * p,  gsl_vector * v)

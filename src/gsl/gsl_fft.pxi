@@ -1,9 +1,9 @@
-cdef extern from "gsl_fft.h":
+cdef extern from "gsl/gsl_fft.h":
   cdef enum gsl_fft_direction:
     forward = -1
     backward = 1
 
-cdef extern from "gsl_fft_complex.h":
+cdef extern from "gsl/gsl_fft_complex.h":
   
   # Power of 2 routines
   int  gsl_fft_complex_radix2_forward(gsl_complex_packed_array data, size_t stride, size_t n)
@@ -56,7 +56,7 @@ cdef extern from "gsl_fft_complex.h":
 
   # end of gsl_fft_complex.h
 
-cdef extern from "gsl_fft_real.h":
+cdef extern from "gsl/gsl_fft_real.h":
 
   int  gsl_fft_real_radix2_transform(double data[], size_t stride, size_t n)
 
@@ -84,7 +84,7 @@ cdef extern from "gsl_fft_real.h":
 
   # end of gsl_fft_real.h
 
-cdef extern from "gsl_fft_halfcomplex.h":
+cdef extern from "gsl/gsl_fft_halfcomplex.h":
 
   int  gsl_fft_halfcomplex_radix2_backward(double data[], size_t stride, size_t n)
 

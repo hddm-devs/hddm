@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_pow_int.h":
+cdef extern from "gsl/gsl_sf_pow_int.h":
 
   double  gsl_sf_pow_int(double x, int n)
 

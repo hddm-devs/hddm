@@ -1,4 +1,4 @@
-cdef extern from "gsl_statistics_double.h":
+cdef extern from "gsl/gsl_statistics_double.h":
   double gsl_stats_mean ( double data[],  size_t stride,  size_t n)
   double gsl_stats_variance ( double data[],  size_t stride,  size_t n)
   double gsl_stats_sd ( double data[],  size_t stride,  size_t n)

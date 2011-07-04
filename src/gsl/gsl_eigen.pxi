@@ -1,4 +1,4 @@
-cdef extern from "gsl_eigen.h":
+cdef extern from "gsl/gsl_eigen.h":
 
   ctypedef enum gsl_eigen_sort_t:
     GSL_EIGEN_SORT_VAL_ASC,

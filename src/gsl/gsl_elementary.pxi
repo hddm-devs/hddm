@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_elementary.h":
+cdef extern from "gsl/gsl_sf_elementary.h":
 
   int  gsl_sf_multiply_e(double x, double y, gsl_sf_result * result)
 

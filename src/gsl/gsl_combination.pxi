@@ -1,4 +1,4 @@
-cdef extern from "gsl_combination.h":
+cdef extern from "gsl/gsl_combination.h":
 
   ctypedef struct gsl_combination:
     size_t n

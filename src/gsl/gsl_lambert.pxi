@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_lambert.h":
+cdef extern from "gsl/gsl_sf_lambert.h":
 
   double  gsl_sf_lambert_W0(double x)
 

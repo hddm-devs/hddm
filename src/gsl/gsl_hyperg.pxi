@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_hyperg.h":
+cdef extern from "gsl/gsl_sf_hyperg.h":
 
   double  gsl_sf_hyperg_0F1(double c, double x)
 

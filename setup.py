@@ -5,6 +5,7 @@ import numpy as np
 import os
 
 gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
+print gsl_include
 
 setup(
     name="HDDM",

@@ -1,4 +1,4 @@
-cdef extern from "gsl_block_double.h":
+cdef extern from "gsl/gsl_block_double.h":
 
   ctypedef struct gsl_block:
     size_t size
@@ -22,7 +22,7 @@ cdef extern from "gsl_block_double.h":
   double * gsl_block_data (gsl_block * b)
 
   
-cdef extern from "gsl_block_complex_double.h":
+cdef extern from "gsl/gsl_block_complex_double.h":
 
   ctypedef struct gsl_block_complex:
     size_t size

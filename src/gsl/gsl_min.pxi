@@ -1,4 +1,4 @@
-cdef extern from "gsl_min.h":
+cdef extern from "gsl/gsl_min.h":
   
   ctypedef struct gsl_min_fminimizer_type:
       char *name

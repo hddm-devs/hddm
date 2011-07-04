@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_transport.h":
+cdef extern from "gsl/gsl_sf_transport.h":
 
   double  gsl_sf_transport_2(double x)
 

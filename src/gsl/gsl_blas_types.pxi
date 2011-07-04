@@ -1,4 +1,4 @@
-cdef extern from "gsl_cblas.h":
+cdef extern from "gsl/gsl_cblas.h":
   cdef enum CBLAS_ORDER:
     CblasRowMajor=101
     CblasColMajor=102
@@ -22,7 +22,7 @@ cdef extern from "gsl_cblas.h":
   
 ctypedef size_t CBLAS_INDEX
 
-cdef extern from "gsl_blas_types.h":
+cdef extern from "gsl/gsl_blas_types.h":
   ctypedef  CBLAS_INDEX  CBLAS_INDEX_t
   ctypedef  CBLAS_ORDER       CBLAS_ORDER_t
   ctypedef  CBLAS_TRANSPOSE   CBLAS_TRANSPOSE_t

@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_airy.h":
+cdef extern from "gsl/gsl_sf_airy.h":
 
   double  gsl_sf_airy_Ai(double x, gsl_mode_t mode)
 

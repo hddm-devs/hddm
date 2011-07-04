@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_expint.h":
+cdef extern from "gsl/gsl_sf_expint.h":
 
   double  gsl_sf_expint_E1(double x)
 

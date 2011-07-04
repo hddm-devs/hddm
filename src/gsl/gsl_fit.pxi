@@ -1,4 +1,4 @@
-cdef extern from "gsl_fit.h":
+cdef extern from "gsl/gsl_fit.h":
   
   
   int gsl_fit_linear ( double * x,  size_t xstride,

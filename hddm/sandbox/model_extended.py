@@ -1,3 +1,8 @@
+import hddm
+from hddm.model import Base
+import pymc as pm
+from kabuki import Parameter
+
 class HDDMFullExtended(Base):
     def get_params(self):
         [self.include.add(param) for param in ['V','Z','T']]

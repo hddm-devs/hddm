@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_dawson.h":
+cdef extern from "gsl/gsl_sf_dawson.h":
 
   double  gsl_sf_dawson(double x)
 

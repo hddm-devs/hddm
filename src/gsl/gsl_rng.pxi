@@ -1,4 +1,4 @@
-cdef extern from "gsl_rng.h":
+cdef extern from "gsl/gsl_rng.h":
 
   ctypedef struct gsl_rng_type
   ctypedef struct gsl_rng

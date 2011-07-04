@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_gegenbauer.h":
+cdef extern from "gsl/gsl_sf_gegenbauer.h":
 
   double  gsl_sf_gegenpoly_1(double lambd, double x)
 

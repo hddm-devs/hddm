@@ -1,4 +1,4 @@
-cdef extern from "gsl_ntuple.h":
+cdef extern from "gsl/gsl_ntuple.h":
   ctypedef struct gsl_ntuple
   
   ctypedef struct gsl_ntuple_select_fn:

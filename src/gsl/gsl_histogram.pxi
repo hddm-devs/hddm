@@ -1,4 +1,4 @@
-cdef extern from "gsl_histogram.h":
+cdef extern from "gsl/gsl_histogram.h":
   ctypedef struct gsl_histogram 
   ctypedef struct gsl_histogram_pdf 
   
@@ -74,7 +74,7 @@ cdef extern from "gsl_histogram.h":
   double gsl_histogram_pdf_sample ( gsl_histogram_pdf * p, double r)
   
 
-cdef extern from "gsl_histogram2d.h":
+cdef extern from "gsl/gsl_histogram2d.h":
   ctypedef struct gsl_histogram2d:
     size_t nx, ny
     double * xrange

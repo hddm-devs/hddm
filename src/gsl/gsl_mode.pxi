@@ -1,4 +1,4 @@
-cdef extern from "gsl_mode.h":
+cdef extern from "gsl/gsl_mode.h":
    ctypedef unsigned int gsl_mode_t
    double GSL_PREC_DOUBLE
 

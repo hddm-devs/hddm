@@ -1,4 +1,4 @@
-cdef extern from "gsl_roots.h":
+cdef extern from "gsl/gsl_roots.h":
   
   ctypedef struct gsl_root_fsolver_type:
       char *name

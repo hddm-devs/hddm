@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_debye.h":
+cdef extern from "gsl/gsl_sf_debye.h":
 
   double  gsl_sf_debye_1(double x)
 

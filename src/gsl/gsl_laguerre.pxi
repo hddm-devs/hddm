@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_laguerre.h":
+cdef extern from "gsl/gsl_sf_laguerre.h":
 
   double  gsl_sf_laguerre_1(double a, double x)
 

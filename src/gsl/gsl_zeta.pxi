@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_zeta.h":
+cdef extern from "gsl/gsl_sf_zeta.h":
 
   double  gsl_sf_zeta_int(int n)
 

@@ -1,5 +1,5 @@
 
-cdef extern from "gsl_sf_result.h":
+cdef extern from "gsl/gsl_sf_result.h":
   ctypedef struct gsl_sf_result:
     double val
     double err

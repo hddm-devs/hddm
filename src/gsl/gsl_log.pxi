@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_log.h":
+cdef extern from "gsl/gsl_sf_log.h":
 
   double  gsl_sf_log(double x)
 

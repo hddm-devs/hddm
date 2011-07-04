@@ -1,6 +1,6 @@
 include "gsl_blas_types.pxi"
 
-cdef extern from "gsl_blas.h":
+cdef extern from "gsl/gsl_blas.h":
 
   # Level 1
   int  gsl_blas_ddot(gsl_vector * x, gsl_vector * y, double * result)

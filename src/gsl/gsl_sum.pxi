@@ -1,4 +1,4 @@
-cdef extern from "gsl_sum.h":
+cdef extern from "gsl/gsl_sum.h":
   
   ctypedef struct gsl_sum_levin_u_workspace:
     size_t terms_used

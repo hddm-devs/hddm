@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_clausen.h":
+cdef extern from "gsl/gsl_sf_clausen.h":
 
   double  gsl_sf_clausen(double x)
 

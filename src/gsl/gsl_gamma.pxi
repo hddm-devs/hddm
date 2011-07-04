@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_gamma.h":
+cdef extern from "gsl/gsl_sf_gamma.h":
 
   double  gsl_sf_gamma(double x)
 

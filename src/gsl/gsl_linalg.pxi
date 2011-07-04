@@ -1,4 +1,4 @@
-cdef extern from "gsl_linalg.h":
+cdef extern from "gsl/gsl_linalg.h":
   
   cdef enum gsl_linalg_matrix_mod_t:
     GSL_LINALG_MOD_NONE = 0

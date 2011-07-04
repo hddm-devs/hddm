@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_synchrotron.h":
+cdef extern from "gsl/gsl_sf_synchrotron.h":
 
   double  gsl_sf_synchrotron_1(double x)
 

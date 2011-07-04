@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_dilog.h":
+cdef extern from "gsl/gsl_sf_dilog.h":
 
   double  gsl_sf_dilog(double x)
 

@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_legendre.h":
+cdef extern from "gsl/gsl_sf_legendre.h":
 
   double  gsl_sf_legendre_P1(double x)
 

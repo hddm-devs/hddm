@@ -1,4 +1,4 @@
-cdef extern from "gsl_chebyshev.h":
+cdef extern from "gsl/gsl_chebyshev.h":
   
   ctypedef struct gsl_cheb_series
   

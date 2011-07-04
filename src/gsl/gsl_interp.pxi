@@ -1,4 +1,4 @@
-cdef extern from "gsl_interp.h":
+cdef extern from "gsl/gsl_interp.h":
   
   ctypedef struct gsl_interp_accel
   
@@ -72,7 +72,7 @@ cdef extern from "gsl_interp.h":
   
 
 
-cdef extern from "gsl_spline.h":
+cdef extern from "gsl/gsl_spline.h":
   ctypedef struct gsl_spline
   
   gsl_spline * gsl_spline_alloc( gsl_interp_type * T, size_t size)

@@ -1,4 +1,4 @@
-cdef extern from "gsl_vector.h":
+cdef extern from "gsl/gsl_vector.h":
 
   ctypedef struct gsl_vector:
     size_t size

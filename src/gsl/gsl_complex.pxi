@@ -1,4 +1,4 @@
-cdef extern from "gsl_complex.h":
+cdef extern from "gsl/gsl_complex.h":
 
   ctypedef double * gsl_complex_packed_array
   ctypedef double * gsl_complex_packed_ptr
@@ -21,7 +21,7 @@ cdef extern from "gsl_complex.h":
   double GSL_SET_IMAG(gsl_complex * zp, double y)
 
 
-cdef extern from "gsl_complex_math.h":
+cdef extern from "gsl/gsl_complex_math.h":
 
 # Complex numbers
   gsl_complex  gsl_complex_rect(double x, double y)

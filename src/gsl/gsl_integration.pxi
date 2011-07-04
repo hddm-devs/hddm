@@ -1,4 +1,4 @@
-cdef extern from "gsl_integration.h":
+cdef extern from "gsl/gsl_integration.h":
 
   ctypedef struct gsl_integration_workspace
   ctypedef struct gsl_integration_qaws_table

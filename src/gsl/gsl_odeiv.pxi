@@ -1,4 +1,4 @@
-cdef extern from "gsl_odeiv.h":
+cdef extern from "gsl/gsl_odeiv.h":
   
   ctypedef struct gsl_odeiv_system:
     int (* function) (double t,  double y[], double dydt[], void * params)

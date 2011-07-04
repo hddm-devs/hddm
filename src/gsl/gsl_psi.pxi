@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_psi.h":
+cdef extern from "gsl/gsl_sf_psi.h":
 
   double  gsl_sf_psi_int(int n)
 

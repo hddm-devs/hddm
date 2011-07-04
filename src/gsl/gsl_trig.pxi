@@ -1,4 +1,4 @@
-cdef extern from "gsl_sf_trig.h":
+cdef extern from "gsl/gsl_sf_trig.h":
 
   double  gsl_sf_sin(double x)
 

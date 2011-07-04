@@ -1,4 +1,4 @@
-cdef extern from "gsl_vector_complex_double.h":
+cdef extern from "gsl/gsl_vector_complex_double.h":
 
   ctypedef struct gsl_vector_complex:
     size_t size

@@ -1,4 +1,4 @@
-cdef extern from "gsl_math.h":
+cdef extern from "gsl/gsl_math.h":
 
   double M_E
 
