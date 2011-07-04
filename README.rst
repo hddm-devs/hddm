@@ -2,13 +2,13 @@
 Introduction
 ************
 
-:Date: April 18, 2011
+:Date: July 4, 2011
 :Author: Thomas V. Wiecki, Imri Sofer
-:Contact: thomas_wiecki@brown.edu
+:Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu
 :Web site: http://code.google.com/p/hddm
 :Copyright: This document has been placed in the public domain.
-:License: PyMC is released under the GPLv3.
-:Version: 0.1alpha
+:License: HDDM is released under the GPLv3.
+:Version: 0.1RC1
 
 Purpose
 =======
@@ -30,13 +30,6 @@ possible. Here is a short list of some of its features:
 * Easy specification of models via configuration file fosters exchange of models and research results.
 
 * Built-in Bayesian hypothesis testing and several convergence and goodness-of-fit diagnostics.
-
-* Supports the following Drift Model types:
-    * Simple DDM: Ratcliff DDDM without taking intra-trial variabilities into account.
-    * Full-MC DDM: Ratcliff DDM taking intra-trial variabilities into account by using Monte-Carlo integration.
-    * Full DDM: Ratcliff DDM with full hierarchical bayesian parameter estimation of intra-trial variabilites.
-    * LBA: Linear Ballistic Accumulator (Brown et al.)
-
 
 Usage
 =====

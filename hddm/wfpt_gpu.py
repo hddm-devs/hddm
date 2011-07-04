@@ -40,7 +40,7 @@ pdf_gpu = ElementwiseKernel(
             v = -v_in;
             t = x;
         }
-        if (ter>t) {return (0.0f);}
+        if (t<=ter) {return (-9999.0f);}
         
         // Subtract ter
         t -= ter;
@@ -94,6 +94,15 @@ pdf_gpu = ElementwiseKernel(
         p *= expf((powf((a*w*V),2) - 2*a*v*w - (powf(v,2))*t)/(2*(powf(V,2))*t+2))/sqrtf((powf(V,2))*t+1)/(powf(a,2));
         return logf(p);
     }""")
+
+def pdf(rt, v, V, a, z, t, err=1e-4):
+    x_gpu = gpuarray.to_gpu(np.asarray(rt, dtype=np.float32))
+    out_gpu = gpuarray.empty_like(x_gpu)
+    pdf_gpu(x_gpu, v, V, a, z, t, err, out_gpu)
+    
+    out = out_gpu.get()
+    out[out==-9999.0] = -np.inf
+    return np.asarray(out)
 
 if __name__=="__main__":
     x = -1 * np.random.rand(10).astype(np.float32)

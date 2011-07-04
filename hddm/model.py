@@ -19,11 +19,7 @@ from kabuki.hierarchical import Parameter
 
 class Base(kabuki.Hierarchical):
     """
-    This class can generate different hddms:
-    - simple DDM (without inter-trial variabilities)
-    - full averaging DDM (with inter-trial variabilities)
-    - subject param DDM (each subject get's it's own param, see EJ's book 8.3)
-    - parameter dependent on data (e.g. drift rate is dependent on stimulus
+    
     """
     
     def __init__(self, data, trace_subjs=True, no_bias=True, 
@@ -135,122 +131,6 @@ class Base(kabuki.Hierarchical):
 class HDDM(Base):
     pass
 
-class HDDMGPU(Base):
-    def get_rootless_child(self, param, params):
-        import pycuda.driver as cuda
-        import pycuda.autoinit
-        import pycuda.gpuarray as gpuarray
-
-        if param.name == 'wfpt':
-            data = param.data['rt'].flatten().astype(np.float32)
-            data_gpu = gpuarray.to_gpu(data)
-            out_gpu = gpuarray.empty_like(data_gpu)
-            return hddm.likelihoods.WienerGPU(param.full_name,
-                                              value=data_gpu,
-                                              v = params['v'],
-                                              V = self.get_node('V', params),
-                                              a = params['a'],
-                                              z = self.get_node('z',params),
-                                              t = params['t'],
-                                              out = out_gpu,
-                                              observed=True)
-
-        else:
-            raise KeyError, "Rootless parameter named %s not found." % param.name
-
-class HDDMFullExtended(Base):
-    def get_params(self):
-        [self.include.add(param) for param in ['V','Z','T']]
-        
-        params = [Parameter('z_trls', False),
-                  Parameter('v_trls', False),
-                  Parameter('t_trls', False)]
-        params += list(super(self.__class__, self).get_params())
-
-        return params
-
-    def get_rootless_child(self, param, params):
-        trials = len(param.data)
-
-        if param.name == 'z_trls':
-            return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
-                                                   center=params['z'],
-                                                   width=params['Z']) for i in range(trials)]
-
-        elif param.name == 'v_trls':
-            return [pm.Normal(param.full_name+str(i),
-                              mu=params['v'],
-                              tau=params['V']**-2) for i in range(trials)]
-
-        elif param.name == 't_trls':
-            return [hddm.likelihoods.CenterUniform(param.full_name+str(i),
-                                                   center=params['t'],
-                                                   width=params['T']) for i in range(trials)]
-
-        elif param.name == 'wfpt':
-            return hddm.likelihoods.WienerSingleTrial(param.full_name,
-                                                      value=param.data['rt'],
-                                                      v=params['v_trls'],
-                                                      t=params['t_trls'], 
-                                                      a=[params['a'] for i in range(trials)],
-                                                      z=params['z_trls'],
-                                                      observed=True)
-        else:
-            raise KeyError, "Rootless child node named %s not found." % param.name
-        
-class HLBA(Base):
-    param_names = (('a',True), ('z',True), ('t',True), ('V',True), ('v0',True), ('v1',True), ('lba',False))
-
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude=None, **kwargs):
-        super(self.__class__, self).__init__(data, **kwargs)
-
-        # LBA model
-        self.normalize_v = normalize_v
-        self.init_params = {}
-            
-        self.param_ranges = {'a_lower': .2,
-                             'a_upper': 4.,
-                             'v_lower': 0.1,
-                             'v_upper': 3.,
-                             'z_lower': .0,
-                             'z_upper': 2.,
-                             't_lower': .05,
-                             't_upper': 2.,
-                             'V_lower': .2,
-                             'V_upper': 2.}
-            
-        if self.normalize_v:
-            self.param_ranges['v_lower'] = 0.
-            self.param_ranges['v_upper'] = 1.
-
-    def get_rootless_child(self, param, params):
-        return hddm.likelihoods.LBA(param.full_name,
-                                    value=param.data['rt'],
-                                    a=params['a'],
-                                    z=params['z'],
-                                    t=params['t'],
-                                    v0=params['v0'],
-                                    v1=params['v1'],
-                                    V=params['V'],
-                                    normalize_v=self.normalize_v,
-                                    observed=True)
-
-    def get_root_node(self, param):
-        """Create and return a prior distribution for [param]. [tag] is
-        used in case of dependent parameters.
-        """
-        if param.name == 'V' and self.fix_sv is not None: # drift rate variability
-            return pm.Lambda(param.full_name, lambda x=self.fix_sv: x)
-        else:
-            return super(self.__class__, self).get_root_param(self, param)
-
-    def get_child_node(self, param, plot=False):
-        if param.name.startswith('V') and self.fix_sv is not None:
-            return pm.Lambda(param.full_name, lambda x=param.root: x,
-                             plot=plot, trace=self.trace_subjs)
-        else:
-            return super(self.__class__, self).get_child_node(param, plot=plot)
-    
 class HDDMContaminant(Base):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
@@ -325,13 +205,13 @@ class HDDMAntisaccade(Base):
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = [Parameter('v',True, lower=-3, upper=0., init=-1.),
-                       Parameter('v_switch', True, lower=0, upper=3., init=1.),
-                       Parameter('a', True, lower=1.5, upper=3.5, init=2),
-                       Parameter('t', True, lower=0., upper=1., init=0.1),
+        self.params = [Parameter('v',True, lower=-4, upper=0.),
+                       Parameter('v_switch', True, lower=0, upper=4.),
+                       Parameter('a', True, lower=1, upper=4.5),
+                       Parameter('t', True, lower=0., upper=.5, init=0.1),
                        Parameter('t_switch', True, lower=0.0, upper=1.0, init=0.3),
-                       Parameter('T', True, lower=0, upper=.5, init=0, default=0, optional=True),
-                       Parameter('V_switch', True, lower=0, upper=2., init=.1, default=0, optional=True),
+                       Parameter('T', True, lower=0, upper=.5, init=.1, default=0, optional=True),
+                       Parameter('V_switch', True, lower=0, upper=2., default=0, optional=True),
                        Parameter('wfpt', False)]
 
     def get_rootless_child(self, param, params):
@@ -350,8 +230,6 @@ class HDDMAntisaccade(Base):
                                                       observed=True)
         else:
             raise TypeError, "Parameter named %s not found." % param.name
-
-
 
 class HDDMRegressor(Base):
     def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):

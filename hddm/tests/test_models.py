@@ -76,7 +76,7 @@ class TestSingle(unittest.TestCase):
 
     def runTest(self):
         return
-    
+
     def test_HDDM(self, assert_=True):
         #raise SkipTest("Disabled.")
         includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
@@ -125,7 +125,20 @@ class TestSingle(unittest.TestCase):
         check_model(mc, params_true, assert_=assert_)
 
         return mc
-        
+
+    def test_HDDMGPU(self, assert_=True):
+        try:
+            import pycuda
+        except ImportError:
+            raise SkipTest("Disabled.")
+        include = ['V']
+        data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
+        model = hddm.model.HDDMGPU(data, include=include, no_bias=False, is_group_model=False)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
+
     def test_lba(self):
         raise SkipTest("Disabled.")
         model = hddm.model.HLBA(self.data, is_group_model=False, normalize_v=True)
