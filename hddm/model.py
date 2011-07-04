@@ -8,12 +8,7 @@ from copy import copy
 
 import hddm
 
-try:
-    # Use system-wide kabuki if installed
-    import kabuki
-except ImportError:
-    # Otherwise take included one.
-    import hddm.kabuki as kabuki
+import kabuki
 
 from kabuki.hierarchical import Parameter
 
