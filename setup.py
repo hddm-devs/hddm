@@ -1,3 +1,6 @@
+from aksetup_helper import check_git_submodules
+check_git_submodules()
+
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -5,7 +8,6 @@ import numpy as np
 import os
 
 gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
-print gsl_include
 
 setup(
     name="HDDM",
