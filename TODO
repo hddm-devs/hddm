@@ -1,6 +1,7 @@
 0.1:
 * Write documentation to functions (Thomas + Imri)
 * Add more unittests (Thomas + Imri)
+* Update existing examples and add new ones (Thomas)
 * Contaminant model should work with only one outlier parameter (Imri)
 * wp should affect Cont model (Imri)
 * need to change the dummy variables in Cone model (Imri)
