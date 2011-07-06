@@ -13,21 +13,6 @@ from scipy.stats import kstest
 
 from nose import SkipTest
 
-class TestGPU(unittest.TestCase):
-    def test_gpu(self):
-        v = (rand()-.5)*1.5
-        V = rand()
-        t = rand()*.5
-        a = 1.5+rand()
-        z = rand()
-        rt = np.linspace(-5,5,100)
-        err = 1e-4 #10*(-3- np.ceil(rand()*20))
-        # Test if equal up to the 9th decimal.
-        gpu_pdf = hddm.wfpt_gpu.pdf(rt, v, V, a, z, t, err)
-        python_pdf = np.log(hddm.likelihoods.wfpt.pdf(rt, v, V, a, z, 0, t, 0))
-
-        np.testing.assert_allclose(gpu_pdf, python_pdf, rtol=1e-2, atol=0)
-
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
@@ -225,42 +210,5 @@ class TestWfptFull(unittest.TestCase):
             t = 0.2
             T = 0.1
 
-class TestLBA(unittest.TestCase):
-    def runTest(self):
-        pass
-        #self.setUp()
-    
-    def setUp(self, size=200):
-        self.x = np.random.rand(size)
-        self.a = np.random.rand(1)+1
-        self.z = np.random.rand(1)*self.a
-        self.v = np.random.rand(2)+.5
-        #self.v_multi = np.random.rand(5)
-        self.V = np.random.rand(1)+.5
-
-    def test_lba_single(self):
-        try:
-            import rpy2.robjects as robjects
-            import rpy2.robjects.numpy2ri
-            robjects.r.source('lba-math.r')
-        except ImportError:
-            raise SkipTest("rpy2 not installed, not testing against reference implementation.")
-
-        like_cython = hddm.likelihoods.LBA_like(self.x, self.a, self.z, 0., self.V, self.v[0], self.v[1], logp=False)
-        like_r = np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.V)))
-        np.testing.assert_array_almost_equal(like_cython, like_r,5)
-
-    def call_cython(self):
-        return hddm.lba.lba(self.x, self.z, self.a, self.V, self.v[0], self.v[1])
-
-    def call_r(self):
-        return np.array(robjects.r.n1PDF(t=self.x, x0max=np.float(self.z), chi=np.float(self.a), drift=self.v, sdI=np.float(self.V)))
-        
-
-
 if __name__=='__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestWfpt)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestLBA)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    print "Run nosetest."
