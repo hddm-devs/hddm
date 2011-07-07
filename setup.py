@@ -24,8 +24,6 @@ setup(
     include_dirs = [np.get_include(), gsl_include, '/usr/local/include'],
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("wfpt", ["src/wfpt.pyx"]),
-                   Extension("wfpt_switch", ["src/wfpt_switch.pyx"], libraries=['gsl','gslcblas']),
                    Extension("wfpt_full", ["src/wfpt_full.pyx"])]
-                   #Extension("lba", ["src/lba.pyx"])]
 )
 
