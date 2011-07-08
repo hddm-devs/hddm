@@ -25,23 +25,6 @@ from numpy.random import rand
 
 from nose import SkipTest
 
-def create_multi_data(params1, params2, samples=1000, subj=False, num_subjs=10.):
-    import numpy.lib.recfunctions as rec
-
-    if not subj:
-        data1 = hddm.generate.gen_rts(params1, structured=True, samples=samples)
-        data2 = hddm.generate.gen_rts(params2, structured=True, samples=samples)
-    else:
-        data1 = gen_rand_subj_data(num_subjs=num_subjs, params=params1, samples=samples/num_subjs, )[0]
-        data2 = gen_rand_subj_data(num_subjs=num_subjs, params=params2, samples=samples/num_subjs, )[0]
-
-    # Add stimulus field
-    data1 = rec.append_fields(data1, names='stim', data=np.zeros(data1.shape[0]), dtypes='i8', usemask=False)
-    data2 = rec.append_fields(data2, names='stim', data=np.ones(data2.shape[0]), dtypes='i8', usemask=False)
-
-    data = rec.stack_arrays((data1, data2), usemask=False)
-
-    return data
 
 def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
     params1 = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
@@ -82,9 +65,8 @@ class TestSingle(unittest.TestCase):
         includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
-            model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=False)
-            nodes = model.create()
-            mc = pm.MCMC(nodes)
+            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=False)
+            mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
 
@@ -94,9 +76,8 @@ class TestSingle(unittest.TestCase):
         includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
-            model = hddm.model.HDDM(data, include=include, no_bias=False, is_group_model=True)
-            nodes = model.create()
-            mc = pm.MCMC(nodes)
+            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=True)
+            mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
 
@@ -104,4 +85,4 @@ class TestSingle(unittest.TestCase):
 
 
 if __name__=='__main__':
-    print "Run nosetest.py".
+    print "Run nosetest.py"
