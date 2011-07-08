@@ -366,18 +366,27 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100):
                       {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
     n_conds = len(params_set)
     n = samples_per_cond
-    data = np.empty(n*n_conds, dtype = ([('response', np.float), ('rt', np.float), ('cond', np.int), ('cond2', np.int)]))
     counter = 0
-    for i in range(n_conds):
-        i_data = gen_rts(params_set[i], samples=n, structured=True, strict_size=True)
-        data[counter:counter+len(i_data)]['response'] = np.sign(i_data['response'])
-        data[counter:counter+len(i_data)]['rt'] = np.abs(i_data['rt'])
-        data[counter:counter+len(i_data)]['cond'] = i
-        data[counter:counter+len(i_data):2]['cond2'] = i+1
-        data[counter+1:counter+len(i_data):2]['cond2'] = i+2
-        counter += len(i_data)
+    arrays = []
+    for i, params in enumerate(params_set):
+        i_data = gen_rts(params, samples=n, structured=True)
+        data = np.empty(len(i_data), dtype = ([('response', np.float),
+                                               ('rt', np.float), 
+                                               ('cond', np.int)]))
+                                               #('cond2', np.int)]))
+
+        data['response'] = np.sign(i_data['response'])
+        data['rt'] = np.abs(i_data['rt'])
+        data['cond'] = i
+        #data[:len(i_data)]['cond2'] = i+1
+        #data[len(i_data)+1:]['cond2'] = i+2
+        
+        arrays.append(data)
+
+    data_out = rec.stack_arrays(arrays, usemask=False)
+
     if params_set[0].has_key('pi'):
-        add_contaminate_data(data, params_set[0])
+        add_contaminate_data(data_out, params_set[0])
 
     return data, params_set
 
