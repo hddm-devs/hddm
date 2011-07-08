@@ -13,7 +13,16 @@ except:
 
 
 def flip_errors(data):
-    """Flip sign for lower boundary responses."""
+    """Flip sign for lower boundary responses.
+
+        :Arguments:
+            data : numpy.recarray
+                Input array with at least one column named 'RT' and one named 'response'
+        :Returns:
+            data : numpy.recarray
+                Input array with RTs sign flipped where 'response' == 0
+
+    """
     # Check if data is already flipped
     if np.any(data['rt'] < 0):
         return data
@@ -216,7 +225,10 @@ def uniform(x, lower, upper):
     return y
 
 def interpolate_trace(x, trace, range=(-1,1), bins=100):
-    """Create a histogram over a trace and interpolate to get a smoothed distribution."""
+    """Create a histogram over a trace and interpolate to get a
+    smoothed distribution.
+
+    """
     import scipy.interpolate
 
     x_histo = np.linspace(range[0], range[1], bins)
@@ -229,20 +241,26 @@ def savage_dickey(pos, post_trace, range=(-.3,.3), bins=40, prior_trace=None, pr
     """Calculate Savage-Dickey density ratio test, see Wagenmakers et
     al. 2010 at http://dx.doi.org/10.1016/j.cogpsych.2009.12.001
 
-    Arguments:
-    **********
-    pos<float>: position at which to calculate the savage dickey ratio at (i.e. the specific hypothesis you want to test)
-    post_trace<numpy.array>: trace of the posterior distribution
+    :Arguments:
+        pos : float
+            position at which to calculate the savage dickey ratio at (i.e. the spec hypothesis you want to test)
+        post_trace : numpy.array
+            trace of the posterior distribution
+    
+    :Optional:
+         prior_trace : numpy.array
+             trace of the prior distribution
+         prior_y : numpy.array
+             prior density pos
+         range : (int,int)
+             Range over which to interpolate and plot
+         bins : int
+             Over how many bins to compute the histogram over
+    
+    :Note: Supply either prior_trace or prior_y.
 
-    Keyword arguments:
-    ******************
-    prior_trace<numpy.array>: trace of the prior distribution
-    prior_y<numpy.array>: prior density pos
-    range<(int,int)>: Range over which to interpolate and plot
-    bins<int>: Over how many bins to compute the histogram over
-
-    IMPORTANT: Supply either prior_trace or prior_y.
     """
+    
     x = np.linspace(range[0], range[1], bins)
 
     if prior_trace is not None:
@@ -265,8 +283,10 @@ def savage_dickey(pos, post_trace, range=(-.3,.3), bins=40, prior_trace=None, pr
     return sav_dick
 
 def gen_stats(traces, alpha=0.05, batches=100):
-    """Useful helper function to generate stats() on a loaded database object.
-    Pass the db._traces list."""
+    """Useful helper function to generate stats() on a loaded database
+    object.  Pass the db._traces list.
+
+    """
     
     from pymc.utils import hpd, quantiles
     from pymc import batchsd
@@ -328,24 +348,6 @@ def test_chain_convergance(models):
         R_hat_param[param_name] = R_hat(samples)
 
     return R_hat_param
-
-def save_csv(data, fname, sep=None):
-    """Save record array to fname as csv.
-    """
-    if sep is None:
-        sep = ','
-    with open(fname, 'w') as fd:
-        # Write header
-        fd.write(sep.join(data.dtype.names))
-        fd.write('\n')
-        # Write data
-        for line in data:
-            line_str = [str(i) for i in line]
-            fd.write(sep.join(line_str))
-            fd.write('\n')
-
-def load_csv(fname):
-    return np.recfromcsv(fname)
 
 def parse_config_file(fname, mcmc=False, load=False):
     import os.path
@@ -518,18 +520,19 @@ def EZ_data(data, s=1):
     """
     Calculate Wagenmaker's EZ-diffusion statistics on data.
 
-       :Parameters:
-       - data : numpy.array
+    :Arguments:
+       data : numpy.array
            Data array with reaction time data. Correct RTs
            are positive, incorrect RTs are negative.
-       - s : float
+       s : float
            Scaling parameter (default=1)
 
-      :Returns:
-      - (v, a, ter) : tuple
+    :Returns:
+      (v, a, ter) : tuple
           drift-rate, threshold and non-decision time
 
-    :SeeAlso: EZ
+    :See Also: EZ
+
     """
 
     try:
@@ -551,41 +554,41 @@ def EZ(pc, vrt, mrt, s=1):
     """
     Calculate Wagenmaker's EZ-diffusion statistics.
     
-      :Parameters:
-      - pc : float
-          probability correct.
-      - vrt : float
-          variance of response time for correct decisions (only!).
-      - mrt : float
-          mean response time for correct decisions (only!).
-      - s : float
-          scaling parameter. Default s=1.
-
-      :Returns:
-      - (v, a, ter) : tuple
-          drift-rate, threshold and non-decision time
+    :Parameters:
+        pc : float
+            probability correct.
+        vrt : float
+            variance of response time for correct decisions (only!).
+        mrt : float
+            mean response time for correct decisions (only!).
+        s : float
+            scaling parameter. Default s=1.
+    :Returns:
+        (v, a, ter) : tuple
+             drift-rate, threshold and non-decision time
           
     The error RT distribution is assumed identical to the correct RT distrib.
 
     Edge corrections are required for cases with Pc=0 or Pc=1. (Pc=.5 is OK)
 
-    Assumptions of the EZ-diffusion model:
-    * The error RT distribution is identical to the correct RT distrib.
-    * z=.5 -- starting point is equidistant from the response boundaries
-    * sv=0 -- across-trial variability in drift rate is negligible
-    * sz=0  -- across-trial variability in starting point is negligible
-    * st=0  -- across-trial range in nondecision time is negligible
+    :Assumptions:
+        * The error RT distribution is identical to the correct RT distrib.
+        * z=.5 -- starting point is equidistant from the response boundaries
+        * sv=0 -- across-trial variability in drift rate is negligible
+        * sz=0  -- across-trial variability in starting point is negligible
+        * st=0  -- across-trial range in nondecision time is negligible
 
-    Reference:
-    Wagenmakers, E.-J., van der Maas, H. Li. J., & Grasman, R. (2007).
-    An EZ-diffusion model for response time and accuracy.
-    Psychonomic Bulletin & Review, 14 (1), 3-22.
+    :Reference:
+        Wagenmakers, E.-J., van der Maas, H. Li. J., & Grasman, R. (2007).
 
-    :Example from Wagenmakers et al. (2007):
-    >>> EZ(.802, .112, .723, s=.1)
-    (0.099938526231301769, 0.13997020267583737, 0.30002997230248141)
+        An EZ-diffusion model for response time and accuracy.
+        Psychonomic Bulletin & Review, 14 (1), 3-22.
 
-    :SeeAlso: EZ_data
+    :Example:
+        >>> EZ(.802, .112, .723, s=.1)
+        (0.099938526231301769, 0.13997020267583737, 0.30002997230248141)
+
+    :See Also: EZ_data
     """
     if (pc == 0 or pc == .5 or pc == 1):
         raise ValueError('pc is either 0%, 50% or 100%')
@@ -611,12 +614,15 @@ def EZ(pc, vrt, mrt, s=1):
 def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
     """Calculate posterior predictive probability density function.
 
-    Input:
-    ======
+    :Arguments:
+        traces : dict
+            A dictionary of traces (e.g. MCMC._dict_container).
+        pdf : func
+            A pdf to generate the posterior predictive from [default=wfpt].
+        args : tuple
+            Tuple of arguments to be supplied to the pdf 
+            [default=('v', 'V', 'a','z','Z', 't','T')].
 
-    traces<dict>: a dictionary of traces (e.g. MCMC._dict_container).
-    pdf<func>: A pdf to generate the posterior predictive from [default=wfpt].
-    args<tuple>: Tuple of arguments to be supplied to the pdf [default=('v', 'V', 'a','z','Z', 't','T')].
     """
     if pdf is None:
         pdf = wfpt.likelihoods.wfpt.pdf
@@ -716,6 +722,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
     plt.show()
 
 def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
+    raise NotImplemented, "Coming in v0.2."
     if depends_on is None:
         depends_on = []
 
@@ -736,13 +743,11 @@ def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
                 contaminant_prob = np.mean(subj_node.trace(), axis=0)
         else:
             raise NotImplemented, "TODO, use group model."
-                
-        
         
 def hddm_parents_trace(node,idx):
-    """
-    return the parents' value of an wfpt node in index 'idx'
-    (the function is used by ppd_test)
+    """Return the parents' value of an wfpt node in index 'idx' (the
+    function is used by ppd_test)
+
     """
     params = {}
     for name in ['a','v','t']:
@@ -765,9 +770,7 @@ def hddm_parents_trace(node,idx):
     return params
             
 def _gen_statistics():
-    """
-    generate different statistical tests from ppd_test
-    """
+    """generate different statistical tests from ppd_test."""
     statistics = []
     
     ##accuracy test
@@ -788,14 +791,19 @@ def _gen_statistics():
 
 def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
     """
-    test statistics over the posterior predictive distibution
-    input:
-    nodes - set of nodes/ the mc model
-    n_times - number of samples to take out of the trace
-    confidence - confidence interval
-    stats - a set of statistics to check over the sampled data. if stats is None then a default set
-        of statistics is created
-    plot_all - should all result be ploted
+    Test statistics over the posterior predictive distibution.
+
+    :Arguments:
+        nodes : set or MCMC object
+            set of nodes / the mc model
+        n_times : int 
+            number of samples to take out of the trace
+        confidence : int
+            confidence interval
+        stats : set
+            a set of statistics to check over the sampled data. if stats is None thedefault set of statistics is created
+        plot_all : bool
+            should all result be ploted
     """
     if type(nodes) == type(pm.MCMC([])):
         nodes = nodes._dict_container
@@ -855,9 +863,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         plt.show()                        
 
 def cont_report(nodes, cont_threshold = 0.5, plot= True):
-    """
-    create conaminate report
-    """
+    """create conaminate report."""
     if type(nodes) == type(pm.MCMC([])):
         nodes = nodes._dict_container
         
