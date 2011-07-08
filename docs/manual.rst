@@ -42,5 +42,3 @@ hddm Package
 
 .. automodule:: hddm.utils
     :members:
-    :undoc-members:
-    :show-inheritance:

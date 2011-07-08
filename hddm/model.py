@@ -27,33 +27,28 @@ class HDDM(kabuki.Hierarchical):
     drift-diffusion model using the Navarro & Fuss likelihood and
     numerical integration over the variability parameters.
 
-        :Arguments:
-            data : numpy.recarray
-                Input data with a row for each trial.
-
-                Must contain the following columns:
-                  * 'rt': Reaction time of trial in seconds.
-                  * 'response': Binary response (e.g. 0->error, 1->correct)
-
-                May contain:
-                  * 'subj_idx': A unique ID (int) of the subject.
-                  * Other user-defined columns that can be used in depends on keyword.
-
-        :Example:
-            >>> data, params = hddm.generate.gen_rand_data() # gen data
-            >>> model = hddm.HDDM(data) # create object
-            >>> mcmc = model.mcmc() # Create pymc.MCMC object
-            >>> mcmc.sample() # Sample from posterior
-
-        :Optional:
-            include : iterable
-                Optional inter-trial variability parameters to include.
-
-                Can be any combination of 'V', 'Z' and 'T'. Passing the string
-                'all' will include all three.
-                
-                Note: Including 'Z' and/or 'T' will increase run time significantly!
-    
+    :Arguments:
+        data : numpy.recarray
+            Input data with a row for each trial.
+             Must contain the following columns:
+              * 'rt': Reaction time of trial in seconds.
+              * 'response': Binary response (e.g. 0->error, 1->correct)
+             May contain:
+              * 'subj_idx': A unique ID (int) of the subject.
+              * Other user-defined columns that can be used in depends on keyword.
+    :Example:
+        >>> data, params = hddm.generate.gen_rand_data() # gen data
+        >>> model = hddm.HDDM(data) # create object
+        >>> mcmc = model.mcmc() # Create pymc.MCMC object
+        >>> mcmc.sample() # Sample from posterior
+    :Optional:
+        include : iterable
+            Optional inter-trial variability parameters to include.
+             Can be any combination of 'V', 'Z' and 'T'. Passing the string
+            'all' will include all three.
+            
+            Note: Including 'Z' and/or 'T' will increase run time significantly!
+ 
             is_group_model : bool
                 If True, this results in a hierarchical
                 model with separate parameter distributions for each
