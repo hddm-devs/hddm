@@ -23,9 +23,9 @@ import kabuki
 from kabuki.hierarchical import Parameter
 
 class HDDM(kabuki.Hierarchical):
-    """HDDM Base Class. Implements the hierarchical Ratcliff
-    drift-diffusion model using the Navarro & Fuss likelihood and
-    numerical integration over the variability parameters.
+    """Implements the hierarchical Ratcliff drift-diffusion model
+    using the Navarro & Fuss likelihood and numerical integration over
+    the variability parameters.
 
     :Arguments:
         data : numpy.recarray
@@ -133,7 +133,7 @@ class HDDM(kabuki.Hierarchical):
 
         self.params = self.get_params()
 
-        super(hddm.model.Base, self).__init__(data, include=include, **kwargs)
+        super(hddm.model.HDDM, self).__init__(data, include=include, **kwargs)
 
     def get_params(self):
         """Returns list of model parameters.
