@@ -1,4 +1,14 @@
-#!/usr/bin/python
+"""
+.. module:: HDDM
+   :platform: Agnostic
+   :synopsis: Definition of HDDM models.
+
+.. moduleauthor:: Thomas Wiecki <thomas.wiecki@gmail.com>
+                  Imri Sofer <imrisofer@gmail.com>
+
+
+"""
+
 from __future__ import division
 import numpy as np
 import numpy.lib.recfunctions as rec
@@ -12,82 +22,93 @@ import kabuki
 
 from kabuki.hierarchical import Parameter
 
-class Base(kabuki.Hierarchical):
+class HDDM(kabuki.Hierarchical):
     """HDDM Base Class. Implements the hierarchical Ratcliff
     drift-diffusion model using the Navarro & Fuss likelihood and
     numerical integration over the variability parameters.
 
-    :Arguments:
-        data <numpy.recarray>: Input data with a row for each trial.
-            Must contain the following columns:
-              * 'rt': Reaction time of trial in seconds.
-              * 'response': Binary response (e.g. 0->error, 1->correct)
-            May contain:
-              * 'subj_idx': A unique ID (int) of the subject.
-              * Other user-defined columns that can be used in depends_on
-                keyword.
+        :Arguments:
+            data : numpy.recarray
+                Input data with a row for each trial.
 
-    :Keyword arguments:
-        include <tuple=()>: Optional variability parameters to include.
-            Can be any combination of 'V', 'Z' and 'T'. Passing the string
-            'all' will include all three.
-            
-            :Note: Including 'Z' and/or 'T' will increase run time
-            significantly!
+                Must contain the following columns:
+                  * 'rt': Reaction time of trial in seconds.
+                  * 'response': Binary response (e.g. 0->error, 1->correct)
 
-        is_group_model <bool>: If True, this results in a hierarchical
-            model with separate parameter distributions for each
-            subject. The subject parameter distributions are
-            themselves distributed according to a group parameter
-            distribution.
+                May contain:
+                  * 'subj_idx': A unique ID (int) of the subject.
+                  * Other user-defined columns that can be used in depends on keyword.
 
-            If not provided, this parameter is set to True if data
-            provides a column 'subj_idx' and False otherwise.
-        
-        depends_on <dict>: Specifies which parameter depends on data
-            of a column in data. For each unique element in that
-            column, a separate set of parameter distributions will be
-            created and applied. Multiple columns can be specified in
-            a sequential container (e.g. list)
+        :Example:
+            >>> data, params = hddm.generate.gen_rand_data() # gen data
+            >>> model = hddm.HDDM(data) # create object
+            >>> mcmc = model.mcmc() # Create pymc.MCMC object
+            >>> mcmc.sample() # Sample from posterior
 
-            :Example: 
+        :Optional:
+            include : iterable
+                Optional inter-trial variability parameters to include.
 
-            depends_on={'param1':['column1']}
+                Can be any combination of 'V', 'Z' and 'T'. Passing the string
+                'all' will include all three.
+                
+                Note: Including 'Z' and/or 'T' will increase run time significantly!
     
-            Suppose column1 has the elements 'element1' and
-            'element2', then parameters 'param1('element1',)' and
-            'param1('element2',)' will be created and the
-            corresponding parameter distribution and data will be
-            provided to the user-specified method get_liklihood().
+            is_group_model : bool
+                If True, this results in a hierarchical
+                model with separate parameter distributions for each
+                subject. The subject parameter distributions are
+                themselves distributed according to a group parameter
+                distribution.
+    
+                If not provided, this parameter is set to True if data
+                provides a column 'subj_idx' and False otherwise.
+        
+            depends_on : dict
+                Specifies which parameter depends on data
+                of a column in data. For each unique element in that
+                column, a separate set of parameter distributions will be
+                created and applied. Multiple columns can be specified in
+                a sequential container (e.g. list)
+    
+                :Example: 
+    
+                    >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
+                    
+                    Separate drift-rate parameters will be estimated
+                    for each difficulty. Requires 'data' to have a
+                    column difficulty.
+        
 
-        bias <bool=False>: Whether to allow a bias to be
-            estimated. This is normally used when the responses represent
-            left/right and subjects could develop a bias towards
-            responding right. This is normally never done, however, when
-            the 'response' column codes correct/error.
-
-        trace_subjs <bool=True>: Save trace for subjs (needed for many
-             statistics so probably a good idea.)
-
-        plot_tau <bool=False>: Plot group variability parameters
-             (i.e. variance of Normal distribution.)
-
-        wiener_params <dict>: Parameters for wfpt evaluation and
-             numerical integration.
-             
-             :Parameters: 
-                 err: Error bound for wfpt (default 1e-4)
-                 nT: Maximum depth for numerical integration 
-                     for T (default 2)
-                 nZ: Maximum depth for numerical integration 
-                     for Z (default 2)
-                 use_adaptive: Whether to use adaptive numerical 
-                     integration (default True)
-                 simps_err: Error bound for Simpson integration
-                     (default 1e-3)
+            bias : bool 
+                Whether to allow a bias to be estimated. This
+                is normally used when the responses represent
+                left/right and subjects could develop a bias towards
+                responding right. This is normally never done,
+                however, when the 'response' column codes
+                correct/error.
+    
+            trace_subjs : bool 
+                 Save trace for subjs (needed for many
+                 statistics so probably a good idea.)
+    
+            plot_tau : bool
+                 Plot group variability parameters when calling pymc.Matplot.plot()
+                 (i.e. variance of Normal distribution.)
+    
+            wiener_params : dict
+                 Parameters for wfpt evaluation and
+                 numerical integration.
+                 
+                 :Parameters: 
+                     * err: Error bound for wfpt (default 1e-4)
+                     * nT: Maximum depth for numerical integration for T (default 2)
+                     * nZ: Maximum depth for numerical integration for Z (default 2)
+                     * use_adaptive: Whether to use adaptive numerical integration (default True)
+                     * simps_err: Error bound for Simpson integration (default 1e-3)
 
     """
-    
+        
     def __init__(self, data, trace_subjs=True, bias=False,
                  include=(), wiener_params = None, **kwargs):
         
@@ -139,7 +160,7 @@ class Base(kabuki.Hierarchical):
     
     def get_root_node(self, param):
         """Create and return a uniform prior distribution for root
-        parameter [param].
+        parameter 'param'.
 
         This is used for the group distributions.
 
@@ -152,7 +173,7 @@ class Base(kabuki.Hierarchical):
 
     def get_tau_node(self, param):
         """Create and return a Uniform prior distribution for the
-        variability parameter [param].
+        variability parameter 'param'.
         
         Note, that we chose a Uniform distribution rather than the
         more common Gamma (see Gelman 2006: "Prior distributions for
@@ -166,7 +187,7 @@ class Base(kabuki.Hierarchical):
     def get_child_node(self, param):
         """Create and return a Normal (in case of an effect or
         drift-parameter) or Truncated Normal (otherwise) distribution
-        for [param] centered around param.root with standard deviation
+        for 'param' centered around param.root with standard deviation
         param.tau and initialization value param.init.
 
         This is used for the individual subject distributions.
@@ -190,9 +211,9 @@ class Base(kabuki.Hierarchical):
     
     def get_rootless_child(self, param, params):
         """Create and return the wiener likelihood distribution
-        supplied in [param]. 
+        supplied in 'param'. 
 
-        [params] is a dictionary of all parameters on which the data
+        'params' is a dictionary of all parameters on which the data
         depends on (i.e. condition and subject).
 
         """
@@ -210,10 +231,6 @@ class Base(kabuki.Hierarchical):
 
         else:
             raise KeyError, "Rootless parameter named %s not found." % param.name
-
-
-class HDDM(Base):
-    pass
 
 if __name__ == "__main__":
     import doctest

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+__docformat__ = 'restructuredtext'
+
 import likelihoods
 import generate
 import utils
@@ -9,7 +11,6 @@ from utils import plot_posteriors, plot_post_pred
 
 import wfpt
 import wfpt_full
-import wfpt_switch
 
 from kabuki.utils import load_csv, save_csv
 

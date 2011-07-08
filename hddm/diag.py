@@ -4,7 +4,7 @@ import platform
 import numpy as np
 import pymc as pm
 np.seterr(divide='ignore')
-from numpy.random import rand
+
 from sys import stdout
 import hddm
 from scipy.stats import scoreatpercentile
@@ -175,6 +175,7 @@ def check_correl(model):
     return ok
 
 def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
+    from numpy.random import rand
     burn = 10000
     thin = 1
     n_samples = 10000
