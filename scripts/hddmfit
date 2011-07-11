@@ -5,8 +5,7 @@ if __name__=='__main__':
     import sys
     import os
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
-        print "hddmfit [-l] <model.cfg>"
-        print "-l: load previous samples from database. Does not run MCMC."
+        print "hddmfit <model.cfg>"
         sys.exit(-1)
 
     if sys.argv[1] == '-l':

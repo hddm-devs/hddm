@@ -26,14 +26,14 @@ from numpy.random import rand
 from nose import SkipTest
 
 
-def diff_model(param, subj=True, num_subjs=10, change=.5, samples=10000):
+def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
     params1 = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
     params2 = copy(params1)
     params2[param] = params1[param]+change
 
-    data = create_multi_data(params1, params2, subj=subj, num_subjs=num_subjs, samples=samples)
+    data = hddm.generate.gen_rand_cond_data((params1, params2), samples_per_cond=samples)
 
-    model = hddm.model.HDDM(data, depends_on={param:['stim']}, is_group_model=subj)
+    model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
 
     return model
             
@@ -73,6 +73,7 @@ class TestSingle(unittest.TestCase):
         return mc
 
     def test_HDDM_group(self, assert_=True):
+        raise SkipTest("Disabled.")
         includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)

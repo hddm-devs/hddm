@@ -350,6 +350,7 @@ def test_chain_convergance(models):
     return R_hat_param
 
 def parse_config_file(fname, mcmc=False, load=False):
+    import kabuki
     import os.path
     if not os.path.isfile(fname):
         raise ValueError("%s could not be found."%fname)
@@ -357,63 +358,41 @@ def parse_config_file(fname, mcmc=False, load=False):
     import ConfigParser
     
     config = ConfigParser.ConfigParser()
+    config.optionxform = str
     config.read(fname)
     
     #####################################################
     # Parse config file
-    data_fname = config.get('data', 'load')
+    data_fname = config.get('model', 'data')
     if not os.path.exists(data_fname):
         raise IOError, "Data file %s not found."%data_fname
-
-    try:
-        save = config.get('data', 'save')
-    except ConfigParser.NoOptionError:
-        save = False
 
     data = np.recfromcsv(data_fname)
     
     try:
-        model_type = config.get('model', 'type')
+        include = config.get('model', 'include')
     except ConfigParser.NoOptionError:
-        model_type = 'simple'
+        include = ()
 
     try:
-        is_subj_model = config.getboolean('model', 'is_subj_model')
+        is_group_model = config.getboolean('model', 'is_group_model')
     except ConfigParser.NoOptionError:
-        is_subj_model = True
+        is_group_model = None
 
     try:
-        no_bias = config.getboolean('model', 'no_bias')
+        bias = config.getboolean('model', 'bias')
     except ConfigParser.NoOptionError:
-        no_bias = True
+        bias = False
 
     try:
-        debug = config.getboolean('model', 'debug')
+        db = config.get('mcmc', 'db')
     except ConfigParser.NoOptionError:
-        debug = False
+        db = 'ram'
 
     try:
         dbname = config.get('mcmc', 'dbname')
     except ConfigParser.NoOptionError:
         dbname = None
-
-    if model_type == 'simple' or model_type == 'simple_gpu':
-        group_param_names = ['a', 'v', 'z', 't']
-    elif model_type == 'full_mc' or model_type == 'full':
-        group_param_names = ['a', 'v', 'V', 'z', 'Z', 't', 'T']
-    elif model_type == 'lba':
-        group_param_names = ['a', 'v', 'z', 't', 'V']
-    else:
-        raise NotImplementedError('Model type %s not implemented'%model_type)
-
-    # Get depends
-    depends = {}
-    for param_name in group_param_names:
-        try:
-            # Multiple depends can be listed (separated by a comma)
-            depends[param_name] = config.get('depends', param_name).split(',')
-        except ConfigParser.NoOptionError:
-            pass
 
     # MCMC values
     try:
@@ -435,35 +414,40 @@ def parse_config_file(fname, mcmc=False, load=False):
 
     try:
         plot_rt_fit = config.getboolean('stats', 'plot_rt_fit')
-    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         plot_rt_fit = False
         
     try:
         plot_posteriors = config.getboolean('stats', 'plot_posteriors')
-    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         plot_posteriors = False
 
+    group_params = ['v', 'V', 'a', 'z', 'Z', 't', 'T']
     
+    # Get depends
+    depends = {}
+    for param_name in group_params:
+        try:
+            # Multiple depends can be listed (separated by a comma)
+            depends[param_name] = config.get('depends', param_name).split(',')
+        except ConfigParser.NoOptionError:
+            pass
+
     print "Creating model..."
-    m = hddm.models.Multi(data, model_type=model_type, is_subj_model=is_subj_model, no_bias=no_bias, depends_on=depends, debug=debug)
+    m = hddm.HDDM(data, include=include, bias=bias, is_group_model=is_group_model, depends_on=depends)
 
-    if mcmc:
-        if not load:
-            print "Sampling... (this can take some time)"
-            m.mcmc(samples=samples, burn=burn, thin=thin, verbose=verbose, dbname=dbname)
-        else:
-            m.mcmc_load_from_db(dbname=dbname)
+    m.mcmc(dbname=dbname, db=db).sample(samples, burn=burn, thin=thin, verbose=verbose)
 
-    if save:
-        m.save_stats(save)
-    else:
-        print m.summary()
+    print kabuki.analyze.print_stats(m.nodes)
+
+    print "logp: %f" % m.mc.logp 
+    print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        m.plot_rt_fit()
+        plot_post_pred(m.nodes)
         
     if plot_posteriors:
-        m.plot_posteriors
+        plot_posteriors(m.nodes)
         
     return m
 
