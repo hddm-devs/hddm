@@ -37,9 +37,8 @@ Next we will have a look at how the simplest configuration file might look like.
 
 ::
 
-	[data]
-	load = example.csv # Main data file containing all RTs in csv format
-	save = example_out.txt # Estimated parameters and stats will be written to this file
+    [model]
+    load = example.csv # Main data file containing all RTs in csv format
 
 The [data] tag specifies that the parameters after the tag set input
 and output variables. In this case, HDDM will load the file
@@ -50,7 +49,7 @@ Our model specification is now complete and we can fit the model by calling:
 
 ::
 
-	hddmfit example.conf
+    hddmfit example.conf
 
 Depending on the amount of your data, the complexity and type of the
 model used (since we did not specifiy it in this case, HDDM chose the
@@ -60,17 +59,7 @@ After parameter estimation is done we can examine the output file (example_out.t
 
 ::
 
-	Model type: simple
-
-	General model stats:
-      	logp: -106.555642
-      	dic: 286.293556
-
-      	Group parameter			Mean		Std
-      	a				2.0		0.032740
-      	t				0.3		0.003501
-      	v				0.5		0.019900
-
+    TODO
 
 Example Subject Model
 ---------------------
@@ -130,7 +119,8 @@ Specifiying Models in Python
 As an alternative to the configuration file, HDDM offers model
 specification directly from Python. For this, you first import hddm:
 
->>> import hddm
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 1
 
 Next, we have to load the data into Python. HDDM expects a NumPy
 structured array which you can either create yourself or load it from
@@ -138,27 +128,33 @@ a csv file. Information on how to create a proper structured NumPy
 array can be found here. If you want to load a csv file make sure it
 is in the proper format outlined above. You can then load the data as follows:
 
->>> data = hddm.utils.csv2rec('yourdata.csv')
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 4
 
 After you loaded the data you can create the model object which is called Multi because it allows you to dynamically create multiple HDDM models depending on your data. In the simplest case, you'll want to create a simple DDM (default):
 
->>> model = hddm.models.Multi(data)
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 7
 
 You may then sample from the posterior distribution by calling:
 
->>> model.mcmc()
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 10
 
 Depending on the model and amount of data this can take some time. After enough samples were generated, you may want to print some statistics on the screen:
 
->>> print model.summary()
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 13
 
 You can currently generate two plots to examine model fit. If you want to see if your chains converged and what the posteriors for each parameter look like you can call:
 
->>> model.plot_posteriors()
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 16
 
 To see how well the RT distributions are fit by the mean of the posterior distribution we can plot the theoretical RT distribution on top of our empirical RT distribution by calling:
 
->>> model.plot_RT_fit()
+.. literalinclude :: ../hddm/examples/simple_model.py
+   :lines: 17
 
 The closer the two distributions look like, the better the fit. Note
 that the RT distribution for the second response is mirrored on the
@@ -186,5 +182,5 @@ full bayesian integration is extremely slow. The model creation and
 sampling then might look like this (assuming we imported hddm and
 loaded the data as above):
 
->>> model = hddm.models.Multi(data, is_subj_model=True, model_type='full_mcmc', depends_on={'v':'difficulty'})
->>> model.mcmc(samples=10000, burn=5000)
+>>> model = hddm.HDDM(data, include=('V','Z','T'), depends_on={'v':'difficulty'})
+>>> model.sample(10000, burn=5000)

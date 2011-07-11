@@ -98,7 +98,7 @@ class DDM(HasTraits):
 
     @cached_property
     def _get_drifts(self):
-        return hddm.generate.gen_rts_from_simulated_drift(self.params_dict, samples=self.iter_plot, dt=self.dt, intra_sv=self.intra_sv)[1]
+        return hddm.generate._gen_rts_from_simulated_drift(self.params_dict, samples=self.iter_plot, dt=self.dt, intra_sv=self.intra_sv)[1]
 
     @cached_property
     def _get_rts(self):
@@ -124,7 +124,7 @@ class DDM(HasTraits):
 
     
 class DDMPlot(HasTraits):
-    from MPLTraits import MPLFigureEditor
+    from hddm.MPLTraits import MPLFigureEditor
     
     figure = Instance(Figure, ())
     parameters = Instance(DDM, ())

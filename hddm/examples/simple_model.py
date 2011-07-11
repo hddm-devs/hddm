@@ -1,15 +1,13 @@
 import hddm
-import kabuki
-import pylab
 
 # Load data from csv file into a NumPy structured array
 data = kabuki.utils.load_csv('simple_subj_data.csv')
 
 # Create a HDDM model multi object
-model = hddm.HDDM(data, is_subj_model=False)
+model = hddm.HDDM(data)
 
 # Create model and start MCMC sampling
-model.mcmc()
+model.sample()
 
 # Print fitted parameters and other model statistics
 print model.summary()

@@ -17,22 +17,6 @@ except ImportError:
 
 import hddm
 
-def wiener_like_simple(value, v, z, t, a):
-    """Log-likelihood for the simple DDM"""
-    return hddm.wfpt.wiener_like_simple(value, v, a, z, t, err=.0001)
-
-@pm.randomwrap
-def wiener_simple(v, z, t, a, size=None):
-    rts = hddm.generate.gen_rts(params={'v':v, 'z':z, 't':t, 'a':a, 'Z':0, 'V':0, 'T':0}, samples=size)
-    print rts
-    return rts
-
-WienerSimple = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                       logp=wiener_like_simple,
-                                       random=wiener_simple,
-                                       dtype=np.float,
-                                       mv=True)
-
 def wiener_like_simple_contaminant(value, cont_x, gamma, v, a, z, t, t_min, t_max, err=.0001):
     """Log-likelihood for the simple DDM including contaminants"""
     return hddm.wfpt.wiener_like_simple_contaminant(value, cont_x.astype(np.int32), gamma, v, a, z, t, t_min, t_max, err)
@@ -43,20 +27,12 @@ WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion 
                                        mv=True)
 
 
-def wiener_like_simple_multi(value, v, a, z, t, multi=None):
+def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
     """Log-likelihood for the simple DDM"""
-    return hddm.wfpt.wiener_like_simple_multi(value, v, a, z, t, .001, multi=multi)
+    return hddm.wfpt_full.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
             
-WienerSimpleMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                            logp=wiener_like_simple_multi,
-                                            dtype=np.float)
-
-def wiener_like_full_multi(value, v, V, a, z, Z, t, T, multi=None):
-    """Log-likelihood for the simple DDM"""
-    return hddm.wfpt_full.wiener_like_full_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
-            
-WienerFullMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                          logp=wiener_like_full_multi,
+WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                          logp=wiener_like_multi,
                                           dtype=np.float)
 
 def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):

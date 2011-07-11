@@ -78,11 +78,10 @@ def test_params_on_data(params, data, include=(), depends_on = None, conf_interv
     if depends_on is None:
         depends_on = {}
     if 'pi' in include or 'gamma' in include:
-        m_hddm = hddm.HDDMContaminant(data, no_bias=False, depends_on=depends_on)
+        m_hddm = hddm.HDDMContaminant(data, bias=True, depends_on=depends_on)
     else:
-        m_hddm = hddm.HDDM(data, no_bias=False, include=include, depends_on=depends_on)
-    nodes = m_hddm.create()
-    model = pm.MCMC(nodes)    
+        m_hddm = hddm.HDDM(data, bias=True, include=include, depends_on=depends_on)
+    model = m_hddm.mcmc()
     #[model.use_step_method(pm.Metropolis, x,proposal_sd=0.1) for x in model.stochastics]
     i_t = time()
     model.sample(n_iter, burn=burn, thin=thin)
@@ -215,7 +214,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
     for i_params in range(len(all_wp)):
         print "working on model %d" % i_params
         
-        model = hddm.model.HDDM(data, no_bias=False, wiener_params=all_wp[i_params], 
+        model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params], 
                                 include = include, depends_on  = {'v':['cond']})#, init_value=params)
         i_t = time()
         if use_db:
