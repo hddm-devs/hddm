@@ -4,11 +4,11 @@ from Cython.Distutils import build_ext
 import numpy as np
 import os
 
-gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
+#gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
 
-if gsl_include == '':
-    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-    sys.exit(-1)
+#if gsl_include == '':
+#    print "Couldn't find gsl-config. Make sure it's installed and in the path."
+#    sys.exit(-1)
 
 setup(
     name="HDDM",
@@ -22,7 +22,7 @@ setup(
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     install_requires=['NumPy >=1.3.0', 'kabuki', 'matplotlib', 'scipy'],
     setup_requires=['NumPy >=1.3.0', 'cython', 'kabuki'],
-    include_dirs = [np.get_include(), gsl_include, '/usr/local/include'],
+    include_dirs = [np.get_include(), '/usr/local/include'],
     cmdclass = {'build_ext': build_ext},
     ext_modules = [Extension("wfpt", ["src/wfpt.pyx"]),
                    Extension("wfpt_full", ["src/wfpt_full.pyx"])]
