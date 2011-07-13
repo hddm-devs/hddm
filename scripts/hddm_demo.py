@@ -65,7 +65,7 @@ class DDM(HasTraits):
     intra_sv = Range(0.,10.,1.)
     urgency = Range(.1,10.,1.)
     
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])#, 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -86,7 +86,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 't_switch', 'v_switch', 'num_samples', 'iter_plot', 'switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot')#, 'switch')
 
     def _get_params_dict(self):
         d = {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
@@ -160,12 +160,12 @@ class DDMPlot(HasTraits):
                 Item('plot_histogram'),
                 Item('plot_drifts'),
                 Item('plot_wiener'),
-                Item('plot_lba'),
+                #Item('plot_lba'),
                 #Item('plot_data'),
                 #Item('plot_density'),
                 #Item('plot_true_density'),
-#                Item('plot_density_dist'),
-                Item('plot_switch'),
+                #Item('plot_density_dist'),
+                #Item('plot_switch'),
 		Item('go'),
 		#style='custom',
 		width=800,

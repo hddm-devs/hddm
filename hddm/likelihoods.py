@@ -12,7 +12,7 @@ try:
     import pycuda.cumath as cumath
     import wfpt_gpu
     gpu_imported = True
-except ImportError:
+except:
     gpu_imported = False
 
 import hddm

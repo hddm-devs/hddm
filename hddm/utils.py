@@ -386,41 +386,41 @@ def parse_config_file(fname, mcmc=False, load=False):
 
     try:
         db = config.get('mcmc', 'db')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         db = 'ram'
 
     try:
         dbname = config.get('mcmc', 'dbname')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         dbname = None
 
     # MCMC values
     try:
         samples = config.getint('mcmc', 'samples')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         samples = 10000
     try:
         burn = config.getint('mcmc', 'burn')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         burn = 5000
     try:
         thin = config.getint('mcmc', 'thin')
-    except ConfigParser.NoOptionError:
-        thin = 3
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+        thin = 2
     try:
         verbose = config.getint('mcmc', 'verbose')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         verbose = 0
 
     try:
         plot_rt_fit = config.getboolean('stats', 'plot_rt_fit')
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        plot_rt_fit = False
+        plot_rt_fit = True
         
     try:
         plot_posteriors = config.getboolean('stats', 'plot_posteriors')
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        plot_posteriors = False
+        plot_posteriors = True
 
     group_params = ['v', 'V', 'a', 'z', 'Z', 't', 'T']
     
@@ -430,24 +430,24 @@ def parse_config_file(fname, mcmc=False, load=False):
         try:
             # Multiple depends can be listed (separated by a comma)
             depends[param_name] = config.get('depends', param_name).split(',')
-        except ConfigParser.NoOptionError:
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
             pass
 
     print "Creating model..."
     m = hddm.HDDM(data, include=include, bias=bias, is_group_model=is_group_model, depends_on=depends)
 
-    m.mcmc(dbname=dbname, db=db).sample(samples, burn=burn, thin=thin, verbose=verbose)
+    m.mcmc().sample(samples, burn=burn, thin=thin, verbose=verbose)
 
-    print kabuki.analyze.print_stats(m.nodes)
+    print kabuki.analyze.print_stats(m.mc.stats())
 
-    print "logp: %f" % m.mc.logp 
+    print "logp: %f" % m.mc.logp
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
         plot_post_pred(m.nodes)
         
     if plot_posteriors:
-        plot_posteriors(m.nodes)
+        hddm.plot_posteriors(m)
         
     return m
 
@@ -609,14 +609,12 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
 
     """
     if pdf is None:
-        pdf = wfpt.likelihoods.wfpt.pdf
+        pdf = hddm.likelihoods.wfpt.pdf
         args = ('v', 'V', 'a','z','Z', 't','T')
         
     if x is None:
         x = np.arange(-5,5,0.01)
 
-    if not traces.has_key('z'):
-        traces['z'] = np.ones(trace_len)*.5
 
     trace_len = len(traces['a'])
     p = np.zeros(len(x), dtype=np.float)
@@ -644,7 +642,7 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
             
     return p/samples
     
-def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
+def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10, fname=None):
     if type(nodes) == type(pm.MCMC([])):
         nodes = nodes._dict_container
         
@@ -652,12 +650,14 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
     # Plot data
     x_data = np.linspace(range[0], range[1], bins)
     
+    figure_idx = 0
     for name, node in nodes.iteritems():
         # Find wfpt node
         if not name.startswith('wfpt'):
             continue 
 
         plt.figure()
+        figure_idx += 1
         if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
             for i, subj_node in enumerate(node):
                 data = subj_node.value
@@ -702,6 +702,9 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10):
             plt.xlim(range)
             plt.title("%s (n=%d)" %(name, len(data)))
             plt.legend()
+            
+        if fname is not None:
+            plt.savefig('%s%i.png'(fname, figure_idx))
 
     plt.show()
 
@@ -892,7 +895,7 @@ def plot_posteriors(model):
 
     This is a wrapper for pymc.Matplot.plot()
     """
-    pm.Matplot.plot(model.mcmc_model)
+    pm.Matplot.plot(model.mc)
 
 if __name__ == "__main__":
     import doctest

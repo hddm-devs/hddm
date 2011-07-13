@@ -337,7 +337,7 @@ def gen_rand_data(samples=500, params=None, include=()):
     
     return (data, params)
 
-def gen_rand_cond_data(params_set=None, samples_per_cond=100):
+def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None):
     """Generate simulated RTs with multiple conditions.
     
         :Optional:
@@ -368,27 +368,37 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100):
     n = samples_per_cond
     counter = 0
     arrays = []
-    for i, params in enumerate(params_set):
+    if conds is None:
+        conds = range(n_conds)
+    
+    if type(conds[0]) is str:
+        cond_type = 'S12'
+    else:
+        cond_type = type(conds[0])
+
+    for cond, params in zip(conds, params_set):
         i_data = gen_rts(params, samples=n, structured=True)
         data = np.empty(len(i_data), dtype = ([('response', np.float),
                                                ('rt', np.float), 
-                                               ('cond', np.int)]))
+                                               ('cond', cond_type)]))
                                                #('cond2', np.int)]))
 
         data['response'] = np.sign(i_data['response'])
         data['rt'] = np.abs(i_data['rt'])
-        data['cond'] = i
+        data['cond'] = cond
+        print cond
         #data[:len(i_data)]['cond2'] = i+1
         #data[len(i_data)+1:]['cond2'] = i+2
         
         arrays.append(data)
 
+    print arrays
     data_out = rec.stack_arrays(arrays, usemask=False)
 
     if params_set[0].has_key('pi'):
         add_contaminate_data(data_out, params_set[0])
 
-    return data, params_set
+    return data_out, params_set
 
 def _add_noise(params, noise=.1, include=()):
     """Add individual noise to each parameter.

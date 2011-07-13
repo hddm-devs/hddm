@@ -83,10 +83,6 @@ class HDDM(kabuki.Hierarchical):
                 however, when the 'response' column codes
                 correct/error.
     
-            trace_subjs : bool 
-                 Save trace for subjs (needed for many
-                 statistics so probably a good idea.)
-    
             plot_tau : bool
                  Plot group variability parameters when calling pymc.Matplot.plot()
                  (i.e. variance of Normal distribution.)
@@ -104,8 +100,8 @@ class HDDM(kabuki.Hierarchical):
 
     """
         
-    def __init__(self, data, trace_subjs=True, bias=False,
-                 include=(), wiener_params = None, **kwargs):
+    def __init__(self, data, bias=False,
+                 include=(), wiener_params=None, **kwargs):
         
         # Flip sign for lower boundary RTs
         self.data = hddm.utils.flip_errors(data)
@@ -192,7 +188,7 @@ class HDDM(kabuki.Hierarchical):
             return pm.Normal(param.full_name,
                              mu=param.root,
                              tau=param.tau**-2,
-                             plot=self.plot_subjs, trace=self.trace_subjs,
+                             plot=self.plot_subjs,
                              value=param.init)
 
         else:
@@ -201,7 +197,7 @@ class HDDM(kabuki.Hierarchical):
                                       b=param.upper,
                                       mu=param.root, 
                                       tau=param.tau**-2,
-                                      plot=self.plot_subjs, trace=self.trace_subjs,
+                                      plot=self.plot_subjs,
                                       value=param.init)
     
     def get_rootless_child(self, param, params):

@@ -1,19 +1,17 @@
 import hddm
 
 # Load data from csv file into a NumPy structured array
-data = kabuki.utils.load_csv('simple_subj_data.csv')
+data = hddm.load_csv('simple_subj_data.csv')
 
 # Create a HDDM model multi object
 model = hddm.HDDM(data)
 
 # Create model and start MCMC sampling
-model.sample()
+model.sample(10000, burn=5000)
 
 # Print fitted parameters and other model statistics
-print model.summary()
+model.print_stats()
 
 # Plot posterior distributions and theoretical RT distributions
 hddm.plot_posteriors(model)
-hddm.plot_rt_fit(model)
-
-pylab.show()
+hddm.plot_post_pred(model.nodes)
