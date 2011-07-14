@@ -56,6 +56,31 @@ Then call hddm:
 
     hddmfit example.conf
 
+Installing
+==========
+
+HDDM has the following dependencies:
+
+* Python
+
+* NumPy
+
+* SciPy
+
+* Matplotlib
+
+* Cython
+
+* PyMC
+
+Linux (Debian based, such as Ubuntu)
+------------------------------------
+
+::
+
+    sudo aptitude install python python-numpy python-scipy python-matplotlib cython
+    pip install hddm
+
 Getting started
 ===============
 
