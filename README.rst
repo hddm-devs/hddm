@@ -73,16 +73,38 @@ HDDM has the following dependencies:
 
 * PyMC
 
-Linux (Debian based, such as Ubuntu)
-------------------------------------
+Instal dependencies on Linux (Debian based, such as Ubuntu)
+-----------------------------------------------------------
 
 ::
 
     sudo aptitude install python python-numpy python-scipy python-matplotlib cython
+
+You can either install the package automatically from pypi:
+
+::
+
     sudo pip install hddm
+
+Or, you can download the package (from pypi_ or checkout the latest code from github), extract and call:
+
+::
+
+    python setup.py install
+
+Which requires admin rights.
+
+
 
 Getting started
 ===============
 
-This guide provides all the information needed to install HDDM, create configuration files, build your own models and save and visualize the results.
-More `examples`_ of usage as well as `tutorials`_  are available from the PyMC web site.
+Check out the documentation_ for a manual and tutorial for how to use HDDM.
+
+.. _HDDM: http://code.google.com/p/hddm/
+.. _Python: http://www.python.org/
+.. _PyMC: http://code.google.com/p/pymc/
+.. _Cython: http://www.cython.org/
+.. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
+.. _fast-dm: http://seehuhn.de/pages/fast-dm
+.. _documentation: http://ski.cog.brown.edu/hddm_docs
