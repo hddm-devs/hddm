@@ -3,8 +3,8 @@ Introduction
 ************
 
 :Date: July 4, 2011
-:Author: Thomas V. Wiecki, Imri Sofer
-:Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu
+:Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
+:Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://github.com/twiecki/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
@@ -80,7 +80,7 @@ Install dependencies on Linux (Debian based, such as Ubuntu)
 
 ::
 
-    sudo aptitude install python python-numpy python-scipy python-matplotlib cython python-pip
+    sudo aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran
 
 You can either install the package automatically from pypi:
 

@@ -5,90 +5,100 @@ Tutorial
 Specifiying Models via Configuration File
 =========================================
 
-The simplest model
-------------------
-
 The easiest way to use HDDM is to create a simple configuration
-file. In our first example, we will consider the easiest usage case
-where we will not use subject information or different treatment
-influences.
-
-First, you have to prepare your data to be in a specific format
+file. First, you have to prepare your data to be in a specific format
 (csv). A possible data file might look like this:
 
 ::
 
-    rt,response
-    0.5,1.
-    1.2,0.
-    0.7,0.
-    2.3,1.
+    rt,response,subj_idx,difficulty
+    0.5,1.,1,easy
+    1.2,0.,1,hard
+    0.7,0.,2,easy
+    2.3,1.,2,hard
 
 The first line contains the header and specifies which columns contain
 which data.
 
-IMPORTANT: There must be one column named 'rt' and one named 'response'.
+IMPORTANT: There must be one column named 'rt' and one named
+'response'. If you want to build a group model (i.e. one with
+hierarchical structure) you have to include column named 'subj_idx'.
 
-The following lines contain the reaction time of the trial, followed
-by a comma, followed by the response made (e.g. 1=correct, 0=error or
-1=left, 0=right).
+The following the header contain the reaction time of the trial,
+followed by a comma, followed by the response made (e.g. 1=correct,
+0=error or 1=left, 0=right), followed by the ID of the subject and, in
+our example case, a condition. Note, that columns that describe
+conditions can be anything you like.
 
-Next we will have a look at how the simplest configuration file might look like.
+The following configuration file specifies a group-model in which
+drift-rate depends on difficulty:
 
-::
+.. literalinclude :: ../hddm/examples/simple_subjs_difficulty.conf
 
-    [model]
-    load = example.csv # Main data file containing all RTs in csv format
+The [model] tag specifies that parameters after the tag are model
+parameters. In this case, the 'data' parameter tells HDDM where the
+input data is to be found.
 
-The [data] tag specifies that the parameters after the tag set input
-and output variables. In this case, HDDM will load the file
-example.csv and write its output statistics and parameter fits to
-example_out.txt which you can then analyze.
+The optional tag [depends_on] specifies DDM parameters that depend on
+data. In our case, we want to estimate separate drift-rates (v) for
+the conditions found in the data column 'difficulty'.
 
-Our model specification is now complete and we can fit the model by calling:
+The optional [mcmc] tag specifies parameter of the Markov chain
+Monte-Carlo estimation such as how many samples to draw from the
+posterior and how many samples to discard as burn-in (often, it takes
+the MCMC chains some time to converge to the true posterior).
+
+Our model specification is now complete and we can fit the model by
+calling:
 
 ::
 
     hddmfit example.conf
 
-Depending on the amount of your data, the complexity and type of the
-model used (since we did not specifiy it in this case, HDDM chose the
-simple DDM as a default).
 
-After parameter estimation is done we can examine the output file (example_out.txt):
+Which will generate the following output:
 
 ::
 
-    TODO
+    Creating model...
+    Sampling: 100% [0000000000000000000000000000000000] Iterations: 5000
 
-Example Subject Model
----------------------
+       name       mean   std    2.5q   25q    50q    75q    97.5  mc_err
+    a         :  2.029  0.034  1.953  2.009  2.028  2.049  2.090  0.002
+    t         :  0.297  0.007  0.282  0.292  0.297  0.302  0.311  0.001
+    v('easy',):  0.992  0.051  0.902  0.953  0.987  1.028  1.102  0.003
+    v('hard',):  0.522  0.049  0.429  0.485  0.514  0.561  0.612  0.002
 
-Lets create a more interesting model. Say we have a dataset where
-multiple subjects were tested on three conditions of the moving dot
-task. In this task, subjects view randomly moving dots on a screen and
-have to decide if more dots are moving to one side or the
-other. Depending on the number of coherently moving dots, this can be
-harder or easier. In our example, we have two conditions: easy and
-hard. The dataset looks like this:
+    logp: -1171.276303
+    DIC: 2329.069932
 
-::
-	
-	rt, response, subj_idx, difficulty
-	0.73, 1., 1., 'easy'
-	1.35, 0., 1., 'hard'
-	1.23, 1., 2., 'easy'
-	...
+Because we used simulated data in this example, we know the true
+parameters that generated the data (i.e. a=2, t=0.3, v_easy=1,
+v_hard=0.5). As you can see, the mean posterior values are very close
+to the true parameters -- our estimation worked! However, often we are
+not only interested in the best fitting value but also how confident
+we are in that estimation and how good other values are fitting. This
+is one of advantages of the Bayesian approach -- it gives us the
+complete posterior distribution. So the next columns are statistics on
+the shape of the distribution, such as the standard deviation and
+different quantiles to give you a feel for how certain you can be in
+the estimates.
 
-The subj_idx column specifies the index number of the subject. This column must be named 'subj_idx'.
+Lastly, logp and DIC give you a measure of how well the model fits the
+data. These values are not all that useful if looked at in isolation
+but they provide a tool to do model comparison. Logp is the summed
+log-likelihood of the best-fitting values (higher is better). DIC
+stands for deviance information criterion and is a measure that takes
+model complexity into account. Lower values are better.
 
-Our configuration file then becomes:
+Excerise
+++++++++
 
-.. literalinclude :: ../hddm/examples/simple_subjs_difficulty.conf
-
-Under the [model] tag we can specify the type of model. Here, we want
-to fit a full DDM using Monte-Carlo integration (which is the
-fastest). 
+Create a new model that ignores the different difficulties (i.e. only
+estimate one drift-rate). Compare the resulting DIC score with that of
+the previous model -- does the increased complexity of the first model
+result in a sufficient increase in model fit to justify using it? Why
+does the drift-rate estimate of the second model make sense?
 
 Setting is_subj_model to True tells HDDM to look for the subj_idx
 column in the data and create separate distributions for each subject
@@ -102,15 +112,6 @@ ignoring. Hierarchical modeling offers a solution to this problem by
 fitting parameters to individual parameters which are constrained by a
 group distribution (more detail on that can be found in the section on
 hierarchical bayesian modeling).
-
-Under the [depends] tag you can set that certain DDM parameters are
-fit to only a subset of the data provided by the column. In this,
-drift-rate will depend on task difficulty and HDDM will look for a
-'difficulty' column in the data.
-
-After calling HDDM this is what the output looks like:
-
-.. literalinclude :: ../hddm/examples/simple_subj_difficulty.txt
 
 
 Specifiying Models in Python
