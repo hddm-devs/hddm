@@ -5,9 +5,9 @@ Tutorial
 Specifiying Models via Configuration File
 =========================================
 
-The easiest way to use HDDM is to create a simple configuration
-file. First, you have to prepare your data to be in a specific format
-(csv). A possible data file might look like this:
+The easiest way to use HDDM is to create a configuration file. First,
+you have to prepare your data to be in a specific format (csv). A
+possible (truncated) data file might look like this:
 
 ::
 
@@ -16,6 +16,7 @@ file. First, you have to prepare your data to be in a specific format
     1.2,0.,1,hard
     0.7,0.,2,easy
     2.3,1.,2,hard
+    ...
 
 The first line contains the header and specifies which columns contain
 which data.
@@ -33,7 +34,7 @@ conditions can be anything you like.
 The following configuration file specifies a group-model in which
 drift-rate depends on difficulty:
 
-.. literalinclude :: ../hddm/examples/simple_subjs_difficulty.conf
+.. literalinclude :: ../hddm/examples/simple_difficulty.conf
 
 The [model] tag specifies that parameters after the tag are model
 parameters. In this case, the 'data' parameter tells HDDM where the
@@ -91,8 +92,8 @@ log-likelihood of the best-fitting values (higher is better). DIC
 stands for deviance information criterion and is a measure that takes
 model complexity into account. Lower values are better.
 
-Excerise
-++++++++
+Excercise
++++++++++
 
 Create a new model that ignores the different difficulties (i.e. only
 estimate one drift-rate). Compare the resulting DIC score with that of

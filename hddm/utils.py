@@ -643,7 +643,7 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
     return p/samples
     
 def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10, fname=None):
-    if type(nodes) == type(pm.MCMC([])):
+    if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
         
     x = np.arange(range[0],range[1],0.05)
@@ -713,7 +713,7 @@ def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
     if depends_on is None:
         depends_on = []
 
-    if type(nodes) == type(pm.MCMC([])):
+    if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
     
     for name, node in nodes.iteritems():
@@ -792,7 +792,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         plot_all : bool
             should all result be ploted
     """
-    if type(nodes) == type(pm.MCMC([])):
+    if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
     
     #get statistics    
@@ -851,7 +851,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
 
 def cont_report(nodes, cont_threshold = 0.5, plot= True):
     """create conaminate report."""
-    if type(nodes) == type(pm.MCMC([])):
+    if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
         
     cont_keys = [z for z in nodes.keys() if z.startswith('x')]
