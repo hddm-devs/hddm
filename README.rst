@@ -79,7 +79,7 @@ Linux (Debian based, such as Ubuntu)
 ::
 
     sudo aptitude install python python-numpy python-scipy python-matplotlib cython
-    pip install hddm
+    sudo pip install hddm
 
 Getting started
 ===============
