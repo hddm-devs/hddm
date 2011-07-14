@@ -3,50 +3,56 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to HDDM's documentation!
-================================
+************
+Introduction
+************
 
-HDDM is a python toolkit to fit Drift Diffusion Models to reaction times using Hierarchical Bayesian estimation (via PyMC_).
+:Date: July 4, 2011
+:Author: Thomas V. Wiecki, Imri Sofer
+:Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu
+:Web site: http://github.com/twiecki/hddm
+:Copyright: This document has been placed in the public domain.
+:License: HDDM is released under the GPLv3.
+:Version: 0.1RC1
 
-Quickstart for the impatient
-============================
+Purpose
+=======
 
-Homepage: http://code.google.com/p/hddm
-License: GPLv3
+HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models (via PyMC_).
 
-Installation
-------------
-::
+Features
+========
 
-    easy_install hddm
+HDDM provides functionalities to make Drift Diffusion analysis of reaction times as painless as 
+possible. Here is a short list of some of its features:
 
-or get the source from the project page or the repository and
+* Uses hierarchical bayesian estimation (via PyMC) of DDM parameters to allow simultanious estimation of subject and group parameters. HDDM can thus produce better estimates when less RT values are measured compared to other methods using maximum likelihood (i.e. `DMAT`_ or `fast-dm`_).
 
-::
+* Heavily optimized likelihood functions for speed.
 
-    setup.py install
+* Flexible creation of complex models tailored to specific hypotheses (e.g. separate drift-rate parameters for different stimulus types).
+
+* Easy specification of models via configuration file fosters exchange of models and research results.
+
+* Built-in Bayesian hypothesis testing and several convergence and goodness-of-fit diagnostics.
 
 Usage
------
+=====
 
 The easiest way to use HDDM is by creating a configuration file for your model:
 
 example.conf
 ::
 
-    [data]
-    load = data/example_subj.csv # Main data file containing all RTs in csv format
-    save = data/example_subj_out.txt # Estimated parameters and stats will be written to this file
-
     [model]
-    type = simple # Use the simple DDM model that does not take intra-trial variabilites into account (and is faster).
-    is_subj_model = True # Create separate distributions for each subject that feed into a group level distribution.
+    data = examples/simple_difficulty.csv
 
     [depends]
+    v = difficulty
 
     [mcmc]
-    samples=5000 # Sample 5000 posterior samples
-    burn=2000 # Discard the first 100 samples as burn-in
+    samples=10000 # Sample 5000 posterior samples
+    burn=5000 # Discard the first 100 samples as burn-in
     thin=3 # Discard every third sample to remove autocorrelations
 
 Then call hddm:
@@ -55,31 +61,31 @@ Then call hddm:
 
     hddmfit example.conf
 
+Installing
+==========
 
-Features
-========
+HDDM has the following dependencies:
 
-HDDM provides functionalities to make Drift Diffusion analysis of reaction times as painless as 
-possible. Here is a short list of some of its features:
+* Python
 
-* Uses hierchical bayesian estimation (via PyMC_) of DDM parameters to allow simultanious estimation of subject and group parameters. HDDM can thus produce better estimates when less RT values are measured compared to other methods (i.e. `DMAT`_ or `fast-dm`_).
+* NumPy
 
-* Heavily optimized likelihood functions for speed (with experimental GPU support).
+* SciPy
 
-* Flexible creation of complex models tailored to specific hypotheses (e.g. separate drift-rate parameters for different stimulus types).
+* Matplotlib
 
-* Provides many base classes for common model types but also an option to specify a model via a simple configuration file.
+* Cython
 
-* Supports the following Drift Model types:
-    * Simple DDM: Ratcliff DDDM without taking intra-trial variabilities into account.
-    * Full-average DDM: Ratcliff DDM taking intra-trial variabilities into account by using an averaging method.
-    * Full DDM: Ratcliff DDM with full hierarchical bayesian parameter estimation of intra-trial variabilites.
-    * LBA: Linear Ballistic Accumulator (Brown et al.)
+* PyMC
 
-* Includes a demo application that generates and displays drift
-  processes with user-specified parameters in real time.
+Linux (Debian based, such as Ubuntu)
+------------------------------------
 
-* Several convergence and goodness-of-fit diagnostics.
+::
+
+    sudo aptitude install python python-numpy python-scipy python-matplotlib cython
+    sudo pip install hddm
+
 
 Table of Contents:
 ==================
