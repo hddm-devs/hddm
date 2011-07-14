@@ -5,7 +5,7 @@ Introduction
 :Date: July 4, 2011
 :Author: Thomas V. Wiecki, Imri Sofer
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu
-:Web site: http://code.google.com/p/hddm
+:Web site: http://github.com/twiecki/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
 :Version: 0.1RC1
@@ -21,9 +21,9 @@ Features
 HDDM provides functionalities to make Drift Diffusion analysis of reaction times as painless as 
 possible. Here is a short list of some of its features:
 
-* Uses hierchical bayesian estimation (via PyMC) of DDM parameters to allow simultanious estimation of subject and group parameters. HDDM can thus produce better estimates when less RT values are measured compared to other methods using maximum likelihood (i.e. `DMAT`_ or `fast-dm`_).
+* Uses hierarchical bayesian estimation (via PyMC) of DDM parameters to allow simultanious estimation of subject and group parameters. HDDM can thus produce better estimates when less RT values are measured compared to other methods using maximum likelihood (i.e. `DMAT`_ or `fast-dm`_).
 
-* Heavily optimized likelihood functions for speed (with experimental GPU support).
+* Heavily optimized likelihood functions for speed.
 
 * Flexible creation of complex models tailored to specific hypotheses (e.g. separate drift-rate parameters for different stimulus types).
 
@@ -39,25 +39,22 @@ The easiest way to use HDDM is by creating a configuration file for your model:
 example.conf
 ::
 
-    [data]
-    load = data/example_subj.csv # Main data file containing all RTs in csv format
-    save = data/example_subj_out.txt # Estimated parameters and stats will be written to this file
-
     [model]
-    type = simple # Use the simple DDM model that takes not intra-trial variabilites into account (and is faster).
-    is_subj_model = True # Create separate distributions for each subject that feed into a group level distribution.
+    data = examples/simple_difficulty.csv
 
     [depends]
+    v = difficulty
 
     [mcmc]
-    samples=5000 # Sample 5000 posterior samples
-    burn=2000 # Discard the first 100 samples as burn-in
+    samples=10000 # Sample 5000 posterior samples
+    burn=5000 # Discard the first 100 samples as burn-in
     thin=3 # Discard every third sample to remove autocorrelations
 
 Then call hddm:
 
 ::
-    hddm.py example.conf
+
+    hddmfit example.conf
 
 Getting started
 ===============
