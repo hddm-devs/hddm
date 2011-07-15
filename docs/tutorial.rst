@@ -6,32 +6,28 @@ Specifiying Models via Configuration File
 =========================================
 
 The easiest way to use HDDM is to create a configuration file. First,
-you have to prepare your data to be in a specific format (csv). A
-possible (truncated) data file might look like this:
+you have to prepare your data to be in a specific format (csv). As a
+working example we will be using simulated data for which we know the
+true parameters. The data file can be found in the examples directory
+and is named simple_difficulty.csv. Lets take a look at what it looks
+like:
 
-::
-
-    rt,response,subj_idx,difficulty
-    0.5,1.,1,easy
-    1.2,0.,1,hard
-    0.7,0.,2,easy
-    2.3,1.,2,hard
-    ...
+.. literalinclude :: ../hddm/examples/simple_difficulty.csv
+   :lines: 1-8
 
 The first line contains the header and specifies which columns contain
 which data.
 
 IMPORTANT: There must be one column named 'rt' and one named
-'response'. If you want to build a group model (i.e. one with
-hierarchical structure) you have to include column named 'subj_idx'.
+'response'. 
 
-The following the header contain the reaction time of the trial,
+The rows following the header contain the reaction time of the trial,
 followed by a comma, followed by the response made (e.g. 1=correct,
-0=error or 1=left, 0=right), followed by the ID of the subject and, in
-our example case, a condition. Note, that columns that describe
-conditions can be anything you like.
+0=error or 1=left, 0=right), followed by the difficulty of the
+trail. Note, that 'difficulty' is just an example, you can call them
+whatever you like.
 
-The following configuration file specifies a group-model in which
+The following configuration file specifies a model in which
 drift-rate depends on difficulty:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.conf
@@ -114,6 +110,28 @@ fitting parameters to individual parameters which are constrained by a
 group distribution (more detail on that can be found in the section on
 hierarchical bayesian modeling).
 
+
+Adding subjects
+===============
+
+Up until now, we have been looking at data that was generated from the
+same set of parameters. However, in most experiments, we test multiple
+subjects and only gather a couple of trials. Traditionally, we would
+either fit a separate model to each individual subject or fit one
+model to all subjects. Neither of these approaches are ideal as we
+will see below. We can expect that subjects will be similar in many
+ways yet have non-neglicable individual differences. If we fit
+separate models we ignore their similarties and need much more data
+per subject to make useful inference. If we fit one model to all
+subjects we ignore their differences and get worse fit.
+
+To illustrate this point, consider the following example: we tested 30
+subjects on the above task with the easy and hard condition. For
+practical reasons, however, we only collected ten trials per
+subject. As an example of what happens when trying to fit separate
+models to each subject, we will run HDDM on the first subject. The
+file simple_difficulty_subjs_single.csv only contains data from the
+first subject.
 
 Specifiying Models in Python
 ============================

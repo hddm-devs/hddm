@@ -349,7 +349,7 @@ def test_chain_convergance(models):
 
     return R_hat_param
 
-def parse_config_file(fname, mcmc=False, load=False):
+def parse_config_file(fname, mcmc=False, data=None):
     import kabuki
     import os.path
     if not os.path.isfile(fname):
@@ -363,7 +363,10 @@ def parse_config_file(fname, mcmc=False, load=False):
     
     #####################################################
     # Parse config file
-    data_fname = config.get('model', 'data')
+    if data is not None:
+        data_fname = data
+    else:
+        data_fname = config.get('model', 'data')
     if not os.path.exists(data_fname):
         raise IOError, "Data file %s not found."%data_fname
 
@@ -371,17 +374,17 @@ def parse_config_file(fname, mcmc=False, load=False):
     
     try:
         include = config.get('model', 'include')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         include = ()
 
     try:
         is_group_model = config.getboolean('model', 'is_group_model')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         is_group_model = None
 
     try:
         bias = config.getboolean('model', 'bias')
-    except ConfigParser.NoOptionError:
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
         bias = False
 
     try:

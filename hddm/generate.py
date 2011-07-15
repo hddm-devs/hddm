@@ -337,7 +337,64 @@ def gen_rand_data(samples=500, params=None, include=()):
     
     return (data, params)
 
-def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None):
+def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, num_subjs=10, noise=.05):
+    """Generate simulated RTs with multiple conditions.
+    
+        :Optional:
+            params_set : list
+                List of dicts, for each condition one 
+                dict of parameters.
+    
+                Default:
+    
+                [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
+                 {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
+
+            samlpes_per_cond : int
+                How many samples to generate for each condition.
+            
+            num_subjs : int
+                How many subjects to generate data for
+
+            noise : float
+                Amount of noise to add to each parameter
+
+        :Returns:
+            data : array 
+                RTs
+            params: list 
+                parameter values for each condition
+    
+    """
+    # Create RT data
+    if params_set is None:
+        params_set = [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
+                      {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
+
+    params_orig = copy(params_set)
+    data_out = []
+    params_subj = []
+    for subj_idx in range(num_subjs):
+        params = copy(params_orig)
+        params_out = []
+        for param in params:
+            param = _add_noise(param, noise)
+            param_out = {}
+            for name,value in param.iteritems():
+                param_out[name+str(subj_idx)] = value
+            params_out.append(param_out)
+
+        data_subj, dummy = gen_rand_cond_data(params_set=params,
+                                              samples_per_cond=samples_per_cond,
+                                              conds=conds,
+                                              subj_idx=subj_idx)
+
+        data_out.append(data_subj)
+        params_subj.append(params_out)
+        
+    return rec.stack_arrays(data_out, usemask=False), params_subj
+
+def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_idx=None):
     """Generate simulated RTs with multiple conditions.
     
         :Optional:
@@ -378,21 +435,23 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None):
 
     for cond, params in zip(conds, params_set):
         i_data = gen_rts(params, samples=n, structured=True)
-        data = np.empty(len(i_data), dtype = ([('response', np.float),
-                                               ('rt', np.float), 
-                                               ('cond', cond_type)]))
-                                               #('cond2', np.int)]))
+        if subj_idx is None:
+            data = np.empty(len(i_data), dtype = ([('response', np.float),
+                                                   ('rt', np.float), 
+                                                   ('cond', cond_type)]))
+        else:
+            data = np.empty(len(i_data), dtype = ([('response', np.float),
+                                                   ('rt', np.float), 
+                                                   ('cond', cond_type),
+                                                   ('subj_idx', np.int)]))
+            data['subj_idx'] = subj_idx
 
         data['response'] = np.sign(i_data['response'])
         data['rt'] = np.abs(i_data['rt'])
         data['cond'] = cond
-        print cond
-        #data[:len(i_data)]['cond2'] = i+1
-        #data[len(i_data)+1:]['cond2'] = i+2
         
         arrays.append(data)
 
-    print arrays
     data_out = rec.stack_arrays(arrays, usemask=False)
 
     if params_set[0].has_key('pi'):
@@ -419,14 +478,16 @@ def _add_noise(params, noise=.1, include=()):
             dict with parameters with added noise.
 
     """
+
     params = copy(params)
+
     for param, value in params.iteritems():
-        if param not in include:
+        if param in include or param in ('v','a','z','t'):
             params[param] = np.random.normal(loc=value, scale=noise)
 
     return params
 
-def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include=()):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, include=()):
     """Generate simulated RTs of multiple subjects.
 
         :Optional:
@@ -468,7 +529,6 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include
             params['%s%i'%(name,i)] = value
             if name in include or name in ('v','a','t'):
                 params['%stau'%name] = noise
-                
             
         # Create RT data
         data_gen = gen_rts(params_subj, samples=samples, structured=True, subj_idx=i)
