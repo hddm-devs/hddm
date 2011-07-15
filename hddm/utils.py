@@ -366,10 +366,14 @@ def parse_config_file(fname, mcmc=False, data=None):
     if data is not None:
         data_fname = data
     else:
-        data_fname = config.get('model', 'data')
+        try:
+            data_fname = config.get('model', 'data')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+            print "ERROR: No data file specified. Either provide data file as an argument to hddmfit or in the model specification"
+            sys.exit(-1)
     if not os.path.exists(data_fname):
         raise IOError, "Data file %s not found."%data_fname
-
+    
     data = np.recfromcsv(data_fname)
     
     try:

@@ -118,7 +118,7 @@ samples. These methods, albeit slow, have been used with great success
 in many different scenarios. The theoretical background of these
 sampling methods is out of the scope of this paper and are not
 required for an intuitive understanding of Bayesian parameter
-estimation. The interested reader is referred to: TODO.
+estimation.
 
 Another nice property of the Bayesian method is that it lends itself
 naturally to a hierarchical design. In such a design, parameters for
@@ -141,15 +141,7 @@ parameter but let the parameters for these distributions come from
 another group distribution. This way, the individual subject
 distributions restrict the group distribution and vice versa. 
 
-# TODO: CUT?
-As an example, consider a design where we have a large number of
-subjects that each only have very few trials. In this case, we do not
-have enough data for each subject to fit a model to each subject
-separately and if we lump all subjects together we increase the
-variance in our dataset by the inter-subject variance. 
-
-
-.. _HDDM: http://code.google.com/p/hddm/
+.. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/
 .. _PyMC: http://code.google.com/p/pymc/
 .. _Cython: http://www.cython.org/
