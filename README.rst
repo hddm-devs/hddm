@@ -71,31 +71,30 @@ HDDM has the following dependencies:
 
 * Cython_
 
-* PyMC_
+* PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
 
 * Kabuki_ 
 
 Install dependencies on Linux (Debian based, such as Ubuntu)
 -----------------------------------------------------------
 
+The following commands require admin rights
+
 ::
 
-    sudo aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran
+    aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran lapack-dev
 
 You can either install the package automatically from pypi:
 
 ::
 
-    sudo pip install hddm
+    pip install hddm
 
-Or, you can download the package (from pypi_ or checkout the latest code from github), extract and call:
+Or, you can install the package from the source directory:
 
 ::
 
     python setup.py install
-
-Which requires admin rights.
-
 
 
 Getting started
@@ -111,4 +110,3 @@ Check out the documentation_ for a manual and tutorial for how to use HDDM.
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: http://ski.cog.brown.edu/hddm_docs
 .. _kabuki: http://github.com/twiecki/kabuki
-
