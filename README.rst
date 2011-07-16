@@ -39,9 +39,6 @@ The easiest way to use HDDM is by creating a configuration file for your model:
 example.conf
 ::
 
-    [model]
-    data = examples/simple_difficulty.csv
-
     [depends]
     v = difficulty
 
@@ -54,7 +51,7 @@ Then call hddm:
 
 ::
 
-    hddmfit example.conf
+    hddmfit example.conf mydata.csv
 
 Installing
 ==========
@@ -73,7 +70,7 @@ HDDM has the following dependencies:
 
 * PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
 
-* Kabuki_ 
+* kabuki_ 
 
 Install dependencies on Linux (Debian based, such as Ubuntu)
 -----------------------------------------------------------
