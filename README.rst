@@ -8,7 +8,7 @@ Introduction
 :Web site: http://github.com/twiecki/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.1RC1
+:Version: 0.1RC2
 
 Purpose
 =======
