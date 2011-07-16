@@ -12,9 +12,9 @@ import os
 
 setup(
     name="HDDM",
-    version="0.1RC1",
-    author="Thomas V. Wiecki, Imri Sofer",
-    author_email="thomas_wiecki@brown.edu, imri_sofer@brown.edu",
+    version="0.1RC3",
+    author="Thomas V. Wiecki, Imri Sofer, Michael J. Frank",
+    author_email="thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu",
     url="http://github.com/twiecki/hddm",
     packages=["hddm", "hddm.tests"],
     package_data={"hddm":["examples/*"]},

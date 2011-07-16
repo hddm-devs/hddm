@@ -1,4 +1,5 @@
 setup.py
+README.rst
 hddm/MPLTraits.py
 hddm/__init__.py
 hddm/demo.py
@@ -9,3 +10,5 @@ hddm/theta.py
 hddm/wfpt_gpu.py
 src/lba.pyx
 src/wfpt.pyx
+src/wfpt.c
+src/wfpt_full.c

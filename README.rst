@@ -8,7 +8,7 @@ Introduction
 :Web site: http://github.com/twiecki/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.1RC1
+:Version: 0.1RC2
 
 Purpose
 =======
@@ -48,9 +48,6 @@ The easiest way to use HDDM is by creating a configuration file for your model:
 example.conf
 ::
 
-    [model]
-    data = examples/simple_difficulty.csv
-
     [depends]
     v = difficulty
 
@@ -63,7 +60,7 @@ Then call hddm:
 
 ::
 
-    hddmfit example.conf
+    hddmfit example.conf mydata.csv
 
 Installing
 ==========
@@ -82,7 +79,7 @@ HDDM has the following dependencies:
 
 * PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
 
-* Kabuki_ 
+* kabuki_ 
 
 Install dependencies on Linux (Debian based, such as Ubuntu)
 -----------------------------------------------------------
