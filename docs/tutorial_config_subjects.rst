@@ -8,14 +8,21 @@ Creating a hierarchical group model
 
 Up until now, we have been looking at data that was generated from the
 same set of parameters. However, in most experiments, we test multiple
-subjects and only gather a couple of trials. Traditionally, we would
-either fit a separate model to each individual subject or fit one
-model to all subjects. Neither of these approaches are ideal as we
-will see below. We can expect that subjects will be similar in many
-ways yet have non-neglicable individual differences. If we fit
-separate models we ignore their similarties and need much more data
-per subject to make useful inference. If we fit one model to all
-subjects we ignore their differences and get worse fit.
+subjects and may only gather relatively few trials per
+subject. Traditionally, we would either fit a separate model to each
+individual subject or fit one model to all subjects. Neither of these
+approaches are ideal as we will see below. We can expect that subjects
+will be similar in many ways yet have non-negligable individual
+differences. If we fit separate models we ignore their similarities
+and need much more data per subject to make useful inference. If we
+fit one model to all subjects we ignore their differences and may get
+a model fit that does not well characterize any individual. It would
+be best if the model fitting could determine to what extent all
+subjects are similar to the others in some respects, and use this
+information as a prior to draw inferences about the paramters of any
+given subject. The hierarchical approach optimally allocates the
+information from the group vs the individual depending on the
+statistics of the data.
 
 To illustrate this point, consider the following example: we tested 30
 subjects on the above task with the easy and hard condition. For
