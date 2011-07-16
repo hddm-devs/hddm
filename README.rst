@@ -18,14 +18,23 @@ HDDM is a python module that implements Hierarchical Bayesian estimation of Drif
 Features
 ========
 
-HDDM provides functionalities to make Drift Diffusion analysis of reaction times as painless as 
+HDDM provides functionalities to make Drift Diffusion analysis of
+error rates and reaction time distributions as painless as 
 possible. Here is a short list of some of its features:
 
-* Uses hierarchical bayesian estimation (via PyMC) of DDM parameters to allow simultanious estimation of subject and group parameters. HDDM can thus produce better estimates when less RT values are measured compared to other methods using maximum likelihood (i.e. `DMAT`_ or `fast-dm`_).
+* Uses hierarchical bayesian estimation (via PyMC) of DDM parameters
+  to allow simultaneous estimation of subject and group parameters,
+  where individual subjects are assumed to be drawn from a group
+  distribution. HDDM should thus produce better estimates when less RT
+  values are measured compared to other methods using maximum
+  likelihood for individual subjects (i.e. `DMAT`_ or `fast-dm`_). 
 
 * Heavily optimized likelihood functions for speed.
 
-* Flexible creation of complex models tailored to specific hypotheses (e.g. separate drift-rate parameters for different stimulus types).
+* Flexible creation of complex models tailored to specific hypotheses
+  (e.g. separate drift-rate or other parameters for different task
+  conditions, or predicted changes in model parameters as a function
+  of other indicators like brain activity).
 
 * Easy specification of models via configuration file fosters exchange of models and research results.
 
