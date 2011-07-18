@@ -134,16 +134,19 @@ class HDDM(kabuki.Hierarchical):
     def get_params(self):
         """Returns list of model parameters.
         """
-        params = [Parameter('a', True, lower=.5, upper=4.5),
-                  Parameter('v', True, lower=-10., upper=10.), 
-                  Parameter('t', True, lower=.1, upper=2., init=.1),
-                  Parameter('z', True, lower=0., upper=1., init=.5, 
+        # These boundaries are largely based on a meta-analysis of
+        # reported fit values. 
+        # See: Matzke & Wagenmakers 2009
+        params = [Parameter('a', True, lower=.8, upper=4),
+                  Parameter('v', True, lower=-6., upper=6.), 
+                  Parameter('t', True, lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
+                  Parameter('z', True, lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
-                  Parameter('V', True, lower=0., upper=6., default=0, 
+                  Parameter('V', True, lower=0., upper=3.5, default=0, 
                             optional=True),
-                  Parameter('Z', True, lower=0., upper=1., init=.1, 
+                  Parameter('Z', True, lower=0., upper=1.3, init=.1, 
                             default=0, optional=True),
-                  Parameter('T', True, lower=0., upper=2., init=.1, 
+                  Parameter('T', True, lower=0., upper=0.8, init=.1, 
                             default=0, optional=True),
                   Parameter('wfpt', False)]
         

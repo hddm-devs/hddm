@@ -40,3 +40,11 @@ first subject. Lets run our model and see what happens:
     logp: -17.105420
     DIC: 25.400104
 
+As you can see, the estimates are far from the true values and the
+posterior distributions are much wider indicating a lack of confidence
+in the estimates. Looking at the posterior predictive and ill-shaped
+RT distribution makes obvious why fitting a DDM to 10 trials is a
+fruitless attempt.
+
+.. figure::
+

@@ -4,7 +4,7 @@ import hddm
 data = hddm.load_csv('simple_subj_data.csv')
 
 # Create a HDDM model multi object
-model = hddm.HDDM(data)
+model = hddm.HDDM(data, depends_on={'v':'difficulty'})
 
 # Create model and start MCMC sampling
 model.sample(10000, burn=5000)

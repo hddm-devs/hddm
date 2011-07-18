@@ -81,7 +81,12 @@ HDDM has the following dependencies:
 
 * kabuki_ 
 
-Install dependencies on Linux (Debian based, such as Ubuntu)
+Windows
+-------
+
+Coming very soon.
+
+Linux (Debian based, such as Ubuntu)
 -----------------------------------------------------------
 
 The following commands require admin rights
