@@ -6,23 +6,26 @@ Getting started: Creating a simple model
 ****************************************
 
 Imagine that we collected data from one subject on the moving dots or
-coherent motion task. In this task, participants indicate via keypress
-in which of two directions dots on a screen are moving. However,
-depending on the difficulty, some of the dots are moving into random
-directions (see the figure). In our working example, we used two
-conditions, an easy and a hard condition. In the following, we will
-walk through the steps on creating a model in HDDM to estimate the
-underlying psychological decision making parameters of this task.
+coherent motion task (e.g., Roitman & Shadlen, 2002). In this task,
+participants indicate via keypress in which of two directions dots are
+moving on a screen. Only some of the dots are moving in a coherent
+direction; depending on the difficulty, more or less of the dots are
+moving in random directions (see the figure). In our working example,
+we used two conditions, an easy and a hard condition. In the
+following, we will walk through the steps on creating a model in HDDM
+to estimate the underlying psychological decision making parameters of
+this task.
 
 ..  figure:: moving_dots.jpg
     :scale: 20%
 
 The easiest way to use HDDM is to create a configuration file. First,
 you have to prepare your data to be in a specific format (csv). The
-data from our was simulated from the DDM so that we know the true
-parameters. The data file can be found in the examples directory and
-is named simple_difficulty.csv. Lets take a look at what it looks
-like:
+data that we use here were generated from simulated DDM processes
+(i.e. they are not real data), so that we know the true underlying
+generative parameters. The data file can be found in the examples
+directory and is named simple_difficulty.csv. Lets take a look at what
+it looks like:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.csv
    :lines: 1,101-105,579-582
@@ -36,7 +39,7 @@ IMPORTANT: There must be one column named 'rt' and one named
 The rows following the header contain the reaction time of the trial,
 followed by a comma, followed by the response made (e.g. 1=correct,
 0=error or 1=left, 0=right), followed by the difficulty of the
-trail. Note, that 'difficulty' is just an example, you can call them
+trial. Note, that 'difficulty' is just an example, you can call them
 whatever you like.
 
 The following configuration file specifies a model in which
@@ -44,7 +47,7 @@ drift-rate depends on difficulty:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.conf
 
-The [model] tag specifies that parameters after the tag are model
+The [model] tag specifies that parameters following the tag are model
 parameters. In this case, the 'data' parameter tells HDDM where the
 input data is to be found.
 
@@ -54,8 +57,11 @@ the conditions found in the data column 'difficulty'.
 
 The optional [mcmc] tag specifies parameter of the Markov chain
 Monte-Carlo estimation such as how many samples to draw from the
-posterior and how many samples to discard as burn-in (often, it takes
-the MCMC chains some time to converge to the true posterior).
+posterior and how many samples to discard as burn-in (as in any MCMC
+case, often it takes the MCMC chains some time to converge to the true
+posterior so that one would not want to use the initial samples to
+draw inferences about the true parameters; for details please read up
+on MCMC approaches).
 
 Our model specification is now complete and we can fit the model by
 calling hddmfit:
@@ -101,8 +107,11 @@ to the true parameters -- our estimation worked! However, often we are
 not only interested in the best fitting value but also how confident
 we are in that estimation and how good other values are fitting. This
 is one of advantages of the Bayesian approach -- it gives us the
-complete posterior distribution. So the next columns are statistics on
-the shape of the distribution, such as the standard deviation and
+complete posterior distribution, rather than just a single best guess
+(in principle the maximum likelihood estimate could be only slightly
+better fit than a range of other values, in which case the posterior
+would have high variance). As such the next columns are statistics on the
+shape of the distribution, such as the standard deviation and
 different quantiles to give you a feel for how certain you can be in
 the estimates.
 
@@ -111,12 +120,14 @@ data. These values are not all that useful if looked at in isolation
 but they provide a tool to do model comparison. Logp is the summed
 log-likelihood of the best-fitting values (higher is better). DIC
 stands for deviance information criterion and is a measure that takes
-model complexity into account. Lower values are better.
+model complexity into account for bayesian models, similar to BIC or AIC (see here for the relationship
+http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml). Lower values
+are better.
 
-:Excercise:
+:Exercise:
 
     Create a new model that ignores the different difficulties (i.e. only
-    estimate one drift-rate). Compare the resulting DIC score with that of
+    estimate a single drift-rate). Compare the resulting DIC score with that of
     the previous model -- does the increased complexity of the first model
     result in a sufficient increase in model fit to justify using it? Why
     does the drift-rate estimate of the second model make sense?
@@ -134,27 +145,28 @@ distribution for each condition:
 .. figure:: ../hddm/examples/plots/simple_difficulty_hard.png
    :scale: 40%
 
-Note that error responses have been mirrored along the y-axis to
+Note that error responses have been mirrored along the y-axis (on the
+left) to
 display both RT distributions in one plot. 
 
 These plots allow you to see how good the estimation fits your
 data. Here, we also see that our subject makes more errors and are
-slower in the difficult condition which is covered well by the
-decreased drift-rate parameter.
+slower in the difficult condition. This combination is well captured
+by the reduced estimated drift-rate parameter in this condition.
 
 Moreover, HDDM generates the trace and histogram of the posterior
 samples. As pointed out in the introduction, we can rarely compute the
 posterior analytically so we have to estimate it. One standard method
 is MCMC which allows you to draw samples from the posterior. On the
 left side of the plot we see the trace of this sampling. The main
-thing to look out for is if the chain drifts around (i.e. has not
-converged) or if there are periods where it seems stuck in one place
-(i.e. proposal distribution too wide). In our case the chain of the
-parameter a seems to have converged nicely to the correct value. This
-is also illustrated in the right side plot which is the histogram of
-the trace and gives a feel for how to the posterior distribution looks
-like. In our case, it looks like a normal distribution centered around
-a value close to 2.
+thing to look out for is if the chain drifts around such that the mean
+value is not stable (i.e. has not converged) or if there are periods
+where it seems stuck in one place (i.e. proposal distribution too
+wide). In our case the chain of the parameter "a" (threshold) seems to
+have converged nicely to the correct value. This is also illustrated
+in the right side plot which is the histogram of the trace and gives a
+feel for how to the posterior distribution looks like. In our case, it
+looks like a normal distribution centered around a value close to 2.
 
 .. figure:: ../hddm/examples/plots/simple_difficulty_trace_a.png
    :scale: 40%

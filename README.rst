@@ -120,4 +120,4 @@ Check out the documentation_ for a manual and tutorial for how to use HDDM.
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: http://ski.cog.brown.edu/hddm_docs
-.. _kabuki: http://github.com/twiecki/kabuki
+.. _kabuki: https://github.com/hddm-devs/kabuki
