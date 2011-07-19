@@ -85,7 +85,7 @@ Windows
 -------
 
 The easiest way is to download and install the `Enthought Python
-Distribution`_ which has a free version for academic use.
+Distribution`_ which is free for academic use.
 
 After this open cmd.exe and type ::
 
