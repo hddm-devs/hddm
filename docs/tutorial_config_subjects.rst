@@ -34,7 +34,7 @@ first subject. Lets run our model and see what happens:
 
 ::
 
-    hddmfit simple_difficulty.conf simple_difficulty_subjs_single.csv
+    hddm_fit.py simple_difficulty.conf simple_difficulty_subjs_single.csv
 
     Creating model...
     Sampling: 100% [000000000000000000000000000000] Iterations: 10000

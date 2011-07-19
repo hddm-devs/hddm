@@ -2,13 +2,13 @@
 Introduction
 ************
 
-:Date: July 4, 2011
+:Date: July 19, 2011
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
-:Web site: http://github.com/twiecki/hddm
+:Web site: http://github.com/hddm-devs/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.1RC2
+:Version: 0.1
 
 Purpose
 =======
@@ -60,7 +60,7 @@ Then call hddm:
 
 ::
 
-    hddmfit example.conf mydata.csv
+    hddm_fit.py example.conf mydata.csv
 
 Installing
 ==========
@@ -84,7 +84,13 @@ HDDM has the following dependencies:
 Windows
 -------
 
-Coming very soon.
+The easiest way is to download and install the `Enthought Python
+Distribution`_ which has a free version for academic use.
+
+After this open cmd.exe and type ::
+
+    easy_install hddm
+
 
 Linux (Debian based, such as Ubuntu)
 -----------------------------------------------------------
@@ -121,3 +127,4 @@ Check out the documentation_ for a manual and tutorial for how to use HDDM.
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: http://ski.cog.brown.edu/hddm_docs
 .. _kabuki: https://github.com/hddm-devs/kabuki
+.. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php

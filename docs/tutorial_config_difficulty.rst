@@ -68,7 +68,7 @@ calling hddmfit:
 
 ::
 
-    hddmfit simple_difficulty.conf simple_difficulty.csv
+    hddm_fit.py simple_difficulty.conf simple_difficulty.csv
 
 The first argument tells HDDM which model specification to use, the
 second argument is the data file to apply the model to.
