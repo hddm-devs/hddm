@@ -29,7 +29,7 @@ possible. Here is a short list of some of its features:
   values are measured compared to other methods using maximum
   likelihood for individual subjects (i.e. `DMAT`_ or `fast-dm`_). 
 
-* Heavily optimized likelihood functions for speed.
+* Heavily optimized likelihood functions for speed (Navarro & Fuss, 2009).
 
 * Flexible creation of complex models tailored to specific hypotheses
   (e.g. separate drift-rate or other parameters for different task

@@ -48,7 +48,6 @@ If instead of installing the prebuilt binaries you prefer (or have) to build
 ``HDDM`` yourself, make sure you have a Cython and a C compiler. There are free
 compilers (gcc) available on all platforms.
 
-
 .. _`Python`: http://www.python.org/.
 
 .. _`NumPy`: http://www.scipy.org/NumPy
@@ -66,6 +65,7 @@ compilers (gcc) available on all platforms.
 
 .. _`IPython (optional)`: http://ipython.scipy.org/
 
+.. _Cython: http://www.cython.org/
 
 Installation using EasyInstall
 ==============================
@@ -144,7 +144,6 @@ Mac OS X or Linux
 -----------------
 In a terminal, type::
 
-    python setup.py config_fc --fcompiler gnu95 build
     python setup.py install
 
 The above syntax also assumes that you have gFortran installed and available. The 
@@ -161,19 +160,9 @@ directory if it has restricted privileges.
 Development version
 ===================
 
-You can check out the bleeding edge version of the code from the `subversion`_
-repository::
+Get the code from the GIT mirror::
 
-    svn checkout http://pymc.googlecode.com/svn/trunk/ pymc
-
-Previous versions are available in the ``/tags`` directory.
-
-.. _`subversion`: http://subversion.tigris.org/
-
-
-You can also get the code from the GIT mirror::
-
-    git clone git://github.com/pymc-devs/pymc.git pymc
+    git clone git://github.com/hddm-devs/hddm.git hddm
 
 
 Running the test suite
