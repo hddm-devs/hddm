@@ -24,34 +24,50 @@ given subject. The hierarchical approach optimally allocates the
 information from the group vs the individual depending on the
 statistics of the data.
 
-To illustrate this point, consider the following example: we tested 30
+To illustrate this point, consider the following example: we tested 40
 subjects on the above task with the easy and hard condition. For
-practical reasons, however, we only collected ten trials per
-subject. As an example of what happens when trying to fit separate
+practical reasons, however, we only collected 20 trials per
+condition. As an example of what happens when trying to fit separate
 models to each subject, we will run HDDM on the first subject. The
 file simple_difficulty_subjs_single.csv only contains data from the
 first subject. Lets run our model and see what happens:
 
 ::
 
-    hddm_fit.py simple_difficulty.conf simple_difficulty_subjs_single.csv
+    hddm_fit.py simple_difficulty.conf simple_subjs_difficulty_single.csv
 
     Creating model...
-    Sampling: 100% [000000000000000000000000000000] Iterations: 10000
+    Sampling: 100% [0000000000000000000000000000000000] Iterations: 10000
        name       mean   std    2.5q   25q    50q    75q    97.5  mc_err
-    a         :  1.571  0.219  1.202  1.418  1.552  1.708  2.039  0.012
-    t         :  0.461  0.041  0.366  0.439  0.468  0.490  0.519  0.002
-    v('easy',): -0.002  0.479 -0.980 -0.333  0.024  0.348  0.980  0.021
-    v('hard',):  1.684  0.528  0.614  1.330  1.683  2.053  2.684  0.023
+    a         :  1.936  0.152  1.665  1.830  1.926  2.030  2.259  0.007
+    t         :  0.314  0.044  0.214  0.288  0.318  0.347  0.386  0.002
+    v('easy',):  0.468  0.248 -0.017  0.298  0.473  0.642  0.929  0.009
+    v('hard',):  0.426  0.234 -0.028  0.268  0.428  0.571  0.869  0.008
 
-    logp: -17.105420
-    DIC: 25.400104
+    logp: -60.214194
+    DIC: 113.099890
 
-As you can see, the estimates are far from the true values and the
-posterior distributions are much wider indicating a lack of confidence
-in the estimates. Looking at the posterior predictive and ill-shaped
-RT distribution makes obvious why fitting a DDM to 10 trials is a
-fruitless attempt.
+As you can see, the estimates are far much worse (especially in the
+hard condition) and the posterior distributions are much wider
+indicating a lack of confidence in the estimates. Looking at the
+posterior predictive and ill-shaped RT distribution makes obvious why
+fitting a DDM to 10 trials is a fruitless attempt.
 
-.. figure::
+However, what about the data from the 39 other subjects? We certainly
+wouldn't expect everyone to have the exact same parameters, but they
+should be fairly similar. Couldn't we combine the data? This is where
+the hierarchical approach becomes useful -- we can estimate individual
+parameters, but at the same time have the parameters feed into a group
+distribution so that the tiny bit we learn from each subject can be
+pooled together and constrain the subject fits. Unfortunately, such a
+model is a little bit more difficult to create in
+general. Fortunately, HDDM does all of this automatically. Simply
+running hddm_fit.py on a datafile that has a column named 'subj_idx'
+will make HDDM create a hierarchical model where ach subject gets
+assigned it's own distribution that is dependent on a group
+distribution. Running this example produces the following output::
+
+
+
+
 

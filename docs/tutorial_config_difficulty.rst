@@ -24,7 +24,9 @@ you have to prepare your data to be in a specific format (csv). The
 data that we use here were generated from simulated DDM processes
 (i.e. they are not real data), so that we know the true underlying
 generative parameters. The data file can be found in the examples
-directory and is named simple_difficulty.csv. Lets take a look at what
+directory and is named simple_difficulty.csv (under Windows, these
+files can probably be found in
+C:\Python27\Lib\site-packages\hddm\examples). Lets take a look at what
 it looks like:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.csv
