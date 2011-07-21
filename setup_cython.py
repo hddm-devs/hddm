@@ -1,5 +1,6 @@
 from distutils.core import setup
 from distutils.extension import Extension
+from Cython.Distutils import build_ext
 import numpy as np
 import os
 
@@ -22,6 +23,7 @@ setup(
     install_requires=['NumPy >=1.3.0', 'kabuki'],
     setup_requires=['NumPy >=1.3.0', 'kabuki'],
     include_dirs = [np.get_include()],
+    cmdclass = {'build_ext': build_ext},
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
@@ -31,7 +33,7 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.c"]),
-                   Extension("wfpt_full", ["src/wfpt_full.c"])]
+    ext_modules = [Extension("wfpt", ["src/wfpt.pyx"]),
+                   Extension("wfpt_full", ["src/wfpt_full.pyx"])]
 )
 
