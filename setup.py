@@ -19,8 +19,8 @@ setup(
     package_data={"hddm":["examples/*"]},
     scripts=["scripts/hddm_fit.py", "scripts/hddm_demo.py"],
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
-    install_requires=['NumPy >=1.3.0', 'kabuki'],
-    setup_requires=['NumPy >=1.3.0', 'kabuki'],
+    install_requires=['NumPy >=1.3.0', 'kabuki', 'pymc'],
+    setup_requires=['NumPy >=1.3.0', 'kabuki', 'pymc'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
