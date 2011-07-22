@@ -116,7 +116,7 @@ Or, you can install the package from the source directory:
 OSX
 ---
 
-We provide an automatic installer based the scipy superpack by Chris Fonnesbeck. Simply download and run this script_ which should install all dependencies.
+We provide an automatic installer based on the scipy superpack by Chris Fonnesbeck. Simply download and run this script_ which should install all dependencies.
 
 Getting started
 ===============
