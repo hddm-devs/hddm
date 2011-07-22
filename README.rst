@@ -65,21 +65,24 @@ Then call hddm:
 Installing
 ==========
 
-HDDM has the following dependencies:
+Below we provide instructions for how to install HDDM and all it's dependencies.
+
+HDDM relies on the following packages:
 
 * Python
 
 * NumPy
 
-* SciPy
-
-* Matplotlib
-
-* Cython_
-
 * PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
 
 * kabuki_ 
+
+* SciPy (optional)
+
+* Matplotlib (optional)
+
+* Cython_ (optional)
+
 
 Windows
 -------
