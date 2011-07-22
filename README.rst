@@ -93,7 +93,7 @@ After this open cmd.exe and type ::
 
 
 Linux (Debian based, such as Ubuntu)
------------------------------------------------------------
+------------------------------------
 
 The following commands require admin rights
 
@@ -113,6 +113,10 @@ Or, you can install the package from the source directory:
 
     python setup.py install
 
+OSX
+---
+
+We provide an automatic installer based the scipy superpack by Chris Fonnesbeck. Simply download and run this script_ which should install all dependencies.
 
 Getting started
 ===============
@@ -128,3 +132,4 @@ Check out the documentation_ for a manual and tutorial for how to use HDDM.
 .. _documentation: http://ski.cog.brown.edu/hddm_docs
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
+.. _script: https://raw.github.com/hddm-devs/hddm/master/install_osx.sh
