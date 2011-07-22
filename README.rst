@@ -121,7 +121,7 @@ We provide an automatic installer based on the scipy superpack by Chris Fonnesbe
 Getting started
 ===============
 
-Check out the documentation_ for a manual and tutorial for how to use HDDM.
+Check out the documentation_ for a tutorial_ for how to use HDDM.
 
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
@@ -130,6 +130,8 @@ Check out the documentation_ for a manual and tutorial for how to use HDDM.
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: http://ski.cog.brown.edu/hddm_docs
+.. _tutorial: http://ski.cog.brown.edu/hddm_docs/tutorial.html
+.. _manual: http://ski.cog.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _script: https://raw.github.com/hddm-devs/hddm/master/install_osx.sh
