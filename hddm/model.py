@@ -134,6 +134,7 @@ class HDDM(kabuki.Hierarchical):
     def get_params(self):
         """Returns list of model parameters.
         """
+<<<<<<< HEAD
         # These boundaries are largely based on a meta-analysis of
         # reported fit values. 
         # See: Matzke & Wagenmakers 2009

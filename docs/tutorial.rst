@@ -11,4 +11,3 @@ Tutorial
    tutorial_config_difficulty
    tutorial_config_subjects
    tutorial_python
-

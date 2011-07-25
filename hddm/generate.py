@@ -395,36 +395,6 @@ def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, n
     return rec.stack_arrays(data_out, usemask=False), params_subj
 
 def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_idx=None):
-    """Generate simulated RTs with multiple conditions.
-    
-        :Optional:
-            params_set : list
-                List of dicts, for each condition one 
-                dict of parameters.
-    
-                Default:
-    
-                [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
-                 {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
-
-            samlpes_per_cond : int
-                How many samples to generate for each condition.
-
-        :Returns:
-            data : array 
-                RTs
-            params: list 
-                parameter values for each condition
-    
-    """
-    # Create RT data
-    if params_set is None:
-        params_set = [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
-                      {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
-    n_conds = len(params_set)
-    n = samples_per_cond
-    counter = 0
-    arrays = []
     if conds is None:
         conds = range(n_conds)
     
@@ -449,7 +419,7 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_i
         data['response'] = np.sign(i_data['response'])
         data['rt'] = np.abs(i_data['rt'])
         data['cond'] = cond
-        
+
         arrays.append(data)
 
     data_out = rec.stack_arrays(arrays, usemask=False)
@@ -487,7 +457,7 @@ def _add_noise(params, noise=.1, include=()):
 
     return params
 
-def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1, include=()):
+def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include=()):
     """Generate simulated RTs of multiple subjects.
 
         :Optional:

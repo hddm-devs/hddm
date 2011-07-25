@@ -79,6 +79,81 @@ class TestSingle(unittest.TestCase):
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
             model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=True)
             mc = model.mcmc()
+<<<<<<< HEAD
+=======
+            mc.sample(self.samples, burn=self.burn)
+            check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended(self, assert_=True):
+        data, params_true = hddm.generate.gen_rand_data(samples=500, include='all')
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=False)
+        nodes = model.create()
+        #pm.MAP(nodes).fit()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended_subj(self):
+        raise SkipTest("Disabled.")
+        data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=True)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(20000, burn=15000)
+        check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDMGPU(self, assert_=True):
+        try:
+            import pycuda
+        except ImportError:
+            raise SkipTest("Disabled.")
+        include = ['V']
+        data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
+        model = hddm.model.HDDMGPU(data, include=include, no_bias=False, is_group_model=False)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
+
+    def test_lba(self):
+        raise SkipTest("Disabled.")
+        model = hddm.model.HLBA(self.data, is_group_model=False, normalize_v=True)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        #self.check_model(mc, self.params_true_lba)
+        print model.params_est
+        return model
+
+    def test_lba_subj(self):
+        raise SkipTest("Disabled.")
+        model = hddm.model.HLBA(self.data_subj, is_group_model=True, normalize_v=True)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        #self.check_model(mc, self.params_true_lba)
+        print model.params_est
+        return model
+    
+    def test_cont(self, assert_=False):
+        gammas = [1./8, 7./8]
+        params_true = gen_rand_params()
+        params_true['pi'] = 0.05
+        for gamma in gammas:
+            params_true['gamma'] = gamma
+            data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)            
+            model = hddm.model.HDDM(data, no_bias=False, is_group_model=False)
+            nodes = model.create()
+            mc = pm.MCMC(nodes)
+>>>>>>> experimental
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
 
