@@ -134,7 +134,6 @@ class HDDM(kabuki.Hierarchical):
     def get_params(self):
         """Returns list of model parameters.
         """
-<<<<<<< HEAD
         # These boundaries are largely based on a meta-analysis of
         # reported fit values. 
         # See: Matzke & Wagenmakers 2009
@@ -153,32 +152,6 @@ class HDDM(kabuki.Hierarchical):
         
         return params
     
-    def get_root_node(self, param):
-        """Create and return a uniform prior distribution for root
-        parameter 'param'.
-
-        This is used for the group distributions.
-
-        """
-        return pm.Uniform(param.full_name,
-                          lower=param.lower,
-                          upper=param.upper,
-                          value=param.init,
-                          verbose=param.verbose)
-
-    def get_tau_node(self, param):
-        """Create and return a Uniform prior distribution for the
-        variability parameter 'param'.
-        
-        Note, that we chose a Uniform distribution rather than the
-        more common Gamma (see Gelman 2006: "Prior distributions for
-        variance parameters in hierarchical models").
-
-        This is used for the variability fo the group distribution.
-
-        """
-        return pm.Uniform(param.full_name, lower=0., upper=1., value=.1, plot=self.plot_tau)
-
     def get_child_node(self, param):
         """Create and return a Normal (in case of an effect or
         drift-parameter) or Truncated Normal (otherwise) distribution
