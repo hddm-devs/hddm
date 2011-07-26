@@ -121,11 +121,10 @@ class HDDM(kabuki.Hierarchical):
             self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
                                   'use_adaptive':1,
                                   'simps_err':1e-3}
-            self.wfpt = hddm.likelihoods.WienerFullIntrp
         else:
             self.wiener_params = wiener_params
-            wp = self.wiener_params
-            self.wfpt = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'], use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
+        wp = self.wiener_params
+        self.wfpt = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'], use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
 
         self.params = self.get_params()
 
