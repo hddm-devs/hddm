@@ -783,7 +783,7 @@ def _gen_statistics():
         
     return statistics
 
-def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
+def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_verbose = 1, verbose = 1):
     """
     Test statistics over the posterior predictive distibution.
 
@@ -795,8 +795,10 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_all = Fal
             confidence interval
         stats : set
             a set of statistics to check over the sampled data. if stats is None thedefault set of statistics is created
-        plot_all : bool
-            should all result be ploted
+        plot : int
+            0 - no plots
+            1 - plot only the statistics that fall outside of the confidencde interval (default)
+            2 - plot everything
     """
     nodes = hm.mc._dict_container
     
@@ -842,13 +844,13 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_all = Fal
         
         #compute quantile statistic and plot it if needed
         for i_stat in range(len(stats)):
-            plot_this = False
+            out_conf = False
             p = sum(res[i_stat] < obs[i_stat])*1./len(res[i_stat]) * 100
             if (p < conf_lb) or (p>conf_ub):
                 print "*!*!* %s :: %s %.1f" % (name,stats[i_stat]['name'], p )
-                plot_this = True 
+                out_conf = True 
             #plot that shit
-            if plot_this or plot_all:
+            if (plot_verbose==2) or (out_conf and plot_verbose >= 1):
                 pm.Matplot.gof_plot(res[i_stat], obs[i_stat], nbins=30, name=name, verbose=0)
                 plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
         
