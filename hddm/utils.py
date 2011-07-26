@@ -783,13 +783,12 @@ def _gen_statistics():
         
     return statistics
 
-def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
+def ppd_test(hm, n_times = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
     """
     Test statistics over the posterior predictive distibution.
 
     :Arguments:
-        nodes : set or MCMC object
-            set of nodes / the mc model
+        hm : HDDM model
         n_times : int 
             number of samples to take out of the trace
         confidence : int
@@ -799,8 +798,7 @@ def ppd_test(nodes, n_times = 1000, confidence = 95, stats = None, plot_all = Fa
         plot_all : bool
             should all result be ploted
     """
-    if type(nodes) is pm.MCMC:
-        nodes = nodes._dict_container
+    nodes = hm.mc._dict_container
     
     #get statistics    
     if stats == None:
