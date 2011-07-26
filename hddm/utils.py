@@ -783,13 +783,13 @@ def _gen_statistics():
         
     return statistics
 
-def ppd_test(hm, n_times = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
+def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_all = False, verbose = 1):
     """
     Test statistics over the posterior predictive distibution.
 
     :Arguments:
         hm : HDDM model
-        n_times : int 
+        n_samples : int 
             number of samples to take out of the trace
         confidence : int
             confidence interval
@@ -820,12 +820,12 @@ def ppd_test(hm, n_times = 1000, confidence = 95, stats = None, plot_all = False
             print "computing stats for %s" % name
         
         len_trace = len(node.parents['a'].trace())
-        thin = max(int(len_trace // n_times), 1)
-        n_times = int(len_trace // thin)
-        res = np.zeros((len(stats),n_times))
+        thin = max(int(len_trace // n_samples), 1)
+        n_samples = int(len_trace // thin)
+        res = np.zeros((len(stats),n_samples))
         obs = np.zeros(len(stats))
         #simulate data and compute stats
-        for i in xrange(n_times):
+        for i in xrange(n_samples):
             idx = i*thin
             if verbose > 1 and ((i+1) % 100)==0:
                 print "created samples for %d params" % (i+1)
