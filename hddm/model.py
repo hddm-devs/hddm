@@ -104,7 +104,7 @@ class HDDM(kabuki.Hierarchical):
                  include=(), wiener_params=None, **kwargs):
         
         # Flip sign for lower boundary RTs
-        self.data = hddm.utils.flip_errors(data)
+        data = hddm.utils.flip_errors(data)
 
         include = set(include)
         
