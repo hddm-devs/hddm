@@ -9,10 +9,6 @@ import os
 #    print "Couldn't find gsl-config. Make sure it's installed and in the path."
 #    sys.exit(-1)
 
-if gsl_include == '':
-    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-    sys.exit(-1)
-
 setup(
     name="HDDM",
     version="0.1.1",
