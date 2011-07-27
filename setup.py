@@ -9,10 +9,6 @@ import os
 #    print "Couldn't find gsl-config. Make sure it's installed and in the path."
 #    sys.exit(-1)
 
-if gsl_include == '':
-    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-    sys.exit(-1)
-
 setup(
     name="HDDM",
     version="0.1.1",
@@ -20,7 +16,8 @@ setup(
     author_email="thomas_wiecki@brown.edu",
     url="http://github.com/hddm-devs/hddm",
     packages=["hddm", "hddm.tests"],
-    package_data={"hddm":["examples/*"]},
+    package_data={"hddm":["examples/*.csv", "examples/*.conf"]},
+    #package_dir={"hddm":"hddm/examples"},
     scripts=["scripts/hddm_fit.py", "scripts/hddm_demo.py"],
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     install_requires=['NumPy >=1.3.0', 'kabuki', 'pymc'],
