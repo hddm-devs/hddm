@@ -17,12 +17,12 @@ except:
 
 import hddm
 
-def wiener_like_simple_contaminant(value, cont_x, gamma, v, a, z, t, t_min, t_max, err=.0001):
+def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, err=.0001):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt.wiener_like_simple_contaminant(value, cont_x.astype(np.int32), gamma, v, a, z, t, t_min, t_max, err)
+    return hddm.wfpt.wiener_like_full_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, t_min, t_max, err)
 
-WienerSimpleContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                       logp=wiener_like_simple_contaminant,
+WienerContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                       logp=wiener_like_contaminant,
                                        dtype=np.float,
                                        mv=True)
 
@@ -87,7 +87,7 @@ CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
 
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
-    """Log-likelihood for the simple DDM including contaminants"""
+    """Log-likelihood for the simple DDM switch model"""
     logp = hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
     return logp
 

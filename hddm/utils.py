@@ -904,6 +904,12 @@ def plot_posteriors(model):
     """
     pm.Matplot.plot(model.mc)
 
+def data_plot(data, nbins=50):
+    data = hddm.utils.flip_errors(data)
+    plt.figure()
+    plt.hist(data['rt'], nbins)
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

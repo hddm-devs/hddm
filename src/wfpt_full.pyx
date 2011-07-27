@@ -146,9 +146,10 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
         rts[i] = rt
     return rts
 
+
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, ndim=1] cont_x, double gamma, double v, double V, double a, double z, double Z, double t, double T, double t_min, double t_max, double err):
+def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, ndim=1] cont_x, double v, double V, double a, double z, double Z, double t, double T, double t_min, double t_max, double err):
     """Wiener likelihood function where RTs could come from a
     separate, uniform contaminant distribution.
 
@@ -166,17 +167,11 @@ def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[in
             if p == 0:
                 return -np.inf
             sum_logp += log(p)      
-        elif value[i]>0:
-            pos_cont += 1
         # If one probability = 0, the log sum will be -Inf
         
     
     # add the log likelihood of the contaminations
     #first the guesses
-    sum_logp += n_cont*log(gamma*(0.5 * 1./(t_max-t_min)))     
-    #then the positive prob_boundary 
-    sum_logp += pos_cont*log((1-gamma) * prob_ub(v, a, z) * 1./(t_max-t_min))
-    #and the negative prob_boundary
-    sum_logp += (n_cont - pos_cont)*log((1-gamma)*(1-prob_ub(v, a, z)) * 1./(t_max-t_min))
+    sum_logp += n_cont*log(0.5 * 1./(t_max-t_min))     
 
     return sum_logp

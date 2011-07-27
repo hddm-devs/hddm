@@ -1,16 +1,15 @@
 import hddm
-from hddm.model import Base
+from hddm.model import HDDM
 import pymc as pm
 from kabuki import Parameter
 
-class HDDMContaminant(Base):
+class HDDMContaminant(HDDM):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = [Parameter('a',True, lower=.5, upper=4.5),
                        Parameter('v',True, lower=-6., upper=6.), 
                        Parameter('t',True, lower=.1, upper=2., init=.1),
                        Parameter('pi',True, lower=1e-3, upper=0.2),
-                       Parameter('gamma',True, lower=1e-4, upper=1-1e-4),
                        Parameter('x', False), 
                        Parameter('dummy_gamma',False),
                        Parameter('dummy_pi',False),
@@ -35,8 +34,6 @@ class HDDMContaminant(Base):
                                                             observed=True)
         elif param.name == 'x':
             return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
-        elif param.name == 'dummy_gamma':
-            return pm.Bernoulli(param.full_name, p=params['gamma'], value=[True,False], observed=True)
         elif param.name == 'dummy_pi':
             return pm.Bernoulli(param.full_name, p=params['pi'], value=[True], observed=True)
         else:

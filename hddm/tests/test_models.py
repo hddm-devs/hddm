@@ -144,18 +144,15 @@ class TestSingle(unittest.TestCase):
         return model
     
     def test_cont(self, assert_=False):
-        gammas = [1./8, 7./8]
-        params_true = gen_rand_params()
-        params_true['pi'] = 0.05
-        for gamma in gammas:
-            params_true['gamma'] = gamma
-            data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)            
-            model = hddm.model.HDDM(data, no_bias=False, is_group_model=False)
-            nodes = model.create()
-            mc = pm.MCMC(nodes)
->>>>>>> experimental
-            mc.sample(self.samples, burn=self.burn)
-            check_model(mc, params_true, assert_=assert_)
+        params_true = gen_rand_params(include = ['V','T'])
+        data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)
+        data[0]['rt'] = min(abs(data['rt']))/2.
+        data[1]['rt'] = max(abs(data['rt'])) + 0.8           
+        model = hddm.model.HDDM(data, no_bias=False, is_group_model=False)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
 
         return mc
 
