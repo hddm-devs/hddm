@@ -13,9 +13,8 @@ class HDDMContaminant(HDDM):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = self.params[:-1] + \
-                 [Parameter('pi',True, lower=1e-3, upper=0.2),
+                 [Parameter('pi',True, lower=0.01, upper=0.1),
                   Parameter('x', False), 
-                  Parameter('dummy_pi',False),
                   Parameter('wfpt', False)]
                  
         if self.is_group_model:
@@ -46,8 +45,6 @@ class HDDMContaminant(HDDM):
 
         elif param.name == 'x':
             return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
-        elif param.name == 'dummy_pi':
-            return pm.Bernoulli(param.full_name, p=params['pi'], value=[True], observed=True)
         else:
             raise KeyError, "Rootless child parameter %s not found" % param.name
         
