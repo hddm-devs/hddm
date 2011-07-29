@@ -47,7 +47,7 @@ def gen_rand_params(include=()):
 
     if 'pi' in include or 'gamma' in include:
         params['pi'] = max(rand()*0.1,0.01)
-        params['gamma'] = rand()        
+#        params['gamma'] = rand()        
     
     return params
 
@@ -284,12 +284,15 @@ def _gen_rts_from_cdf(params, samples=1000):
        
 def add_contaminate_data(data, params):
     """ add contaminated data"""
+    if not params.has_key('gamma'):
+        gamma = 1
+    else:
+        gamma = params['gamma']
     t_min = max(np.abs(data['rt']))+0.5
     t_max = t_min+3;
     pi = params['pi']
-    gamma = params['gamma']
-    n_cont = int(len(data)*pi)
-    n_unif = int(n_cont*gamma)
+    n_cont = max(int(len(data)*pi),2)
+    n_unif = max(int(n_cont*gamma),2)
     n_other = n_cont - n_unif
     l_data = range(len(data))
     cont_idx = random.sample(l_data,n_cont)
@@ -300,10 +303,9 @@ def add_contaminate_data(data, params):
     response = np.round(uniform.rvs(0,1,size=n_unif))
     data[unif_idx]['rt']  = uniform.rvs(0,t_max,size=n_unif) * response    
     data[unif_idx]['rt']  = response
-    
-    # create an early response
-    data[unif_idx[0]]['rt'] = min(np.abs(data['rt']))/2.
-    
+    data[unif_idx[0]]['rt'] = min(abs(data['rt']))/2.
+    data[unif_idx[1]]['rt'] = max(abs(data['rt'])) + 0.8   
+        
     #create late responses
     response = (np.sign(gen_rts(params, n_other))+1) / 2
     data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
@@ -502,6 +504,9 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include
             
         # Create RT data
         data_gen = gen_rts(params_subj, samples=samples, structured=True, subj_idx=i)
+        if params.has_key('pi'):
+            add_contaminate_data(data_gen, params_subj)
+        
         data_gens.append(data_gen)
     
     return (rec.stack_arrays(data_gens, usemask=False), params)

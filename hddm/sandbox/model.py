@@ -16,10 +16,7 @@ class HDDMContaminant(HDDM):
                  [Parameter('pi',True, lower=0.01, upper=0.1),
                   Parameter('x', False), 
                   Parameter('wfpt', False)]
-                 
-        if self.is_group_model:
-            raise NotImplemented, "sorry, the group_model is not yet implemented"
-            
+                             
         self.t_min = 0
         self.t_max = max(self.data['rt'])
         wp = self.wiener_params
@@ -59,77 +56,99 @@ class HDDMContaminant(HDDM):
         data_dep = hm._get_data_depend()
         conds = [str(x[2]) for x in data_dep]
         
-        # loop over cont nodes
-        n_cont = 0
-        rts = np.empty(0)
-        probs = np.empty(0)
-        cont_idx = np.empty(0)
-        for cond in conds:
-            print "*********************"
-            print "looking at %s" % cond
-            node =hm.params_include['x'].child_nodes[cond]
-            m = np.mean(node.trace(),0)
-            #look for outliers with high probabilty
-            idx = np.where(m > cont_threshold)[0]
-            n_cont += len(idx)
-            if idx.size > 0:
-                print "found %d probable outliers in %s" % (len(idx), cond)            
-                wfpt = hm.params_include['wfpt'].child_nodes[cond]
-                data_idx = [x for x in data_dep if str(x[2])==cond][0][0]['data_idx']
-                for i_cont in range(len(idx)):
-                    print "rt: %8.5f prob: %.2f" % (wfpt.value[idx[i_cont]], m[idx[i_cont]])
-                cont_idx = np.r_[cont_idx, data_idx[idx]]
-                rts = np.r_[rts, wfpt.value[idx]]
-                probs = np.r_[probs, m[idx]]
-                #plot outliers
-                if plot:
-                    plt.figure()
-                    mask = np.ones(len(wfpt.value),dtype=bool)
-                    mask[idx] = False
-                    plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
-                    plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
-                    plt.title(wfpt.__name__)
-            #report the next higest probability outlier
-            next_outlier = max(m[m < cont_threshold])
-            print "probability of the next most probable outlier: %.2f" % next_outlier
+        self.cont_res = {}
+        if self.is_group_model:
+            subj_list = self._subj
+        else:
+            subj_list = [0]
+
+        #loop over subjects
+        for subj_idx, subj in enumerate(subj_list):
+            n_cont = 0
+            rts = np.empty(0)
+            probs = np.empty(0)
+            cont_idx = np.empty(0)
+            print "#$#$#$# outliers for subject %s #$#$#$#" % subj
+            #loop over conds
+            for cond in conds:
+                print "*********************"
+                print "looking at %s" % cond
+                nodes =hm.params_include['x'].child_nodes[cond]
+                if self.is_group_model:
+                    node = nodes[subj_idx]
+                else:
+                    node = nodes
+                m = np.mean(node.trace(),0)
+                
+                #look for outliers with high probabilty
+                idx = np.where(m > cont_threshold)[0]
+                n_cont += len(idx)
+                if idx.size > 0:
+                    print "found %d probable outliers in %s" % (len(idx), cond)
+                    wfpt = list(node.children)[0]
+                    data_idx = [x for x in data_dep if str(x[2])==cond][0][0]['data_idx']
+                    for i_cont in range(len(idx)):
+                        print "rt: %8.5f prob: %.2f" % (wfpt.value[idx[i_cont]], m[idx[i_cont]])
+                    cont_idx = np.r_[cont_idx, data_idx[idx]]
+                    rts = np.r_[rts, wfpt.value[idx]]
+                    probs = np.r_[probs, m[idx]]
+                    
+                    #plot outliers
+                    if plot:
+                        plt.figure()
+                        mask = np.ones(len(wfpt.value),dtype=bool)
+                        mask[idx] = False
+                        plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
+                        plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
+                        plt.title(wfpt.__name__)
+                #report the next higest probability outlier
+                next_outlier = max(m[m < cont_threshold])
+                print "probability of the next most probable outlier: %.2f" % next_outlier
+            
+            print "!!!!!**** %d probable outliers were found in the data ****!!!!!" % n_cont
+            single_cont_res = {}
+            single_cont_res['cont_idx'] = cont_idx
+            single_cont_res['rts'] = rts
+            single_cont_res['probs'] = probs
+            if self.is_group_model:
+                self.cont_res[subj] = single_cont_res
+            else:
+                self.cont_res = single_cont_res
+
         if plot:
             plt.show()
             
-        print "!!!!!**** %d probable outliers were found in the data ****!!!!!" % n_cont
-        self.cont_res = {}
-        self.cont_res['cont_idx'] = cont_idx
-        self.cont_res['rts'] = rts
-        self.cont_res['probs'] = probs
+        
         return self.cont_res
 
 
-    def remove_outliers(self, cutoff=.5):
-        data_dep = self._get_data_depend()
-
-        data_out = []
-        cont = []
-        
-        # Find x param
-        for param in self.params:
-            if param.name == 'x':
-                break
-
-        for i, (data, params_dep, dep_name) in enumerate(data_dep):
-            dep_name = str(dep_name)
-            # Contaminant probability
-            print dep_name
-            for subj_idx, subj in enumerate(self._subjs):
-                data_subj = data[data['subj_idx'] == subj]
-                cont_prob = np.mean(param.child_nodes[dep_name][subj_idx].trace(), axis=0)
-            
-                no_cont = np.where(cont_prob < cutoff)[0]
-                cont.append(np.logical_not(no_cont))
-                data_out.append(data_subj[no_cont])
-
-        data_all = np.concatenate(data_out)
-        data_all['rt'] = np.abs(data_all['rt'])
-        
-        return data_all, np.concatenate(cont)
+#    def remove_outliers(self, cutoff=.5):
+#        data_dep = self._get_data_depend()
+#
+#        data_out = []
+#        cont = []
+#        
+#        # Find x param
+#        for param in self.params:
+#            if param.name == 'x':
+#                break
+#
+#        for i, (data, params_dep, dep_name) in enumerate(data_dep):
+#            dep_name = str(dep_name)
+#            # Contaminant probability
+#            print dep_name
+#            for subj_idx, subj in enumerate(self._subjs):
+#                data_subj = data[data['subj_idx'] == subj]
+#                cont_prob = np.mean(param.child_nodes[dep_name][subj_idx].trace(), axis=0)
+#            
+#                no_cont = np.where(cont_prob < cutoff)[0]
+#                cont.append(np.logical_not(no_cont))
+#                data_out.append(data_subj[no_cont])
+#
+#        data_all = np.concatenate(data_out)
+#        data_all['rt'] = np.abs(data_all['rt'])
+#        
+#        return data_all, np.concatenate(cont)
 
 class HDDMAntisaccade(HDDM):
     def __init__(self, data, init=True, **kwargs):
