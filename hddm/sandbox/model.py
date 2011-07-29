@@ -58,7 +58,7 @@ class HDDMContaminant(HDDM):
         
         self.cont_res = {}
         if self.is_group_model:
-            subj_list = self._subj
+            subj_list = self._subjs
         else:
             subj_list = [0]
 
