@@ -159,17 +159,21 @@ class TestSingle(unittest.TestCase):
 
     def test_cont_subj(self, assert_=False):
         import hddm.sandbox.model as sb
-        data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=2, params=None, 
-                                                        samples=200, noise=0.0001,include=())
-        data[0]['rt'] = min(abs(data['rt']))/2.
-        data[1]['rt'] = max(abs(data['rt'])) + 0.8           
+        data_samples = 200
+        num_subjs = 2
+        data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None, 
+                                                        samples=data_samples, noise=0.0001,include=())
+        for i in range(num_subjs):
+            data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
+            data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8           
         hm = sb.HDDMContaminant(data, bias=True, is_group_model=True)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
-        cont_idx = cont_res['cont_idx']
-        self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
-        self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
+        for i in range(num_subjs):
+            cont_idx = cont_res[i]['cont_idx']
+            self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
+            self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
 
         return hm
 
