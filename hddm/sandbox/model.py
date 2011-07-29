@@ -6,32 +6,35 @@ from kabuki import Parameter
 class HDDMContaminant(HDDM):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
-        self.params = [Parameter('a',True, lower=.5, upper=4.5),
-                       Parameter('v',True, lower=-6., upper=6.), 
-                       Parameter('t',True, lower=.1, upper=2., init=.1),
-                       Parameter('pi',True, lower=1e-3, upper=0.2),
-                       Parameter('x', False), 
-                       Parameter('dummy_gamma',False),
-                       Parameter('dummy_pi',False),
-                       Parameter('wfpt', False),
-                       Parameter('z',True, lower=0., upper=1., init=.5, default=.5, optional=True)]
+        self.params = self.params[:-1] + \
+                 [Parameter('pi',True, lower=1e-3, upper=0.2),
+                  Parameter('x', False), 
+                  Parameter('dummy_pi',False),
+                  Parameter('wfpt', False)]
             
         self.t_min = 0
         self.t_max = max(self.data['rt'])
+        wp = self.wiener_params
+        self.wfpt = hddm.likelihoods.general_WienerCont(err=wp['err'], nT=wp['nT'], 
+                                                        nZ=wp['nZ'], use_adaptive=wp['use_adaptive'], 
+                                                        simps_err=wp['simps_err'])
 
     def get_rootless_child(self, param, params):
         if param.name == 'wfpt':
-            return hddm.likelihoods.WienerSimpleContaminant(param.full_name,
-                                                            value=param.data['rt'],
-                                                            cont_x=params['x'],
-                                                            gamma=params['gamma'],
-                                                            v=params['v'],
-                                                            t=params['t'],
-                                                            a=params['a'],
-                                                            z=self.get_node('z', params),
-                                                            t_min=self.t_min,
-                                                            t_max=self.t_max,
-                                                            observed=True)
+            return self.wfpt(param.full_name,
+                             value=param.data['rt'].flatten(),
+                             cont_x=params['x'],
+                             v = params['v'],
+                             a = params['a'],
+                             z = self.get_node('z',params),
+                             t = params['t'],
+                             Z = self.get_node('Z',params),
+                             T = self.get_node('T',params),
+                             V = self.get_node('V',params),
+                             t_min=self.t_min,
+                             t_max=self.t_max,
+                             observed=True)
+
         elif param.name == 'x':
             return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
         elif param.name == 'dummy_pi':
@@ -67,7 +70,7 @@ class HDDMContaminant(HDDM):
         
         return data_all, np.concatenate(cont)
 
-class HDDMAntisaccade(Base):
+class HDDMAntisaccade(HDDM):
     def __init__(self, data, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
         
@@ -100,7 +103,7 @@ class HDDMAntisaccade(Base):
         else:
             raise TypeError, "Parameter named %s not found." % param.name
 
-class HDDMRegressor(Base):
+class HDDMRegressor(HDDM):
     def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 

@@ -856,30 +856,38 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_verbose =
         
         plt.show()                        
 
-def cont_report(nodes, cont_threshold = 0.5, plot= True):
-    """create conaminate report."""
-    if type(nodes) is pm.MCMC:
-        nodes = nodes._dict_container
-        
-    cont_keys = [z for z in nodes.keys() if z.startswith('x')]
+def cont_report(hm, cont_threshold = 0.5, plot= True):
+    """create conaminate report.
+    Input:
+        hm -  HDDM model
+        cont_threshold - the threshold tthat define an outlier (default: 0.5)
+        plot - shoudl the result be plotted (default: True)
+    """
+    data_dep = hm._get_data_depend()
+    conds = [str(x[2]) for x in data_dep]
     
     # loop over cont nodes
     n_cont = 0
     rts = np.empty(0)
-    for key in cont_keys:
+    probs = np.empty(0)
+    cont_idx = np.empty(0)
+    for cond in conds:
         print "*********************"
-        print "looking at %s" % key
-        node = nodes[key]
+        print "looking at %s" % cond
+        node =hm.params_include['x'].child_nodes[cond]
         m = np.mean(node.trace(),0)
         #look for outliers with high probabilty
         idx = np.where(m > cont_threshold)[0]
         n_cont += len(idx)
         if idx.size > 0:
-            print "found %d outliers in %s" % (len(idx), key)            
-            wfpt = [z for z in nodes[key].children if z.__name__.startswith('wfpt')][0]
+            print "found %d probable outliers in %s" % (len(idx), cond)            
+            wfpt = hm.params_include['wfpt'].child_nodes[cond]
+            data_idx = [x for x in data_dep if str(x[2])==cond][0][0]['data_idx']
             for i_cont in range(len(idx)):
                 print "rt: %8.5f prob: %.2f" % (wfpt.value[idx[i_cont]], m[idx[i_cont]])
-            rts = np.concatenate((rts, wfpt.value[idx]))
+            cont_idx = np.r_[cont_idx, data_idx[idx]]
+            rts = np.r_[rts, wfpt.value[idx]]
+            probs = np.r_[probs, m[idx]]
             #plot outliers
             if plot:
                 plt.figure()
@@ -894,8 +902,8 @@ def cont_report(nodes, cont_threshold = 0.5, plot= True):
     if plot:
         plt.show()
         
-    print "!!!!!**** There were %d outliers in the data ****!!!!!" % n_cont
-    return rts
+    print "!!!!!**** %d probable outliers were found in the data ****!!!!!" % n_cont
+    return cont_idx, rts, probs
 
 def plot_posteriors(model):                 
     """Generate posterior plots for each parameter.
@@ -908,6 +916,7 @@ def data_plot(data, nbins=50):
     data = hddm.utils.flip_errors(data)
     plt.figure()
     plt.hist(data['rt'], nbins)
+    plt.show()
 
 
 if __name__ == "__main__":

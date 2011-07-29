@@ -79,8 +79,6 @@ class TestSingle(unittest.TestCase):
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
             model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=True)
             mc = model.mcmc()
-<<<<<<< HEAD
-=======
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
 
@@ -144,17 +142,16 @@ class TestSingle(unittest.TestCase):
         return model
     
     def test_cont(self, assert_=False):
-        params_true = gen_rand_params(include = ['V','T'])
+        import hddm.sandbox.model as sb
+        params_true = gen_rand_params(include = ())
         data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)
         data[0]['rt'] = min(abs(data['rt']))/2.
         data[1]['rt'] = max(abs(data['rt'])) + 0.8           
-        model = hddm.model.HDDM(data, no_bias=False, is_group_model=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
+        hm = sb.HDDMContaminant(data, bias=True, is_group_model=False)
+        hm.sample(self.samples, burn=self.burn)
+        check_model(hm.mc, params_true, assert_=assert_)
 
-        return mc
+        return hm
 
 
 if __name__=='__main__':

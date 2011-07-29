@@ -17,14 +17,28 @@ except:
 
 import hddm
 
-def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, err=.0001):
+def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, 
+                            err, nT, nZ, use_adaptive, simps_err):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt.wiener_like_full_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, t_min, t_max, err)
+    return hddm.wfpt_full.wiener_like_full_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, 
+                                                  t_min, t_max, err, nT, nZ, use_adaptive, simps_err)
 
 WienerContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                        logp=wiener_like_contaminant,
                                        dtype=np.float,
                                        mv=True)
+
+def general_WienerCont(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
+    _like = lambda  value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, err=err, nT=nT, nZ=nZ, \
+    use_adaptive=use_adaptive, simps_err=simps_err: \
+    wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max,\
+                            err=err, nT=nT, nZ=nZ, use_adaptive=use_adaptive, simps_err=simps_err)
+    _like.__doc__ = wiener_like_contaminant.__doc__
+    return pm.stochastic_from_dist(name="Wiener Diffusion Contaminant Process",
+                                       logp=_like,
+                                       dtype=np.float,
+                                       mv=False)
+
 
 
 def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
@@ -40,7 +54,7 @@ def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-4, nT=2, nZ=2, use
     return hddm.wfpt_full.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
 
 
-def general_WienerFullIntrp_variable(err=1e-5, nT=5, nZ=5, use_adaptive=1, simps_err=1e-8):
+def general_WienerFullIntrp_variable(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
     _like = lambda  value, v, V, z, Z, t, T, a, err=err, nT=nT, nZ=nZ, \
     use_adaptive=use_adaptive, simps_err=simps_err: \
     wiener_like_full_intrp(value, v, V, z, Z, t, T, a,\
