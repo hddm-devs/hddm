@@ -150,9 +150,10 @@ class TestSingle(unittest.TestCase):
         hm = sb.HDDMContaminant(data, bias=True, is_group_model=False)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
-        cont_idx = hddm.utils.cont_report(hm, plot=False)[0]
+        cont_res = hm.cont_report(plot=False)
+        cont_idx = cont_res['cont_idx']
         self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
-        self.assertTrue(len(cont_idx)<15, "found too mnay outliers (%d)" % len(cont_idx))
+        self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
 
         return hm
 

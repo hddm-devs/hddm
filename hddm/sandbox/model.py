@@ -2,8 +2,14 @@ import hddm
 from hddm.model import HDDM
 import pymc as pm
 from kabuki import Parameter
+import numpy as np
+import matplotlib.pyplot as plt
 
 class HDDMContaminant(HDDM):
+    """
+    Contaminant HDDM model
+    outleirs are modeled using a uniform distribution over responses and reaction times.
+    """
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = self.params[:-1] + \
@@ -11,6 +17,9 @@ class HDDMContaminant(HDDM):
                   Parameter('x', False), 
                   Parameter('dummy_pi',False),
                   Parameter('wfpt', False)]
+                 
+        if self.is_group_model:
+            raise NotImplemented, "sorry, the group_model is not yet implemented"
             
         self.t_min = 0
         self.t_max = max(self.data['rt'])
@@ -41,6 +50,61 @@ class HDDMContaminant(HDDM):
             return pm.Bernoulli(param.full_name, p=params['pi'], value=[True], observed=True)
         else:
             raise KeyError, "Rootless child parameter %s not found" % param.name
+        
+    def cont_report(self, cont_threshold = 0.5, plot= True):
+        """create conaminate report.
+        Input:
+            hm -  HDDM model
+            cont_threshold - the threshold tthat define an outlier (default: 0.5)
+            plot - shoudl the result be plotted (default: True)
+        """
+        hm = self
+        data_dep = hm._get_data_depend()
+        conds = [str(x[2]) for x in data_dep]
+        
+        # loop over cont nodes
+        n_cont = 0
+        rts = np.empty(0)
+        probs = np.empty(0)
+        cont_idx = np.empty(0)
+        for cond in conds:
+            print "*********************"
+            print "looking at %s" % cond
+            node =hm.params_include['x'].child_nodes[cond]
+            m = np.mean(node.trace(),0)
+            #look for outliers with high probabilty
+            idx = np.where(m > cont_threshold)[0]
+            n_cont += len(idx)
+            if idx.size > 0:
+                print "found %d probable outliers in %s" % (len(idx), cond)            
+                wfpt = hm.params_include['wfpt'].child_nodes[cond]
+                data_idx = [x for x in data_dep if str(x[2])==cond][0][0]['data_idx']
+                for i_cont in range(len(idx)):
+                    print "rt: %8.5f prob: %.2f" % (wfpt.value[idx[i_cont]], m[idx[i_cont]])
+                cont_idx = np.r_[cont_idx, data_idx[idx]]
+                rts = np.r_[rts, wfpt.value[idx]]
+                probs = np.r_[probs, m[idx]]
+                #plot outliers
+                if plot:
+                    plt.figure()
+                    mask = np.ones(len(wfpt.value),dtype=bool)
+                    mask[idx] = False
+                    plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
+                    plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
+                    plt.title(wfpt.__name__)
+            #report the next higest probability outlier
+            next_outlier = max(m[m < cont_threshold])
+            print "probability of the next most probable outlier: %.2f" % next_outlier
+        if plot:
+            plt.show()
+            
+        print "!!!!!**** %d probable outliers were found in the data ****!!!!!" % n_cont
+        self.cont_res = {}
+        self.cont_res['cont_idx'] = cont_idx
+        self.cont_res['rts'] = rts
+        self.cont_res['probs'] = probs
+        return self.cont_res
+
 
     def remove_outliers(self, cutoff=.5):
         data_dep = self._get_data_depend()
