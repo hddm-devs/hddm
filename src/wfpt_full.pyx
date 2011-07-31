@@ -23,7 +23,7 @@ def wiener_like_full_intrp(np.ndarray[double, ndim=1] x, double v, double V, dou
                            double T, double err, int nT= 10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t i
     cdef double p
-    cdef sum_logp = 0
+    cdef double sum_logp = 0
     
     for i from 0 <= i < x.shape[0]:
         p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
