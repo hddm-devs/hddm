@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 
-cpdef double simpson_1D(double x, double v, double V, double a, double z, double t, double err, 
+cdef double simpson_1D(double x, double v, double V, double a, double z, double t, double err, 
                         double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT):
     assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
     assert ((ub_t-lb_t)*(ub_z-lb_z)==0 and (nZ*nT)==0), "the function is defined for 1D-integration only"
@@ -36,7 +36,7 @@ cpdef double simpson_1D(double x, double v, double V, double a, double z, double
 
     return ((ht+hz) * S / 3)
 
-cpdef double simpson_2D(double x, double v, double V, double a, double z, double t, double err, double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT):
+cdef double simpson_2D(double x, double v, double V, double a, double z, double t, double err, double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT):
     assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
     assert ((ub_t-lb_t)*(ub_z-lb_z)>0 and (nZ*nT)>0), "the function is defined for 2D-integration only, lb_t: %f, ub_t %f, lb_z %f, ub_z %f, nZ: %d, nT %d" % (lb_t, ub_t, lb_z, ub_z, nZ, nT)
 
@@ -61,7 +61,7 @@ cpdef double simpson_2D(double x, double v, double V, double a, double z, double
 
     return (ht * S / 3)
 
-cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z, double t, double pdf_err,
+cdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z, double t, double pdf_err,
                                  double lb_z, double ub_z, double lb_t, double ub_t, double ZT, double simps_err,
                                  double S, double f_beg, double f_end, double f_mid, int bottom):
     
@@ -103,7 +103,7 @@ cpdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double 
                                  z_c, ub_z, t_c, ub_t, ZT, simps_err/2,
                                  Sright, f_mid, f_end, fe, bottom-1)
  
-cpdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z, double t, 
+cdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z, double t, 
                               double pdf_err, double lb_z, double ub_z, double lb_t, double ub_t, 
                               double simps_err, int maxRecursionDepth):
 
@@ -166,7 +166,7 @@ cdef double adaptiveSimpsonsAux_2D(double x, double v, double V, double a, doubl
                              
                                  
         
-cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double z, double t,  
+cdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double z, double t,  
                                  double pdf_err, double lb_z, double ub_z, double lb_t, double ub_t, 
                                  double simps_err, int maxRecursionDepth_Z, int maxRecursionDepth_T):
 

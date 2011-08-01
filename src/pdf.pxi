@@ -1,20 +1,8 @@
 include "integrate.pxi"
 
-cdef extern from "math.h":
-    double sin(double)
-    double cos(double)
-    double log(double)
-    double exp(double)
-    double sqrt(double)
-    double fmax(double, double)
-    double pow(double, double)
-    double ceil(double)
-    double floor(double)
-    double fabs(double)
-    double M_PI
+from libc.math cimport sin, cos, log, exp, sqrt, fmax, pow, ceil, floor, fabs, M_PI
 
-
-cpdef double ftt_01w(double tt, double w, double err):
+cdef double ftt_01w(double tt, double w, double err):
     """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
