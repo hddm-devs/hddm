@@ -138,7 +138,7 @@ class HDDM(kabuki.Hierarchical):
         # See: Matzke & Wagenmakers 2009
         params = [Parameter('a', True, lower=.8, upper=4),
                   Parameter('v', True, lower=-6., upper=6.), 
-                  Parameter('t', True, lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
+                  Parameter('t', True, lower=.0, upper=.9, init=.0), # Change lower to .2 as in MW09?
                   Parameter('z', True, lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
                   Parameter('V', True, lower=0., upper=3.5, default=0, 
