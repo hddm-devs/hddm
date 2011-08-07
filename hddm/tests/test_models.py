@@ -152,7 +152,7 @@ class TestSingle(unittest.TestCase):
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
         cont_idx = cont_res['cont_idx']
-        self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
+        self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not find the right outliers")
         self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
 
         return hm
