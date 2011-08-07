@@ -168,7 +168,7 @@ cdef double adaptiveSimpsonsAux_2D(double x, double v, double V, double a, doubl
         
 cpdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double z, double t,  
                                  double pdf_err, double lb_z, double ub_z, double lb_t, double ub_t, 
-                                 double simps_err, int maxRecursionDepth_Z, maxRecursionDepth_T):
+                                 double simps_err, int maxRecursionDepth_Z, int maxRecursionDepth_T):
 
     cdef double h = (ub_t-lb_t)
     
