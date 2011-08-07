@@ -204,13 +204,11 @@ class HDDMRegressor(HDDM):
         The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
         there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
 
-        model = Theta(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
+        model = HDDMRegressor(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
         model.mcmc()
         """
-        if effects_on is None:
-            self.effects_on = {'a': 'theta'}
-        else:
-            self.effects_on = effects_on
+        
+        self.effects_on = effects_on
 
         self.use_root_for_effects = use_root_for_effects
         
@@ -225,7 +223,6 @@ class HDDMRegressor(HDDM):
                 if type(col_names) is list:
                     col_names = col_names[0]
                 params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
-                params.append(Parameter('error_%s_%s'%(col_names, effect_on), True, lower=0., upper=10., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
                                         False,
                                         vars={'col_name':col_names,
@@ -234,7 +231,6 @@ class HDDMRegressor(HDDM):
             elif len(col_names) == 2:
                 for col_name in col_names:
                     params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
-                params.append(Parameter('error_%s_%s'%(col_names, effect_on), True, lower=0, upper=10., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
                                         True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
@@ -305,20 +301,20 @@ class HDDMRegressor(HDDM):
                                                      observed=True)
         return model
 
-def effect1(base, e1, error, data):
+def effect1(base, e1, data):
     """Effect distribution.
     """
-    return base + e1 * data + error
+    return base + e1 * data
 
-def effect1_nozero(base, e1, error, data):
+def effect1_nozero(base, e1, data):
     """Effect distribution where values <0 will be set to 0.
     """
-    value = base + e1 * data + error
+    value = base + e1 * data
     value[value < 0] = 0.
     value[value > .4] = .4
     return value
 
-def effect2(base, e1, e2, e_inter, error, data_e1, data_e2):
+def effect2(base, e1, e2, e_inter, data_e1, data_e2):
     """2-regressor effect distribution
     """
-    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter + error
+    return base + data_e1*e1 + data_e2*e2 + data_e1*data_e2*e_inter
