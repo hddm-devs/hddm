@@ -127,7 +127,7 @@ class HDDMContaminant(HDDM):
         return the data without the contaminants.
         should be run after cont_report()
         Input:
-            cutoff: the probablity that defines an outlier (deafult 0.5)
+            cutoff: the probability that defines an outlier (deafult 0.5)
         """
         new_data = []
         if self.is_group_model:
