@@ -6,9 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class HDDMContaminant(HDDM):
-    """
-    Contaminant HDDM model
-    outleirs are modeled using a uniform distribution over responses and reaction times.
+    """Contaminant HDDM 
+
+    Outliers are modeled using a uniform distribution over responses
+    and reaction times.
+
     """
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
@@ -16,13 +18,30 @@ class HDDMContaminant(HDDM):
                  [Parameter('pi',True, lower=0.01, upper=0.1),
                   Parameter('x', False), 
                   Parameter('wfpt', False)]
-                             
+
         self.t_min = 0
         self.t_max = max(self.data['rt'])
         wp = self.wiener_params
-        self.wfpt = hddm.likelihoods.general_WienerCont(err=wp['err'], nT=wp['nT'], 
-                                                        nZ=wp['nZ'], use_adaptive=wp['use_adaptive'], 
+        self.wfpt = hddm.likelihoods.general_WienerCont(err=wp['err'],
+                                                        nT=wp['nT'],
+                                                        nZ=wp['nZ'],
+                                                        use_adaptive=wp['use_adaptive'],
                                                         simps_err=wp['simps_err'])
+
+        if kwargs.has_key('init'):
+            init = kwargs['init']
+        else:
+            init = True
+
+        if init:
+            # Estimate EZ parameters
+            ez_params = hddm.utils.EZ_subjs(self.data['rt'])
+
+            # Set as init values
+            for param in self.params:
+                if ez_params.has_key(param.name):
+                    param.init = ez_params[param.name]
+
 
     def get_rootless_child(self, param, params):
         if param.name == 'wfpt':
@@ -41,7 +60,12 @@ class HDDMContaminant(HDDM):
                              observed=True)
 
         elif param.name == 'x':
-            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False)
+            rts = param.data['rt']
+            outlier = np.empty(rts.shape, dtype=np.bool)
+            outlier[np.abs(rts) < params['t'].value] = True
+            outlier[np.abs(rts) >= params['t'].value] = False
+            return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False, value=outlier)
+
         else:
             raise KeyError, "Rootless child parameter %s not found" % param.name
         

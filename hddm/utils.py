@@ -465,9 +465,8 @@ def EZ_subjs(data):
     v, a, t = EZ_data(data)
     params['v'] = v
     params['a'] = a
-    params['t'] = t-.2 if t-.2>0 else .1 # Causes problems otherwise
+    params['t'] = t
     params['z'] = .5
-
     
     # Estimate EZ parameters for each subject
     try:
@@ -476,7 +475,7 @@ def EZ_subjs(data):
                 v, a, t = EZ_data(data[data['subj_idx'] == subj])
                 params['v_%i'%subj] = v
                 params['a_%i'%subj] = a
-                params['t_%i'%subj] = 0 #t-.2 if t-.2>0 else .1
+                params['t_%i'%subj] = t #t-.2 if t-.2>0 else .1
                 params['z_%i'%subj] = .5
             except ValueError:
                 # Subject either had 0%, 50%, or 100% correct, which does not work
@@ -582,7 +581,7 @@ def EZ(pc, vrt, mrt, s=1):
     :See Also: EZ_data
     """
     if (pc == 0 or pc == .5 or pc == 1):
-        raise ValueError('pc is either 0%, 50% or 100%')
+        raise ValueError('Probability correct is either 0%, 50% or 100%')
     
     s2 = s**2
     logit_p = np.log(pc/(1-pc))
