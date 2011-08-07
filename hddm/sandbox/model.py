@@ -67,7 +67,7 @@ class HDDMContaminant(HDDM):
             n_cont = 0
             rts = np.empty(0)
             probs = np.empty(0)
-            cont_idx = np.empty(0)
+            cont_idx = np.empty(0, np.int)
             print "#$#$#$# outliers for subject %s #$#$#$#" % subj
             #loop over conds
             for cond in conds:
@@ -122,34 +122,37 @@ class HDDMContaminant(HDDM):
         return self.cont_res
 
 
-#    def remove_outliers(self, cutoff=.5):
-#        data_dep = self._get_data_depend()
-#
-#        data_out = []
-#        cont = []
-#        
-#        # Find x param
-#        for param in self.params:
-#            if param.name == 'x':
-#                break
-#
-#        for i, (data, params_dep, dep_name) in enumerate(data_dep):
-#            dep_name = str(dep_name)
-#            # Contaminant probability
-#            print dep_name
-#            for subj_idx, subj in enumerate(self._subjs):
-#                data_subj = data[data['subj_idx'] == subj]
-#                cont_prob = np.mean(param.child_nodes[dep_name][subj_idx].trace(), axis=0)
-#            
-#                no_cont = np.where(cont_prob < cutoff)[0]
-#                cont.append(np.logical_not(no_cont))
-#                data_out.append(data_subj[no_cont])
-#
-#        data_all = np.concatenate(data_out)
-#        data_all['rt'] = np.abs(data_all['rt'])
-#        
-#        return data_all, np.concatenate(cont)
+    def remove_conts(self, cutoff=.5):
+        """
+        return the data without the contaminants.
+        should be run after cont_report()
+        Input:
+            cutoff: the probablity that defines an outlier (deafult 0.5)
+        """
+        new_data = []
+        if self.is_group_model:
+            subj_list = self._subjs
+        else:
+            subj_list = [0]
 
+        #loop over subjects
+        for subj_idx, subj in enumerate(subj_list):
+            if self.is_group_model:
+                cont_res = self.cont_res[subj]
+                data_subj = self.data[self.data['subj_idx']==subj]
+            else:
+                cont_res = self.cont_res
+                data_subj = self.data
+            idx = np.ones(len(data_subj), bool)
+            idx[cont_res['cont_idx'][cont_res['probs'] >= cutoff]] = 0
+            new_data.append(data_subj[idx])
+            
+        data_all = np.concatenate(new_data)
+        data_all['rt'] = np.abs(data_all['rt'])
+        
+        return data_all
+        
+        
 class HDDMAntisaccade(HDDM):
     def __init__(self, data, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
