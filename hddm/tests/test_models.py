@@ -142,12 +142,11 @@ class TestSingle(unittest.TestCase):
         return model
     
     def test_cont(self, assert_=False):
-        import hddm.sandbox.model as sb
         params_true = gen_rand_params(include = ())
         data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)
         data[0]['rt'] = min(abs(data['rt']))/2.
         data[1]['rt'] = max(abs(data['rt'])) + 0.8           
-        hm = sb.HDDMContaminant(data, bias=True, is_group_model=False)
+        hm = hddm.HDDMContaminant(data, bias=True, is_group_model=False)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
