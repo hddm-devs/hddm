@@ -15,6 +15,8 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
+from cython.parallel import *
+
 include "pdf.pxi"
 
 @cython.wraparound(False)
@@ -24,14 +26,15 @@ def wiener_like_full_intrp(np.ndarray[double, ndim=1] x, double v, double V, dou
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
-    
-    for i from 0 <= i < x.shape[0]:
+
+    for i in prange(x.shape[0], nogil=True):
         p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
-            return -np.inf
-        sum_logp += log(p)
-        
+            with gil:
+                return -np.inf
+         sum_logp += log(p)
+
     return sum_logp
 
 
@@ -40,19 +43,54 @@ def wiener_like_full_intrp(np.ndarray[double, ndim=1] x, double v, double V, dou
 def wiener_like_full(np.ndarray[double, ndim=1] x,
                      np.ndarray[double, ndim=1] v, np.ndarray[double, ndim=1] a,
                      np.ndarray[double, ndim=1] z, np.ndarray[double, ndim=1] t, err):
-    cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
 
-    for i from 0 <= i < size:
+    for i in prange(x.shape[0], nogil=True):
         p = pdf_sign(x[i], v[i], a[i], z[i], t[i], err)
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
-            return -np.inf
-        sum_logp += log(p)
+            with gil:
+                return -np.inf
+         sum_logp += log(p)
 
     return sum_logp
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False) # turn of bounds-checking for entire function
+def wiener_like_full_collCont(np.ndarray[double, ndim=1] x,
+                              np.ndarray[bint, ndim=1] cont_x, double gamma,
+                              double v, double V, double a, double z, double Z,
+                              double t, double T, double t_min, double t_max,
+                              double err=1e-4, int nT=2, int nZ=2, bint
+                              use_adaptive = 1, double simps_err = 1e-3):
+    """Wiener likelihood function where RTs could come from a
+    separate, uniform contaminant distribution.
+
+    Reference: Lee, Vandekerckhove, Navarro, & Tuernlinckx (2007)
+    """
+    return 0
+#    cdef Py_ssize_t i
+#    cdef double p
+#    cdef sum_logp = 0
+#    for i from 0 <= i < x.shape[0]:
+#        if cont_x[i] == 1:
+#            p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
+#        elif cont_y[i] == 0:
+#            p = prob_boundary(x[i], v, a, z, t, err) * 1./(t_max-t_min)
+#        else:
+#            p = .5 * 1./(t_max-t_min)
+#        #print p, x[i], v, a, z, t, err, t_max, t_min, cont_x[i], cont_y[i]
+#        # If one probability = 0, the log sum will be -Inf
+#        if p == 0:
+#            return -infinity
+#
+#        sum_logp += log(p)
+#        
+#    return sum_logp
+
 
 
 @cython.wraparound(False)
@@ -89,7 +127,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
     cdef int idx
     
     l_cdf[0] = 0
-    for i from 1 <= i < x.shape[0]:
+    for i in prange(x.shape[0], nogil=True):
         pdf = full_pdf(x[i], v, V, a, z, Z, 0, 0, 1e-4)
         l_cdf[i] = l_cdf[i-1] + pdf
     
@@ -111,13 +149,9 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
         rts[i] = rt
     return rts
 
-
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, ndim=1] cont_x, double v, \
-                                 double V, double a, double z, double Z, double t, double T, double t_min, \
-                                 double t_max, double err, int nT= 10, int nZ=10, bint use_adaptive=1, \
-                                 double simps_err=1e-8):
+def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, ndim=1] cont_x, double gamma, double v, double V, double a, double z, double Z, double t, double T, double t_min, double t_max, double err):
     """Wiener likelihood function where RTs could come from a
     separate, uniform contaminant distribution.
 
@@ -129,16 +163,19 @@ def wiener_like_full_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[in
     cdef int n_cont = np.sum(cont_x)
     cdef int pos_cont = 0
     
-    for i from 0 <= i < value.shape[0]:
+    for i in prange(value.shape[0], nogil=True):
         if cont_x[i] == 0:
-            p = full_pdf(value[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
-            if p == 0:
-                return -np.inf
+            p = full_pdf(value[i], v, V, a, z, Z, t, T, err)
             sum_logp += log(p)      
-        # If one probability = 0, the log sum will be -Inf
-        
+        elif value[i]>0:
+            pos_cont += 1
     
     # add the log likelihood of the contaminations
-    sum_logp += n_cont*log(0.5 * 1./(t_max-t_min))     
+    #first the guesses
+    sum_logp += n_cont*log(gamma*(0.5 * 1./(t_max-t_min)))     
+    #then the positive prob_boundary 
+    sum_logp += pos_cont*log((1-gamma) * prob_ub(v, a, z) * 1./(t_max-t_min))
+    #and the negative prob_boundary
+    sum_logp += (n_cont - pos_cont)*log((1-gamma)*(1-prob_ub(v, a, z)) * 1./(t_max-t_min))
 
     return sum_logp
