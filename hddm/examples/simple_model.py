@@ -1,7 +1,7 @@
 import hddm
 
 # Load data from csv file into a NumPy structured array
-data = hddm.load_csv('simple_subj_data.csv')
+data = hddm.load_csv('simple_difficulty_subjs.csv')
 
 # Create a HDDM model multi object
 model = hddm.HDDM(data, depends_on={'v':'difficulty'})
