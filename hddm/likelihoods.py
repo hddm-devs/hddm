@@ -210,11 +210,11 @@ class wfpt_gen(stats.distributions.rv_continuous):
 
     def _pdf(self, x, v, V, a, z, Z, t, T):
         if np.isscalar(x):
-            out = hddm.wfpt_full.full_pdf(x, v, V, a, z, Z, t, T, self.dt)
+            out = hddm.wfpt_full.wiener_like_full_single(x, v, V, a, z, Z, t, T, self.dt)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = hddm.wfpt_full.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
+                out[i] = hddm.wfpt_full.wiener_like_full_single(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
         
         return out
 

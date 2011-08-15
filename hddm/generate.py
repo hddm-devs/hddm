@@ -311,7 +311,7 @@ def add_contaminate_data(data, params):
     data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
     return data
 
-def gen_rand_data(samples=500, params=None, include=()):
+def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     """Generate simulated RTs with random parameters.
     
        :Optional:
@@ -333,7 +333,7 @@ def gen_rand_data(samples=500, params=None, include=()):
         params = gen_rand_params(include=include)
 
     # Create RT data
-    data = gen_rts(params, samples=samples, structured=True)
+    data = gen_rts(params, samples=samples, structured=True, method=method)
     if params.has_key('pi'):
         add_contaminate_data(data, params)
     

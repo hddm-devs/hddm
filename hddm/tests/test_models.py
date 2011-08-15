@@ -64,7 +64,7 @@ class TestSingle(unittest.TestCase):
         #raise SkipTest("Disabled.")
         includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
-            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
+            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include, method='cdf')
             model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=False)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
@@ -161,4 +161,4 @@ class TestSingle(unittest.TestCase):
         data_samples = 200
         num_subjs = 2
         data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None, 
-                                                        samples=data_samples, noise=0.00
+                                                        samples=data_samples, noise=0.00)
