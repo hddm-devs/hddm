@@ -157,19 +157,20 @@ def run_simple_test(nTimes=20, stop_when_fail = False):
 def check_correl(model):
     nodes = filter(lambda x:x.shape == (), model.stochastics)
     threshold = 0.05
-    ok = True
+    fail = False
     for node in nodes:
         t_lag = np.inf
         for lag in range(1,min(101, len(node.trace()[:])//2)):
             corr = pm.diagnostics.autocorr(node.trace()[:], lag)
             if corr <= threshold:
-                t_lag = lag
+                t_lag=  lag
                 break
         if t_lag < np.inf:
-            ok = False
+            fail = True
             print "%s: correlation drop under %f after %d steps" %(node.__name__ , threshold, t_lag)
         else:
             print "%s: correlation don't drop under %f!!!!" %(node.__name__ , threshold)
+    ok = not fail
     return ok
 
 def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
@@ -214,7 +215,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         print "working on model %d" % i_params
         
         model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params], 
-                                include=include, depends_on={'v':['cond']})#, init_value=params)
+                                include = include, depends_on  = {'v':['cond']})#, init_value=params)
         i_t = time()
         if use_db:
             dbname = 'speed.'+ str(clock()) + '.db'
