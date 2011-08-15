@@ -398,15 +398,16 @@ def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, n
 
 def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_idx=None):
     if conds is None:
-        conds = range(n_conds)
+        conds = range(len(params_set))
     
     if type(conds[0]) is str:
         cond_type = 'S12'
     else:
         cond_type = type(conds[0])
-
+    
+    arrays = []
     for cond, params in zip(conds, params_set):
-        i_data = gen_rts(params, samples=n, structured=True)
+        i_data = gen_rts(params, samples=samples_per_cond, structured=True)
         if subj_idx is None:
             data = np.empty(len(i_data), dtype = ([('response', np.float),
                                                    ('rt', np.float), 
