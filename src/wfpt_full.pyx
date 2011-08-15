@@ -92,7 +92,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
     cdef int idx
     
     l_cdf[0] = 0
-    for i in prange(x.shape[0], nogil=True):
+    for i in range(x.shape[0]):
         pdf = full_pdf(x[i], v, V, a, z, Z, 0, 0, 1e-4)
         l_cdf[i] = l_cdf[i-1] + pdf
     
