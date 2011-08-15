@@ -352,6 +352,7 @@ def test_chain_convergance(models):
 def parse_config_file(fname, mcmc=False, data=None):
     import kabuki
     import os.path
+
     if not os.path.isfile(fname):
         raise ValueError("%s could not be found."%fname)
 
@@ -375,7 +376,9 @@ def parse_config_file(fname, mcmc=False, data=None):
         raise IOError, "Data file %s not found."%data_fname
     
     data = np.recfromcsv(data_fname)
-    
+
+    model_name = os.path.splitext(data_fname)[0]
+
     try:
         include = config.get('model', 'include')
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
@@ -451,7 +454,7 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        plot_post_pred(m.nodes)
+        plot_post_pred(m.nodes, fname=model_name, show=False)
         
     if plot_posteriors:
         hddm.plot_posteriors(m)
@@ -646,7 +649,7 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30):
             
     return p/samples
     
-def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None):
+def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None, show=True):
     if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
         
@@ -708,9 +711,10 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None):
             plt.legend()
             
         if fname is not None:
-            plt.savefig('%s%i.png'(fname, figure_idx))
+            plt.savefig('%s%i.png'%(fname, figure_idx))
 
-    plt.show()
+    if show:
+        plt.show()
 
 def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
     raise NotImplemented, "Coming in v0.2."
