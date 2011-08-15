@@ -165,7 +165,7 @@ class TestWfptFull(unittest.TestCase):
             res[np.isinf(res)] = 100            
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
             self.assertTrue(not any(np.isnan(res))), "Found NaN in the simulated results"                                                                                    
-            np.testing.assert_array_almost_equal(my_res, res, 3)
+            np.testing.assert_array_almost_equal(my_res, res, 2)
             
         
     def test_failure_mode(self):
