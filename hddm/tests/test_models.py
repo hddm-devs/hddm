@@ -31,12 +31,11 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
     params2 = copy(params1)
     params2[param] = params1[param]+change
 
-    data = hddm.generate.gen_rand_cond_data((params1, params2), samples_per_cond=samples)
+    data, tmp = hddm.generate.gen_rand_cond_data((params1, params2), samples_per_cond=samples)
 
     model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
 
     return model
-            
         
 class TestMulti(unittest.TestCase):
     def runTest(self):
@@ -47,6 +46,7 @@ class TestMulti(unittest.TestCase):
         return m
     
     def test_diff_a_subj(self, samples=1000):
+        raise SkipTest("Disabled.")
         m = diff_model('a', subj=True, change=-.5, samples=samples)
         return m
     
@@ -62,10 +62,10 @@ class TestSingle(unittest.TestCase):
 
     def test_HDDM(self, assert_=True):
         #raise SkipTest("Disabled.")
-        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_data(samples=500, include=include, method='cdf')
-            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=False)
+            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
@@ -157,8 +157,24 @@ class TestSingle(unittest.TestCase):
         return hm
 
     def test_cont_subj(self, assert_=False):
-        import hddm.sandbox.model as sb
         data_samples = 200
         num_subjs = 2
         data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None, 
-                                                        samples=data_samples, noise=0.00)
+                                                        samples=data_samples, noise=0.0001,include=())
+        for i in range(num_subjs):
+            data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
+            data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8           
+        hm = hddm.model.HDDMContaminant(data, bias=True, is_group_model=True)
+        hm.sample(self.samples, burn=self.burn)
+        check_model(hm.mc, params_true, assert_=assert_)
+        cont_res = hm.cont_report(plot=False)
+        for i in range(num_subjs):
+            cont_idx = cont_res[i]['cont_idx']
+            self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
+            self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
+
+        return hm
+
+
+if __name__=='__main__':
+    print "Run nosetest.py"
