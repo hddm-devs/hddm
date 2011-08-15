@@ -1,20 +1,11 @@
+cimport cython
+
 include "integrate.pxi"
 
-cdef extern from "math.h":
-    double sin(double)
-    double cos(double)
-    double log(double)
-    double exp(double)
-    double sqrt(double)
-    double fmax(double, double)
-    double pow(double, double)
-    double ceil(double)
-    double floor(double)
-    double fabs(double)
-    double M_PI
+from libc.math cimport sin, cos, log, exp, sqrt, fmax, pow, ceil, floor, fabs, M_PI
 
-
-cpdef double ftt_01w(double tt, double w, double err):
+@cython.cdivision(True)
+cdef double ftt_01w(double tt, double w, double err) nogil:
     """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
     """
@@ -53,25 +44,27 @@ cpdef double ftt_01w(double tt, double w, double err):
 
     return p
 
-cdef inline double prob_ub(double v, double a, double z):
+@cython.cdivision(True)
+cdef inline double prob_ub(double v, double a, double z) nogil:
     """Probability of hitting upper boundary."""
     return (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
 
-
-cpdef double pdf(double x, double v, double a, double w, double err):
+@cython.cdivision(True)
+cdef double pdf(double x, double v, double a, double w, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z) using the method
     and implementation of Navarro & Fuss, 2009.
     """
     if x <= 0:
         return 0
 
-    cdef double tt = x/(pow(a,2)) # use normalized time
+    cdef double tt = x/a**2 # use normalized time
     cdef double p = ftt_01w(tt, w, err) #get f(t|0,1,w)
   
     # convert to f(t|v,a,w)
     return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
 
-cpdef double pdf_sign(double x, double v, double a, double z, double t, double err):
+@cython.cdivision(True)
+cdef double pdf_sign(double x, double v, double a, double z, double t, double err) nogil:
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t"""
     if z<0 or z>1 or a<=0:
@@ -84,8 +77,8 @@ cpdef double pdf_sign(double x, double v, double a, double z, double t, double e
         # Upper boundary, flip v and z
         return pdf(x-t, -v, a, 1.-z, err)
 
-
-cpdef double pdf_V(double x, double v, double V, double a, double z, double err):
+@cython.cdivision(True)
+cdef double pdf_V(double x, double v, double V, double a, double z, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method    
     and implementation of Navarro & Fuss, 2009.
     V is the std of the drift rate
@@ -102,7 +95,8 @@ cpdef double pdf_V(double x, double v, double V, double a, double z, double err)
     # convert to f(t|v,a,w)
     return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
 
-cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err):
+@cython.cdivision(True)
+cdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err) nogil:
     """Wiener likelihood function for two response types. Lower bound
     responses have negative t, upper boundary response have positive t."""
     if z<0 or z>1 or a<0:
@@ -115,9 +109,9 @@ cpdef double pdf_V_sign(double x, double v, double V, double a, double z, double
         # Upper boundary, flip v and z
         return pdf_V(x-t, -v, V, a, 1.-z, err)
 
-
-cpdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-                     double t, double T, double err, int nT=2, int nZ=2, bint use_adaptive = 1, double simps_err = 1e-3):
+@cython.cdivision(True)
+cdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
+                     double t, double T, double err, int nT=2, int nZ=2, bint use_adaptive=1, double simps_err=1e-3) nogil:
     """full pdf"""
 
     # Check if parpameters are valid
