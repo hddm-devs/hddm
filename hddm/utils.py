@@ -737,28 +737,20 @@ def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
         else:
             raise NotImplemented, "TODO, use group model."
         
-def hddm_parents_trace(node,idx):
+def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the
     function is used by ppd_test)
-
     """
-    params = {}
-    for name in ['a','v','t']:
-        params[name] = node.parents[name].trace()[idx]
-
-    if node.parents['z'] != .5: # bias model
-        params['z'] = node.parents['z'].trace()[idx]
-    else:
-        params['z'] = 0.5
-    
-    for name in ['V','Z','T']:
-        if node.parents.has_key(name):
-            if node.parents[name] != 0:
-                params[name] = node.parents[name].trace()[idx]
-            else:
-                params[name] = 0
-        else:
-            params[name] = 0
+    model.params_include.keys()
+    params = {'a':0, 'v': 0, 't':0, 'z': 0.5, 'Z': 0 , 'T': 0 , 'V': 0}
+    #example for local_name:  a,v,t,z....
+    #example for parent_full_name: v(['cond1'])3
+    for local_name in model.params_include.keys():
+        if local_name == 'wfpt':
+            continue
+        
+        parent_full_name = obs_node.parents[local_name].__name__
+        params[local_name] = model.mc.db.trace(parent_full_name)[idx]
 
     return params
             
@@ -782,7 +774,7 @@ def _gen_statistics():
         
     return statistics
 
-def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_verbose = 1, verbose = 1):
+def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 1):
     """
     Test statistics over the posterior predictive distibution.
 
@@ -794,33 +786,44 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_verbose =
             confidence interval
         stats : set
             a set of statistics to check over the sampled data. if stats is None thedefault set of statistics is created
-        plot : int
+        plot_verbose : int
             0 - no plots
             1 - plot only the statistics that fall outside of the confidencde interval (default)
             2 - plot everything
     """
-    nodes = hm.mc._dict_container
+    
+    if type(hm) == type(()):
+        nodes = hm[1]
+        model = hm[0]
+    else:
+        #break group model to subjects models
+        if hm.is_group_model:
+            for i in range(hm._num_subjs):
+                print "--- Results for subj %d ---" % (hm._subjs[i])
+                nodes = [x[i] for x in hm.params_include['wfpt'].child_nodes.values()]
+                ppd_test((hm, nodes), n_samples, confidence, plot_verbose, verbose)
+            return
+        #run subjects model
+        else:
+            model = hm
+            nodes = model.params_include['wfpt'].child_nodes.values()
     
     #get statistics    
-    if stats == None:
-        stats  = _gen_statistics()
-    else:
-        stats  = _gen_statistics() + stats
-
+    stats  = _gen_statistics()
+    
     conf_lb = ((100 - confidence)/ 2.)
     conf_ub = (100 - conf_lb)
     
     # get statistics from simulated data
-    for name, node in nodes.iteritems():
-
-        # Find wfpt node
-        if not name.startswith('wfpt'):
-            continue
+    for node in nodes:
+        name = node.__name__
 
         if verbose>0:
             print "computing stats for %s" % name
         
-        len_trace = len(node.parents['a'].trace())
+        #when loading from the db, the trace is not assign to the variables
+        #so I need to change the way I read from the trace. beheichs 
+        len_trace = len(model.mc.db.trace('a')[:])
         thin = max(int(len_trace // n_samples), 1)
         n_samples = int(len_trace // thin)
         res = np.zeros((len(stats),n_samples))
@@ -831,7 +834,7 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, stats = None, plot_verbose =
             if verbose > 1 and ((i+1) % 100)==0:
                 print "created samples for %d params" % (i+1)
             sys.stdout.flush()
-            params = hddm_parents_trace(node, idx)
+            params = hddm_parents_trace(model, node, idx)
             samples = hddm.generate.gen_rts(params, len(node.value), dt=1e-3,method='cdf')
             for i_stat in xrange(len(stats)):
                 res[i_stat][i] = stats[i_stat]['func'](samples)
