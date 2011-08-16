@@ -2,7 +2,21 @@ cimport cython
 
 include "integrate.pxi"
 
-from libc.math cimport sin, cos, log, exp, sqrt, fmax, pow, ceil, floor, fabs, M_PI
+#from libc.math cimport tan, sin, cos, log, exp, sqrt, fmax, pow, ceil, floor, fabs, M_PI
+
+cdef extern from "math.h" nogil:
+    double sin(double)
+    double cos(double)
+    double log(double)
+    double exp(double)
+    double sqrt(double)
+    double fmax(double, double)
+    double pow(double, double)
+    double ceil(double)
+    double floor(double)
+    double fabs(double)
+    double M_PI
+
 
 @cython.cdivision(True)
 cdef double ftt_01w(double tt, double w, double err) nogil:

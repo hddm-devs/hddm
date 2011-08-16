@@ -27,7 +27,7 @@ class TestWfpt(unittest.TestCase):
             raise SkipTest("Could not import mlabwrap, not performing pdf comparison test.")
 
         for i in range(500):
-            v = (rand()-.5)*1.5
+            v = (rand()-.5)*1.5 # TODO!
             t = rand()*.5
             a = 1.5+rand()
             z = .5*rand()
