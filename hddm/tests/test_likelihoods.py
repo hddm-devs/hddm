@@ -24,8 +24,7 @@ class TestWfpt(unittest.TestCase):
         try:
             import mlabwrap
         except ImportError:
-            print "Could not import mlabwrap, not performing pdf comparison test."
-            return
+            raise SkipTest("Could not import mlabwrap, not performing pdf comparison test.")
 
         for i in range(500):
             v = (rand()-.5)*1.5
@@ -34,10 +33,10 @@ class TestWfpt(unittest.TestCase):
             z = .5*rand()
             z_nonorm = a*z
             rt = rand()*4 + t
-            err = 10*(-3- ceil(rand()*20))
+            err = 1e-4
             # Test if equal up to the 9th decimal.
-            matlab_wfpt = mlabwrap.mlab.wfpt(rt, v, a, z_nonorm, err)[0][0]
-            python_wfpt = hddm.wfpt.pdf(rt, v, a, z, err)
+            matlab_wfpt = mlabwrap.mlab.wfpt(rt-t, v, a, z_nonorm, err)[0][0]
+            python_wfpt = hddm.wfpt.pdf_array(np.asarray([-rt]), v, a, z, t, err, 0)[0]
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
