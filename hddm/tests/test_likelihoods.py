@@ -14,7 +14,8 @@ from scipy.stats import kstest
 from nose import SkipTest
 
 def gen_like_from_matlab(samples=20, seed=3123):
-    # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
+    # Generate samples from the reference implementation by Navarro & Fuss 2009
+    # This was used to generate matlab_values.py for comparison with our implementation.
     import mlabwrap
 
     np.random.seed(seed)
