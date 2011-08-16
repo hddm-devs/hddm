@@ -78,20 +78,6 @@ cdef double pdf(double x, double v, double a, double w, double err) nogil:
     return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
 
 @cython.cdivision(True)
-cdef double pdf_sign(double x, double v, double a, double z, double t, double err) nogil:
-    """Wiener likelihood function for two response types. Lower bound
-    responses have negative t, upper boundary response have positive t"""
-    if z<0 or z>1 or a<=0:
-        return 0
-
-    if x<0:
-        # Lower boundary
-        return pdf(fabs(x)-t, v, a, z, err)
-    else:
-        # Upper boundary, flip v and z
-        return pdf(x-t, -v, a, 1.-z, err)
-
-@cython.cdivision(True)
 cdef double pdf_V(double x, double v, double V, double a, double z, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method    
     and implementation of Navarro & Fuss, 2009.
@@ -110,22 +96,10 @@ cdef double pdf_V(double x, double v, double V, double a, double z, double err) 
     return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
 
 @cython.cdivision(True)
-cdef double pdf_V_sign(double x, double v, double V, double a, double z, double t, double err) nogil:
-    """Wiener likelihood function for two response types. Lower bound
-    responses have negative t, upper boundary response have positive t."""
-    if z<0 or z>1 or a<0:
-        return 0
-
-    if x<0:
-        # Lower boundary
-        return pdf_V(fabs(x)-t, v, V, a, z, err)
-    else:
-        # Upper boundary, flip v and z
-        return pdf_V(x-t, -v, V, a, 1.-z, err)
-
-@cython.cdivision(True)
-cdef double full_pdf(double x, double v, double V, double a, double z, double Z, 
-                     double t, double T, double err, int nT=2, int nZ=2, bint use_adaptive=1, double simps_err=1e-3) nogil:
+cpdef double full_pdf(double x, double v, double V, double a, double
+                      z, double Z, double t, double T, double err, int
+                      nT=2, int nZ=2, bint use_adaptive=1, double
+                      simps_err=1e-3) nogil:
     """full pdf"""
 
     # Check if parpameters are valid
