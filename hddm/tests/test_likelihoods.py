@@ -13,11 +13,43 @@ from scipy.stats import kstest
 
 from nose import SkipTest
 
+def gen_like_from_matlab(samples=20, seed=3123):
+    # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
+    import mlabwrap
+
+    np.random.seed(seed)
+
+    vals = []
+
+    for i in range(samples):
+        v = (rand()-.5)*1.5
+        t = rand()*.5
+        a = 1.5+rand()
+        z = .5*rand()
+        z_nonorm = a*z
+        rt = rand()*4 + t
+        err = 10**(round(rand()*-10))
+        # Test if equal up to the 9th decimal.
+        matlab_wfpt = mlabwrap.mlab.wfpt(rt-t, v, a, z_nonorm, err)[0][0]
+        
+        vals.append((v, t, a, z, z_nonorm, rt, err, matlab_wfpt))
+        
+    return vals
+
 class TestWfpt(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfpt, self).__init__(*args, **kwargs)
         self.samples=5000
         self.range_ = (-10,10)
+
+    def test_pdf_no_matlab(self):
+        # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
+        from matlab_values import vals
+
+        for v, t, a, z, z_nonorm, rt, err, matlab_wfpt in vals:
+            python_wfpt = hddm.wfpt.pdf_array(np.asarray([-rt]), v, a, z, t, err, 0)[0]
+            print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
+            np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
     def test_pdf(self):
         # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
