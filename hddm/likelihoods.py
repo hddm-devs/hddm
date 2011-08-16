@@ -20,7 +20,7 @@ import hddm
 def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, 
                             err, nT, nZ, use_adaptive, simps_err):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt_full.wiener_like_full_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, 
+    return hddm.wfpt.wiener_like_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, 
                                                   t_min, t_max, err, nT, nZ, use_adaptive, simps_err)
 
 WienerContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -43,61 +43,32 @@ def general_WienerCont(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
 
 def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
     """Log-likelihood for the simple DDM"""
-    return hddm.wfpt_full.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
+    return hddm.wfpt.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
             
 WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                           logp=wiener_like_multi,
                                           dtype=np.float)
 
-def wiener_like_full_intrp(value, v, V, z, Z, t, T, a, err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
+def wiener_like(value, v, V, z, Z, t, T, a, err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
     """Log-likelihood for the full DDM using the interpolation method"""
-    return hddm.wfpt_full.wiener_like_full_intrp(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
+    return hddm.wfpt.wiener_like(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive,  simps_err)
 
 
 def general_WienerFullIntrp_variable(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
     _like = lambda  value, v, V, z, Z, t, T, a, err=err, nT=nT, nZ=nZ, \
     use_adaptive=use_adaptive, simps_err=simps_err: \
-    wiener_like_full_intrp(value, v, V, z, Z, t, T, a,\
-                            err=err, nT=nT, nZ=nZ, use_adaptive=use_adaptive, simps_err=simps_err)
-    _like.__doc__ = wiener_like_full_intrp.__doc__
+    wiener_like(value, v, V, z, Z, t, T, a,\
+                err=err, nT=nT, nZ=nZ, use_adaptive=use_adaptive, simps_err=simps_err)
+    _like.__doc__ = wiener_like.__doc__
     return pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=_like,
                                        dtype=np.float,
                                        mv=False)
  
 WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                       logp=wiener_like_full_intrp,
+                                       logp=wiener_like,
                                        dtype=np.float,
                                        mv=False)
-
-def wiener_like_single_trial(value, v, a, z, t):
-    """Log-likelihood of the DDM for one RT point."""
-    prob = hddm.wfpt_full.wiener_like_full(value, np.asarray(v), np.asarray(a), np.asarray(z), np.asarray(t), err=1e-4)
-    return prob
-
-WienerSingleTrial = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                            logp=wiener_like_single_trial,
-                                            dtype=np.float,
-                                            mv=True)
-
-
-def centeruniform_like(value, center, width):
-    R"""Likelihood of centered uniform"""
-    return pm.uniform_like(value,
-                           lower=np.asarray(center)-(np.asarray(width)/2.), 
-                           upper=np.asarray(center)+(np.asarray(width)/2.))
-
-@pm.randomwrap
-def centeruniform(center, width, size=1):
-    R"""Sample from centered uniform"""
-    return np.random.uniform(low=np.asarray(center)-(np.asarray(width)/2.), 
-                             high=np.asarray(center)+(np.asarray(width)/2.))
-
-CenterUniform = pm.stochastic_from_dist(name="Centered Uniform",
-                                        logp=centeruniform_like,
-                                        random=centeruniform,
-                                        dtype=np.float,
-                                        mv=True)
 
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
@@ -210,11 +181,11 @@ class wfpt_gen(stats.distributions.rv_continuous):
 
     def _pdf(self, x, v, V, a, z, Z, t, T):
         if np.isscalar(x):
-            out = hddm.wfpt_full.full_pdf(x, v, V, a, z, Z, t, T, self.dt)
+            out = hddm.wfpt.full_pdf(x, v, V, a, z, Z, t, T, self.dt)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = hddm.wfpt_full.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
+                out[i] = hddm.wfpt.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
         
         return out
 

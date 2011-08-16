@@ -86,7 +86,7 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
 
-def gen_rts(params, samples=1000, range_ = (-6, 6), dt = 1e-3, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
+def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
     """
     Returns a numpy.array of randomly simulated RTs from the DDM.
 
@@ -311,7 +311,7 @@ def add_contaminate_data(data, params):
     data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
     return data
 
-def gen_rand_data(samples=500, params=None, include=()):
+def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     """Generate simulated RTs with random parameters.
     
        :Optional:
@@ -333,7 +333,7 @@ def gen_rand_data(samples=500, params=None, include=()):
         params = gen_rand_params(include=include)
 
     # Create RT data
-    data = gen_rts(params, samples=samples, structured=True)
+    data = gen_rts(params, samples=samples, structured=True, method=method)
     if params.has_key('pi'):
         add_contaminate_data(data, params)
     
@@ -398,15 +398,16 @@ def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, n
 
 def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_idx=None):
     if conds is None:
-        conds = range(n_conds)
+        conds = range(len(params_set))
     
     if type(conds[0]) is str:
         cond_type = 'S12'
     else:
         cond_type = type(conds[0])
-
+    
+    arrays = []
     for cond, params in zip(conds, params_set):
-        i_data = gen_rts(params, samples=n, structured=True)
+        i_data = gen_rts(params, samples=samples_per_cond, structured=True)
         if subj_idx is None:
             data = np.empty(len(i_data), dtype = ([('response', np.float),
                                                    ('rt', np.float), 

@@ -352,6 +352,7 @@ def test_chain_convergance(models):
 def parse_config_file(fname, mcmc=False, data=None):
     import kabuki
     import os.path
+
     if not os.path.isfile(fname):
         raise ValueError("%s could not be found."%fname)
 
@@ -375,7 +376,9 @@ def parse_config_file(fname, mcmc=False, data=None):
         raise IOError, "Data file %s not found."%data_fname
     
     data = np.recfromcsv(data_fname)
-    
+
+    model_name = os.path.splitext(data_fname)[0]
+
     try:
         include = config.get('model', 'include')
     except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
@@ -451,7 +454,7 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        plot_post_pred(m.nodes)
+        plot_post_pred(m.nodes, fname=model_name, show=False)
         
     if plot_posteriors:
         hddm.plot_posteriors(m)
@@ -601,7 +604,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
+def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30):
     """Calculate posterior predictive probability density function.
 
     :Arguments:
@@ -619,13 +622,13 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
         args = ('v', 'V', 'a','z','Z', 't','T')
         
     if x is None:
-        x = np.arange(-5,5,0.01)
-
+        x = np.arange(-5,5,0.1)
 
     trace_len = len(traces['a'])
     p = np.zeros(len(x), dtype=np.float)
 
     # Add default traces if needed parameter is excluded.
+    # This makes it easier to always make the same call to pdf below
     if not traces.has_key('V'):
         traces['V'] = np.zeros(trace_len)
     if not traces.has_key('T'):
@@ -635,11 +638,9 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
     if not traces.has_key('z'):
         traces['z'] = np.ones(trace_len)*.5
 
-    samples = 0
-    for i in np.arange(0, trace_len, interval):
-        samples += 1
+    for i in np.round(np.linspace(0, trace_len-1, samples)):
         valued_args = []
-        # Construct arguments to be passed to pdf
+        # Construct arguments from traces to be passed to pdf
         for arg in args:
             valued_args.append(traces[arg][i])
         pdf_full = lambda x: pdf(x, *valued_args)
@@ -648,7 +649,7 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, interval=10):
             
     return p/samples
     
-def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10, fname=None):
+def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None, show=True):
     if type(nodes) is pm.MCMC:
         nodes = nodes._dict_container
         
@@ -701,7 +702,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10, fname=None):
             plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
             # Plot analytical
-            analytical_dens = pdf_of_post_pred(traces, x=x, interval=interval)
+            analytical_dens = pdf_of_post_pred(traces, x=x, samples=samples)
 
             plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
@@ -710,9 +711,10 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), interval=10, fname=None):
             plt.legend()
             
         if fname is not None:
-            plt.savefig('%s%i.png'(fname, figure_idx))
+            plt.savefig('%s%i.png'%(fname, figure_idx))
 
-    plt.show()
+    if show:
+        plt.show()
 
 def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
     raise NotImplemented, "Coming in v0.2."

@@ -51,7 +51,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     ok = not fail
     return ok
 
-def check_rejection(model, assert_ = True):    
+def check_rejection(model, assert_=True):    
     """check if the rejection ratio is not too high"""
     
     for node in model.stochastics:
