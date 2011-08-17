@@ -130,27 +130,18 @@ class HDDMRegressor(HDDM):
             else:
                 params[effect_on] = params['e_inst_%s_%s_%s'%(col_name[0], col_name[1], effect_on)]
 
-        if self.model_type == 'simple':
-            model = hddm.likelihoods.WienerSimpleMulti(param.full_name,
-                                                       value=param.data['rt'],
-                                                       v=params['v'],
-                                                       a=params['a'],
-                                                       z=self._get_node('z',params),
-                                                       t=params['t'],
-                                                       multi=self.effects_on.keys(),
-                                                       observed=True)
-        elif self.model_type == 'full':
-            model = hddm.likelihoods.WienerFullMulti(param.full_name,
-                                                     value=param.data['rt'],
-                                                     v=params['v'],
-                                                     V=self._get_node('V', params),
-                                                     a=params['a'],
-                                                     z=self._get_node('z', params),
-                                                     Z=self._get_node('Z', params),
-                                                     t=params['t'],
-                                                     T=self._get_node('T', params),
-                                                     multi=self.effects_on.keys(),
-                                                     observed=True)
+        else:
+            model = hddm.likelihoods.WienerMulti(param.full_name,
+                                                 value=param.data['rt'],
+                                                 v=params['v'],
+                                                 V=self._get_node('V', params),
+                                                 a=params['a'],
+                                                 z=self._get_node('z', params),
+                                                 Z=self._get_node('Z', params),
+                                                 t=params['t'],
+                                                 T=self._get_node('T', params),
+                                                 multi=self.effects_on.keys(),
+                                                 observed=True)
         return model
 
 def effect1(base, e1, data):
