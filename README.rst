@@ -2,18 +2,27 @@
 Introduction
 ************
 
-:Date: July 19, 2011
+:Date: August 17, 2011
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://github.com/hddm-devs/hddm
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.1
+:Version: 0.2alpha
 
 Purpose
 =======
 
 HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models (via PyMC).
+
+New features in 0.2
+===================
+
+* Multithreading support: make use of all those cores
+
+* Contaminant model: allows you to remove outliers
+
+* Many bugfixes
 
 Features
 ========
@@ -88,12 +97,17 @@ Windows
 -------
 
 The easiest way is to download and install the `Enthought Python
-Distribution`_ which is free for academic use.
+Distribution`_ (EPD) which is free for academic use.
 
 After this open cmd.exe and type ::
 
     easy_install hddm
 
+to install the binary version.
+
+If you want to compile on windows, I found that the EPD
+does not seem to have OpenMP support. Downloading the mingw32 compiler
+solved the problem and compiled HDDM successfully.
 
 Linux (Debian based, such as Ubuntu)
 ------------------------------------
