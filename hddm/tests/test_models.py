@@ -36,7 +36,6 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
     model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
 
     return model
-            
         
 class TestMulti(unittest.TestCase):
     def runTest(self):
@@ -65,7 +64,7 @@ class TestSingle(unittest.TestCase):
         #raise SkipTest("Disabled.")
         includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
-            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
+            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include, method='cdf')
             model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
@@ -75,13 +74,37 @@ class TestSingle(unittest.TestCase):
 
     def test_HDDM_group(self, assert_=True):
         raise SkipTest("Disabled.")
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
-            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=True)
+            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=True)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended(self, assert_=True):
+        data, params_true = hddm.generate.gen_rand_data(samples=500, include='all')
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=False)
+        nodes = model.create()
+        #pm.MAP(nodes).fit()
+        mc = pm.MCMC(nodes)
+        mc.sample(self.samples, burn=self.burn)
+        check_model(mc, params_true, assert_=assert_)
+
+        return mc
+
+    def test_HDDM_full_extended_subj(self):
+        raise SkipTest("Disabled.")
+        data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
+
+        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=True)
+        nodes = model.create()
+        mc = pm.MCMC(nodes)
+        mc.sample(20000, burn=15000)
+        check_model(mc, params_true, assert_=assert_)
 
         return mc
 
@@ -134,7 +157,6 @@ class TestSingle(unittest.TestCase):
         return hm
 
     def test_cont_subj(self, assert_=False):
-        import hddm.sandbox.model as sb
         data_samples = 200
         num_subjs = 2
         data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None, 
@@ -142,7 +164,7 @@ class TestSingle(unittest.TestCase):
         for i in range(num_subjs):
             data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
             data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8           
-        hm = sb.HDDMContaminant(data, bias=True, is_group_model=True)
+        hm = hddm.model.HDDMContaminant(data, bias=True, is_group_model=True)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
