@@ -122,7 +122,7 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
     elif method=='drift':
         rts = _gen_rts_from_simulated_drift(params, samples, dt, intra_sv)[0]
     elif method=='cdf':
-        rts = hddm.wfpt_full.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
+        rts = hddm.wfpt.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
                                          params['Z'],params['t'],params['T'],
                                          samples, range_[0], range_[1], dt)
     else:
@@ -260,7 +260,7 @@ def pdf_with_params(rt, params):
     """
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
     T = params['T']; a = params['a']
-    return hddm.wfpt_full.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
+    return hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
                         T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
 
 def _gen_rts_from_cdf(params, samples=1000):

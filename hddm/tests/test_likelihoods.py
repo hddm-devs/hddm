@@ -69,11 +69,7 @@ class TestWfpt(unittest.TestCase):
             err = 1e-4
             # Test if equal up to the 9th decimal.
             matlab_wfpt = mlabwrap.mlab.wfpt(rt-t, v, a, z_nonorm, err)[0][0]
-<<<<<<< HEAD
-            python_wfpt = hddm.wfpt.pdf_array(np.asarray([-rt]), v, a, z, t, err, 0)[0]
-=======
             python_wfpt = hddm.wfpt.pdf_array(np.asarray([-rt]), v, 0, a, z, 0, t, 0, err, 0)[0]
->>>>>>> parallel2
             print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
@@ -81,12 +77,6 @@ class TestWfpt(unittest.TestCase):
         params = hddm.generate.gen_rand_params(include=('V','Z','T'))
 
         # Generate random valid RTs
-<<<<<<< HEAD
-        rts = t + rand(5000)*2
-        p = hddm.wfpt.pdf_array(rts, v, a, z, t, 1e-4)
-        summed_logp = np.sum(np.log(p))
-        summed_logp_like = hddm.wfpt.wiener_like_simple(np.array(rts), v, a, z, t, 1e-4)
-=======
         rts = params['t'] + params['T'] + rand(500)*2
         p = hddm.wfpt.pdf_array(rts, params['v'], params['V'],
                                 params['a'], params['z'], params['Z'], params['t'],
@@ -96,23 +86,14 @@ class TestWfpt(unittest.TestCase):
         summed_logp_like = hddm.wfpt.wiener_like(rts, params['v'],
                                                  params['V'], params['a'], params['z'], params['Z'],
                                                  params['t'], params['T'], 1e-4)
->>>>>>> parallel2
-
         np.testing.assert_almost_equal(summed_logp, summed_logp_like, 5)
 
         self.assertTrue(-np.Inf == hddm.wfpt.wiener_like(np.array([1.,2.,3.,0.]), 1, 0, .5, 0, 0, 0, 1e-4)), "wiener_like_simple should have returned -np.Inf"
             
-<<<<<<< HEAD
-    def test_pdf_V(self):
-        """Test if our wfpt pdf_V implementation yields the right results"""       
-        func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.pdf_array(value, v_i, a, z, 0, err) * norm.pdf(v_i,v,V)
-
-=======
     def test_pdf_V(self, samples=50):
         """Test if our wfpt pdf_V implementation produces the same value as numerical integration over v"""       
         func = lambda v_i,value,err,v,V,z,a: hddm.wfpt.full_pdf(value, v_i, 0, a, z, 0, 0, 0, err) * norm.pdf(v_i,v,V)
         
->>>>>>> parallel2
         for i in range(50):
             V = rand()*0.4+0.1
             v = (rand()-.5)*4
@@ -122,14 +103,9 @@ class TestWfpt(unittest.TestCase):
             rt = rand()*4 + t
             err = 10**(-3- np.ceil(rand()*12))
             # Test if equal up to the 9th decimal.
-<<<<<<< HEAD
-            res = quad(func, -np.inf, np.inf, args=(np.array([rt]),err,v,V,z,a), epsrel=1e-10, epsabs=1e-10)[0]
-            np.testing.assert_array_almost_equal(hddm.wfpt_full.wiener_like_full_single(rt, v, V, a, z, 0, 0, 0, err=err), res)
-=======
             sp_result = quad(func, -np.inf, np.inf, args=(rt,err,v,V,z,a), epsrel=1e-10, epsabs=1e-10)[0]
             hddm_result = hddm.wfpt.full_pdf(rt, v, V, a, z, 0, 0, 0, err)
             np.testing.assert_array_almost_equal(hddm_result, sp_result)
->>>>>>> parallel2
 
 class TestWfptFull(unittest.TestCase):
     def test_adaptive(self):
@@ -147,13 +123,8 @@ class TestWfptFull(unittest.TestCase):
             nZ = 60
             nT = 60
 
-<<<<<<< HEAD
-            my_res = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=5, nZ=5, use_adaptive=1)
-            res = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ, use_adaptive=0)
-=======
             my_res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=5, nZ=5, use_adaptive=1)
             res = hddm.wfpt.full_pdf(rt,v=v,V=0,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ, use_adaptive=0)
->>>>>>> parallel2
             
             print "(%d) rt %f, v: %f, V: %f, z: %f, Z: %f, t: %f, T: %f a: %f" % (i,rt,v,V,z,Z,t,T,a)
             print my_res
@@ -188,29 +159,6 @@ class TestWfptFull(unittest.TestCase):
             
             for vvv in range(2):
                 #test pdf
-<<<<<<< HEAD
-                my_res[0+vvv*4] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
-                res[0+vvv*4]    = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=0, nZ=0)
-                
-                #test pdf + Z
-                my_res[1+vvv*4] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=0,err=err, nT=nT, nZ=nZ)
-                hZ = Z/nZ
-                for j in range(nZ+1):
-                    z_tag = z-Z/2. + hZ*j
-                    y_z[j] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t, T=0,err=err, nT=0, nZ=0)/Z                             
-                    res[1+vvv*4] = simps(y_z, x=None, dx=hZ)
-                    
-                #test pdf + T
-                my_res[2+vvv*4] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=T,err=err, nT=nT, nZ=nZ)
-                hT = T/nT
-                for j in range(nT+1):
-                    t_tag = t-T/2. + hT*j
-                    y_t[j] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/T      
-                    res[2+vvv*4] = simps(y_t, x=None, dx=hT)
-             
-                #test pdf + Z + T
-                my_res[3+vvv*4] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err, nT=nT, nZ=nZ)
-=======
                 my_res[0+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=nT, nZ=nZ)
                 res[0+vvv*4]    = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=0,t=t, T=0,err=err, nT=0, nZ=0)
                 
@@ -232,18 +180,13 @@ class TestWfptFull(unittest.TestCase):
              
                 #test pdf + Z + T
                 my_res[3+vvv*4] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z,Z=Z,t=t, T=T,err=err, nT=nT, nZ=nZ)
->>>>>>> parallel2
                 hT = T/nT
                 hZ = Z/nZ
                 for j_t in range(nT+1):
                     t_tag = t-T/2. + hT*j_t
                     for j_z in range(nZ+1):
                         z_tag = z-Z/2. + hZ*j_z
-<<<<<<< HEAD
-                        y_z[j_z] = hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/Z/T    
-=======
                         y_z[j_z] = hddm.wfpt.full_pdf(rt,v=v,V=V*vvv,a=a,z=z_tag,Z=0,t=t_tag, T=0,err=err, nT=0, nZ=0)/Z/T    
->>>>>>> parallel2
                     y_t[j_t] = simps(y_z, x=None, dx=hZ)             
                     res[3+vvv*4] = simps(y_t, x=None, dx=hT)
                 
@@ -273,52 +216,28 @@ class TestWfptFull(unittest.TestCase):
     
            
             z = 1.1
-<<<<<<< HEAD
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
-            z = -0.1
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
-=======
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
             z = -0.1
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
->>>>>>> parallel2
             z = 0.5
             
             z = 0.1
             Z = 0.25
-<<<<<<< HEAD
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
-=======
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
->>>>>>> parallel2
             z = 0.5
         
-        
             a = -0.1
-<<<<<<< HEAD
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
-=======
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
->>>>>>> parallel2
             a = 1.5
             
             t = 0.7
             T = 0
-<<<<<<< HEAD
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)            
-            t = -0.3
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)          
-            t = 0.1
-            T = 0.3
-            self.assertTrue(hddm.wfpt_full.wiener_like_full_single(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
-=======
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)            
             t = -0.3
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)          
             t = 0.1
             T = 0.3
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, T=T,err=1e-10, nT=10, nZ=10)==0)
->>>>>>> parallel2
             t = 0.2
             T = 0.1
 
