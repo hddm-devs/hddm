@@ -167,6 +167,15 @@ class HDDM(kabuki.Hierarchical):
                              plot=self.plot_subjs,
                              value=param.init)
 
+        elif param.name == 'V':
+            return pm.TruncatedNormal(param.full_name,
+                                      a=param.lower,
+                                      b=1000,
+                                      mu=param.root,
+                                      tau=param.tau**-2,
+                                      plot=self.plot_subjs,
+                                      value=param.init)
+
         else:
             return pm.TruncatedNormal(param.full_name,
                                       a=param.lower,
