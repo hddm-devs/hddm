@@ -31,7 +31,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
     params2 = copy(params1)
     params2[param] = params1[param]+change
 
-    data = hddm.generate.gen_rand_cond_data((params1, params2), samples_per_cond=samples)
+    data, tmp = hddm.generate.gen_rand_cond_data((params1, params2), samples_per_cond=samples)
 
     model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
 
@@ -47,6 +47,7 @@ class TestMulti(unittest.TestCase):
         return m
     
     def test_diff_a_subj(self, samples=1000):
+        raise SkipTest("Disabled.")
         m = diff_model('a', subj=True, change=-.5, samples=samples)
         return m
     
@@ -62,10 +63,10 @@ class TestSingle(unittest.TestCase):
 
     def test_HDDM(self, assert_=True):
         #raise SkipTest("Disabled.")
-        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
-            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=False)
+            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
@@ -74,37 +75,13 @@ class TestSingle(unittest.TestCase):
 
     def test_HDDM_group(self, assert_=True):
         raise SkipTest("Disabled.")
-        includes = [['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
             data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
-            model = hddm.model.HDDM(data, include=include, bias=True, is_group_model=True)
+            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=True)
             mc = model.mcmc()
             mc.sample(self.samples, burn=self.burn)
             check_model(mc, params_true, assert_=assert_)
-
-        return mc
-
-    def test_HDDM_full_extended(self, assert_=True):
-        data, params_true = hddm.generate.gen_rand_data(samples=500, include='all')
-
-        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=False)
-        nodes = model.create()
-        #pm.MAP(nodes).fit()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-        return mc
-
-    def test_HDDM_full_extended_subj(self):
-        raise SkipTest("Disabled.")
-        data, params_true = hddm.generate.gen_rand_subj_data(samples=100)
-
-        model = hddm.model.HDDMFullExtended(data, no_bias=False, is_group_model=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(20000, burn=15000)
-        check_model(mc, params_true, assert_=assert_)
 
         return mc
 
