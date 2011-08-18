@@ -649,47 +649,58 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30):
             
     return p/samples
     
-def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None, show=True):
-    if type(nodes) is pm.MCMC:
-        nodes = nodes._dict_container
+def plot_post_pred(model, bins=50, interval=(-5.,5.), samples=30, fname=None, show=True):
+    """
+    plot posterior predective distribution
+    Input:
+        model - hddm model
+        bins - number of bins in the histogram of the data
+        interval - a tuple for the time interval which will be presented
+        samples - number of samples to create the ppd from
+        fname - the file name which the images will be saved to 
+        show - show the plots
+    """
         
-    x = np.arange(range[0],range[1],0.05)
+    x = np.arange(interval[0],interval[1],0.05)
     # Plot data
-    x_data = np.linspace(range[0], range[1], bins)
+    x_data = np.linspace(interval[0], interval[1], bins)
     
     figure_idx = 0
-    for name, node in nodes.iteritems():
-        # Find wfpt node
-        if not name.startswith('wfpt'):
-            continue 
+    wfpt = model.params_dict['wfpt'].child_nodes
+    for (cond, nodes) in wfpt.iteritems():
 
         plt.figure()
         figure_idx += 1
-        if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
-            for i, subj_node in enumerate(node):
+        #group model
+        if model.is_group_model:
+            n_subjs = model._num_subjs
+            for i, subj_node in enumerate(nodes):
                 data = subj_node.value
                 # Walk through nodes and collect traces
                 traces = {}
                 for parent_name, parent_node in subj_node.parents.iteritems():
                     if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
                         continue
-                    traces[parent_name] = parent_node.trace()
+                    traces[parent_name] = model.mc.db.trace(parent_node.__name__)[:]
 
                 # Plot that shit ;)
-                plt.subplot(3, int(np.ceil(len(node)/3.)), i+1)
+                plt.subplot(3, int(np.ceil(n_subjs/3.)), i+1)
 
-                empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
+                empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
                 
                 # Plot analytical
-                analytical_dens = pdf_of_post_pred(traces, x=x, interval=interval)
+                analytical_dens = pdf_of_post_pred(traces, x=x)
 
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
-                plt.xlim(range)
-                plt.title("%s (n=%d). idx: %i" %(name, len(data), i))
+                plt.xlim(interval)
+                plt.title("subj %i. (n=%d)" %(model._subjs[i], len(data)))
+            
+            plt.suptitle(cond)
 
         else:
+            node = nodes
             data = node.value
             # Walk through nodes and collect traces
             traces = {}
@@ -698,7 +709,7 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None, show=
                         continue
                 traces[parent_name] = parent_node.trace()
             
-            empirical_dens = histogram(data, bins=bins, range=range, density=True)[0]
+            empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
             plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
 
             # Plot analytical
@@ -706,8 +717,8 @@ def plot_post_pred(nodes, bins=50, range=(-5.,5.), samples=30, fname=None, show=
 
             plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
-            plt.xlim(range)
-            plt.title("%s (n=%d)" %(name, len(data)))
+            plt.xlim(interval)
+            plt.title("%s (n=%d)" %(cond, len(data)))
             plt.legend()
             
         if fname is not None:
