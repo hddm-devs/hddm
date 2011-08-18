@@ -12,16 +12,16 @@ class HDDMAntisaccade(HDDM):
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = [Parameter('v',True, lower=-4, upper=0.),
-                       Parameter('v_switch', True, lower=0, upper=4.),
-                       Parameter('a', True, lower=1, upper=4.5),
-                       Parameter('t', True, lower=0., upper=.5, init=0.1),
-                       Parameter('t_switch', True, lower=0.0, upper=1.0, init=0.3),
-                       Parameter('T', True, lower=0, upper=.5, init=.1, default=0, optional=True),
-                       Parameter('V_switch', True, lower=0, upper=2., default=0, optional=True),
-                       Parameter('wfpt', False)]
+        self.params = [Parameter('v', lower=-4, upper=0.),
+                       Parameter('v_switch', lower=0, upper=4.),
+                       Parameter('a', lower=1, upper=4.5),
+                       Parameter('t', lower=0., upper=.5, init=0.1),
+                       Parameter('t_switch', lower=0.0, upper=1.0, init=0.3),
+                       Parameter('T', lower=0, upper=.5, init=.1, default=0, optional=True),
+                       Parameter('V_switch', lower=0, upper=2., default=0, optional=True),
+                       Parameter('wfpt', is_bottom_node=True)]
 
-    def get_rootless_child(self, param, params):
+    def get_bottom_node(self, param, params):
         if param.name == 'wfpt':
             return hddm.likelihoods.WienerAntisaccade(param.full_name,
                                                       value=param.data['rt'],
@@ -74,7 +74,7 @@ class HDDMRegressor(HDDM):
             if type(col_names) is str or (type(col_names) is list and len(col_names) == 1):
                 if type(col_names) is list:
                     col_names = col_names[0]
-                params.append(Parameter('e_%s_%s'%(col_names, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
+                params.append(Parameter('e_%s_%s'%(col_names, effect_on), lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
                                         False,
                                         vars={'col_name':col_names,
@@ -82,9 +82,9 @@ class HDDMRegressor(HDDM):
                                               'e':'e_%s_%s'%(col_names, effect_on)}))
             elif len(col_names) == 2:
                 for col_name in col_names:
-                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
+                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
                 params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
-                                        True, lower=-3., upper=3., init=0, no_childs=self.use_root_for_effects))
+                                        True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
                                         False,
                                         vars={'col_name0': col_names[0],
@@ -100,7 +100,7 @@ class HDDMRegressor(HDDM):
 
         return params
 
-    def get_rootless_child(self, param, params):
+    def get_bottom_node(self, param, params):
         """Generate the HDDM."""
         if param.name.startswith('e_inst'):
             if not param.vars.has_key('inter'):

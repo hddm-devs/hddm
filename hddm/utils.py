@@ -37,7 +37,7 @@ def flip_errors(data):
 
 def set_proposal_sd(mc, tau=.1):
     for var in mc.variables:
-        if var.__name__.endswith('tau'):
+        if var.__name__.endswith('var'):
             # Change proposal SD
             mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
 
@@ -813,13 +813,13 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
         if hm.is_group_model:
             for i in range(hm._num_subjs):
                 print "--- Results for subj %d ---" % (hm._subjs[i])
-                nodes = [x[i] for x in hm.params_include['wfpt'].child_nodes.values()]
+                nodes = [x[i] for x in hm.params_include['wfpt'].subj_nodes.values()]
                 ppd_test((hm, nodes), n_samples, confidence, plot_verbose, verbose)
             return
         #run subjects model
         else:
             model = hm
-            nodes = model.params_include['wfpt'].child_nodes.values()
+            nodes = model.params_include['wfpt'].subj_nodes.values()
     
     #get statistics    
     stats  = _gen_statistics()

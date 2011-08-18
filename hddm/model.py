@@ -83,7 +83,7 @@ class HDDM(kabuki.Hierarchical):
                 however, when the 'response' column codes
                 correct/error.
     
-            plot_tau : bool
+            plot_var : bool
                  Plot group variability parameters when calling pymc.Matplot.plot()
                  (i.e. variance of Normal distribution.)
     
@@ -136,34 +136,34 @@ class HDDM(kabuki.Hierarchical):
         # These boundaries are largely based on a meta-analysis of
         # reported fit values. 
         # See: Matzke & Wagenmakers 2009
-        params = [Parameter('a', True, lower=.3, upper=4),
-                  Parameter('v', True, lower=-10., upper=10.),
-                  Parameter('t', True, lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
-                  Parameter('z', True, lower=.2, upper=0.8, init=.5, 
+        params = [Parameter('a', lower=.3, upper=4),
+                  Parameter('v', lower=-10., upper=10.),
+                  Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
+                  Parameter('z', lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
-                  Parameter('V', True, lower=0., upper=3.5, default=0, 
+                  Parameter('V', lower=0., upper=3.5, default=0, 
                             optional=True),
-                  Parameter('Z', True, lower=0., upper=1.0, init=.1,
+                  Parameter('Z', lower=0., upper=1.0, init=.1,
                             default=0, optional=True),
-                  Parameter('T', True, lower=0., upper=0.8, init=.1, 
+                  Parameter('T', lower=0., upper=0.8, init=.1, 
                             default=0, optional=True),
-                  Parameter('wfpt', False)]
+                  Parameter('wfpt', is_bottom_node=True)]
         
         return params
     
-    def get_child_node(self, param):
+    def get_subj_node(self, param):
         """Create and return a Normal (in case of an effect or
         drift-parameter) or Truncated Normal (otherwise) distribution
-        for 'param' centered around param.root with standard deviation
-        param.tau and initialization value param.init.
+        for 'param' centered around param.group with standard deviation
+        param.var and initialization value param.init.
 
         This is used for the individual subject distributions.
 
         """
         if param.name.startswith('e') or param.name.startswith('v'):
             return pm.Normal(param.full_name,
-                             mu=param.root,
-                             tau=param.tau**-2,
+                             mu=param.group,
+                             tau=param.var**-2,
                              plot=self.plot_subjs,
                              value=param.init)
 
@@ -171,8 +171,8 @@ class HDDM(kabuki.Hierarchical):
             return pm.TruncatedNormal(param.full_name,
                                       a=param.lower,
                                       b=1000,
-                                      mu=param.root,
-                                      tau=param.tau**-2,
+                                      mu=param.group,
+                                      tau=param.var**-2,
                                       plot=self.plot_subjs,
                                       value=param.init)
 
@@ -180,12 +180,12 @@ class HDDM(kabuki.Hierarchical):
             return pm.TruncatedNormal(param.full_name,
                                       a=param.lower,
                                       b=param.upper,
-                                      mu=param.root, 
-                                      tau=param.tau**-2,
+                                      mu=param.group, 
+                                      tau=param.var**-2,
                                       plot=self.plot_subjs,
                                       value=param.init)
     
-    def get_rootless_child(self, param, params):
+    def get_bottom_node(self, param, params):
         """Create and return the wiener likelihood distribution
         supplied in 'param'. 
 
@@ -206,7 +206,7 @@ class HDDM(kabuki.Hierarchical):
                              observed=True)
 
         else:
-            raise KeyError, "Rootless parameter named %s not found." % param.name
+            raise KeyError, "Groupless parameter named %s not found." % param.name
 
 class HDDMContaminant(HDDM):
     """Contaminant HDDM 
@@ -222,9 +222,9 @@ class HDDMContaminant(HDDM):
     def __init__(self, *args, **kwargs):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = self.params[:-1] + \
-                 [Parameter('pi',True, lower=0.01, upper=0.1),
-                  Parameter('x', False), 
-                  Parameter('wfpt', False)]
+                 [Parameter('pi', lower=0.01, upper=0.1),
+                  Parameter('x', is_bottom_node=True), 
+                  Parameter('wfpt', is_bottom_node=True)]
 
         self.cont_res = None
 
@@ -252,7 +252,7 @@ class HDDMContaminant(HDDM):
                     param.init = ez_params[param.name]
 
 
-    def get_rootless_child(self, param, params):
+    def get_bottom_node(self, param, params):
         if param.name == 'wfpt':
             return self.wfpt(param.full_name,
                              value=param.data['rt'].flatten(),
@@ -276,7 +276,7 @@ class HDDMContaminant(HDDM):
             return pm.Bernoulli(param.full_name, p=params['pi'], size=len(param.data['rt']), plot=False, value=outlier)
 
         else:
-            raise KeyError, "Rootless child parameter %s not found" % param.name
+            raise KeyError, "Groupless subj parameter %s not found" % param.name
         
     def cont_report(self, cont_threshold = 0.5, plot= True):
         """Create conaminate report
@@ -315,7 +315,7 @@ class HDDMContaminant(HDDM):
             for cond in conds:
                 print "*********************"
                 print "looking at %s" % cond
-                nodes =hm.params_include['x'].child_nodes[cond]
+                nodes =hm.params_include['x'].subj_nodes[cond]
                 if self.is_group_model:
                     node = nodes[subj_idx]
                 else:
