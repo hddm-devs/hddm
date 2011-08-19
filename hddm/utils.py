@@ -604,7 +604,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30):
+def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30):
     """Calculate posterior predictive probability density function.
 
     :Arguments:
@@ -648,15 +648,18 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30):
         p[:] += map(pdf_full, x)
             
     return p/samples
+
+def pdf_of_post_pred(parent_dict, x):
+    pdf = hddm.likelihoods.wfpt.pdf
+
     
-def plot_post_pred(model, bins=50, interval=(-5.,5.), samples=30, fname=None, show=True):
+def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, show=True):
     """
     plot posterior predective distribution
     Input:
         model - hddm model
         bins - number of bins in the histogram of the data
         interval - a tuple for the time interval which will be presented
-        samples - number of samples to create the ppd from
         fname - the file name which the images will be saved to 
         show - show the plots
     """
@@ -677,20 +680,21 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), samples=30, fname=None, sh
             for i, subj_node in enumerate(nodes):
                 data = subj_node.value
                 # Walk through nodes and collect traces
-                traces = {}
+                parent_dict = {}
                 for parent_name, parent_node in subj_node.parents.iteritems():
-                    if type(parent_node) is int or type(parent_node) is float or type(parent_node) is list or type(parent_node) is pm.ListContainer:
-                        continue
-                    traces[parent_name] = model.mc.db.trace(parent_node.__name__)[:]
+                    if np.isscalar(parent_node):
+                        parent_dict[parent_name] = parent_node
+                    else:
+                        parent_dict[parent_name] = np.mean(model.mc.db.trace(parent_node.__name__)[:])
 
                 # Plot that shit ;)
-                plt.subplot(3, int(np.ceil(n_subjs/3.)), i+1)
+                plt.subplot(n_rows, int(np.ceil(n_subjs/n_rows)), i+1)
 
                 empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
                 
                 # Plot analytical
-                analytical_dens = pdf_of_post_pred(traces, x=x)
+                analytical_dens = hddm.wfpt.pdf_array(x, **parent_dict)
 
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 

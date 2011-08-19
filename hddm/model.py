@@ -165,6 +165,7 @@ class HDDM(kabuki.Hierarchical):
                              mu=param.group,
                              tau=param.var**-2,
                              plot=self.plot_subjs,
+                             trace = self.trace_subjs,
                              value=param.init)
 
         elif param.name == 'V':
@@ -174,6 +175,7 @@ class HDDM(kabuki.Hierarchical):
                                       mu=param.group,
                                       tau=param.var**-2,
                                       plot=self.plot_subjs,
+                                      trace = self.trace_subjs,
                                       value=param.init)
 
         else:
@@ -183,6 +185,7 @@ class HDDM(kabuki.Hierarchical):
                                       mu=param.group, 
                                       tau=param.var**-2,
                                       plot=self.plot_subjs,
+                                      trace = self.trace_subjs,
                                       value=param.init)
     
     def get_bottom_node(self, param, params):
