@@ -660,7 +660,8 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
         model - hddm model
         bins - number of bins in the histogram of the data
         interval - a tuple for the time interval which will be presented
-        fname - the file name which the images will be saved to 
+        n_rows - number of rows in each figure 
+        fname -  the file name which the images will be saved to 
         show - show the plots
     """
         
@@ -669,7 +670,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
     x_data = np.linspace(interval[0], interval[1], bins)
     
     figure_idx = 0
-    wfpt = model.params_dict['wfpt'].child_nodes
+    wfpt = model.params_dict['wfpt'].subj_nodes
     for (cond, nodes) in wfpt.iteritems():
 
         plt.figure()
