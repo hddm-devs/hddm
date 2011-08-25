@@ -761,6 +761,9 @@ def hddm_parents_trace(model, obs_node, idx):
     """
     model.params_include.keys()
     params = {'a':0, 'v': 0, 't':0, 'z': 0.5, 'Z': 0 , 'T': 0 , 'V': 0}
+    if not np.isscalar(idx):
+        for (key, value) in params.iteritems():
+            params[key] = np.ones(len(idx))*value
     #example for local_name:  a,v,t,z....
     #example for parent_full_name: v(['cond1'])3
     for local_name in model.params_include.keys():
@@ -846,13 +849,15 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
         n_samples = int(len_trace // thin)
         res = np.zeros((len(stats),n_samples))
         obs = np.zeros(len(stats))
+        all_params = hddm_parents_trace(model, node, np.arange(0, len_trace, thin))
         #simulate data and compute stats
+        params = {}
         for i in xrange(n_samples):
-            idx = i*thin
             if verbose > 1 and ((i+1) % 100)==0:
                 print "created samples for %d params" % (i+1)
             sys.stdout.flush()
-            params = hddm_parents_trace(model, node, idx)
+            for key in all_params.iterkeys():
+                params[key] = all_params[key][i]
             samples = hddm.generate.gen_rts(params, len(node.value), dt=1e-3,method='cdf')
             for i_stat in xrange(len(stats)):
                 res[i_stat][i] = stats[i_stat]['func'](samples)
