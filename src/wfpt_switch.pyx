@@ -41,7 +41,7 @@ cdef double wfpt_gsl(double x, void * params):
     t_switch = (<double_ptr> params)[7]
     T = (<double_ptr> params)[8]
 
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
+    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
 
     return f
 
@@ -175,7 +175,7 @@ cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, doub
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -253,6 +253,6 @@ cdef double wfpt_gsl_precomp(double x, void * params):
 
     global acc, spline
 
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc)
+    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * gsl_spline_eval(spline, x*a, acc)
 
     return f
