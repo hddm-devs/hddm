@@ -4,8 +4,19 @@ import pymc as pm
 from kabuki import Parameter
 import numpy as np
 import matplotlib.pyplot as plt
+import hddm.wfpt_switch
 
-class HDDMAntisaccade(HDDM):
+def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
+    """Log-likelihood for the simple DDM switch model"""
+    logp = hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+    return logp
+
+WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                            logp=wiener_like_antisaccade,
+                                            dtype=np.float,
+                                            mv=True)
+
+class HDDMSwitch(HDDM):
     def __init__(self, data, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
         
@@ -23,18 +34,18 @@ class HDDMAntisaccade(HDDM):
 
     def get_bottom_node(self, param, params):
         if param.name == 'wfpt':
-            return hddm.likelihoods.WienerAntisaccade(param.full_name,
-                                                      value=param.data['rt'],
-                                                      instruct=param.data['instruct'],
-                                                      v=params['v'],
-                                                      v_switch=params['v_switch'],
-                                                      V_switch=self.get_node('V_switch',params),
-                                                      a=params['a'],
-                                                      z=.5,
-                                                      t=params['t'],
-                                                      t_switch=params['t_switch'],
-                                                      T=self.get_node('T',params),
-                                                      observed=True)
+            return WienerAntisaccade(param.full_name,
+                                     value=param.data['rt'],
+                                     instruct=param.data['instruct'],
+                                     v=params['v'],
+                                     v_switch=params['v_switch'],
+                                     V_switch=self.get_node('V_switch',params),
+                                     a=params['a'],
+                                     z=.5,
+                                     t=params['t'],
+                                     t_switch=params['t_switch'],
+                                     T=self.get_node('T',params),
+                                     observed=True)
         else:
             raise TypeError, "Parameter named %s not found." % param.name
 

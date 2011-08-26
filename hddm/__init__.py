@@ -10,6 +10,10 @@ from model import *
 from utils import plot_posteriors, plot_post_pred
 
 import wfpt
+try:
+    import wfpt_switch
+except:
+    pass
 
 from kabuki.utils import load_csv, save_csv
 

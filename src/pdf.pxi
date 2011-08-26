@@ -1,3 +1,8 @@
+#cython: embedsignature=True
+#cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
+
 cimport cython
 
 include "integrate.pxi"
@@ -17,8 +22,6 @@ cdef extern from "math.h" nogil:
     double fabs(double)
     double M_PI
 
-
-@cython.cdivision(True)
 cdef double ftt_01w(double tt, double w, double err) nogil:
     """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
     and implementation of Navarro & Fuss, 2009.
@@ -58,12 +61,10 @@ cdef double ftt_01w(double tt, double w, double err) nogil:
 
     return p
 
-@cython.cdivision(True)
 cdef inline double prob_ub(double v, double a, double z) nogil:
     """Probability of hitting upper boundary."""
     return (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
 
-@cython.cdivision(True)
 cdef double pdf(double x, double v, double a, double w, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z) using the method
     and implementation of Navarro & Fuss, 2009.
@@ -77,7 +78,6 @@ cdef double pdf(double x, double v, double a, double w, double err) nogil:
     # convert to f(t|v,a,w)
     return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
 
-@cython.cdivision(True)
 cdef double pdf_V(double x, double v, double V, double a, double z, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method    
     and implementation of Navarro & Fuss, 2009.
@@ -95,7 +95,6 @@ cdef double pdf_V(double x, double v, double V, double a, double z, double err) 
     # convert to f(t|v,a,w)
     return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
 
-@cython.cdivision(True)
 cpdef double full_pdf(double x, double v, double V, double a, double
                       z, double Z, double t, double T, double err, int
                       nT=2, int nZ=2, bint use_adaptive=1, double

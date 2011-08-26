@@ -1,4 +1,5 @@
-#!/usr/bin/python 
+#cython: embedsignature=True
+#cython: cdivision=True
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based directly
 # on the following code by Navarro & Fuss:
@@ -14,9 +15,8 @@ from copy import copy
 import numpy as np
 cimport numpy as np
 
-import scipy.interpolate
-
 cimport cython
+from cython.parallel import *
 
 include "gsl/gsl.pxi"
 include "pdf.pxi"
@@ -29,7 +29,7 @@ cdef extern from "stdlib.h":
     void* malloc(size_t size)
     void* realloc(void* ptr, size_t size)
     
-cdef double wfpt_gsl(double x, void * params):
+cdef double wfpt_gsl(double x, void * params) nogil:
     cdef double rt, v, v_switch, a, z, t, t_switch, f, T
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
@@ -41,18 +41,18 @@ cdef double wfpt_gsl(double x, void * params):
     t_switch = (<double_ptr> params)[7]
     T = (<double_ptr> params)[8]
 
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
+    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
 
     return f
 
 
-cpdef double calc_drift_dens_T(double x, double t, double v, double a, double z, double T):
+cdef double calc_drift_dens_T(double x, double t, double v, double a, double z, double T) nogil:
     if T < 1e-4:
         return calc_drift_dens(x,t,v,a,z,False)
     else:
         return 1/T * (calc_drift_dens(x,t+T/2,v,a,z,True) - calc_drift_dens(x,t-T/2,v,a,z,True))
 
-cpdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t):
+cdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t) nogil:
     cdef int N=30
     cdef int n=0
     cdef int got_zero = 0
@@ -67,8 +67,8 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
         else:
             # Indefinite integral over t
             divisor = (-0.5*M_PI**2*n**2/a**2 - 0.5*v**2)
-            if divisor == 0:
-                print n, a, v
+            #if divisor == 0:
+            #    print n, a, v
             term = sin(n*M_PI*z/a) * sin(n*M_PI*x/a) * (exp(-.5*(v**2 + (n**2*M_PI**2)/a**2)*t) / divisor)
         # Start counting after N terms
         if fabs(term) < 1e-6 and n > N:
@@ -76,15 +76,15 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
         
         summed += term
         n+=1
-        if term == -np.inf or term == +np.inf:
-            print x, t, v, a, z, n, term
-            return 0
+        #if term == -np.inf or term == +np.inf:
+            #print x, t, v, a, z, n, term
+            #return 0
         
     return 2 * exp(v*(x-z)) * summed
     
-cpdef double pdf_post_switch(double rt, double v, double v_switch,
+cdef double pdf_post_switch(double rt, double v, double v_switch,
                              double V_switch, double a, double z, double t,
-                             double t_switch, double T, double err):
+                             double t_switch, double T, double err) nogil:
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
@@ -109,7 +109,7 @@ cpdef double pdf_post_switch(double rt, double v, double v_switch,
 
     return result
 
-cpdef pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+cdef double pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
     cdef double p
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
@@ -127,7 +127,7 @@ cpdef pdf_switch(double rt, int instruct, double v, double v_switch, double V_sw
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -136,12 +136,13 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray instruct, 
     if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
         return -np.inf
         
-    for i from 0 <= i < size:
+    for i in prange(size, nogil=True):
         p = pdf_switch(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
-            return -np.inf
-        if p < 0:
-            print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T
+            with gil:
+                return -np.inf
+        #if p < 0:
+        #    print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T
         sum_logp += log(p)
 
 
@@ -157,7 +158,7 @@ cdef double *eval_dens
 cdef gsl_interp_accel *acc 
 cdef gsl_spline *spline
 
-cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+cdef double pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
     cdef double p
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
@@ -175,7 +176,7 @@ cdef pdf_switch_precomp(double rt, int instruct, double v, double v_switch, doub
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -196,7 +197,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     spline = gsl_spline_alloc(gsl_interp_cspline, evals)
 
     # Compute density
-    for x from 0 <= x < evals:
+    for x in prange(evals, nogil=True):
         eval_dens[x] = a * (<double>x/(evals-1))
         drift_density[x] = calc_drift_dens_T(eval_dens[x], t_switch, v, a, z*a, T)
         #if drift_density[x] == 0:
@@ -205,10 +206,11 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     # Init spline
     gsl_spline_init(spline, eval_dens, drift_density, evals)
 
-    for i from 0 <= i < size:
+    for i in prange(size, nogil=True):
         p = pdf_switch_precomp(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
-            return -np.inf
+            with gil:
+                return -np.inf
         sum_logp += log(p)
 
     gsl_spline_free (spline)
@@ -216,7 +218,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray in
     
     return sum_logp
 
-cdef double pdf_post_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err):
+cdef double pdf_post_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err) nogil:
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
@@ -240,7 +242,7 @@ cdef double pdf_post_switch_precomp(double rt, double v, double v_switch, double
 
     return result
 
-cdef double wfpt_gsl_precomp(double x, void * params):
+cdef double wfpt_gsl_precomp(double x, void * params) nogil:
     cdef double rt, v, v_switch, V_switch, a, z, t, t_switch, f
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
@@ -253,6 +255,6 @@ cdef double wfpt_gsl_precomp(double x, void * params):
 
     global acc, spline
 
-    f = pdf_V_sign(rt, v_switch, V_switch, a, x, t+t_switch, 1e-4) * gsl_spline_eval(spline, x*a, acc)
+    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * gsl_spline_eval(spline, x*a, acc)
 
     return f

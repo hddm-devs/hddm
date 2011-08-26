@@ -13,6 +13,7 @@ from numpy import array, zeros, empty, ones
 
 
 import hddm
+
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
@@ -42,14 +43,6 @@ def flip_errors(data):
     
     return data
 
-def set_proposal_sd(mc, tau=.1):
-    for var in mc.variables:
-        if var.__name__.endswith('var'):
-            # Change proposal SD
-            mc.use_step_method(pm.Metropolis, var, proposal_sd = tau)
-
-    return
-    
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
     Compute the histogram of a set of data.
@@ -211,152 +204,7 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
         else:
             return n, bins
 
-def difference_prior(delta):
-    # See Wagenmakers et al 2010, equation 14
-    if type(delta) is int:
-        if delta<=0:
-            return 1+delta
-        else:
-            return 1-delta
-    else:
-        out = copy(delta)
-        out[delta <= 0] = 1+delta[delta <= 0]
-        out[delta > 0] = 1-delta[delta > 0]
-        return out
-
-def uniform(x, lower, upper):
-    y = np.ones(x.shape, dtype=np.float)/(upper-lower)
-    #y[x<lower] = 0.
-    #y[x>upper] = 0.
-
-    return y
-
-def interpolate_trace(x, trace, range=(-1,1), bins=100):
-    """Create a histogram over a trace and interpolate to get a
-    smoothed distribution.
-
-    """
-    import scipy.interpolate
-
-    x_histo = np.linspace(range[0], range[1], bins)
-    histo = histogram(trace, bins=bins, range=range, density=True)[0]
-    interp = scipy.interpolate.InterpolatedUnivariateSpline(x_histo, histo)(x)
-
-    return interp
-
-def savage_dickey(pos, post_trace, range=(-.3,.3), bins=40, prior_trace=None, prior_y=None):
-    """Calculate Savage-Dickey density ratio test, see Wagenmakers et
-    al. 2010 at http://dx.doi.org/10.1016/j.cogpsych.2009.12.001
-
-    :Arguments:
-        pos : float
-            position at which to calculate the savage dickey ratio at (i.e. the spec hypothesis you want to test)
-        post_trace : numpy.array
-            trace of the posterior distribution
-    
-    :Optional:
-         prior_trace : numpy.array
-             trace of the prior distribution
-         prior_y : numpy.array
-             prior density pos
-         range : (int,int)
-             Range over which to interpolate and plot
-         bins : int
-             Over how many bins to compute the histogram over
-    
-    :Note: Supply either prior_trace or prior_y.
-
-    """
-    
-    x = np.linspace(range[0], range[1], bins)
-
-    if prior_trace is not None:
-        # Prior is provided as a trace -> histogram + interpolate
-        prior_pos = interpolate_trace(pos, prior_trace, range=range, bins=bins)
-
-    elif prior_y is not None:
-        # Prior is provided as a density for each point -> interpolate to retrieve positional density
-        import scipy.interpolate
-        prior_pos = prior_y #scipy.interpolate.InterpolatedUnivariateSpline(x, prior_y)(pos)
-    else:
-        assert ValueError, "Supply either prior_trace or prior_y keyword arguments"
-
-    # Histogram and interpolate posterior trace at SD position
-    posterior_pos = interpolate_trace(pos, post_trace, range=range, bins=bins)
-
-    # Calculate Savage-Dickey density ratio at pos
-    sav_dick = prior_pos / posterior_pos
-
-    return sav_dick
-
-def gen_stats(traces, alpha=0.05, batches=100):
-    """Useful helper function to generate stats() on a loaded database
-    object.  Pass the db._traces list.
-
-    """
-    
-    from pymc.utils import hpd, quantiles
-    from pymc import batchsd
-
-    stats = {}
-    for name, trace_obj in traces.iteritems():
-        trace = np.squeeze(np.array(trace_obj(), float))
-        stats[name] = {'standard deviation': trace.std(0),
-                       'mean': trace.mean(0),
-                       '%s%s HPD interval' % (int(100*(1-alpha)),'%'): hpd(trace, alpha),
-                       'mc error': batchsd(trace, batches),
-                       'quantiles': quantiles(trace)}
-
-    return stats
-
-
-def plot_savage_dickey(range=(-1,1), bins=100):
-    x = np.linspace(range[0], range[1], bins)
-    label='posterior'
-            
-    # Histogram and interpolate posterior trace
-    posterior = interpolate_trace(x, post_trace, range=range, bins=bins)
-
-    plt.plot(x, posterior, label=label, lw=2.)
-    if plot_prior:
-        if prior_trace is not None:
-            # Histogram and interpolate prior trace
-            prior_y = interpolate_trace(x, prior_trace, range=range, bins=bins)
-        plt.plot(x, prior_y, label='prior', lw=2.)
-    plt.axvline(x=0, lw=1., color='k')
-    plt.ylim(ymin=0)
-
-def R_hat(samples):
-    n, num_chains = samples.shape # n=num_samples
-    chain_means = np.mean(samples, axis=1)
-    # Calculate between-sequence variance
-    between_var = n * np.var(chain_means, ddof=1)
-
-    chain_var = np.var(samples, axis=1, ddof=1)
-    within_var = np.mean(chain_var)
-
-    marg_post_var = ((n-1.)/n) * within_var + (1./n) * between_var # 11.2
-    R_hat_sqrt = np.sqrt(marg_post_var/within_var)
-
-    return R_hat_sqrt
-
-def test_chain_convergance(models):
-    # Calculate R statistic to check for chain convergance (Gelman at al 2004, 11.4)
-    params = models[0].group_params
-    R_hat_param = {}
-    for param_name in params.iterkeys():
-        # Calculate mean for each chain
-        num_samples = models[0].group_params[param_name].trace().shape[0] # samples
-        num_chains = len(models)
-        samples = np.empty((num_chains, num_samples))
-        for i,model in enumerate(models):
-            samples[i,:] = model.group_params[param_name].trace()
-
-        R_hat_param[param_name] = R_hat(samples)
-
-    return R_hat_param
-
-def parse_config_file(fname, mcmc=False, data=None):
+def parse_config_file(fname, map=True, mcmc=False, data=None):
     import kabuki
     import os.path
 
@@ -453,6 +301,10 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "Creating model..."
     m = hddm.HDDM(data, include=include, bias=bias, is_group_model=is_group_model, depends_on=depends)
 
+    if map:
+        print "Finding good initial values..."
+        m.map()
+        
     m.mcmc().sample(samples, burn=burn, thin=thin, verbose=verbose)
 
     print kabuki.analyze.print_stats(m.mc.stats())
@@ -461,7 +313,8 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        plot_post_pred(m.nodes, fname=model_name, show=False)
+        print "Plotting posterior predictive to %s..." % (model_name+'.png')
+        plot_post_pred(m, fname=model_name, show=False)
         
     if plot_posteriors:
         hddm.plot_posteriors(m)
@@ -611,7 +464,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30):
+def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=False):
     """Calculate posterior predictive probability density function.
 
     :Arguments:
@@ -622,6 +475,8 @@ def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30
         args : tuple
             Tuple of arguments to be supplied to the pdf 
             [default=('v', 'V', 'a','z','Z', 't','T')].
+        use_mean : bool
+            Whether to use the mean of or samples from the trace.
 
     """
     if pdf is None:
@@ -645,31 +500,47 @@ def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30
     if not traces.has_key('z'):
         traces['z'] = np.ones(trace_len)*.5
 
-    for i in np.round(np.linspace(0, trace_len-1, samples)):
+    if use_mean:
         valued_args = []
         # Construct arguments from traces to be passed to pdf
         for arg in args:
-            valued_args.append(traces[arg][i])
-        pdf_full = lambda x: pdf(x, *valued_args)
+            valued_args.append(np.mean(traces[arg][:]))
+        dens = pdf(x, *valued_args)
+
+    else:
+        for i in np.round(np.linspace(0, trace_len-1, samples)):
+            valued_args = []
+            # Construct arguments from traces to be passed to pdf
+            for arg in args:
+                valued_args.append(traces[arg][i])
+            pdf_full = lambda x: pdf(x, *valued_args)
         
-        p[:] += map(pdf_full, x)
-            
-    return p/samples
+            p[:] += map(pdf_full, x)
+        dens = p/samples
+        
+    return dens
 
-def pdf_of_post_pred(parent_dict, x):
-    pdf = hddm.likelihoods.wfpt.pdf
-
-    
-def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, show=True):
+def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fname=None, show=True, use_mean=True):
     """
     plot posterior predective distribution
-    Input:
-        model - hddm model
-        bins - number of bins in the histogram of the data
-        interval - a tuple for the time interval which will be presented
-        n_rows - number of rows in each figure 
-        fname -  the file name which the images will be saved to 
-        show - show the plots
+    
+    :Arguments:
+        model : HDDM object
+             hddm model
+
+    :Optional:
+        bins : int
+             number of bins in the histogram of the data
+        interval : (int, int)
+             a tuple for the time interval which will be presented
+        n_rows : int
+             number of rows in each figure 
+        fname : str
+             the file name which the images will be saved to 
+        use_mean : bool
+            Whether to use the mean of or samples from the trace.
+        show : bool
+             show the plots
     """
         
     x = np.arange(interval[0],interval[1],0.05)
@@ -679,7 +550,6 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
     figure_idx = 0
     wfpt = model.params_dict['wfpt'].subj_nodes
     for (cond, nodes) in wfpt.iteritems():
-
         plt.figure()
         figure_idx += 1
         #group model
@@ -688,12 +558,11 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
             for i, subj_node in enumerate(nodes):
                 data = subj_node.value
                 # Walk through nodes and collect traces
-                parent_dict = {}
+                traces = {}
                 for parent_name, parent_node in subj_node.parents.iteritems():
-                    if np.isscalar(parent_node):
-                        parent_dict[parent_name] = parent_node
-                    else:
-                        parent_dict[parent_name] = np.mean(model.mc.db.trace(parent_node.__name__)[:])
+                    if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                        continue
+                    traces[parent_name] = parent_node.trace()
 
                 # Plot that shit ;)
                 plt.subplot(n_rows, int(np.ceil(n_subjs/n_rows)), i+1)
@@ -702,10 +571,10 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
                 
                 # Plot analytical
-                analytical_dens = hddm.wfpt.pdf_array(x, **parent_dict)
+                analytical_dens = pdf_of_post_pred(traces, x=x, samples=samples, use_mean=use_mean)
 
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
-
+ 
                 plt.xlim(interval)
                 plt.title("subj %i. (n=%d)" %(model._subjs[i], len(data)))
             
@@ -718,7 +587,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
             traces = {}
             for parent_name, parent_node in node.parents.iteritems():
                 if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
-                        continue
+                    continue
                 traces[parent_name] = parent_node.trace()
             
             empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
@@ -738,29 +607,6 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
 
     if show:
         plt.show()
-
-def remove_outliers(nodes, depends_on=None, cutoff_prob=.4):
-    raise NotImplemented, "Coming in v0.2."
-    if depends_on is None:
-        depends_on = []
-
-    if type(nodes) is pm.MCMC:
-        nodes = nodes._dict_container
-    
-    for name, node in nodes.iteritems():
-        # Select x nodes that code for contaminant
-        if not name.startswith('x'):
-            continue
-        
-        # Select appropriate wfpt node
-        wfpt_node = nodes[name.replace('x', 'wfpt')]
-
-        if type(node) is np.ndarray or type(node) is pm.ArrayContainer: # Group model
-            for cont, wfpt in zip(node, wfpt_node):
-                data = wfpt.value
-                contaminant_prob = np.mean(subj_node.trace(), axis=0)
-        else:
-            raise NotImplemented, "TODO, use group model."
         
 def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the

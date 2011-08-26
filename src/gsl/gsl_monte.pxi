@@ -1,6 +1,6 @@
 cdef extern from "gsl/gsl_monte.h":
   ctypedef struct gsl_monte_function:
-    double (*f)(double * x_array, size_t dim, void * params)
+    double (*f) (double * x_array, size_t dim, void * params) nogil
     size_t dim
     void * params
 
@@ -11,25 +11,25 @@ cdef extern from "gsl/gsl_monte_plain.h":
                               double xl[],  double xu[], \
                               size_t dim, size_t calls, gsl_rng * r,  \
                              gsl_monte_plain_state * state, \
-                             double *result, double *abserr)
+                             double *result, double *abserr) nogil
   
-  gsl_monte_plain_state* gsl_monte_plain_alloc(size_t dim)
+  gsl_monte_plain_state* gsl_monte_plain_alloc(size_t dim) nogil
   
-  int gsl_monte_plain_init(gsl_monte_plain_state* state)
+  int gsl_monte_plain_init(gsl_monte_plain_state* state) nogil
   
-  void gsl_monte_plain_free (gsl_monte_plain_state* state)
+  void gsl_monte_plain_free (gsl_monte_plain_state* state) nogil
 
 cdef extern from "gsl/gsl_monte_miser.h":
   
   ctypedef struct gsl_monte_miser_state
   
-  int gsl_monte_miser_integrate(gsl_monte_function * f, double xl[],  double xh[],  size_t dim, size_t calls, gsl_rng *r,  gsl_monte_miser_state* state, double *result, double *abserr)
+  int gsl_monte_miser_integrate(gsl_monte_function * f, double xl[],  double xh[],  size_t dim, size_t calls, gsl_rng *r,  gsl_monte_miser_state* state, double *result, double *abserr) nogil
   
-  gsl_monte_miser_state* gsl_monte_miser_alloc(size_t dim)
+  gsl_monte_miser_state* gsl_monte_miser_alloc(size_t dim) nogil
   
-  int gsl_monte_miser_init(gsl_monte_miser_state* state)
+  int gsl_monte_miser_init(gsl_monte_miser_state* state) nogil
   
-  void gsl_monte_miser_free(gsl_monte_miser_state* state)
+  void gsl_monte_miser_free(gsl_monte_miser_state* state) nogil
   
   # vegas
 cdef extern from "gsl/gsl_monte_vegas.h":
@@ -41,10 +41,10 @@ cdef extern from "gsl/gsl_monte_vegas.h":
   ctypedef struct gsl_monte_vegas_state:
     double chisq
   
-  int gsl_monte_vegas_integrate(gsl_monte_function * f, double xl[], double xu[], size_t dim, size_t calls, gsl_rng * r, gsl_monte_vegas_state *state, double* result, double* abserr)
+  int gsl_monte_vegas_integrate(gsl_monte_function * f, double xl[], double xu[], size_t dim, size_t calls, gsl_rng * r, gsl_monte_vegas_state *state, double* result, double* abserr) nogil
   
-  gsl_monte_vegas_state* gsl_monte_vegas_alloc(size_t dim)
+  gsl_monte_vegas_state* gsl_monte_vegas_alloc(size_t dim) nogil
   
-  int gsl_monte_vegas_init(gsl_monte_vegas_state* state)
+  int gsl_monte_vegas_init(gsl_monte_vegas_state* state) nogil
   
-  void gsl_monte_vegas_free (gsl_monte_vegas_state* state)
+  void gsl_monte_vegas_free (gsl_monte_vegas_state* state) nogil

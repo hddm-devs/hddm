@@ -69,30 +69,30 @@ cdef extern from "gsl/gsl_rng.h":
   cdef gsl_rng_type *gsl_rng_default
   unsigned long int gsl_rng_default_seed
   
-  gsl_rng *gsl_rng_alloc ( gsl_rng_type * T)
-  int gsl_rng_memcpy (gsl_rng * dest, gsl_rng * src)
-  gsl_rng *gsl_rng_clone ( gsl_rng * r)
+  gsl_rng *gsl_rng_alloc ( gsl_rng_type * T) nogil
+  int gsl_rng_memcpy (gsl_rng * dest, gsl_rng * src) nogil
+  gsl_rng *gsl_rng_clone ( gsl_rng * r) nogil
   
-  void gsl_rng_free (gsl_rng * r)
+  void gsl_rng_free (gsl_rng * r) nogil
   
-  void gsl_rng_set ( gsl_rng * r, unsigned long int seed)
-  unsigned long int gsl_rng_max ( gsl_rng * r)
-  unsigned long int gsl_rng_min ( gsl_rng * r)
-  char *gsl_rng_name ( gsl_rng * r)
+  void gsl_rng_set ( gsl_rng * r, unsigned long int seed) nogil
+  unsigned long int gsl_rng_max ( gsl_rng * r) nogil
+  unsigned long int gsl_rng_min ( gsl_rng * r) nogil
+  char *gsl_rng_name ( gsl_rng * r) nogil
   
-  int gsl_rng_fread (FILE * stream, gsl_rng * r)
-  int gsl_rng_fwrite (FILE * stream, gsl_rng * r)
+  int gsl_rng_fread (FILE * stream, gsl_rng * r) nogil
+  int gsl_rng_fwrite (FILE * stream, gsl_rng * r) nogil
   
-  size_t gsl_rng_size ( gsl_rng * r)
-  void * gsl_rng_state ( gsl_rng * r)
+  size_t gsl_rng_size ( gsl_rng * r) nogil
+  void * gsl_rng_state ( gsl_rng * r) nogil
   
-  void gsl_rng_print_state ( gsl_rng * r)
+  void gsl_rng_print_state ( gsl_rng * r) nogil
   
-  gsl_rng_type * gsl_rng_env_setup ()
+  gsl_rng_type * gsl_rng_env_setup () nogil
   
-  unsigned long int gsl_rng_get ( gsl_rng * r)
-  double gsl_rng_uniform ( gsl_rng * r)
-  double gsl_rng_uniform_pos ( gsl_rng * r)
-  unsigned long int gsl_rng_uniform_int ( gsl_rng * r, unsigned long int n)
+  unsigned long int gsl_rng_get ( gsl_rng * r) nogil
+  double gsl_rng_uniform ( gsl_rng * r) nogil
+  double gsl_rng_uniform_pos ( gsl_rng * r) nogil
+  unsigned long int gsl_rng_uniform_int ( gsl_rng * r, unsigned long int n) nogil
   
   

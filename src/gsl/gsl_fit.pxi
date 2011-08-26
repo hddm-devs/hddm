@@ -6,7 +6,7 @@ cdef extern from "gsl/gsl_fit.h":
                        size_t n,
                       double * c0, double * c1, 
                       double * cov00, double * cov01, double * cov11, 
-                      double * sumsq)
+                      double * sumsq) nogil
   
   
   int gsl_fit_wlinear ( double * x,  size_t xstride,
@@ -14,33 +14,33 @@ cdef extern from "gsl/gsl_fit.h":
                         double * y,  size_t ystride,
                         size_t n, double * c0, double * c1, 
                        double * cov00, double * cov01, double * cov11, 
-                       double * chisq)
+                       double * chisq) nogil
   
   int gsl_fit_linear_est ( double x, double c0,  double c1, 
                        double c00,  double c01,  double c11,
-                      double *y, double *y_err)
+                      double *y, double *y_err) nogil
   
   
   int gsl_fit_mul ( double * x,  size_t xstride,
                     double * y,  size_t ystride,
-                    size_t n, double * c1, double * cov11, double * sumsq)
+                    size_t n, double * c1, double * cov11, double * sumsq) nogil
   
   int gsl_fit_wmul ( double * x,  size_t xstride,
                      double * w,  size_t wstride,
                      double * y,  size_t ystride, 
-  		   size_t n, double * c1, double * cov11, double * sumsq)
+  		   size_t n, double * c1, double * cov11, double * sumsq) nogil
   
   
   int gsl_fit_mul_est ( double x, double c1, double c11,
-                   double *y, double *y_err)
+                   double *y, double *y_err) nogil
   
   
   
   int gsl_fit_poly ( double * x, double * w, double * y, size_t n,
-                    double * c, size_t m, double * chisq)
+                    double * c, size_t m, double * chisq) nogil
   
   int gsl_fit_fns ( double * A, double * w, double * y, 
-                   size_t n, double * c, size_t m, double * chisq)
+                   size_t n, double * c, size_t m, double * chisq) nogil
   
-  int gsl_fit_linear_nd (double * m, double * y, double * w)
+  int gsl_fit_linear_nd (double * m, double * y, double * w) nogil
   

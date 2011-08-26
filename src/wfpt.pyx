@@ -1,4 +1,7 @@
-#!/usr/bin/python 
+#cython: embedsignature=True
+#cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
@@ -19,8 +22,6 @@ from cython.parallel import *
 
 include "pdf.pxi"
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def pdf_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t, double T, double err, bint logp=0, int nT=2, int nZ=2, bint use_adaptive=1, double simps_err=1e-3):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
@@ -34,15 +35,14 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double
     else:
         return y
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t, 
                 double T, double err, int nT= 10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
+    cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
 
-    for i in prange(x.shape[0], nogil=True):
+    for i in prange(size, nogil=True):
         p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         if p == 0:
@@ -52,11 +52,9 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, doub
 
     return sum_logp
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, V, a, z, Z, t, T, double err, multi=None):
-    cdef unsigned int size = x.shape[0]
-    cdef unsigned int i
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
     cdef double p = 0
 
     if multi is None:
@@ -74,19 +72,18 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, V, a, z, Z, t, T, double 
                               err))
         return p
     
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t, \
                      double T, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
     
     cdef np.ndarray[double, ndim=1] x = np.arange(cdf_lb, cdf_ub, dt)
     cdef np.ndarray[double, ndim=1] l_cdf = np.empty(x.shape[0], dtype=np.double)
     cdef double pdf, rt
+    cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i, j
     cdef int idx
     
     l_cdf[0] = 0
-    for i in range(x.shape[0]):
+    for i in range(size):
         pdf = full_pdf(x[i], v, V, a, z, Z, 0, 0, 1e-4)
         l_cdf[i] = l_cdf[i-1] + pdf
     
@@ -108,9 +105,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
         rts[i] = rt
     return rts
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, ndim=1] cont_x, double v, \
+def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1] cont_x, double v, \
                                  double V, double a, double z, double Z, double t, double T, double t_min, \
                                  double t_max, double err, int nT= 10, int nZ=10, bint use_adaptive=1, \
                                  double simps_err=1e-8):
@@ -119,15 +114,16 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] value, np.ndarray[int, nd
 
     Reference: Lee, Vandekerckhove, Navarro, & Tuernlinckx (2007)
     """
+    cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
     cdef int n_cont = np.sum(cont_x)
     cdef int pos_cont = 0
     
-    for i in prange(value.shape[0], nogil=True):
+    for i in prange(size, nogil=True):
         if cont_x[i] == 0:
-            p = full_pdf(value[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
+            p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
             if p == 0:
                 with gil:
                     return -np.inf

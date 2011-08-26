@@ -1,8 +1,12 @@
+#cython: embedsignature=True
+#cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
+
 import numpy as np
 cimport numpy as np
 cimport cython
 
-@cython.cdivision(True)
 cdef double simpson_1D(double x, double v, double V, double a, double z, double t, double err, 
                         double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT) nogil:
     #assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
@@ -38,7 +42,6 @@ cdef double simpson_1D(double x, double v, double V, double a, double z, double 
 
     return ((ht+hz) * S / 3)
 
-@cython.cdivision(True)
 cdef double simpson_2D(double x, double v, double V, double a, double z, double t, double err, double lb_z, double ub_z, int nZ, double lb_t, double ub_t, int nT) nogil:
     #assert ((nZ&1)==0 and (nT&1)==0), "nT and nZ have to be even"
     #assert ((ub_t-lb_t)*(ub_z-lb_z)>0 and (nZ*nT)>0), "the function is defined for 2D-integration only, lb_t: %f, ub_t %f, lb_z %f, ub_z %f, nZ: %d, nT %d" % (lb_t, ub_t, lb_z, ub_z, nZ, nT)
@@ -64,7 +67,6 @@ cdef double simpson_2D(double x, double v, double V, double a, double z, double 
 
     return (ht * S / 3)
 
-@cython.cdivision(True)
 cdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z, double t, double pdf_err,
                                  double lb_z, double ub_z, double lb_t, double ub_t, double ZT, double simps_err,
                                  double S, double f_beg, double f_end, double f_mid, int bottom) nogil:
@@ -107,7 +109,6 @@ cdef double adaptiveSimpsonsAux(double x, double v, double V, double a, double z
                                  z_c, ub_z, t_c, ub_t, ZT, simps_err/2,
                                  Sright, f_mid, f_end, fe, bottom-1)
 
-@cython.cdivision(True)
 cdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z, double t, 
                               double pdf_err, double lb_z, double ub_z, double lb_t, double ub_t, 
                               double simps_err, int maxRecursionDepth) nogil:
@@ -137,7 +138,6 @@ cdef double adaptiveSimpsons_1D(double x, double v, double V, double a, double z
                                  S, f_beg, f_end, f_mid, maxRecursionDepth)
     return res
 
-@cython.cdivision(True)
 cdef double adaptiveSimpsonsAux_2D(double x, double v, double V,
                                    double a, double z, double t, double
                                    pdf_err, double err_1d, double lb_z,
@@ -176,7 +176,6 @@ cdef double adaptiveSimpsonsAux_2D(double x, double v, double V,
                                  Sright, f_mid, f_end, fe, maxRecursionDepth_Z, bottom-1)
                              
                                  
-@cython.cdivision(True)        
 cdef double adaptiveSimpsons_2D(double x, double v, double V, double a, double z, double t,  
                                  double pdf_err, double lb_z, double ub_z, double lb_t, double ub_t, 
                                  double simps_err, int maxRecursionDepth_Z, int maxRecursionDepth_T) nogil:

@@ -46,8 +46,8 @@ def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
     return hddm.wfpt.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
             
 WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                          logp=wiener_like_multi,
-                                          dtype=np.float)
+                                      logp=wiener_like_multi,
+                                      dtype=np.float)
 
 def wiener_like(value, v, V, z, Z, t, T, a, err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
     """Log-likelihood for the full DDM using the interpolation method"""
@@ -71,15 +71,6 @@ WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        mv=False)
 
 
-def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
-    """Log-likelihood for the simple DDM switch model"""
-    logp = hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
-    return logp
-
-WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                            logp=wiener_like_antisaccade,
-                                            dtype=np.float,
-                                            mv=True)
 
 ################################
 # Linear Ballistic Accumulator
