@@ -6,6 +6,7 @@ from scipy.stats import scoreatpercentile
 import sys
 
 import hddm
+
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
 except:
@@ -454,7 +455,7 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        plot_post_pred(m.nodes, fname=model_name, show=False)
+        plot_post_pred(m, fname=model_name, show=False)
         
     if plot_posteriors:
         hddm.plot_posteriors(m)
@@ -604,7 +605,7 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30):
+def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=False):
     """Calculate posterior predictive probability density function.
 
     :Arguments:
@@ -615,6 +616,8 @@ def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30
         args : tuple
             Tuple of arguments to be supplied to the pdf 
             [default=('v', 'V', 'a','z','Z', 't','T')].
+        use_mean : bool
+            Whether to use the mean of or samples from the trace.
 
     """
     if pdf is None:
@@ -638,31 +641,47 @@ def pdf_of_post_pred_from_traces(traces, pdf=None, args=None, x=None, samples=30
     if not traces.has_key('z'):
         traces['z'] = np.ones(trace_len)*.5
 
-    for i in np.round(np.linspace(0, trace_len-1, samples)):
+    if use_mean:
         valued_args = []
         # Construct arguments from traces to be passed to pdf
         for arg in args:
-            valued_args.append(traces[arg][i])
-        pdf_full = lambda x: pdf(x, *valued_args)
+            valued_args.append(np.mean(traces[arg][:]))
+        dens = pdf(x, *valued_args)
+
+    else:
+        for i in np.round(np.linspace(0, trace_len-1, samples)):
+            valued_args = []
+            # Construct arguments from traces to be passed to pdf
+            for arg in args:
+                valued_args.append(traces[arg][i])
+            pdf_full = lambda x: pdf(x, *valued_args)
         
-        p[:] += map(pdf_full, x)
-            
-    return p/samples
+            p[:] += map(pdf_full, x)
+        dens = p/samples
+        
+    return dens
 
-def pdf_of_post_pred(parent_dict, x):
-    pdf = hddm.likelihoods.wfpt.pdf
-
-    
-def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, show=True):
+def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fname=None, show=True, use_mean=True):
     """
     plot posterior predective distribution
-    Input:
-        model - hddm model
-        bins - number of bins in the histogram of the data
-        interval - a tuple for the time interval which will be presented
-        n_rows - number of rows in each figure 
-        fname -  the file name which the images will be saved to 
-        show - show the plots
+    
+    :Arguments:
+        model : HDDM object
+             hddm model
+
+    :Optional:
+        bins : int
+             number of bins in the histogram of the data
+        interval : (int, int)
+             a tuple for the time interval which will be presented
+        n_rows : int
+             number of rows in each figure 
+        fname : str
+             the file name which the images will be saved to 
+        use_mean : bool
+            Whether to use the mean of or samples from the trace.
+        show : bool
+             show the plots
     """
         
     x = np.arange(interval[0],interval[1],0.05)
@@ -672,7 +691,6 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
     figure_idx = 0
     wfpt = model.params_dict['wfpt'].subj_nodes
     for (cond, nodes) in wfpt.iteritems():
-
         plt.figure()
         figure_idx += 1
         #group model
@@ -681,12 +699,11 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
             for i, subj_node in enumerate(nodes):
                 data = subj_node.value
                 # Walk through nodes and collect traces
-                parent_dict = {}
+                traces = {}
                 for parent_name, parent_node in subj_node.parents.iteritems():
-                    if np.isscalar(parent_node):
-                        parent_dict[parent_name] = parent_node
-                    else:
-                        parent_dict[parent_name] = np.mean(model.mc.db.trace(parent_node.__name__)[:])
+                    if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
+                        continue
+                    traces[parent_name] = parent_node.trace()
 
                 # Plot that shit ;)
                 plt.subplot(n_rows, int(np.ceil(n_subjs/n_rows)), i+1)
@@ -695,10 +712,10 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
                 
                 # Plot analytical
-                analytical_dens = hddm.wfpt.pdf_array(x, **parent_dict)
+                analytical_dens = pdf_of_post_pred(traces, x=x, samples=samples, use_mean=use_mean)
 
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
-
+ 
                 plt.xlim(interval)
                 plt.title("subj %i. (n=%d)" %(model._subjs[i], len(data)))
             
@@ -711,7 +728,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, fname=None, sh
             traces = {}
             for parent_name, parent_node in node.parents.iteritems():
                 if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
-                        continue
+                    continue
                 traces[parent_name] = parent_node.trace()
             
             empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
