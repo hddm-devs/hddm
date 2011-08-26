@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 import pymc as pm
 from scipy.stats import scoreatpercentile
 import sys
+import table_print
+try:
+    from termcolor import colored
+except ImportError:
+    colored = lambda x:x
+from numpy import array, zeros, empty, ones
+
 
 import hddm
 try:
@@ -795,14 +802,15 @@ def _gen_statistics():
         
     return statistics
 
-def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 1):
+def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 1,
+             table_width = 10):
     """
     Test statistics over the posterior predictive distibution.
 
     :Arguments:
         hm : HDDM model
         n_samples : int 
-            number of samples to take out of the trace
+            number of samples to use for the ppd test
         confidence : int
             confidence interval
         stats : set
@@ -810,24 +818,32 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
         plot_verbose : int
             0 - no plots
             1 - plot only the statistics that fall outside of the confidencde interval (default)
-            2 - plot everything
+            2 - plot everything          
+        verbose : verbosity of output. 
     """
     
+    #if input is tuple than hm is a group model and we are in a recursion
     if type(hm) == type(()):
-        nodes = hm[1]
+        #get conds, nodes, and hm 
+        conds = [x[0] for x in hm[1]]
+        nodes = [x[1] for x in hm[1]]
         model = hm[0]
     else:
         #break group model to subjects models
         if hm.is_group_model:
+            group_res = [None]*hm._num_subjs
             for i in range(hm._num_subjs):
                 print "--- Results for subj %d ---" % (hm._subjs[i])
-                nodes = [x[i] for x in hm.params_include['wfpt'].subj_nodes.values()]
-                ppd_test((hm, nodes), n_samples, confidence, plot_verbose, verbose)
-            return
-        #run subjects model
+                nodes_tuple = [(item[0], item[1][i]) for item in hm.params_include['wfpt'].subj_nodes.items()]
+                group_res[i] = ppd_test((hm, nodes_tuple), n_samples, confidence, plot_verbose, verbose)
+            
+            print_ppd_test_result_for_group(group_res, table_width)
+            return group_res
+        
+        #run subject model
         else:
             model = hm
-            nodes = model.params_include['wfpt'].subj_nodes.values()
+            (conds, nodes) = model.params_include['wfpt'].subj_nodes.items()
     
     #get statistics    
     stats  = _gen_statistics()
@@ -835,12 +851,17 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
     conf_lb = ((100 - confidence)/ 2.)
     conf_ub = (100 - conf_lb)
     
+    subj_res = {}
+    
     # get statistics from simulated data
-    for node in nodes:
+    for i_node in xrange(len(nodes)):
+        node = nodes[i_node]
+        cond = conds[i_node]
+        subj_res[cond] = {}
         name = node.__name__
 
-        if verbose>0:
-            print "computing stats for %s" % name
+        if verbose>=2:
+            print "computing stats for %s" % cond
         
         #when loading from the db, the trace is not assign to the variables
         #so I need to change the way I read from the trace. beheichs 
@@ -853,7 +874,7 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
         #simulate data and compute stats
         params = {}
         for i in xrange(n_samples):
-            if verbose > 1 and ((i+1) % 100)==0:
+            if verbose >= 4 and ((i+1) % 100)==0:
                 print "created samples for %d params" % (i+1)
             sys.stdout.flush()
             for key in all_params.iterkeys():
@@ -869,17 +890,126 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 1, verbose = 
         
         #compute quantile statistic and plot it if needed
         for i_stat in range(len(stats)):
+            stats_name = stats[i_stat]['name']            
             out_conf = False
             p = sum(res[i_stat] < obs[i_stat])*1./len(res[i_stat]) * 100
             if (p < conf_lb) or (p>conf_ub):
-                print "*!*!* %s :: %s %.1f" % (name,stats[i_stat]['name'], p )
+                if verbose >= 3:
+                    print "*!*!* %s :: %s %.1f" % (name,stats[i_stat]['name'], p )
                 out_conf = True 
             #plot that shit
             if (plot_verbose==2) or (out_conf and plot_verbose >= 1):
                 pm.Matplot.gof_plot(res[i_stat], obs[i_stat], nbins=30, name=name, verbose=0)
                 plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
+            #save results to subj_res
+            subj_res[cond][stats_name] = {}
+            subj_res[cond][stats_name]['obs'] = obs[i_stat]
+            subj_res[cond][stats_name]['mean'] = np.mean(res[i_stat])
+            subj_res[cond][stats_name]['median'] = np.median(res[i_stat])
+            subj_res[cond][stats_name]['lb'] = scoreatpercentile(res[i_stat], conf_lb)
+            subj_res[cond][stats_name]['ub'] = scoreatpercentile(res[i_stat], conf_ub)
+            subj_res[cond][stats_name]['p'] = p
+            subj_res[cond][stats_name]['out_conf'] = out_conf
+
+    plt.show()
+    if verbose >= 1:
+        print_ppd_test_result_for_subject(subj_res)                
+    return subj_res
+
+def print_ppd_test_result_for_subject(subj_res, width = 10):
+    """
+    print results of ppd_test for single subject
+    Input:
+        subj_res - the results from ppd_test of a single subject or 
+                an element from the output of ppd_test for a group model 
+    """
+    
+    conds = sorted(subj_res.keys())
+    stats = sorted(subj_res[conds[0]].keys())
+    n_conds = len(conds)
+    
+    #create table for print
+    table = [None] * (len(stats)+1)
+    table[0] = [''] + conds + ['sum']
+    total_conf = np.zeros(n_conds, dtype=np.int)
+    for i in range(len(stats)):
+        p = [str(subj_res[x][stats[i]]['p']) for x in conds]
+        out_conf = [subj_res[x][stats[i]]['out_conf'] for x in conds]
+        total_conf += out_conf
         
-        plt.show()                        
+        table[i+1] = [stats[i]] + [None]*(n_conds+1)
+        for j in range(n_conds):
+            if out_conf[j]:
+                table[i+1][j+1] = p[j]
+            else:
+                table[i+1][j+1] = '-'
+        table[i+1][-1] = str(sum(out_conf))
+    
+    table.append(['sum'] + map(str, list(total_conf)))
+
+    #print
+    print "\n"
+    print "----------------  stats v.s. conds ----------------\n" 
+    print "(quantiles of the statistics that fell out side of the confidence interval)\n"
+    print table_print.indent(table, hasHeader=True,
+                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+    
+def print_ppd_test_result_for_group(group_res, width = 10):
+    """
+    print results of ppd_test for group model
+    Input:
+        group_res - the results from ppd_test of a group model
+    """
+    
+    conds = sorted(group_res[0].keys())
+    stats = sorted(group_res[0][conds[0]].keys())
+    n_conds = len(conds)
+    n_stats = len(stats)
+    n_subjs = len(group_res)
+    
+    #compute summary tables
+    sum_stats = np.zeros((n_stats, n_conds), dtype=np.int)
+    sum_subjs =  np.zeros((n_subjs, n_conds), dtype=np.int)
+    for i_subj in range(n_subjs):
+        for i_stat in range(n_stats):
+            out_conf = [group_res[i_subj][x][stats[i_stat]]['out_conf'] for x in conds]
+            sum_stats[i_stat] += array(out_conf) 
+            sum_subjs[i_subj] += array(out_conf)
+
+
+    #print stats table
+    stats_table = [None] * (n_stats+1)
+    stats_table[0] = [''] + conds + ['sum']    
+    for i_stat in range(n_stats):
+        stats_table[i_stat+1] = [stats[i_stat]] + [None]*(n_conds+1)
+        stats_table[i_stat+1][1:-1] = [str(x).replace('0','-') for x in sum_stats[i_stat]]
+        stats_table[i_stat+1][-1] = str(sum(sum_stats[i_stat]))
+        
+    stats_table.append(['sum'] + map(str, sum_stats.sum(0)))
+    
+    print "\n"
+    print "----------------  stats v.s. conds ----------------"
+    print "(number of statistics that fell out side of the confidence interval)\n"
+    print table_print.indent(stats_table, hasHeader=True,
+                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+    
+    #print subjs table
+    subjs_table = [None] * (n_subjs+1)
+    subjs_table[0] = [''] + conds + ['sum']
+    for i_subj in range(n_subjs):
+        subjs_table[i_subj+1] = [str(i_subj)] + [None]*(n_conds+1)
+        subjs_table[i_subj+1][1:-1] = [str(x).replace('0','-') for x in sum_subjs[i_subj]]
+        subjs_table[i_subj+1][-1] = str(sum(sum_subjs[i_subj]))
+        
+    subjs_table.append(['sum'] + map(str, sum_subjs.sum(0)))
+   
+    print "\n"
+    print "----------------  subjects v.s. conds ----------------"
+    print "(number of statistics that fell out side of the confidence interval)\n"
+    print table_print.indent(subjs_table, hasHeader=True,
+                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+    
+    
 
 
 def plot_posteriors(model):                 
