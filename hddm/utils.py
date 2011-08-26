@@ -197,7 +197,7 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
         else:
             return n, bins
 
-def parse_config_file(fname, mcmc=False, data=None):
+def parse_config_file(fname, map=True, mcmc=False, data=None):
     import kabuki
     import os.path
 
@@ -294,6 +294,10 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "Creating model..."
     m = hddm.HDDM(data, include=include, bias=bias, is_group_model=is_group_model, depends_on=depends)
 
+    if map:
+        print "Finding good initial values..."
+        m.map()
+        
     m.mcmc().sample(samples, burn=burn, thin=thin, verbose=verbose)
 
     print kabuki.analyze.print_stats(m.mc.stats())
@@ -302,7 +306,7 @@ def parse_config_file(fname, mcmc=False, data=None):
     print "DIC: %f" % m.mc.dic
 
     if plot_rt_fit:
-        print "Plotting posterior predictive to %s..." % model_name+'.png'
+        print "Plotting posterior predictive to %s..." % (model_name+'.png')
         plot_post_pred(m, fname=model_name, show=False)
         
     if plot_posteriors:
