@@ -1,14 +1,14 @@
 cdef extern from "gsl/gsl_odeiv.h":
   
   ctypedef struct gsl_odeiv_system:
-    int (* function) (double t,  double y[], double dydt[], void * params)
-    int (* jacobian) (double t,  double y[], double * dfdy, double dfdt[], void * params)
+    int (* function) (double t,  double y[], double dydt[], void * params) nogil
+    int (* jacobian) (double t,  double y[], double * dfdy, double dfdt[], void * params) nogil
     size_t dimension
     void * params
   
   # no:
-  #define GSL_ODEIV_FN_EVAL(S,t,y,f)  (*((S)->function))(t,y,f,(S)->params)
-  #define GSL_ODEIV_JA_EVAL(S,t,y,dfdy,dfdt)  (*((S)->jacobian))(t,y,dfdy,dfdt,(S)->params)
+  #define GSL_ODEIV_FN_EVAL(S,t,y,f) (*((S)->function))(t,y,f,(S) nogil->params) nogil
+  #define GSL_ODEIV_JA_EVAL(S,t,y,dfdy,dfdt)(*((S)->jacobian))(t,y,dfdy,dfdt,(S)->params) nogil
   
   
   
@@ -29,14 +29,14 @@ cdef extern from "gsl/gsl_odeiv.h":
   gsl_odeiv_step_type *gsl_odeiv_step_gear2
   
   
-  gsl_odeiv_step * gsl_odeiv_step_alloc( gsl_odeiv_step_type * T, size_t dim)
-  int  gsl_odeiv_step_reset(gsl_odeiv_step * s)
-  void gsl_odeiv_step_free(gsl_odeiv_step * s)
+  gsl_odeiv_step * gsl_odeiv_step_alloc( gsl_odeiv_step_type * T, size_t dim) nogil
+  int  gsl_odeiv_step_reset(gsl_odeiv_step * s) nogil
+  void gsl_odeiv_step_free(gsl_odeiv_step * s) nogil
   
-  char * gsl_odeiv_step_name( gsl_odeiv_step *)
-  unsigned int gsl_odeiv_step_order( gsl_odeiv_step * s)
+  char * gsl_odeiv_step_name( gsl_odeiv_step *) nogil
+  unsigned int gsl_odeiv_step_order( gsl_odeiv_step * s) nogil
   
-  int  gsl_odeiv_step_apply(gsl_odeiv_step *, double t, double h, double y[], double yerr[],  double dydt_in[], double dydt_out[],  gsl_odeiv_system * dydt)
+  int  gsl_odeiv_step_apply(gsl_odeiv_step *, double t, double h, double y[], double yerr[],  double dydt_in[], double dydt_out[],  gsl_odeiv_system * dydt) nogil
   
   
   ctypedef struct gsl_odeiv_control_type
@@ -47,22 +47,22 @@ cdef extern from "gsl/gsl_odeiv.h":
     GSL_ODEIV_HADJ_NIL = 0  
     GSL_ODEIV_HADJ_INC = 1  
   
-  gsl_odeiv_control * gsl_odeiv_control_alloc( gsl_odeiv_control_type * T)
-  int gsl_odeiv_control_init(gsl_odeiv_control * c, double eps_abs, double eps_rel, double a_y, double a_dydt)
-  void gsl_odeiv_control_free(gsl_odeiv_control * c)
-  int gsl_odeiv_control_hadjust (gsl_odeiv_control * c, gsl_odeiv_step * s,  double y0[],  double yerr[],  double dydt[], double * h)
-  char * gsl_odeiv_control_name( gsl_odeiv_control * c)
+  gsl_odeiv_control * gsl_odeiv_control_alloc( gsl_odeiv_control_type * T) nogil
+  int gsl_odeiv_control_init(gsl_odeiv_control * c, double eps_abs, double eps_rel, double a_y, double a_dydt) nogil
+  void gsl_odeiv_control_free(gsl_odeiv_control * c) nogil
+  int gsl_odeiv_control_hadjust (gsl_odeiv_control * c, gsl_odeiv_step * s,  double y0[],  double yerr[],  double dydt[], double * h) nogil
+  char * gsl_odeiv_control_name( gsl_odeiv_control * c) nogil
   
   
-  gsl_odeiv_control * gsl_odeiv_control_standard_new(double eps_abs, double eps_rel, double a_y, double a_dydt)
-  gsl_odeiv_control * gsl_odeiv_control_y_new(double eps_abs, double eps_rel)
-  gsl_odeiv_control * gsl_odeiv_control_yp_new(double eps_abs, double eps_rel)
+  gsl_odeiv_control * gsl_odeiv_control_standard_new(double eps_abs, double eps_rel, double a_y, double a_dydt) nogil
+  gsl_odeiv_control * gsl_odeiv_control_y_new(double eps_abs, double eps_rel) nogil
+  gsl_odeiv_control * gsl_odeiv_control_yp_new(double eps_abs, double eps_rel) nogil
   
-  gsl_odeiv_control * gsl_odeiv_control_scaled_new(double eps_abs, double eps_rel, double a_y, double a_dydt,  double scale_abs[], size_t dim)
+  gsl_odeiv_control * gsl_odeiv_control_scaled_new(double eps_abs, double eps_rel, double a_y, double a_dydt,  double scale_abs[], size_t dim) nogil
   
   ctypedef struct gsl_odeiv_evolve
   
-  gsl_odeiv_evolve * gsl_odeiv_evolve_alloc(size_t dim)
-  int gsl_odeiv_evolve_apply(gsl_odeiv_evolve *, gsl_odeiv_control * con, gsl_odeiv_step * step,  gsl_odeiv_system * dydt, double * t, double t1, double * h, double y[])
-  int gsl_odeiv_evolve_reset(gsl_odeiv_evolve *)
-  void gsl_odeiv_evolve_free(gsl_odeiv_evolve *)
+  gsl_odeiv_evolve * gsl_odeiv_evolve_alloc(size_t dim) nogil
+  int gsl_odeiv_evolve_apply(gsl_odeiv_evolve *, gsl_odeiv_control * con, gsl_odeiv_step * step,  gsl_odeiv_system * dydt, double * t, double t1, double * h, double y[]) nogil
+  int gsl_odeiv_evolve_reset(gsl_odeiv_evolve *) nogil
+  void gsl_odeiv_evolve_free(gsl_odeiv_evolve *) nogil
