@@ -26,9 +26,9 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
     for node in nodes:
         if node.__name__ not in params_true:
             continue # Skip non-existent params
-        trace = node.trace()[:]
-        est = np.mean(trace)
         name = node.__name__
+        trace = model.db.trace(name)[:]
+        est = np.mean(trace)        
         truth = params_true[name]
         lb = (50 - conf_interval/2.)
         lb_score = scoreatpercentile(trace, lb)

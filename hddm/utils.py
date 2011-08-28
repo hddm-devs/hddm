@@ -689,7 +689,9 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         #run subject model
         else:
             model = hm
-            (conds, nodes) = model.params_include['wfpt'].subj_nodes.items()
+            items = model.params_include['wfpt'].subj_nodes.items()
+            conds = [x[0] for x in items]
+            nodes = [x[1] for x in items]
     
     #get statistics    
     stats  = _gen_statistics()
