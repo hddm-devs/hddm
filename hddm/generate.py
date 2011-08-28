@@ -339,24 +339,33 @@ def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     
     return (data, params)
 
-def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, num_subjs=10, noise=.05):
+def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None, 
+                            num_subjs=10, include = (), noise=.05):
     """Generate simulated RTs with multiple conditions.
     
         :Optional:
-            params_set : list
-                List of dicts, for each condition one 
-                dict of parameters.
-    
-                Default:
-    
-                [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
-                 {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
+            cond_params :  a dictionary of params
+                if cond_params[key] is a list then a new condition
+                is created for each item in the list
+                for instance,
+                if cond_params = {'a':2, 't':0.3, 'v':[1,2], ...}
+                then two set of params will be created:
+                    1) - {'a':2, 't':0.3, 'v': 1, ...}
+                    2) - {'a':2, 't':0.3, 'v': 2, ...}
+
+                if cond_params is None then it is genreated randomly 
 
             samlpes_per_cond : int
                 How many samples to generate for each condition.
+
+            n_conds : int
+                number of conditions
             
             num_subjs : int
                 How many subjects to generate data for
+
+            include: tuple
+                which extra parameters to include
 
             noise : float
                 Amount of noise to add to each parameter
@@ -364,41 +373,85 @@ def gen_rand_cond_subj_data(params_set=None, samples_per_cond=100, conds=None, n
         :Returns:
             data : array 
                 RTs
-            params: list 
+            params_subj: list
                 parameter values for each condition
+            combined_params: dictionary
+                a dictionary used by check_model
     
     """
     # Create RT data
-    if params_set is None:
-        params_set = [{'v': .5, 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2},
-                      {'v': 1., 'V': 0., 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2}]
+    if cond_params == None:
+        cond_params, original_combined_params = gen_cond_params_v(n_conds, include=include)
 
-    params_orig = copy(params_set)
+
     data_out = []
     params_subj = []
+    keys = cond_params.keys()
+    combined_params = {}
+    #loop over subjects
     for subj_idx in range(num_subjs):
-        params = copy(params_orig)
-        params_out = []
-        for param in params:
-            param = _add_noise(param, noise)
-            param_out = {}
-            for name,value in param.iteritems():
-                param_out[name+str(subj_idx)] = value
-            params_out.append(param_out)
-
-        data_subj, dummy = gen_rand_cond_data(params_set=params,
+        i_cond_params = _add_noise(cond_params, noise, include=include)
+        i_combined_params = cond_params_to_combined_params(i_cond_params)
+        #create combined params
+        for (key, value) in i_combined_params.iteritems():
+            combined_params[key + str(subj_idx)] = value
+        #create data for subject
+        data_subj, dummy1, dummy2 = gen_rand_cond_data(cond_params=i_cond_params,
                                               samples_per_cond=samples_per_cond,
-                                              conds=conds,
+                                              n_conds=n_conds,
                                               subj_idx=subj_idx)
 
         data_out.append(data_subj)
-        params_subj.append(params_out)
+        params_subj.append(i_cond_params)
         
-    return rec.stack_arrays(data_out, usemask=False), params_subj
+    return rec.stack_arrays(data_out, usemask=False), params_subj, combined_params
 
-def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_idx=None):
-    if conds is None:
-        conds = range(len(params_set))
+
+def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None, 
+                       include = (), subj_idx=None):
+    """Generate simulated RTs with multiple conditions.
+    
+        :Input:
+            cond_params :  a dictionary of params
+                if cond_params[key] is a list then a new condition
+                is created for each item in the list
+                for instance,
+                if cond_params = {'a':2, 't':0.3, 'v':[1,2], ...}
+                then two set of params will be created:
+                    1) - {'a':2, 't':0.3, 'v': 1, ...}
+                    2) - {'a':2, 't':0.3, 'v': 2, ...}
+
+                if cond_params is None then it is genreated randomly 
+
+            samlpes_per_cond : int
+                How many samples to generate for each condition.
+
+            n_conds : int
+                number of conditions
+
+            include: tuple
+                which extra parameters to include
+
+            noise : float
+                Amount of noise to add to each parameter
+
+        :Returns:
+            data : array 
+                RTs
+            cond_params: dictionary
+                see Input
+            combined_params: dictionary
+                a dictionary used by check_model
+
+    """
+
+    if cond_params == None:
+        cond_params, combined_params = gen_cond_params_v(n_conds)
+    else:
+        combined_params = cond_params_to_combined_params(cond_params)
+    params_set = cond_params_to_params_set(cond_params)
+
+    conds = range(n_conds)
     
     if type(conds[0]) is str:
         cond_type = 'S12'
@@ -427,10 +480,72 @@ def gen_rand_cond_data(params_set=None, samples_per_cond=100, conds=None, subj_i
 
     data_out = rec.stack_arrays(arrays, usemask=False)
 
-    if params_set[0].has_key('pi'):
-        add_contaminate_data(data_out, params_set[0])
+    if cond_params.has_key('pi'):
+        add_contaminate_data(data_out, cond_params)
 
-    return data_out, params_set
+    return data_out, cond_params, combined_params
+
+def gen_cond_params_v(n_conds = 3, params = None, include = ()):
+    """
+    generate params set with multiple conditions for v
+    Input:
+        n_conds - number of conditions
+        params - the basic params. if not supplied than it is randomly generated
+        include : tuple
+            Which inter-trial variability
+            parameters to include ('V', 'Z', 'T')
+
+    output:
+        cond_params : list of params
+        combined_params: all the params combined together in one dictionary
+            (used to check the model)
+    """
+    if params == None:
+        params = hddm.generate.gen_rand_params(include)
+
+    cond_params = copy(params)
+    combined_params = copy(params)
+    del combined_params['v']
+    cond_params['v'] = np.linspace(min(0.5,params['v']/2) , max(params['v']*2, 3), n_conds)
+    for i in range(n_conds):
+        combined_params['v(%d,)'%i] = cond_params['v'][i]
+
+    return cond_params, combined_params
+
+def cond_params_to_combined_params(cond_params):
+    """
+    transform cond_params to combined_params
+    (combine_params are used by check_model)
+    """
+    cond_params = copy(cond_params)
+    combined_params = copy(cond_params)
+    n_conds = max([len(x) for x in cond_params.values() if not np.isscalar(x)] + [1])    
+    dep_keys = [x for x in cond_params.keys() if not np.isscalar(cond_params[x])]
+    for key in dep_keys:
+        del combined_params[key]
+        for i in range(n_conds):
+            combined_params['%s(%d,)'%(key, i)] = cond_params[key][i]
+
+    return combined_params
+    
+
+
+def cond_params_to_params_set(cond_params):
+    """
+    transform cond_params to params_set
+
+    """
+
+    n_conds = max([len(x) for x in cond_params.values() if not np.isscalar(x)] + [1])
+    params_set = [None]*(n_conds)
+    for i_cond in range(n_conds):
+        params_set[i_cond] = {}
+        for key in cond_params.iterkeys():
+            if np.isscalar(cond_params[key]):
+                params_set[i_cond][key] = cond_params[key]
+            else:
+                params_set[i_cond][key] = cond_params[key][i_cond]
+    return params_set
 
 def _add_noise(params, noise=.1, include=()):
     """Add individual noise to each parameter.
@@ -455,7 +570,7 @@ def _add_noise(params, noise=.1, include=()):
     params = copy(params)
 
     for param, value in params.iteritems():
-        if param in include or param in ('v','a','z','t'):
+        if param in include or param in ('v','a','t'):
             params[param] = np.random.normal(loc=value, scale=noise)
 
     return params
