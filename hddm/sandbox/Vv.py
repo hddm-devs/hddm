@@ -23,12 +23,12 @@ class HDDMVv(HDDM):
         # reported fit values. 
         # See: Matzke & Wagenmakers 2009
         params = [Parameter('a', lower=.3, upper=4),
-                  Parameter('v', lower=-15., upper=15.),
+                  Parameter('v', lower=-15., upper=15., init = 0.),
                   Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
                   Parameter('z', lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
-                  Parameter('Va', lower=0, upper=10, init=1, create_subj_nodes = False),
-                  Parameter('Vb', lower=0, upper=10, init=0, create_subj_nodes=False),
+                  Parameter('Va', lower=0, upper=2., init=1, create_subj_nodes = False),
+                  Parameter('Vb', lower=0, upper=2., init=0, create_subj_nodes=False),
                   Parameter('V', lower=0., upper=3.5, is_bottom_node = True),
                   Parameter('Z', lower=0., upper=1.0, init=.1,
                             default=0, optional=True),
