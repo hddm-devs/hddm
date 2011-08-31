@@ -662,8 +662,8 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         stats : set
             a set of statistics to check over the sampled data. if stats is None thedefault set of statistics is created
         plot_verbose : int
-            0 - no plots
-            1 - plot only the statistics that fall outside of the confidencde interval (default)
+            0 - no plots (default)
+            1 - plot only the statistics that fall outside of the confidencde interval 
             2 - plot everything          
         verbose : verbosity of output. 
     """
