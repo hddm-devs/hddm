@@ -13,8 +13,9 @@ debug_here = Tracer()
 class HDDMVv(HDDM):
     """
     """
-    def __init__(self, data, Vv_per_subj = True, **kwargs):
+    def __init__(self, data, Vv_per_subj = True, Vv_exp = True, **kwargs):
         self.Vv_per_subj = Vv_per_subj
+        self.Vv_exp = Vv_exp
         super(HDDMVv, self).__init__(data, **kwargs)
 
 
@@ -29,9 +30,9 @@ class HDDMVv(HDDM):
                   Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
                   Parameter('z', lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
-                  Parameter('Va', lower=0, upper=2., init=1,
+                  Parameter('Va', lower=0, upper=3., init=0.1,
                             create_subj_nodes=self.Vv_per_subj),
-                  Parameter('Vb', lower=0, upper=2., init=0,
+                  Parameter('Vb', lower=0, upper=3., init=0.1,
                             create_subj_nodes=self.Vv_per_subj),
                   Parameter('V', lower=0., upper=3.5, is_bottom_node = True),
                   Parameter('Z', lower=0., upper=1.0, init=.1,
@@ -44,7 +45,13 @@ class HDDMVv(HDDM):
 
     def get_bottom_node(self, param, params):
         if param.name == 'V':
-            V_func = lambda Va=params['Va'], Vb=params['Vb'], v=params['v']: Va*np.abs(v) + Vb
+            Va = params['Va']
+            Vb = params['Vb']
+            v = params['v']
+            if self.Vv_exp:
+                V_func = lambda Va=Va, Vb=Vb, v=v: Va*np.exp(abs(v)*Vb)
+            else:
+                V_func = lambda Va=Va, Vb=Vb, v=v: Va*np.abs(v) + Vb
             return pm.Lambda(param.full_name, V_func, plot=self.plot_subjs,
                              trace=self.trace_subjs)
             
