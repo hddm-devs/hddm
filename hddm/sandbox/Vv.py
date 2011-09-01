@@ -13,8 +13,10 @@ debug_here = Tracer()
 class HDDMVv(HDDM):
     """
     """
-    def __init__(self, *args, **kwargs):
-        super(HDDMVv, self).__init__(*args, **kwargs)
+    def __init__(self, data, Vv_per_subj = True, **kwargs):
+        self.Vv_per_subj = Vv_per_subj
+        super(HDDMVv, self).__init__(data, **kwargs)
+
 
     def get_params(self):
         """Returns list of model parameters.
@@ -27,8 +29,10 @@ class HDDMVv(HDDM):
                   Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
                   Parameter('z', lower=.2, upper=0.8, init=.5, 
                             default=.5, optional=True),
-                  Parameter('Va', lower=0, upper=2., init=1),
-                  Parameter('Vb', lower=0, upper=2., init=0),
+                  Parameter('Va', lower=0, upper=2., init=1,
+                            create_subj_nodes=self.Vv_per_subj),
+                  Parameter('Vb', lower=0, upper=2., init=0,
+                            create_subj_nodes=self.Vv_per_subj),
                   Parameter('V', lower=0., upper=3.5, is_bottom_node = True),
                   Parameter('Z', lower=0., upper=1.0, init=.1,
                             default=0, optional=True),
