@@ -5,6 +5,7 @@ __docformat__ = 'restructuredtext'
 import likelihoods
 import generate
 import utils
+import sandbox
 
 from model import *
 from utils import plot_posteriors, plot_post_pred

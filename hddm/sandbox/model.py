@@ -4,22 +4,26 @@ import pymc as pm
 from kabuki import Parameter
 import numpy as np
 import matplotlib.pyplot as plt
-import hddm.wfpt_switch
+
+try:
+    import wfpt_switch
+except:
+    pass
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
     """Log-likelihood for the simple DDM switch model"""
-    logp = hddm.wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+    logp = wfpt_switch.wiener_like_antisaccade_precomp(value, np.array(instruct, dtype=np.int32), v, v_switch, V_switch, a, z, t, t_switch, T, err)
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                             logp=wiener_like_antisaccade,
                                             dtype=np.float,
-                                            mv=True)
+                                            mv=False)
 
 class HDDMSwitch(HDDM):
     def __init__(self, data, init=True, **kwargs):
         super(self.__class__, self).__init__(data, **kwargs)
-        
+
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
@@ -70,13 +74,13 @@ class HDDMRegressor(HDDM):
         model = HDDMRegressor(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
         model.mcmc()
         """
-        
+
         self.effects_on = effects_on
 
         self.use_root_for_effects = use_root_for_effects
-        
+
         super(self.__class__, self).__init__(data, **kwargs)
-        
+
     def get_params(self):
         params = []
 
@@ -86,7 +90,7 @@ class HDDMRegressor(HDDM):
                 if type(col_names) is list:
                     col_names = col_names[0]
                 params.append(Parameter('e_%s_%s'%(col_names, effect_on), lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
-                params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on), 
+                params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on),
                                         False,
                                         vars={'col_name':col_names,
                                               'effect_on':effect_on,
@@ -94,9 +98,9 @@ class HDDMRegressor(HDDM):
             elif len(col_names) == 2:
                 for col_name in col_names:
                     params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
-                params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
+                params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on),
                                         True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
-                params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on), 
+                params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on),
                                         False,
                                         vars={'col_name0': col_names[0],
                                               'col_name1': col_names[1],
@@ -126,7 +130,7 @@ class HDDMRegressor(HDDM):
                                                  'e1': params[param.vars['e']],
                                                  'data': param.data[param.vars['col_name']]}, trace=False, plot=self.plot_subjs)
             else:
-                    
+
                 return pm.Deterministic(effect2, param.full_name, param.full_name,
                                         parents={'base': params[param.vars['effect_on']],
                                                  'e1': params[param.vars['e1']],
