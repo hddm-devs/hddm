@@ -5,19 +5,16 @@ import pymc as pm
 from scipy.stats import scoreatpercentile
 import sys
 import table_print
-try:
-    from termcolor import colored
-except ImportError:
-    colored = lambda x:x
 from numpy import array, zeros, empty, ones
 
 
 import hddm
 
 try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    pass
+    from IPython.Debugger import Tracer; 
+except ImportError:
+    from IPython.core.debugger import Tracer; 
+debug_here = Tracer()
 
 
 def flip_errors(data):
@@ -649,23 +646,33 @@ def _gen_statistics():
     return statistics
 
 def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 1,
-             table_width = 10):
+             table_width = 10, labels_dict = None):
     """
     Test statistics over the posterior predictive distibution.
 
     :Arguments:
         hm : HDDM model
+
         n_samples : int 
             number of samples to use for the ppd test
+
         confidence : int
             confidence interval
+
         stats : set
             a set of statistics to check over the sampled data. if stats is None thedefault set of statistics is created
+
         plot_verbose : int
             0 - no plots (default)
             1 - plot only the statistics that fall outside of the confidencde interval 
-            2 - plot everything          
-        verbose : verbosity of output. 
+            2 - plot everything
+
+        verbose : verbosity of output.
+
+        table_width - maximum of width of the table columns
+
+        labels_dict - (optional) a dictionary of labels for the table, where the keys are
+            the different conditions and the values are the labels of table
     """
     
     #if input is tuple than hm is a group model and we are in a recursion
@@ -681,9 +688,12 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
             for i in range(hm._num_subjs):
                 print "--- Results for subj %d ---" % (hm._subjs[i])
                 nodes_tuple = [(item[0], item[1][i]) for item in hm.params_include['wfpt'].subj_nodes.items()]
-                group_res[i] = ppd_test((hm, nodes_tuple), n_samples, confidence, plot_verbose, verbose)
+                group_res[i] = ppd_test((hm, nodes_tuple), n_samples, confidence, 
+                                        plot_verbose=plot_verbose, verbose=verbose,
+                                        table_width=table_width,
+                                        labels_dict=labels_dict)
             
-            print_ppd_test_result_for_group(group_res, table_width)
+            print_ppd_test_result_for_group(group_res, labels_dict, table_width)
             return group_res
         
         #run subject model
@@ -761,10 +771,10 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
 
     plt.show()
     if verbose >= 1:
-        print_ppd_test_result_for_subject(subj_res)                
+        print_ppd_test_result_for_subject(subj_res, labels_dict, table_width)
     return subj_res
 
-def print_ppd_test_result_for_subject(subj_res, width = 10):
+def print_ppd_test_result_for_subject(subj_res, labels_dict = None, width = 10):
     """
     print results of ppd_test for single subject
     Input:
@@ -776,9 +786,15 @@ def print_ppd_test_result_for_subject(subj_res, width = 10):
     stats = sorted(subj_res[conds[0]].keys())
     n_conds = len(conds)
     
+    #create labels
+    if labels_dict == None:
+        labels = conds
+    else:
+        labels = [labels_dict[x] for x in conds]
+    
     #create table for print
     table = [None] * (len(stats)+1)
-    table[0] = [''] + conds + ['sum']
+    table[0] = [''] + labels + ['sum']
     total_conf = np.zeros(n_conds, dtype=np.int)
     for i in range(len(stats)):
         p = [str(subj_res[x][stats[i]]['p']) for x in conds]
@@ -802,7 +818,7 @@ def print_ppd_test_result_for_subject(subj_res, width = 10):
     print table_print.indent(table, hasHeader=True,
                              wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
     
-def print_ppd_test_result_for_group(group_res, width = 10):
+def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
     """
     print results of ppd_test for group model
     Input:
@@ -814,6 +830,12 @@ def print_ppd_test_result_for_group(group_res, width = 10):
     n_conds = len(conds)
     n_stats = len(stats)
     n_subjs = len(group_res)
+
+    #create labels
+    if labels_dict == None:
+        labels = conds
+    else:
+        labels = [labels_dict[x] for x in conds]
     
     #compute summary tables
     sum_stats = np.zeros((n_stats, n_conds), dtype=np.int)
@@ -827,7 +849,7 @@ def print_ppd_test_result_for_group(group_res, width = 10):
 
     #print stats table
     stats_table = [None] * (n_stats+1)
-    stats_table[0] = [''] + conds + ['sum']    
+    stats_table[0] = [''] + labels + ['sum']    
     for i_stat in range(n_stats):
         stats_table[i_stat+1] = [stats[i_stat]] + [None]*(n_conds+1)
         stats_table[i_stat+1][1:-1] = [str(x).replace('0','-') for x in sum_stats[i_stat]]
@@ -843,7 +865,7 @@ def print_ppd_test_result_for_group(group_res, width = 10):
     
     #print subjs table
     subjs_table = [None] * (n_subjs+1)
-    subjs_table[0] = [''] + conds + ['sum']
+    subjs_table[0] = [''] + labels + ['sum']
     for i_subj in range(n_subjs):
         subjs_table[i_subj+1] = [str(i_subj)] + [None]*(n_conds+1)
         subjs_table[i_subj+1][1:-1] = [str(x).replace('0','-') for x in sum_subjs[i_subj]]
