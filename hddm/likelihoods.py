@@ -17,10 +17,10 @@ except:
 
 import hddm
 
-def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max, 
+def wiener_like_contaminant(value, cont_x, v, V, a, z, Z, t, T, t_min, t_max,
                             err, nT, nZ, use_adaptive, simps_err):
     """Log-likelihood for the simple DDM including contaminants"""
-    return hddm.wfpt.wiener_like_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T, 
+    return hddm.wfpt.wiener_like_contaminant(value, cont_x.astype(np.int32), v, V, a, z, Z, t, T,
                                                   t_min, t_max, err, nT, nZ, use_adaptive, simps_err)
 
 WienerContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -44,7 +44,7 @@ def general_WienerCont(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
 def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
     """Log-likelihood for the simple DDM"""
     return hddm.wfpt.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
-            
+
 WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                       logp=wiener_like_multi,
                                       dtype=np.float)
@@ -64,7 +64,7 @@ def general_WienerFullIntrp_variable(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps
                                        logp=_like,
                                        dtype=np.float,
                                        mv=False)
- 
+
 WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        logp=wiener_like,
                                        dtype=np.float,
@@ -84,7 +84,7 @@ def LBA_like(value, a, z, t, V, v0, v1=0., logp=True, normalize_v=False):
     #print a, z, t, v, V
     prob = hddm.lba.lba_like(np.asarray(value, dtype=np.double), z, a, t, V, v0, v1, int(logp), int(normalize_v))
     return prob
-    
+
 LBA = pm.stochastic_from_dist(name='LBA likelihood',
                               logp=LBA_like,
                               dtype=np.float,
@@ -158,10 +158,10 @@ v1: drift-rate of second accumulator
 References:
 ***********
 The simplest complete model of choice response time: linear ballistic accumulation.
-Brown SD, Heathcote A; Cogn Psychol. 2008 Nov ; 57(3): 153-78 
+Brown SD, Heathcote A; Cogn Psychol. 2008 Nov ; 57(3): 153-78
 
 Getting more from accuracy and response time data: methods for fitting the linear ballistic accumulator.
-Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 1095-110 
+Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 1095-110
 """)
 
 class wfpt_gen(stats.distributions.rv_continuous):
@@ -177,7 +177,7 @@ class wfpt_gen(stats.distributions.rv_continuous):
             out = np.empty_like(x)
             for i in xrange(len(x)):
                 out[i] = hddm.wfpt.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
-        
+
         return out
 
     def _rvs(self, v, V, a, z, Z, t, T):
@@ -206,13 +206,13 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
 
     def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
         if np.isscalar(x):
-            out = hddm.wfpt_switch.pdf_switch(np.array([x]), np.asarray([1]), v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
+            out = hddm.wfpt_switch.pdf_switch(np.array([x]), 1, v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
             #out = hddm.wfpt_switch.pdf_switch(x, v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = hddm.wfpt_switch.pdf_switch(np.array([x[i]]), np.asarray([1]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
-                
+                out[i] = hddm.wfpt_switch.pdf_switch(np.array([x[i]]), 1, v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
+
         return out
 
     def _rvs(self, v, v_switch, V_switch, a, z, t, t_switch, T):
@@ -248,7 +248,7 @@ def wiener_like_gpu(value, v, V, a, z, t, out, err=1e-4):
 
     wfpt_gpu.pdf_gpu(value, float(v), float(V), float(a), float(z), float(t), err, out)
     logp = gpuarray.sum(out).get() #cumath.log(out)).get()
-    
+
     return np.asscalar(logp)
 
 WienerGPU = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",

@@ -7,15 +7,7 @@ import sys
 import table_print
 from numpy import array, zeros, empty, ones
 
-
 import hddm
-
-try:
-    from IPython.Debugger import Tracer; 
-except ImportError:
-    from IPython.core.debugger import Tracer; 
-debug_here = Tracer()
-
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.

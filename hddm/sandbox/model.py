@@ -12,7 +12,7 @@ except:
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
     """Log-likelihood for the simple DDM switch model"""
-    logp = wfpt_switch.wiener_like_antisaccade_precomp(value, np.array(instruct, dtype=np.int32), v, v_switch, V_switch, a, z, t, t_switch, T, err)
+    logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -40,7 +40,7 @@ class HDDMSwitch(HDDM):
         if param.name == 'wfpt':
             return WienerAntisaccade(param.full_name,
                                      value=param.data['rt'],
-                                     instruct=param.data['instruct'],
+                                     instruct=np.array(param.data['instruct'], dtype=np.int32),
                                      v=params['v'],
                                      v_switch=params['v_switch'],
                                      V_switch=self.get_node('V_switch',params),

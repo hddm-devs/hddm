@@ -46,52 +46,52 @@ class HDDM(kabuki.Hierarchical):
             Optional inter-trial variability parameters to include.
              Can be any combination of 'V', 'Z' and 'T'. Passing the string
             'all' will include all three.
-            
+
             Note: Including 'Z' and/or 'T' will increase run time significantly!
- 
+
             is_group_model : bool
                 If True, this results in a hierarchical
                 model with separate parameter distributions for each
                 subject. The subject parameter distributions are
                 themselves distributed according to a group parameter
                 distribution.
-    
+
                 If not provided, this parameter is set to True if data
                 provides a column 'subj_idx' and False otherwise.
-        
+
             depends_on : dict
                 Specifies which parameter depends on data
                 of a column in data. For each unique element in that
                 column, a separate set of parameter distributions will be
                 created and applied. Multiple columns can be specified in
                 a sequential container (e.g. list)
-    
-                :Example: 
-    
+
+                :Example:
+
                     >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
-                    
+
                     Separate drift-rate parameters will be estimated
                     for each difficulty. Requires 'data' to have a
                     column difficulty.
-        
 
-            bias : bool 
+
+            bias : bool
                 Whether to allow a bias to be estimated. This
                 is normally used when the responses represent
                 left/right and subjects could develop a bias towards
                 responding right. This is normally never done,
                 however, when the 'response' column codes
                 correct/error.
-    
+
             plot_var : bool
                  Plot group variability parameters when calling pymc.Matplot.plot()
                  (i.e. variance of Normal distribution.)
-    
+
             wiener_params : dict
                  Parameters for wfpt evaluation and
                  numerical integration.
-                 
-                 :Parameters: 
+
+                 :Parameters:
                      * err: Error bound for wfpt (default 1e-4)
                      * nT: Maximum depth for numerical integration for T (default 2)
                      * nZ: Maximum depth for numerical integration for Z (default 2)
@@ -99,15 +99,15 @@ class HDDM(kabuki.Hierarchical):
                      * simps_err: Error bound for Simpson integration (default 1e-3)
 
     """
-        
+
     def __init__(self, data, bias=False,
                  include=(), wiener_params=None, **kwargs):
-        
+
         # Flip sign for lower boundary RTs
         data = hddm.utils.flip_errors(data)
 
         include = set(include)
-        
+
         if include is not None:
             if include == 'all':
                 [include.add(param) for param in ('T','V','Z')]
@@ -134,23 +134,23 @@ class HDDM(kabuki.Hierarchical):
         """Returns list of model parameters.
         """
         # These boundaries are largely based on a meta-analysis of
-        # reported fit values. 
+        # reported fit values.
         # See: Matzke & Wagenmakers 2009
         params = [Parameter('a', lower=.3, upper=4),
-                  Parameter('v', lower=-15., upper=15., init=0.),
+                  Parameter('v', lower=-5., upper=5.),
                   Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
-                  Parameter('z', lower=.2, upper=0.8, init=.5, 
+                  Parameter('z', lower=.2, upper=0.8, init=.5,
                             default=.5, optional=True),
-                  Parameter('V', lower=0., upper=3.5, default=0, 
+                  Parameter('V', lower=0., upper=3.5, default=0,
                             optional=True),
                   Parameter('Z', lower=0., upper=1.0, init=.1,
                             default=0, optional=True),
-                  Parameter('T', lower=0., upper=0.8, init=.1, 
+                  Parameter('T', lower=0., upper=0.8, init=.1,
                             default=0, optional=True),
                   Parameter('wfpt', is_bottom_node=True)]
-        
+
         return params
-    
+
     def get_subj_node(self, param):
         """Create and return a Normal (in case of an effect or
         drift-parameter) or Truncated Normal (otherwise) distribution
@@ -165,7 +165,7 @@ class HDDM(kabuki.Hierarchical):
                              mu=param.group,
                              tau=param.var**-2,
                              plot=self.plot_subjs,
-                             trace = self.trace_subjs,
+                             trace=self.trace_subjs,
                              value=param.init)
 
         elif param.name == 'V':
@@ -175,22 +175,22 @@ class HDDM(kabuki.Hierarchical):
                                       mu=param.group,
                                       tau=param.var**-2,
                                       plot=self.plot_subjs,
-                                      trace = self.trace_subjs,
+                                      trace=self.trace_subjs,
                                       value=param.init)
 
         else:
             return pm.TruncatedNormal(param.full_name,
                                       a=param.lower,
                                       b=param.upper,
-                                      mu=param.group, 
+                                      mu=param.group,
                                       tau=param.var**-2,
                                       plot=self.plot_subjs,
-                                      trace = self.trace_subjs,
+                                      trace=self.trace_subjs,
                                       value=param.init)
-    
+
     def get_bottom_node(self, param, params):
         """Create and return the wiener likelihood distribution
-        supplied in 'param'. 
+        supplied in 'param'.
 
         'params' is a dictionary of all parameters on which the data
         depends on (i.e. condition and subject).
@@ -212,7 +212,7 @@ class HDDM(kabuki.Hierarchical):
             raise KeyError, "Groupless parameter named %s not found." % param.name
 
 class HDDMContaminant(HDDM):
-    """Contaminant HDDM 
+    """Contaminant HDDM
 
     Outliers are modeled using a uniform distribution over responses
     and reaction times.
@@ -226,7 +226,7 @@ class HDDMContaminant(HDDM):
         super(HDDMContaminant, self).__init__(*args, **kwargs)
         self.params = self.params[:-1] + \
                  [Parameter('pi', lower=0.01, upper=0.1),
-                  Parameter('x', is_bottom_node=True), 
+                  Parameter('x', is_bottom_node=True),
                   Parameter('wfpt', is_bottom_node=True)]
 
         self.cont_res = None
@@ -280,10 +280,10 @@ class HDDMContaminant(HDDM):
 
         else:
             raise KeyError, "Groupless subj parameter %s not found" % param.name
-        
+
     def cont_report(self, cont_threshold = 0.5, plot= True):
         """Create conaminate report
-        
+
         :Arguments:
             cont_threshold : float
                 the threshold tthat define an outlier (default: 0.5)
@@ -300,7 +300,7 @@ class HDDMContaminant(HDDM):
         hm = self
         data_dep = hm._get_data_depend()
         conds = [str(x[2]) for x in data_dep]
-        
+
         self.cont_res = {}
         if self.is_group_model:
             subj_list = self._subjs
@@ -324,7 +324,7 @@ class HDDMContaminant(HDDM):
                 else:
                     node = nodes
                 m = np.mean(node.trace(),0)
-                
+
                 #look for outliers with high probabilty
                 idx = np.where(m > cont_threshold)[0]
                 n_cont += len(idx)
@@ -337,7 +337,7 @@ class HDDMContaminant(HDDM):
                     cont_idx = np.r_[cont_idx, data_idx[idx]]
                     rts = np.r_[rts, wfpt.value[idx]]
                     probs = np.r_[probs, m[idx]]
-                    
+
                     #plot outliers
                     if plot:
                         plt.figure()
@@ -349,7 +349,7 @@ class HDDMContaminant(HDDM):
                 #report the next higest probability outlier
                 next_outlier = max(m[m < cont_threshold])
                 print "probability of the next most probable outlier: %.2f" % next_outlier
-            
+
             print "!!!!!**** %d probable outliers were found in the data ****!!!!!" % n_cont
             single_cont_res = {}
             single_cont_res['cont_idx'] = cont_idx
@@ -362,15 +362,15 @@ class HDDMContaminant(HDDM):
 
         if plot:
             plt.show()
-            
-        
+
+
         return self.cont_res
 
 
     def remove_conts(self, cont_threshold=.5):
         """
         Return the data without the contaminants.
-        
+
         :Arguments:
             cutoff : float
                 the probablity that defines an outlier (deafult 0.5)
@@ -400,12 +400,12 @@ class HDDMContaminant(HDDM):
             idx = np.ones(len(data_subj), bool)
             idx[cont_res['cont_idx'][cont_res['probs'] >= cutoff]] = 0
             new_data.append(data_subj[idx])
-            
+
         data_all = np.concatenate(new_data)
         data_all['rt'] = np.abs(data_all['rt'])
-        
+
         return data_all
-        
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -1,14 +1,9 @@
 #cython: embedsignature=True
 #cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
 #
-# Cython version of the Navarro & Fuss, 2009 DDM PDF. Based directly
-# on the following code by Navarro & Fuss:
-# http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
-#
-# This implementation is about 170 times faster than the matlab
-# reference version.
-#
-# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
+# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010
 # GPLv3
 
 from copy import copy
@@ -28,7 +23,7 @@ cdef extern from "stdlib.h":
     void free(void* ptr)
     void* malloc(size_t size)
     void* realloc(void* ptr, size_t size)
-    
+
 cdef double wfpt_gsl(double x, void * params) nogil:
     cdef double rt, v, v_switch, a, z, t, t_switch, f, T
     rt = (<double_ptr> params)[0]
@@ -73,15 +68,15 @@ cdef double calc_drift_dens(double x, double t, double v, double a, double z, bi
         # Start counting after N terms
         if fabs(term) < 1e-6 and n > N:
             got_zero+=1
-        
+
         summed += term
         n+=1
         #if term == -np.inf or term == +np.inf:
             #print x, t, v, a, z, n, term
             #return 0
-        
+
     return 2 * exp(v*(x-z)) * summed
-    
+
 cdef double pdf_post_switch(double rt, double v, double v_switch,
                              double V_switch, double a, double z, double t,
                              double t_switch, double T, double err) nogil:
@@ -109,7 +104,7 @@ cdef double pdf_post_switch(double rt, double v, double v_switch,
 
     return result
 
-cdef double pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
+cpdef double pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
     cdef double p
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
@@ -125,8 +120,6 @@ cdef double pdf_switch(double rt, int instruct, double v, double v_switch, doubl
 
     return p
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
 def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
@@ -135,7 +128,7 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=
 
     if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
         return -np.inf
-        
+
     for i in prange(size, nogil=True):
         p = pdf_switch(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
@@ -155,7 +148,7 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=
 # Global variables for density and interpolation
 cdef double *drift_density
 cdef double *eval_dens
-cdef gsl_interp_accel *acc 
+cdef gsl_interp_accel *acc
 cdef gsl_spline *spline
 
 cdef double pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
@@ -163,7 +156,7 @@ cdef double pdf_switch_precomp(double rt, int instruct, double v, double v_switc
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
         return 0
-    
+
     if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
     elif t_switch < 0.08:
@@ -215,7 +208,7 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[in
 
     gsl_spline_free (spline)
     gsl_interp_accel_free (acc)
-    
+
     return sum_logp
 
 cdef double pdf_post_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double err) nogil:
