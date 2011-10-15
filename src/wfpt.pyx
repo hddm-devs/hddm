@@ -39,14 +39,11 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double
         return y
 
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t,
-                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8, int num_threads=0):
+                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
-
-    if num_threads != 0:
-        openmp.omp_set_num_threads(num_threads)
 
     for i in prange(size, nogil=True, schedule='dynamic'):
         p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
@@ -59,16 +56,16 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, doub
 
     return sum_logp
 
+def set_num_threads(num_threads):
+    openmp.omp_set_num_threads(num_threads)
+
 def wiener_like_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t,
-                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8, int num_threads=0):
+                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double sum_logp = 0
 
     cdef np.ndarray[double, ndim=1] p_array = np.empty(size, dtype=np.float)
-
-    if num_threads != 0:
-        openmp.omp_set_num_threads(num_threads)
 
     for i in prange(size, nogil=True, schedule='dynamic'):
         p_array[i] = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)

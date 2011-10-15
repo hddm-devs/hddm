@@ -14,12 +14,12 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 
-from enthought.traits.api import HasTraits, Instance, Range,\
+from traits.api import HasTraits, Instance, Range,\
                                 Array, on_trait_change, Property,\
                                 cached_property, Bool
-from enthought.traits.api import Any, Instance
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
+from traits.api import Any, Instance
+from traitsui.wx.editor import Editor
+from traitsui.basic_editor_factory import BasicEditorFactory
 
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
@@ -78,7 +78,7 @@ def main():
             self.t = linspace(0, 2*pi, 200)
 	    param = self.test
 	    self.line, = self.axes.plot(sin(self.t)*(1+0.5*cos(self.test*self.t)), cos(self.t)*(1+0.5*cos(11*self.t)))
-	    
+
 	def update_plot(self):
 	    self.figure.axes[0].clear()
 	    self.figure.axes[0].plot(sin(self.t)*(1+0.5*cos(self.test*self.t)), cos(self.t)*(1+0.5*cos(11*self.t)))
@@ -86,12 +86,12 @@ def main():
 	    #self.axes.redraw_in_frame()
 	    wx.CallAfter(self.figure.canvas.draw)
 
-	    
+
 
 	def _test_changed(self):
 	    self.update_plot()
 
-	
+
     #wx.EVT_IDLE(wx.GetApp(), callback)
     Test().configure_traits()
 

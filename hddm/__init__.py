@@ -23,4 +23,4 @@ try:
 except:
     def debug_here(): pass
 
-num_threads = 1
+wfpt.set_num_threads(1)
