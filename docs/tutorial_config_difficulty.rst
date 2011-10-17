@@ -36,13 +36,12 @@ The first line contains the header and specifies which columns contain
 which data.
 
 IMPORTANT: There must be one column named 'rt' and one named
-'response'. 
+'response'.
 
-The rows following the header contain the reaction time of the trial,
-followed by a comma, followed by the response made (e.g. 1=correct,
-0=error or 1=left, 0=right), followed by the difficulty of the
-trial. Note, that 'difficulty' is just an example, you can call them
-whatever you like.
+The rows following the header contain the response made
+(e.g. 1=correct, 0=error or 1=left, 0=right), followed by the reaction
+time of the trial, followed by the difficulty of the trial. Note, that
+'difficulty' is just an example, you can call them whatever you like.
 
 The following configuration file specifies a model in which
 drift-rate depends on difficulty:
@@ -149,7 +148,7 @@ distribution for each condition:
 
 Note that error responses have been mirrored along the y-axis (on the
 left) to
-display both RT distributions in one plot. 
+display both RT distributions in one plot.
 
 These plots allow you to see how good the estimation fits your
 data. Here, we also see that our subject makes more errors and are
