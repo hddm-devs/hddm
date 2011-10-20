@@ -52,8 +52,8 @@ def timer(method):
 class DDM(HasTraits):
     """Drift diffusion model"""
     # Paremeters
-    z = Range(0,1.,.5)
-    sz = Range(0,1.,.0)
+    z = Range(0, 1., .5)
+    sz = Range(0, 1., .0)
     v = Range(-3,3.,-2.)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
@@ -88,7 +88,7 @@ class DDM(HasTraits):
     view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'T', 'switch', 't_switch', 'v_switch')
 
     def _get_params_dict(self):
-        d = {'v':self.v, 'V':self.sv, 'z':self.z, 'Z':self.sz, 't':self.ter, 'T':self.ster, 'a':self.a}
+        d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
         if self.switch:
             d['v_switch'] = self.v_switch
             d['t_switch'] = self.t_switch
@@ -103,16 +103,16 @@ class DDM(HasTraits):
     def _get_rts(self):
         if not self.switch:
             # Use faster cdf method
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_ = (-5, 5))
+            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5))
         else:
             # Simulate individual drifts
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_ = (-5, 5), method='drift')
+            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5), method='drift')
 
     @cached_property
     def _get_histo(self):
-        n, bins = hddm.utils.histogram(self.rts, bins=2*self.bins, range=(-self.T,self.T))
+        n, bins = hddm.utils.histogram(self.rts, bins=2 * self.bins, range=(-self.T, self.T))
         db = np.array(np.diff(bins), float)
-        return n/db/(n.sum())
+        return n / db / (n.sum())
 
     def _get_params(self):
         return np.array([self.a, self.v, self.ter, self.sz, self.sv, self.ster])
@@ -145,14 +145,14 @@ class DDMPlot(HasTraits):
 
     x_raster = Int(100)
 
-    data = Array() # Can be set externally
+    data = Array()  # Can be set externally
     external_params = Dict()
 
     go = Button('Go')
 
     view = View(Item('figure', editor=MPLFigureEditor(),
-		     show_label=False),
-		Item('parameters'),
+                     show_label=False),
+                Item('parameters'),
                 Item('plot_histogram'),
                 Item('plot_drifts'),
                 Item('plot_wiener'),
@@ -170,14 +170,14 @@ class DDMPlot(HasTraits):
                 resizable=True)
 
     def __init__(self, data=None, params=None):
-	super(DDMPlot, self).__init__()
+        super(DDMPlot, self).__init__()
         plt.hot()
 
         # Create plot
         self.num_axes = 3
-	self.ax1 = self.figure.add_subplot(411)
-	self.ax2 = self.figure.add_subplot(412, sharex=self.ax1)
-	self.ax3 = self.figure.add_subplot(413, sharex=self.ax1)
+        self.ax1 = self.figure.add_subplot(411)
+        self.ax2 = self.figure.add_subplot(412, sharex=self.ax1)
+        self.ax3 = self.figure.add_subplot(413, sharex=self.ax1)
 
         self.set_figure()
         #self.update_plot()
@@ -215,7 +215,6 @@ class DDMPlot(HasTraits):
                                         self.parameters.ter, self.parameters.ster)
         return pdf
 
-
     @timer
     def _get_lba(self):
         return hddm.likelihoods.LBA_like(self.x_analytical,
@@ -232,17 +231,17 @@ class DDMPlot(HasTraits):
     def plot_histo(self, x, y, color, max_perc=None):
         # y consists of lower and upper boundary responses
         # mid point tells us where to split
-        assert y.shape[0]%2==0, "x_analytical has to be even. Shape is %s "%str(y.shape)
-        mid = y.shape[0]/2
+        assert y.shape[0] % 2 == 0, "x_analytical has to be even. Shape is %s " % str(y.shape)
+        mid = y.shape[0] / 2
         self.figure.axes[0].plot(x, y[mid:], color=color, lw=2.)
         # Compute correct EV
-        mean_correct_rt = np.sum(x*y[mid:])/np.sum(y[mid:])
+        mean_correct_rt = np.sum(x * y[mid:]) / np.sum(y[mid:])
         # [::-1] -> reverse ordering
         if self.color_errors:
             color='r'
         self.figure.axes[2].plot(x, -y[:mid][::-1], color=color, lw=2.)
         # Compute error EV
-        mean_error_rt = np.sum(x*y[:mid][::-1])/np.sum(y[:mid][::-1])
+        mean_error_rt = np.sum(x * y[:mid][::-1]) / np.sum(y[:mid][::-1])
 
         if self.plot_mean_rt:
             self.figure.axes[0].axvline(mean_correct_rt, color=color)
@@ -251,33 +250,33 @@ class DDMPlot(HasTraits):
 
     def plot_dens(self):
         t = np.linspace(0.0, self.parameters.T, self.x_raster)
-        xm,ym = np.meshgrid(t, np.linspace(0, self.parameters.a, 100))
-        zm = np.zeros_like(xm) # np.zeros((t, 100), dtype=np.float)
+        xm, ym = np.meshgrid(t, np.linspace(0, self.parameters.a, 100))
+        zm = np.zeros_like(xm)  # np.zeros((t, 100), dtype=np.float)
         #print zs
         i = 0
-        for xs,ys in zip(xm, ym):
+        for xs, ys in zip(xm, ym):
             j = 0
             for x, y in zip(xs, ys):
-                if x <= self.parameters.ter+.05:
-                    zm[i,j] = 1.
+                if x <= self.parameters.ter + .05:
+                    zm[i, j] = 1.
                 else:
-                    zm[i,j] = hddm.wfpt_switch.drift_dens(y, x-self.parameters.ter, self.parameters.v, self.parameters.a, self.parameters.z*self.parameters.a)
-                j+=1
-        self.figure.axes[1].contourf(xm,ym,zm)
+                    zm[i, j] = hddm.wfpt_switch.drift_dens(y, x - self.parameters.ter, self.parameters.v, self.parameters.a, self.parameters.z * self.parameters.a)
+                j += 1
+        self.figure.axes[1].contourf(xm, ym, zm)
 
     @on_trait_change('parameters.params')
     def update_plot(self):
         if self.figure.canvas is None:
             return
 
-	# Clear all plots
-	for i in range(self.num_axes):
-	    self.figure.axes[i].clear()
+        # Clear all plots
+        for i in range(self.num_axes):
+            self.figure.axes[i].clear()
 
         # Set x axis values
         x = np.linspace(0, self.parameters.T, self.parameters.bins)
         # Set x axis values for analyticals
-        x_anal = np.linspace(0, self.parameters.T, self.x_raster/2)
+        x_anal = np.linspace(0, self.parameters.T, self.x_raster / 2)
 
         # Plot normalized histograms of simulated data
         if self.plot_histogram:
@@ -301,7 +300,7 @@ class DDMPlot(HasTraits):
             self.plot_dens()
 
         if self.plot_drifts:
-            t = np.linspace(0.0, 5., 5./1e-4)
+            t = np.linspace(0.0, 5., 5. / 1e-4)
             drifts = self.parameters.drifts
             for drift in drifts:
                 # Make sure drift is not longer than x-axis
@@ -322,7 +321,7 @@ class DDMPlot(HasTraits):
 
         self.set_figure()
 
-	wx.CallAfter(self.figure.canvas.draw)
+        wx.CallAfter(self.figure.canvas.draw)
 
     def set_figure(self):
         # Set axes limits
@@ -338,7 +337,7 @@ class DDMPlot(HasTraits):
                 if max_point > total_max:
                     total_max = max_point
 
-        self.figure.axes[0].set_ylim((0,total_max))
+        self.figure.axes[0].set_ylim((0, total_max))
         self.figure.axes[2].set_ylim((-total_max, 0))
         self.figure.axes[0].set_xlim((0, self.parameters.T))
         self.figure.axes[2].set_xlim((0, self.parameters.T))

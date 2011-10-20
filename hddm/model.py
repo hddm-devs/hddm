@@ -11,10 +11,8 @@
 
 from __future__ import division
 import numpy as np
-import numpy.lib.recfunctions as rec
 import pymc as pm
 import matplotlib.pyplot as plt
-from copy import copy
 
 import hddm
 
@@ -281,7 +279,7 @@ class HDDMContaminant(HDDM):
         else:
             raise KeyError, "Groupless subj parameter %s not found" % param.name
 
-    def cont_report(self, cont_threshold = 0.5, plot= True):
+    def cont_report(self, cont_threshold=0.5, plot=True):
         """Create conaminate report
 
         :Arguments:
@@ -318,12 +316,12 @@ class HDDMContaminant(HDDM):
             for cond in conds:
                 print "*********************"
                 print "looking at %s" % cond
-                nodes =hm.params_include['x'].subj_nodes[cond]
+                nodes = hm.params_include['x'].subj_nodes[cond]
                 if self.is_group_model:
                     node = nodes[subj_idx]
                 else:
                     node = nodes
-                m = np.mean(node.trace(),0)
+                m = np.mean(node.trace(), 0)
 
                 #look for outliers with high probabilty
                 idx = np.where(m > cont_threshold)[0]
@@ -341,7 +339,7 @@ class HDDMContaminant(HDDM):
                     #plot outliers
                     if plot:
                         plt.figure()
-                        mask = np.ones(len(wfpt.value),dtype=bool)
+                        mask = np.ones(len(wfpt.value), dtype=bool)
                         mask[idx] = False
                         plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
                         plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
@@ -390,15 +388,15 @@ class HDDMContaminant(HDDM):
             subj_list = [0]
 
         # Loop over subjects and append cleaned data
-        for subj_idx, subj in enumerate(subj_list):
+        for subj in subj_list:
             if self.is_group_model:
                 cont_res = self.cont_res[subj]
-                data_subj = self.data[self.data['subj_idx']==subj]
+                data_subj = self.data[self.data['subj_idx'] == subj]
             else:
                 cont_res = self.cont_res
                 data_subj = self.data
             idx = np.ones(len(data_subj), bool)
-            idx[cont_res['cont_idx'][cont_res['probs'] >= cutoff]] = 0
+            idx[cont_res['cont_idx'][cont_res['probs'] >= cont_threshold]] = 0
             new_data.append(data_subj[idx])
 
         data_all = np.concatenate(new_data)
