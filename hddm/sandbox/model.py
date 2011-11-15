@@ -12,7 +12,14 @@ except:
 
 def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err=1e-4):
     """Log-likelihood for the simple DDM switch model"""
+    # if np.any(np.abs(value) < t-T/2):
+    #     print t, T/2.
+    #     print "RT too small"
+    # if t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+    #     print "Condition not met"
     logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+    # if logp == -np.inf:
+    #     print locals()
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -27,13 +34,13 @@ class HDDMSwitch(HDDM):
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = [Parameter('v', lower=-4, upper=0.),
-                       Parameter('v_switch', lower=0, upper=4.),
-                       Parameter('a', lower=1, upper=4.5),
-                       Parameter('t', lower=0., upper=.5, init=0.1),
-                       Parameter('t_switch', lower=0.0, upper=1.0, init=0.3),
+        self.params = [Parameter('vpp', lower=-8, upper=0.),
+                       Parameter('vcc', lower=0, upper=8.),
+                       Parameter('a', lower=.5, upper=4.5),
+                       Parameter('t', lower=0., upper=.5, init=0.05),
+                       Parameter('tcc', lower=0.0, upper=1.0),
                        Parameter('T', lower=0, upper=.5, init=.1, default=0, optional=True),
-                       Parameter('V_switch', lower=0, upper=2., default=0, optional=True),
+                       Parameter('Vcc', lower=0, upper=2., default=0, optional=True),
                        Parameter('wfpt', is_bottom_node=True)]
 
     def get_bottom_node(self, param, params):
@@ -41,13 +48,13 @@ class HDDMSwitch(HDDM):
             return WienerAntisaccade(param.full_name,
                                      value=param.data['rt'],
                                      instruct=np.array(param.data['instruct'], dtype=np.int32),
-                                     v=params['v'],
-                                     v_switch=params['v_switch'],
-                                     V_switch=self.get_node('V_switch',params),
+                                     v=params['vpp'],
+                                     v_switch=params['vcc'],
+                                     V_switch=self.get_node('Vcc',params),
                                      a=params['a'],
                                      z=.5,
                                      t=params['t'],
-                                     t_switch=params['t_switch'],
+                                     t_switch=params['tcc'],
                                      T=self.get_node('T',params),
                                      observed=True)
         else:
