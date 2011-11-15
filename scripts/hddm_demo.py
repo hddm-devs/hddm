@@ -62,7 +62,7 @@ class DDM(HasTraits):
     switch = Bool(False)
     t_switch = Range(0,2.,.3)
     v_switch = Range(-3.,3.,1.)
-    intra_sv = Range(0.,10.,1.)
+    intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
     params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
@@ -85,7 +85,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'T', 'switch', 't_switch', 'v_switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'num_samples', 'iter_plot', 'T', 'switch', 't_switch', 'v_switch')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
@@ -106,7 +106,8 @@ class DDM(HasTraits):
             return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5))
         else:
             # Simulate individual drifts
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5), method='drift')
+            return hddm.generate._gen_rts_from_simulated_drift(self.params_dict, samples=self.num_samples, dt=self.dt, intra_sv=self.intra_sv)[0]
+            #return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5), method='drift')
 
     @cached_property
     def _get_histo(self):
