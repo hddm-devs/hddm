@@ -18,8 +18,8 @@ def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_s
     # if t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
     #     print "Condition not met"
     logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
-    # if logp == -np.inf:
-    #     print locals()
+    if logp == np.nan:
+         print locals()
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
