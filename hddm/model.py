@@ -400,7 +400,7 @@ class HDDMContUnif(HDDMContaminant):
                   Parameter('wfpt', is_bottom_node=True)]
 
         self.t_min = 0
-        self.t_max = max(self.data['rt'])
+        self.t_max = max(abs(self.data['rt']))
         wp = self.wiener_params
         self.wfpt = hddm.likelihoods.general_WienerCont(err=wp['err'],
                                                         nT=wp['nT'],
