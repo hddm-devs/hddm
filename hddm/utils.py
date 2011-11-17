@@ -866,12 +866,12 @@ def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
 
 
 
-def plot_posteriors(model):
+def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
 
     This is a wrapper for pymc.Matplot.plot()
     """
-    pm.Matplot.plot(model.mc)
+    pm.Matplot.plot(model.mc, **kwargs)
 
 def data_plot(data, nbins=50):
     data = hddm.utils.flip_errors(data)

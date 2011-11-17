@@ -62,7 +62,7 @@ class DDM(HasTraits):
     switch = Bool(False)
     t_switch = Range(0,2.,.3)
     v_switch = Range(-3.,3.,1.)
-    intra_sv = Range(0.,10.,1.)
+    intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
     params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])  #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
@@ -106,7 +106,8 @@ class DDM(HasTraits):
             return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5))
         else:
             # Simulate individual drifts
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5), method='drift')
+            return hddm.generate._gen_rts_from_simulated_drift(self.params_dict, samples=self.num_samples, dt=self.dt, intra_sv=self.intra_sv)[0]
+            #return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5), method='drift')
 
     @cached_property
     def _get_histo(self):
@@ -134,6 +135,7 @@ class DDMPlot(HasTraits):
     #plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
     plot_switch = Bool(True)
+    color_errors = Bool(True)
 
     x_analytical = Property(Array)
 
@@ -160,11 +162,12 @@ class DDMPlot(HasTraits):
                 #Item('plot_density'),
                 #Item('plot_true_density'),
                 #Item('plot_density_dist'),
-                #Item('plot_switch'),
-                Item('go'),
-                #style='custom',
-                width=800,
-                height=600,
+                Item('plot_switch'),
+                Item('color_errors'),
+		Item('go'),
+		#style='custom',
+		width=800,
+		height=600,
                 resizable=True)
 
     def __init__(self, data=None, params=None):
@@ -235,13 +238,16 @@ class DDMPlot(HasTraits):
         # Compute correct EV
         mean_correct_rt = np.sum(x * y[mid:]) / np.sum(y[mid:])
         # [::-1] -> reverse ordering
+        if self.color_errors:
+            color='r'
         self.figure.axes[2].plot(x, -y[:mid][::-1], color=color, lw=2.)
         # Compute error EV
         mean_error_rt = np.sum(x * y[:mid][::-1]) / np.sum(y[:mid][::-1])
 
         if self.plot_mean_rt:
             self.figure.axes[0].axvline(mean_correct_rt, color=color)
-            self.figure.axes[2].axvline(mean_error_rt, color=color)
+            if self.color_errors:
+                self.figure.axes[2].axvline(mean_error_rt, color='r')
 
     def plot_dens(self):
         t = np.linspace(0.0, self.parameters.T, self.x_raster)
@@ -301,8 +307,19 @@ class DDMPlot(HasTraits):
             for drift in drifts:
                 # Make sure drift is not longer than x-axis
                 drift_len = len(drift) if len(drift) < len(t) else len(t)
+                if self.color_errors:
+                    if drift[drift_len-1] < 0.1:
+                        color = 'r'
+                    else:
+                        color = 'b'
+                else:
+                    color = 'b'
                 self.figure.axes[1].plot(t[:drift_len],
-                                         drift[:drift_len], 'b', alpha=.5)
+                                         drift[:drift_len], color, alpha=.5)
+
+        # Plot analytical simple likelihood function
+        if self.parameters.switch:
+            self.figure.axes[1].axvline(self.parameters.ter+self.parameters.t_switch, color='k', linestyle='--', lw=2)
 
         self.set_figure()
 
@@ -331,9 +348,10 @@ class DDMPlot(HasTraits):
         self.figure.subplots_adjust(hspace=0)
         for ax in self.ax1, self.ax2:
             plt.setp(ax.get_xticklabels(), visible=False)
+            plt.setp(ax.get_yticklabels(), visible=False)
 
-        #for ax in self.ax3:
-        #    plt.setp(ax.get_yticklabels(), visible=False)
+        plt.setp(self.ax3.get_yticklabels(), visible=False)
+
         self.ax3.set_xlabel('time (secs)')
 
 if __name__ == "__main__":
