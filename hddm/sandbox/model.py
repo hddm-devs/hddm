@@ -34,8 +34,8 @@ class HDDMSwitch(HDDM):
         if 'instruct' not in self.data.dtype.names:
             raise AttributeError, 'data has to contain a field name instruct.'
 
-        self.params = [Parameter('vpp', lower=-8, upper=0.),
-                       Parameter('vcc', lower=0, upper=8.),
+        self.params = [Parameter('vpp', lower=-20, upper=0.),
+                       Parameter('vcc', lower=0, upper=20.),
                        Parameter('a', lower=.5, upper=4.5),
                        Parameter('t', lower=0., upper=.5, init=0.05),
                        Parameter('tcc', lower=0.0, upper=1.0),
