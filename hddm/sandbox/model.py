@@ -18,8 +18,8 @@ def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_s
     # if t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
     #     print "Condition not met"
     logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
-    if logp == np.nan:
-         print locals()
+    # if logp == -np.inf:
+    #     print locals()
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -64,22 +64,19 @@ class HDDMRegressor(HDDM):
     def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 
-        Arguments:
-        ==========
-        data: structured numpy array containing columns: subj_idx, response, RT, theta, dbs
-
-        Keyword Arguments:
-        ==================
-        effect_on <list>: theta and dbs effect these DDM parameters.
-        depend_on <list>: separate stimulus distributions for these parameters.
-
-        Example:
-        ========
-        The following will create and fit a model on the dataset data, theta and dbs affect the threshold. For each stimulus,
-        there are separate drift parameter, while there is a separate HighConflict and LowConflict threshold parameter. The effect coding type is dummy.
-
-        model = HDDMRegressor(data, effect_on=['a'], depend_on=['v', 'a'], effect_coding=False, HL_on=['a'])
-        model.mcmc()
+        :Arguments:
+            data : numpy.recarray
+                structured numpy array containing columns: subj_idx, response, RT, theta, dbs
+        :Optional:
+            effects_on : dict
+                theta and dbs effect these DDM parameters.
+            depends_on : dict
+                separate stimulus distributions for these parameters.
+        :Example:
+            >>> import hddm
+            >>> data, params = hddm.generate.gen_correlated_rts()
+            >>> model = hddm.sandbox.HDDMRegressor(data, effects_on={'a':'cov'})
+            >>> model.sample(5000)
         """
 
         self.effects_on = effects_on
@@ -96,19 +93,31 @@ class HDDMRegressor(HDDM):
             if type(col_names) is str or (type(col_names) is list and len(col_names) == 1):
                 if type(col_names) is list:
                     col_names = col_names[0]
-                params.append(Parameter('e_%s_%s'%(col_names, effect_on), lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
+                params.append(Parameter('e_%s_%s'%(col_names, effect_on),
+                                        lower=-3., upper=3., init=0,
+                                        create_subj_nodes=not self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s'%(col_names, effect_on),
-                                        False,
+                                        is_bottom_node=True,
                                         vars={'col_name':col_names,
                                               'effect_on':effect_on,
                                               'e':'e_%s_%s'%(col_names, effect_on)}))
             elif len(col_names) == 2:
                 for col_name in col_names:
-                    params.append(Parameter('e_%s_%s'%(col_name, effect_on), True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
-                params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0], col_names[1], effect_on),
-                                        True, lower=-3., upper=3., init=0, create_subj_nodes=not self.use_root_for_effects))
+                    params.append(Parameter('e_%s_%s'%(col_name,
+                                                       effect_on),
+                                            lower=-3.,
+                                            upper=3.,
+                                            init=0,
+                                            create_subj_nodes=not self.use_root_for_effects))
+                params.append(Parameter('e_inter_%s_%s_%s'%(col_names[0],
+                                                            col_names[1],
+                                                            effect_on),
+                                        lower=-3.,
+                                        upper=3.,
+                                        init=0,
+                                        create_subj_nodes=not self.use_root_for_effects))
                 params.append(Parameter('e_inst_%s_%s_%s'%(col_names[0], col_names[1], effect_on),
-                                        False,
+                                        is_bottom_node=True,
                                         vars={'col_name0': col_names[0],
                                               'col_name1': col_names[1],
                                               'effect_on': effect_on,
@@ -133,7 +142,7 @@ class HDDMRegressor(HDDM):
                     func = effect1
 
                 return pm.Deterministic(func, param.full_name, param.full_name,
-                                        parents={'base': self._get_node(param.vars['effect_on'], params),
+                                        parents={'base': params[param.vars['effect_on']],
                                                  'e1': params[param.vars['e']],
                                                  'data': param.data[param.vars['col_name']]}, trace=False, plot=self.plot_subjs)
             else:
@@ -156,12 +165,12 @@ class HDDMRegressor(HDDM):
             model = hddm.likelihoods.WienerMulti(param.full_name,
                                                  value=param.data['rt'],
                                                  v=params['v'],
-                                                 V=self._get_node('V', params),
+                                                 V=self.get_node('V', params),
                                                  a=params['a'],
-                                                 z=self._get_node('z', params),
-                                                 Z=self._get_node('Z', params),
+                                                 z=self.get_node('z', params),
+                                                 Z=self.get_node('Z', params),
                                                  t=params['t'],
-                                                 T=self._get_node('T', params),
+                                                 T=self.get_node('T', params),
                                                  multi=self.effects_on.keys(),
                                                  observed=True)
         return model
