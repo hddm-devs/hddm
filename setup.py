@@ -15,7 +15,7 @@ setup(
     author="Thomas V. Wiecki, Imri Sofer, Michael J. Frank",
     author_email="thomas_wiecki@brown.edu",
     url="http://github.com/hddm-devs/hddm",
-    packages=["hddm", "hddm.tests"],
+    packages=["hddm", "hddm.tests", "hddm.sandbox"],
     package_data={"hddm":["examples/*.csv", "examples/*.conf"]},
     #package_dir={"hddm":"hddm/examples"},
     scripts=["scripts/hddm_fit.py", "scripts/hddm_demo.py"],
