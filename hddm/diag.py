@@ -1,6 +1,5 @@
 from __future__ import division
 from copy import copy
-import platform
 import numpy as np
 import pymc as pm
 np.seterr(divide='ignore')
@@ -18,7 +17,7 @@ except:
 
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
-    
+
     print "checking estimation with %d confidence interval" % conf_interval
     fail = False
     nodes = sorted(model.stochastics, key=attrgetter('__name__'))
@@ -28,7 +27,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
             continue # Skip non-existent params
         name = node.__name__
         trace = model.db.trace(name)[:]
-        est = np.mean(trace)        
+        est = np.mean(trace)
         truth = params_true[name]
         lb = (50 - conf_interval/2.)
         lb_score = scoreatpercentile(trace, lb)
@@ -44,16 +43,16 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
         if (fell < lb) or (fell > ub):
             fail = True
             print "the true value of %s is outside of the confidence interval !*!*!*!*!*!*!" % name
-        
+
     if assert_:
         assert (fail==False)
-    
+
     ok = not fail
     return ok
 
-def check_rejection(model, assert_=True):    
+def check_rejection(model, assert_=True):
     """check if the rejection ratio is not too high"""
-    
+
     for node in model.stochastics:
         name = node.__name__
         trace = node.trace()[:]
@@ -69,7 +68,7 @@ def check_rejection(model, assert_=True):
 
 
 
-def test_params_on_data(params, data, include=(), depends_on = None, conf_interval = 95):    
+def test_params_on_data(params, data, include=(), depends_on = None, conf_interval = 95):
     thin = 1
     samples = 10000
     burn = 10000
@@ -94,8 +93,8 @@ def test_params_on_data(params, data, include=(), depends_on = None, conf_interv
         if check_model(model, params, assert_=False, conf_interval = conf_interval)==False:
             print "model checking failed again !!!!!!!!!!!!!!!!!!!!!!!"
             ok  = False
-           
-    res = {} 
+
+    res = {}
     res['params'] = params
     res['data'] = data
     res['mc'] = model
@@ -114,8 +113,8 @@ def run_accuracy_test(nTimes=20, include=(), stop_when_fail = True):
         print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
         print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
         % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
-        ok, res = test_params_on_data(params, data, include=include) 
-                                             
+        ok, res = test_params_on_data(params, data, include=include)
+
         if stop_when_fail and not ok:
             return res
     return {}
@@ -138,16 +137,16 @@ def gen_cond_data_and_params(n_data,  n_conds = 3, include = ()):
     all_v = np.linspace(min(0,params['v']/2) , max(params['v']*2, 3), n_conds)
     del params_true['v']
     for i in range(n_conds):
-        params_set[i] = copy(params)    
+        params_set[i] = copy(params)
         params_set[i]['v'] = all_v[i]
         params_true['v(%d,)'%i] = all_v[i]
-    
-    
+
+
     cond_data, temp = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=int(n_data/n_conds))
     positive = sum(cond_data['response'])
     print "generated %d data_points (%d positive %d negative)" % \
     (len(cond_data), positive, len(cond_data) - positive)
-    print "used params: %s" % str_params(params_true)     
+    print "used params: %s" % str_params(params_true)
     stdout.flush()
     return cond_data, params_true
 
@@ -179,11 +178,11 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
     thin = 1
     n_samples = 10000
     n_iter = n_samples*thin
-    
+
     all_wp = []
     all_wp = all_wp + [{'err': 1e-5, 'nT':3, 'nZ':3, 'use_adaptive':1, 'simps_err':1e-5}]
     all_wp = all_wp + [{'err': 1e-5, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-4}]
-    all_wp = all_wp + [{'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}]   
+    all_wp = all_wp + [{'err': 1e-4, 'nT':2, 'nZ':2, 'use_adaptive':1, 'simps_err':1e-3}]
 
     initial_params = hddm.generate.gen_rand_params(include=include)
     full_params = copy(initial_params)
@@ -193,12 +192,12 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
     for j in range(n_conds):
         params_set[j] = copy(initial_params)
         params_set[j]['v'] = all_v[j]
-        full_params['v(%d,)'%j] = params_set[j]['v'] 
-    
+        full_params['v(%d,)'%j] = params_set[j]['v']
+
     data = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=150)
 
     print "Using the following params: \n %s" % str_params(full_params)
-    
+
     i_res={}
     i_res['params'] = copy(full_params)
     i_res['all_wp'] = all_wp
@@ -210,22 +209,22 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
     i_res['logp'] = [None]*len(all_wp)
     i_res['dbname'] = [None]*len(all_wp)
     i_res['mc'] = [None]*len(all_wp)
-            
+
     for i_params in range(len(all_wp)):
         print "working on model %d" % i_params
-        
-        model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params], 
+
+        model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params],
                                 include = include, depends_on  = {'v':['cond']})#, init_value=params)
         i_t = time()
         if use_db:
-            dbname = 'speed.'+ str(clock()) + '.db'
+            dbname = 'speed.' + str(time()) + '.db'
             i_res['dbname'][i_params] = dbname[:]
         else:
             dbname = None
-        
-        nodes = model.create()        
+
+        nodes = model.create()
         mc = pm.MCMC(nodes)
-        i_res['mc'][i_params] = mc 
+        i_res['mc'][i_params] = mc
         [mc.use_step_method(pm.Metropolis, x,proposal_sd=0.5) for x in mc.stochastics]
 
         i_t = time()
@@ -233,7 +232,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         d_time = time() - i_t;
         i_res['burn_time'][i_params] = d_time
         print "burn phase took %f secs" % d_time
-       
+
         i_t = time()
         mc.sample(n_iter, 0, thin=thin)
         d_time = time() - i_t;
@@ -241,11 +240,11 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
 
         print "sampling took in %f secs" % d_time
         stdout.flush()
-        
+
         check_model(mc, full_params, assert_=False, conf_interval = 95)
-        check_rejection(mc, assert_ = False)
+        check_rejection(mc, assert_=False)
         check_correl(mc)
-        
+
         if dbname is not None:
             mc.db.commit()
             mc.db.close()
