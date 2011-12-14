@@ -9,6 +9,13 @@ from numpy import array, zeros, empty, ones
 
 import hddm
 
+try:
+    from IPython.Debugger import Tracer;
+except ImportError:
+    from IPython.core.debugger import Tracer;
+debug_here = Tracer()
+
+
 def flip_errors(data):
     """Flip sign for lower boundary responses.
 
@@ -878,6 +885,71 @@ def data_plot(data, nbins=50):
     plt.figure()
     plt.hist(data['rt'], nbins)
     plt.show()
+
+
+
+def QPplot(model, filt_func = None, group_plot = True):
+    """
+    generate a quantile-probability plot
+    """
+    
+    #Init 
+    quantiles = [10, 30, 50, 70, 90];
+    n_q = len(quantiles)
+    if model.is_group_model:
+        is_group = True
+        n_subj = model._num_subjs
+    else:
+        n_subj = 1
+        is_group = False
+    wfpt_dict = model.params_dict['wfpt'].subj_nodes
+    if filt_func == None:
+        conds = wfpt_dict.keys()
+    else:
+        conds = filter(filt_func, wfpt_dict.keys())
+        assert len(conds)>1, "filter removed all the condtions. please change filt_func"
+    n_conds = len(conds)
+    q_val = zeros((n_subj, n_conds * 2, n_q))
+    acc = zeros((n_subj, n_conds * 2))
+    n_val = zeros(n_conds*2)
+    
+    #loop over conditions and subjs
+    print "plotting the following conditions: " 
+    for i_cond in range(n_conds):
+        print conds[i_cond]
+        for i_subj in range(n_subj):
+            #get rt
+            if is_group:
+                rt = wfpt_dict[conds[i_cond]][i_subj].value
+            else:
+                rt = wfpt_dict[conds[i_cond]].value
+            #loop over responses
+            for i_resp in range(2):
+                if i_resp==0:
+                    t_rt = rt[rt > 0]
+                else:
+                    t_rt = rt[rt < 0]
+                if len(t_rt)>0:
+                    q_val[i_subj, i_cond * 2 + i_resp, :] = \
+                    [scoreatpercentile(abs(t_rt),x) for x in quantiles]
+                acc[i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
+                n_val[i_cond * 2 + i_resp] += len(t_rt)
+    
+    #compute mean values
+    m_val = np.mean(q_val,0)
+    m_acc = np.mean(acc, 0)        
+    idx = np.argsort(m_acc)
+    m_acc = m_acc[idx]
+    m_val = m_val[idx,:]
+    n_val = n_val[idx,:]
+    print "n values:", n_val
+    
+    #plot
+    plt.figure()
+    for i_q in range(n_q):
+            plt.plot(m_acc, m_val[:,i_q],'-*')
+
+
 
 
 if __name__ == "__main__":
