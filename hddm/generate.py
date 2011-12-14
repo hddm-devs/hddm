@@ -10,17 +10,17 @@ import hddm
 
 def gen_rand_params(include=()):
     """Returns a dict of DDM parameters with random values.
-    
+
         :Optional:
             include : tuple
                 Which optional parameters include. Can be
                 any combination of:
-    
+
                 * 'z' (bias, default=0.5)
                 * 'V' (inter-trial drift variability)
                 * 'Z' (inter-trial bias variability)
                 * 'T' (inter-trial non-decision time variability)
-    
+
                 Special arguments are:
                 * 'all': include all of the above
                 * 'all_inter': include all of the above except 'z'
@@ -31,8 +31,8 @@ def gen_rand_params(include=()):
         include = ['z','V','Z','T']
     elif include == 'all_inter':
         include = ['V','Z','T']
-        
-    from numpy.random import rand, randn
+
+    from numpy.random import rand
 
     params['V'] = rand() if 'V' in include else 0
     params['Z'] = rand()* 0.3 if 'Z' in include else 0
@@ -43,12 +43,12 @@ def gen_rand_params(include=()):
     params['v'] = (rand()-.5)*4
     params['t'] = 0.2+rand()*0.3+(params['T']/2)
     params['a'] = 1.0+rand()
-    
+
 
     if 'pi' in include or 'gamma' in include:
         params['pi'] = max(rand()*0.1,0.01)
-#        params['gamma'] = rand()        
-    
+#        params['gamma'] = rand()
+
     return params
 
 
@@ -79,9 +79,9 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
     rts['rt'][:samples_pro] = np.abs(pro_rts)
     rts['rt'][samples_pro:] = np.abs(anti_rts)
     rts['subj_idx'] = subj_idx
-    
+
     return rts, params
-    
+
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
@@ -103,7 +103,7 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
             Number of steps/sec.
         intra_sv : float
             Intra-trial variability.
-        structured : bool 
+        structured : bool
             Return a structured array with fields 'RT'
             and 'response'.
         subj_idx : int
@@ -112,11 +112,11 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
             Which method to use to simulate the RTs:
                 * 'cdf': fast, uses the inverse of cumulative density function to sample, dt can be 1e-2.
                 * 'drift': slow, simulates each complete drift process, dt should be 1e-4.
-    
+
     """
     if params.has_key('v_switch') and method != 'drift':
         print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
-        
+
     if method=='cdf_py':
         rts = _gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
@@ -143,11 +143,11 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
 
 def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
     """Returns simulated RTs from simulating the whole drift-process.
-    
+
         :Arguments:
             params : dict
                 Parameter names and values.
-    
+
         :Optional:
             samlpes : int
                 How many samples to generate.
@@ -160,7 +160,7 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
             gen_rts
     """
 
-    from numpy.random import rand, randn
+    from numpy.random import rand
 
     if samples is None:
         samples = 1
@@ -170,32 +170,30 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
 
     if params.has_key('v_switch'):
         switch = True
-        v_switch = params['v_switch']
         t_switch = params['t_switch']/dt
-        V_switch = params['V_switch']
         # Hack so that we will always step into a switch
         nn = int(round(t_switch))
     else:
         switch = False
-        
+
     #create delay
     if params.has_key('T'):
         start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) \
                        - params['T']/2.)
     else:
         start_delay = np.ones(samples)*params['t']
-    
+
     #create starting_points
     if params.has_key('Z'):
         starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) \
                            - params['Z']/2.)*a
     else:
         starting_points = np.ones(samples)*params['z']*a
-    
+
     rts = np.empty(samples)
     step_size = np.sqrt(dt)*intra_sv
     drifts = []
-    
+
     for i_sample in xrange(samples):
         drift = np.array([])
         crossed = False
@@ -233,10 +231,10 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
                 # for next nn steps to continue drift
                 y_0 = position[-1]
 
-        #find the boundary interception        
+        #find the boundary interception
         y2 = position[cross_idx[0]]
         if cross_idx[0]!=0:
-            y1 = position[cross_idx[0]-1]            
+            y1 = position[cross_idx[0]-1]
         else:
             y1 = y_0
         m = (y2 - y1)/dt  # slope
@@ -252,7 +250,7 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         drifts.append(np.concatenate((np.ones(int(delay))*starting_points[i_sample], drift[:int(abs(rt)/dt)])))
 
     return rts, drifts
-    
+
 def pdf_with_params(rt, params):
     """Helper function that calls full_pdf and gets the parameters
     from the dict params.
@@ -260,18 +258,18 @@ def pdf_with_params(rt, params):
     """
     v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
     T = params['T']; a = params['a']
-    return hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t, 
-                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)         
+    return hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t,
+                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)
 
 def _gen_rts_from_cdf(params, samples=1000):
     """Returns simulated RTs sampled from the inverse of the CDF.
-    
+
        :Arguments:
             params : dict
                 Parameter names and values.
-    
+
         :Optional:
-            samlpes : int 
+            samlpes : int
                 How many samples to generate.
 
         :SeeAlso:
@@ -281,7 +279,7 @@ def _gen_rts_from_cdf(params, samples=1000):
     v = params['v']; V = params['V']; z = params['z']; Z = params['Z']; t = params['t'];
     T = params['T']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
-       
+
 def add_contaminate_data(data, params):
     """ add contaminated data"""
     if not params.has_key('gamma'):
@@ -298,14 +296,14 @@ def add_contaminate_data(data, params):
     cont_idx = random.sample(l_data,n_cont)
     unif_idx = cont_idx[:n_unif]
     other_idx = cont_idx[n_unif:]
-    
-    # create guesses 
+
+    # create guesses
     response = np.round(uniform.rvs(0,1,size=n_unif))
-    data[unif_idx]['rt']  = uniform.rvs(0,t_max,size=n_unif) * response    
+    data[unif_idx]['rt']  = uniform.rvs(0,t_max,size=n_unif) * response
     data[unif_idx]['rt']  = response
     data[unif_idx[0]]['rt'] = min(abs(data['rt']))/2.
-    data[unif_idx[1]]['rt'] = max(abs(data['rt'])) + 0.8   
-        
+    data[unif_idx[1]]['rt'] = max(abs(data['rt'])) + 0.8
+
     #create late responses
     response = (np.sign(gen_rts(params, n_other))+1) / 2
     data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
@@ -313,17 +311,17 @@ def add_contaminate_data(data, params):
 
 def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     """Generate simulated RTs with random parameters.
-    
+
        :Optional:
             params : dict
-                Parameter names and values. If not 
+                Parameter names and values. If not
                 supplied, takes random values.
             samlpes : int
                 How many samples to generate.
             include : tuple
-                Which inter-trial variability 
+                Which inter-trial variability
                 parameters to include ('V', 'Z', 'T')
-    
+
        :Returns:
             data array with RTs
             parameter values
@@ -336,13 +334,13 @@ def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     data = gen_rts(params, samples=samples, structured=True, method=method)
     if params.has_key('pi'):
         add_contaminate_data(data, params)
-    
+
     return (data, params)
 
-def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None, 
+def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None,
                             num_subjs=10, include = (), noise=.05):
     """Generate simulated RTs with multiple conditions.
-    
+
         :Optional:
             cond_params :  a dictionary of params
                 if cond_params[key] is a list then a new condition
@@ -353,14 +351,14 @@ def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None
                     1) - {'a':2, 't':0.3, 'v': 1, ...}
                     2) - {'a':2, 't':0.3, 'v': 2, ...}
 
-                if cond_params is None then it is genreated randomly 
+                if cond_params is None then it is genreated randomly
 
             samlpes_per_cond : int
                 How many samples to generate for each condition.
 
             n_conds : int
                 number of conditions
-            
+
             num_subjs : int
                 How many subjects to generate data for
 
@@ -371,22 +369,21 @@ def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None
                 Amount of noise to add to each parameter
 
         :Returns:
-            data : array 
+            data : array
                 RTs
             params_subj: list
                 parameter values for each condition
             combined_params: dictionary
                 a dictionary used by check_model
-    
+
     """
     # Create RT data
     if cond_params == None:
         cond_params, original_combined_params = gen_cond_params_v(n_conds, include=include)
 
-
     data_out = []
     params_subj = []
-    keys = cond_params.keys()
+
     combined_params = {}
     #loop over subjects
     for subj_idx in range(num_subjs):
@@ -403,14 +400,14 @@ def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None
 
         data_out.append(data_subj)
         params_subj.append(i_cond_params)
-        
+
     return rec.stack_arrays(data_out, usemask=False), params_subj, combined_params
 
 
-def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None, 
+def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
                        include = (), subj_idx=None):
     """Generate simulated RTs with multiple conditions.
-    
+
         :Input:
             cond_params :  a dictionary of params
                 if cond_params[key] is a list then a new condition
@@ -421,7 +418,7 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
                     1) - {'a':2, 't':0.3, 'v': 1, ...}
                     2) - {'a':2, 't':0.3, 'v': 2, ...}
 
-                if cond_params is None then it is genreated randomly 
+                if cond_params is None then it is genreated randomly
 
             samlpes_per_cond : int
                 How many samples to generate for each condition.
@@ -436,7 +433,7 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
                 Amount of noise to add to each parameter
 
         :Returns:
-            data : array 
+            data : array
                 RTs
             cond_params: dictionary
                 see Input
@@ -452,22 +449,22 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
     params_set = cond_params_to_params_set(cond_params)
 
     conds = range(n_conds)
-    
+
     if type(conds[0]) is str:
         cond_type = 'S12'
     else:
         cond_type = type(conds[0])
-    
+
     arrays = []
     for cond, params in zip(conds, params_set):
         i_data = gen_rts(params, samples=samples_per_cond, structured=True)
         if subj_idx is None:
             data = np.empty(len(i_data), dtype = ([('response', np.float),
-                                                   ('rt', np.float), 
+                                                   ('rt', np.float),
                                                    ('cond', cond_type)]))
         else:
             data = np.empty(len(i_data), dtype = ([('response', np.float),
-                                                   ('rt', np.float), 
+                                                   ('rt', np.float),
                                                    ('cond', cond_type),
                                                    ('subj_idx', np.int)]))
             data['subj_idx'] = subj_idx
@@ -484,6 +481,7 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
         add_contaminate_data(data_out, cond_params)
 
     return data_out, cond_params, combined_params
+
 
 def gen_cond_params_v(n_conds = 3, params = None, include = ()):
     """
@@ -512,6 +510,7 @@ def gen_cond_params_v(n_conds = 3, params = None, include = ()):
 
     return cond_params, combined_params
 
+
 def cond_params_to_combined_params(cond_params):
     """
     transform cond_params to combined_params
@@ -519,7 +518,7 @@ def cond_params_to_combined_params(cond_params):
     """
     cond_params = copy(cond_params)
     combined_params = copy(cond_params)
-    n_conds = max([len(x) for x in cond_params.values() if not np.isscalar(x)] + [1])    
+    n_conds = max([len(x) for x in cond_params.values() if not np.isscalar(x)] + [1])
     dep_keys = [x for x in cond_params.keys() if not np.isscalar(cond_params[x])]
     for key in dep_keys:
         del combined_params[key]
@@ -527,7 +526,6 @@ def cond_params_to_combined_params(cond_params):
             combined_params['%s(%d,)'%(key, i)] = cond_params[key][i]
 
     return combined_params
-    
 
 
 def cond_params_to_params_set(cond_params):
@@ -547,18 +545,19 @@ def cond_params_to_params_set(cond_params):
                 params_set[i_cond][key] = cond_params[key][i_cond]
     return params_set
 
+
 def _add_noise(params, noise=.1, include=()):
     """Add individual noise to each parameter.
 
         :Arguments:
             params : dict
                 Parameter names and values
-    
+
         :Optional:
             noise : float
                 Standard deviation of random gaussian
                 variable to add to each parameter.
-            include : tuple 
+            include : tuple
                 Which inter-trial variability parameters to
                 include. Can be any combination of ('V', 'Z', 'T').
 
@@ -574,6 +573,7 @@ def _add_noise(params, noise=.1, include=()):
             params[param] = np.random.normal(loc=value, scale=noise)
 
     return params
+
 
 def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include=()):
     """Generate simulated RTs of multiple subjects.
@@ -592,11 +592,11 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include
             include : tuple
                 Which inter-trial variability parameters to
                 include. Can be any combination of ('V', 'Z', 'T').
-    
+
         :Returns:
             numpy.recarray: with fields 'RT', 'response' and 'subj_idx'
                  and samples*num_subjs entries.
-            dict: Mapping of parameter names (with subject ids) to 
+            dict: Mapping of parameter names (with subject ids) to
                  parameter values.
 
     """
@@ -605,9 +605,6 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include
         #{'v': .5, 'V': 0.1, 'z': .5, 'Z': 0.1, 't': .3, 'T': 0.1, 'a': 2}
 
     params_orig = copy(params)
-    resps = []
-    rts = []
-    subj_idx = []
     data_gens = []
     # Derive individual parameters
     for i in range(num_subjs):
@@ -617,14 +614,14 @@ def gen_rand_subj_data(num_subjs=10, params=None, samples=100, noise=0.1,include
             params['%s%i'%(name,i)] = value
             if name in include or name in ('v','a','t'):
                 params['%stau'%name] = noise
-            
+
         # Create RT data
         data_gen = gen_rts(params_subj, samples=samples, structured=True, subj_idx=i)
         if params.has_key('pi'):
             add_contaminate_data(data_gen, params_subj)
-        
+
         data_gens.append(data_gen)
-    
+
     return (rec.stack_arrays(data_gens, usemask=False), params)
 
 def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, cor_param=None, subj_noise=.1):
@@ -632,7 +629,7 @@ def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, c
     another variable.
 
     """
-    
+
     if params is None:
         params = {'v': .5, 'V': 0, 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2, 'e': correlation}
 
@@ -647,7 +644,7 @@ def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, c
         params_subj = copy(params)
         params_subj = _add_noise(params_subj, subj_noise)
         params_subjs.append(params_subj)
-        
+
         for i in range(samples):
             params_trial = copy(params_subj)
             data['subj_idx'][trial] = subj_idx
@@ -664,7 +661,7 @@ def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, c
                 rt = gen_rts(params_trial, samples=1, structured=False)
 
             data['rt'][trial] = rt
-            
+
             trial+=1
 
     data['response'][data['rt']>0] = 1.
@@ -672,6 +669,6 @@ def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, c
     data['rt'] = np.abs(data['rt'])
 
     return data, params_subjs
-    
 
-        
+
+
