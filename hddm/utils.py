@@ -895,7 +895,7 @@ def data_plot(data, nbins=50):
 
 
 
-def QPplot(model, values_to_use= 'mean'):
+def qp_plot(model, values_to_use= None):
     """
     generate a quantile-probability plot
     Input:
@@ -904,6 +904,7 @@ def QPplot(model, values_to_use= 'mean'):
             may be one of the followings:
             -'mean': mean value of each parameter
             -'current': the current value of each parameter
+            -'none'   : not printing any estimated quantiles
 
 
     """
@@ -961,9 +962,14 @@ def QPplot(model, values_to_use= 'mean'):
     for i_q in range(n_q):
             plt.plot(m_acc, m_val[:,i_q],'bx')
 
+    #add title and labels
+    plt.title('QP plot')
+    plt.xlabel('probability')
+    plt.ylabel('RT')
 
     #### compute estimated quantiles
-
+    if values_to_use == 'none':
+        return
     #get wfpt nodes
     if is_group:
         wfpt = [x[0] for x in model.params_dict['wfpt'].subj_nodes.values()]
@@ -1007,10 +1013,6 @@ def QPplot(model, values_to_use= 'mean'):
     for i_q in range(n_q):
         plt.plot(acc_sim, q_sim[:,i_q],'r-o')
 
-    #add title and labels
-    plt.title('QT plot')
-    plt.xlabel('probability')
-    plt.ylabel('RT')
 
 
 if __name__ == "__main__":
