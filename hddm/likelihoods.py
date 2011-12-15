@@ -68,6 +68,61 @@ WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
                                        dtype=np.float,
                                        mv=False)
 
+def wiener_summary(v, V, a, z, Z, t, T, quan = (10, 30, 50, 70, 90),
+                   cdf_bound=5, dt=1e-3):
+    """
+    provide RT distribution statistics.
+    Input:
+        v, V, a, z, Z, t, T - DDM parameters
+        quan - list of quantiles to compute        
+        cdf_bound, dt - advance arguments to create the cdf
+    
+    Output:
+        accuracy - the chance of hitting the upper boundary
+        RTs - a 2-by-n matrix, where n is the number of quantiles.
+            The first row hold the RT at the requested quantiles
+            of the upper boundary. The second row hold the same for the 
+            lower boundary 
+    """
+    
+    n_steps = int(cdf_bound/dt)
+    l_cdf = np.empty((2, n_steps), dtype=np.double)
+    val = np.empty((2, len(quan)), dtype=np.double)
+    
+    #compute defective cdf for each boundary
+    for i_resp in range(2):
+        if i_resp==0:
+            sign = 1
+        else:
+            sign = -1;
+        for i in xrange(n_steps):
+            rt = (dt*i) * sign
+            pdf = hddm.wfpt.full_pdf(rt, v, V, a, z, Z, t, T, 1e-4)
+            if i==0:
+                l_cdf[i_resp,i] = pdf
+            else:
+                l_cdf[i_resp,i] = l_cdf[i_resp,i-1] + pdf
+
+    #compute accuracy
+    acc = l_cdf[0,-1] / (l_cdf[:,-1].sum())
+    
+    #normalize cdf
+    l_cdf[0,:] -= l_cdf[0,0]
+    for i_resp in range(2):
+        l_cdf[i_resp,:] /= l_cdf[i_resp,-1]
+
+    #get quantiles
+    for i_resp in range(2):
+        q_idx = 0
+        for i in xrange(n_steps):
+            if l_cdf[i_resp,i] > (quan[q_idx] / 100.):
+                val[i_resp,q_idx] = dt*i - dt/2;
+                q_idx += 1
+                if q_idx>=len(quan):
+                    break
+
+    return acc, val
+
 
 
 ################################

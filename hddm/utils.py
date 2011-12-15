@@ -895,7 +895,7 @@ def data_plot(data, nbins=50):
 
 
 
-def QPplot(model, filt_func = None, group_plot = True):
+def QPplot(model, filt_func = None, compare_to= 'mean'):
     """
     generate a quantile-probability plot
     """
@@ -956,7 +956,11 @@ def QPplot(model, filt_func = None, group_plot = True):
     for i_q in range(n_q):
             plt.plot(m_acc, m_val[:,i_q],'-*')
 
-
+    
+    if compare_to == 'map':
+        map = pm.MAP(model.nodes);
+        map.fit(method='fmin_powell')
+        
 
 
 if __name__ == "__main__":
