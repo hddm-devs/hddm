@@ -895,11 +895,20 @@ def data_plot(data, nbins=50):
 
 
 
-def QPplot(model, filt_func = None, compare_to= 'mean'):
+def QPplot(model, values_to_use= 'mean'):
     """
     generate a quantile-probability plot
+    Input:
+        model - hddm model
+        values_to_use - which values will be used to compute the estimated quantiles.
+            may be one of the followings:
+            -'mean': mean value of each parameter
+            -'current': the current value of each parameter
+            
+    
     """
     
+    #### compute empirical quantiles
     #Init 
     quantiles = [10, 30, 50, 70, 90];
     n_q = len(quantiles)
@@ -910,11 +919,7 @@ def QPplot(model, filt_func = None, compare_to= 'mean'):
         n_subj = 1
         is_group = False
     wfpt_dict = model.params_dict['wfpt'].subj_nodes
-    if filt_func == None:
-        conds = wfpt_dict.keys()
-    else:
-        conds = filter(filt_func, wfpt_dict.keys())
-        assert len(conds)>1, "filter removed all the condtions. please change filt_func"
+    conds = wfpt_dict.keys()
     n_conds = len(conds)
     q_val = zeros((n_subj, n_conds * 2, n_q))
     acc = zeros((n_subj, n_conds * 2))
@@ -951,16 +956,62 @@ def QPplot(model, filt_func = None, compare_to= 'mean'):
     n_val = n_val[idx,:]
     print "n values:", n_val
     
-    #plot
+    #plot 
     plt.figure()
     for i_q in range(n_q):
-            plt.plot(m_acc, m_val[:,i_q],'-*')
+            plt.plot(m_acc, m_val[:,i_q],'bx')
 
-    
-    if compare_to == 'map':
-        map = pm.MAP(model.nodes);
-        map.fit(method='fmin_powell')
         
+        
+    #### compute estimated quantiles
+
+    #get wfpt nodes
+    if is_group:
+        wfpt = [x[0] for x in model.params_dict['wfpt'].subj_nodes.values()]
+    else:
+        wfpt = model.params_dict['wfpt'].subj_nodes.values()
+    
+    q_sim = zeros((n_conds * 2, n_q))
+    acc_sim = zeros((n_conds * 2))
+    
+    #loop over conditions
+    for i_cond in range(n_conds):
+        params = hddm.generate.gen_rand_params()
+        wfpt_params = dict(wfpt[i_cond].parents)
+        #get params
+        for key in params.iterkeys():
+            if isinstance(wfpt_params[key], pm.Node):
+                node = wfpt_params[key]
+                if values_to_use == 'mean':
+                    if is_group:
+                        params[key] = mean(node.parents['mu'].trace()[:])
+                    else:
+                        params[key] = mean(node.trace()[:])
+                        
+                elif values_to_use == 'current':
+                    if is_group:
+                        params[key] = node.parents['mu'].value
+                    else:
+                        params[key] = node  .value
+                      
+        t_acc_sim, t_q_sim = hddm.likelihoods.wiener_summary(**params);
+        acc_sim[i_cond * 2] = t_acc_sim
+        acc_sim[i_cond * 2 + 1] = 1 - t_acc_sim
+        q_sim[i_cond * 2, :] = t_q_sim[0,:]
+        q_sim[i_cond * 2 + 1, :] = t_q_sim[1,:]
+
+    idx = np.argsort(acc_sim)
+    acc_sim = acc_sim[idx]
+    q_sim = q_sim[idx,:]
+
+    #plot
+    for i_q in range(n_q):
+        plt.plot(acc_sim, q_sim[:,i_q],'r-o')
+
+    #add title and labels
+    plt.title('QT plot')
+    plt.xlabel('probability')
+    plt.ylabel('RT') 
 
 
 if __name__ == "__main__":
