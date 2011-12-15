@@ -904,12 +904,12 @@ def QPplot(model, values_to_use= 'mean'):
             may be one of the followings:
             -'mean': mean value of each parameter
             -'current': the current value of each parameter
-            
-    
+
+
     """
-    
+
     #### compute empirical quantiles
-    #Init 
+    #Init
     quantiles = [10, 30, 50, 70, 90];
     n_q = len(quantiles)
     if model.is_group_model:
@@ -924,9 +924,9 @@ def QPplot(model, values_to_use= 'mean'):
     q_val = zeros((n_subj, n_conds * 2, n_q))
     acc = zeros((n_subj, n_conds * 2))
     n_val = zeros(n_conds*2)
-    
+
     #loop over conditions and subjs
-    print "plotting the following conditions: " 
+    print "plotting the following conditions: "
     for i_cond in range(n_conds):
         print conds[i_cond]
         for i_subj in range(n_subj):
@@ -946,23 +946,22 @@ def QPplot(model, values_to_use= 'mean'):
                     [scoreatpercentile(abs(t_rt),x) for x in quantiles]
                 acc[i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
                 n_val[i_cond * 2 + i_resp] += len(t_rt)
-    
+
     #compute mean values
     m_val = np.mean(q_val,0)
-    m_acc = np.mean(acc, 0)        
+    m_acc = np.mean(acc, 0)
     idx = np.argsort(m_acc)
     m_acc = m_acc[idx]
     m_val = m_val[idx,:]
     n_val = n_val[idx,:]
     print "n values:", n_val
-    
-    #plot 
+
+    #plot
     plt.figure()
     for i_q in range(n_q):
             plt.plot(m_acc, m_val[:,i_q],'bx')
 
-        
-        
+
     #### compute estimated quantiles
 
     #get wfpt nodes
@@ -970,10 +969,10 @@ def QPplot(model, values_to_use= 'mean'):
         wfpt = [x[0] for x in model.params_dict['wfpt'].subj_nodes.values()]
     else:
         wfpt = model.params_dict['wfpt'].subj_nodes.values()
-    
+
     q_sim = zeros((n_conds * 2, n_q))
     acc_sim = zeros((n_conds * 2))
-    
+
     #loop over conditions
     for i_cond in range(n_conds):
         params = hddm.generate.gen_rand_params()
@@ -987,13 +986,13 @@ def QPplot(model, values_to_use= 'mean'):
                         params[key] = mean(node.parents['mu'].trace()[:])
                     else:
                         params[key] = mean(node.trace()[:])
-                        
+
                 elif values_to_use == 'current':
                     if is_group:
                         params[key] = node.parents['mu'].value
                     else:
                         params[key] = node  .value
-                      
+
         t_acc_sim, t_q_sim = hddm.likelihoods.wiener_summary(**params);
         acc_sim[i_cond * 2] = t_acc_sim
         acc_sim[i_cond * 2 + 1] = 1 - t_acc_sim
@@ -1011,7 +1010,7 @@ def QPplot(model, values_to_use= 'mean'):
     #add title and labels
     plt.title('QT plot')
     plt.xlabel('probability')
-    plt.ylabel('RT') 
+    plt.ylabel('RT')
 
 
 if __name__ == "__main__":
