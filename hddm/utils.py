@@ -5,6 +5,7 @@ import pymc as pm
 from scipy.stats import scoreatpercentile
 import sys
 import table_print
+from numpy import zeros, ones
 
 import hddm
 
@@ -673,6 +674,9 @@ def ppd_test(hm, n_samples=1000, confidence=95, plot_verbose=0, verbose=1,
 
         labels_dict - (optional) a dictionary of labels for the table, where the keys are
             the different conditions and the values are the labels of table
+
+    Output:
+        subj_res/group_res : can be used to reprint the table
     """
 
     #if input is tuple than hm is a group model and we are in a recursion
@@ -772,6 +776,25 @@ def ppd_test(hm, n_samples=1000, confidence=95, plot_verbose=0, verbose=1,
     if verbose >= 1:
         print_ppd_test_result_for_subject(subj_res, labels_dict, table_width)
     return subj_res
+
+
+#def qp_plot_for_ppd_test(subj_res):
+#    q_names = ['q10', 'q30', 'q50', 'q70', 'q90']
+#    conds = subj_res.keys();
+#    n_conds = len(conds)
+#    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+#
+#    #loop over conds
+#    for i_cond in range(n_conds):
+#        stats = subj_res[conds[i_cond]]
+#
+#        #plot observed data
+#        obs_acc = stats['acc']['obs']
+#        obs_q = [stats[x]['obs'] for x in q_names]
+#        plot(ones(n_conds)*obs_acc, obs_q, colors[])
+#        acc = stats['acc']['mean']
+
+
 
 
 def print_ppd_test_result_for_subject(subj_res, labels_dict=None, width=10):
@@ -989,9 +1012,9 @@ def qp_plot(model, values_to_use= None):
                 node = wfpt_params[key]
                 if values_to_use == 'mean':
                     if is_group:
-                        params[key] = mean(node.parents['mu'].trace()[:])
+                        params[key] = np.mean(node.parents['mu'].trace()[:])
                     else:
-                        params[key] = mean(node.trace()[:])
+                        params[key] = np.mean(node.trace()[:])
 
                 elif values_to_use == 'current':
                     if is_group:
