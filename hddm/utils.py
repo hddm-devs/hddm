@@ -5,7 +5,7 @@ import pymc as pm
 from scipy.stats import scoreatpercentile
 import sys
 import table_print
-from numpy import zeros, ones
+from numpy import array, zeros, ones, empty
 
 import hddm
 
