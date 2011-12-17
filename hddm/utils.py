@@ -916,38 +916,25 @@ def data_plot(data, nbins=50):
     plt.hist(data['rt'], nbins)
     plt.show()
 
-
-
-def qp_plot(model, values_to_use= None):
-    """
-    generate a quantile-probability plot
-    Input:
-        model - hddm model
-        values_to_use - which values will be used to compute the estimated quantiles.
-            may be one of the followings:
-            -'mean': mean value of each parameter
-            -'current': the current value of each parameter
-            -'none'   : not printing any estimated quantiles
-
-
-    """
-
-    #### compute empirical quantiles
+def empirical_summary(hm, quantiles = (10, 30, 50, 70, 90)):
+    
     #Init
-    quantiles = [10, 30, 50, 70, 90];
     n_q = len(quantiles)
-    if model.is_group_model:
+    if hm.is_group_model:
         is_group = True
-        n_subj = model._num_subjs
+        n_subj = hm._num_subjs
     else:
         n_subj = 1
         is_group = False
-    wfpt_dict = model.params_dict['wfpt'].subj_nodes
+    wfpt_dict = hm.params_dict['wfpt'].subj_nodes
     conds = wfpt_dict.keys()
     n_conds = len(conds)
-    q_val = zeros((n_subj, n_conds * 2, n_q))
-    acc = zeros((n_subj, n_conds * 2))
-    n_val = zeros(n_conds*2)
+    group_dict = {}; subj_dict = {}
+    group_dict['q'] = zeros((n_conds * 2, n_q))
+    count = zeros(n_conds * 2)
+    subj_dict['q'] = zeros((n_subj, n_conds * 2, n_q))
+    subj_dict['prob'] = zeros((n_subj, n_conds * 2))
+    subj_dict['n'] = zeros((n_subj, n_conds*2))
 
     #loop over conditions and subjs
     print "plotting the following conditions: "
@@ -965,42 +952,163 @@ def qp_plot(model, values_to_use= None):
                     t_rt = rt[rt > 0]
                 else:
                     t_rt = rt[rt < 0]
-                if len(t_rt)>0:
-                    q_val[i_subj, i_cond * 2 + i_resp, :] = \
+                if len(t_rt)>=n_q:
+                    cond_ind = i_cond * 2 + i_resp
+                    subj_dict['q'][i_subj, cond_ind, :] = \
                     [scoreatpercentile(abs(t_rt),x) for x in quantiles]
-                acc[i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
-                n_val[i_cond * 2 + i_resp] += len(t_rt)
+                    group_dict['q'][cond_ind, :] += subj_dict['q'][i_subj,cond_ind,:]
+                    count[cond_ind] += 1
+                else:
+                    subj_dict['q'][i_subj, i_cond * 2 + i_resp, :] = np.NaN
+                subj_dict['prob'][i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
+                subj_dict['n'][i_subj, i_cond * 2 + i_resp] = len(t_rt)
 
-    #compute mean values
-    m_val = np.mean(q_val,0)
-    m_acc = np.mean(acc, 0)
-    idx = np.argsort(m_acc)
-    m_acc = m_acc[idx]
-    m_val = m_val[idx,:]
-    n_val = n_val[idx,:]
-    print "n values:", n_val
+    #compute group values
+    group_dict['prob'] = np.mean(subj_dict['prob'], 0)
+    group_dict['n'] = np.sum(subj_dict['n'],0)
+    for i_c in range(n_conds * 2):
+        group_dict['q'][i_c] /= count[i_c]
+    
+    #sort
+    idx = np.argsort(group_dict['prob'])
+    group_dict['prob'] = group_dict['prob'][idx]
+    group_dict['q'] = group_dict['q'][idx,:]
+    group_dict['n'] = group_dict['n'][idx,:]
+    subj_dict['prob'] = subj_dict['prob'][:,idx]
+    subj_dict['q'] = subj_dict['q'][:,idx,:]    
+    subj_dict['n'] = subj_dict['n'][:,idx]
+    
+    conds = array(conds)[(idx // 2)]
+    
+    return group_dict, subj_dict, conds
 
-    #plot
+def _draw_qp_plot(group_dict, subj_dict, conds, plot_subj, conds_to_plot, cond_str = ''):
+    
+    colors  = ['b', 'g', 'c', 'm', 'r', 'y', 'k'] 
+    n_subj = subj_dict['q'].shape[0]
+    n_q = subj_dict['q'].shape[2]
+    n_conds = len(conds)//2
+    
+    #group plot
     plt.figure()
-    for i_q in range(n_q):
-            plt.plot(m_acc, m_val[:,i_q],'bx')
+    color_counter = -1
+    for i_c in range(n_conds):
+        #check if we need to plot this condition
+        if i_c not in conds_to_plot:
+            continue
+        color_counter += 1
+        #loop over correct and incorrect reponses
+        for i_resp in range(2):
+            if i_resp == 0:
+                idx = i_c
+            else:
+                idx = (n_conds * 2) - 1 - i_c
+            #get color of marker
+            cc = colors[color_counter % len(colors)]
+            if np.isnan(group_dict['prob'][idx]):
+                continue
+            #plot it
+            g_handle = plt.plot(ones(n_q)*group_dict['prob'][idx], 
+                                group_dict['q'][idx,:],'%sd' % cc)
 
     #add title and labels
-    plt.title('QP plot')
+    plt.gcf().canvas.set_window_title('QP: group %s' % cond_str)
+    plt.title('group QP plot %s' % cond_str)
     plt.xlabel('probability')
     plt.ylabel('RT')
+    plt.xlim([-0.05, 1.05])
+
+    #subj plots
+    if plot_subj:
+        s_handle = [None]*n_subj
+        color_counter = -1
+        for i_subj in range(n_subj):
+            plt.figure()
+            for i_c in range(n_conds):
+                if i_c not in conds_to_plot:
+                    continue
+                color_counter += 1
+                for i_resp in range(2):
+                    if i_resp == 0:
+                        idx = i_c
+                    else:
+                        idx = (n_conds * 2) - 1 - i_c
+                    cc = colors[color_counter % len(colors)]
+                    if np.isnan(subj_dict['prob'][i_subj,idx]):
+                        continue                    
+                    s_handle[i_subj] = plt.plot(ones(n_q)*subj_dict['prob'][i_subj,idx], 
+                                                subj_dict['q'][i_subj,idx,:],'%sd' % cc)
+    
+            #add title and labels
+            plt.gcf().canvas.set_window_title('QP: %d (%s)' % (i_subj, cond_str))
+            plt.title('QP: subj %d %s' % (i_subj, cond_str))
+            plt.xlabel('probability')
+            plt.ylabel('RT')
+            plt.xlim([-0.05, 1.05])
+            
+        return [g_handle, s_handle]
+    
+    else:
+        return [g_handle]
+
+
+def qp_plot(hm, values_to_use= None, plot_subj = True, split_func = lambda x:0):
+    """
+    generate a quantile-probability plot
+    Input:
+        hm - hddm model
+        values_to_use - which values will be used to compute the estimated quantiles.
+            may be one of the followings:
+            -'mean': mean value of each parameter
+            -'current': the current value of each parameter
+            -'none'   : not printing any estimated quantiles
+
+
+    """
+
+    #### compute empirical quantiles
+    #Init
+    quantiles = [10, 30, 50, 70, 90];
+    n_q = len(quantiles)
+    if hm.is_group_model:
+        is_group = True
+        n_subj = hm._num_subjs
+    else:
+        n_subj = 1
+        is_group = False
+
+    #get group and subj dicts
+    group_dict, subj_dict, conds = empirical_summary(hm, quantiles = quantiles)
+    
+    #get splits
+    keys = [split_func(x) for x in conds]
+    dic  = {}
+    for i_s in range(len(keys)):
+        if dic.has_key(keys[i_s]):
+            dic[keys[i_s]].append(i_s)
+        else:
+            dic[keys[i_s]] = [i_s]
+    splits = dic.values()
+    splits_keys = dic.keys()
+    
+    #plot
+    handles = [None]*len(splits)
+    for i_s in range(len(splits)):
+        handles[i_s] = _draw_qp_plot(group_dict, subj_dict, conds, plot_subj, 
+                                   splits[i_s], '(%s)' % splits_keys[i_s])
+
 
     #### compute estimated quantiles
     if values_to_use == 'none':
         return
     #get wfpt nodes
     if is_group:
-        wfpt = [x[0] for x in model.params_dict['wfpt'].subj_nodes.values()]
+        wfpt = [x[0] for x in hm.params_dict['wfpt'].subj_nodes.values()]
     else:
-        wfpt = model.params_dict['wfpt'].subj_nodes.values()
+        wfpt = hm.params_dict['wfpt'].subj_nodes.values()
 
     q_sim = zeros((n_conds * 2, n_q))
-    acc_sim = zeros((n_conds * 2))
+    prob_sim = zeros((n_conds * 2))
 
     #loop over conditions
     for i_cond in range(n_conds):
@@ -1023,18 +1131,18 @@ def qp_plot(model, values_to_use= None):
                         params[key] = node  .value
 
         t_acc_sim, t_q_sim = hddm.likelihoods.wiener_summary(**params);
-        acc_sim[i_cond * 2] = t_acc_sim
-        acc_sim[i_cond * 2 + 1] = 1 - t_acc_sim
+        prob_sim[i_cond * 2] = t_acc_sim
+        prob_sim[i_cond * 2 + 1] = 1 - t_acc_sim
         q_sim[i_cond * 2, :] = t_q_sim[0,:]
         q_sim[i_cond * 2 + 1, :] = t_q_sim[1,:]
 
-    idx = np.argsort(acc_sim)
-    acc_sim = acc_sim[idx]
+    idx = np.argsort(prob_sim)
+    prob_sim = prob_sim[idx]
     q_sim = q_sim[idx,:]
 
     #plot
     for i_q in range(n_q):
-        plt.plot(acc_sim, q_sim[:,i_q],'r-o')
+        plt.plot(prob_sim, q_sim[:,i_q],'r-o')
 
 
 
