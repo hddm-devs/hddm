@@ -2,12 +2,14 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
-from scipy.stats import scoreatpercentile
+import hddm
 import sys
 import table_print
-from numpy import array, zeros, ones, empty
 
-import hddm
+from scipy.stats import scoreatpercentile
+from numpy import array, zeros, ones, empty
+from copy import deepcopy
+from time import time
 
 try:
     from IPython.Debugger import Tracer;
@@ -916,8 +918,76 @@ def data_plot(data, nbins=50):
     plt.hist(data['rt'], nbins)
     plt.show()
 
-def empirical_summary(hm, quantiles = (10, 30, 50, 70, 90)):
-    
+#def data_quantiles_summary(hm, quantiles = (10, 30, 50, 70, 90)):
+#
+#    #Init
+#    n_q = len(quantiles)
+#    if hm.is_group_model:
+#        is_group = True
+#        n_subj = hm._num_subjs
+#    else:
+#        n_subj = 1
+#        is_group = False
+#    wfpt_dict = hm.params_dict['wfpt'].subj_nodes
+#    conds = wfpt_dict.keys()
+#    n_conds = len(conds)
+#    group_dict = {}; subj_dict = {}
+#    group_dict['q'] = zeros((n_conds * 2, n_q))
+#    count = zeros(n_conds * 2)
+#    subj_dict['q'] = zeros((n_subj, n_conds * 2, n_q))
+#    subj_dict['prob'] = zeros((n_subj, n_conds * 2))
+#    subj_dict['n'] = zeros((n_subj, n_conds*2))
+#
+#    #loop over conditions and subjs
+#    print "plotting the following conditions: "
+#    for i_cond in range(n_conds):
+#        print conds[i_cond]
+#        for i_subj in range(n_subj):
+#            #get rt
+#            if is_group:
+#                rt = wfpt_dict[conds[i_cond]][i_subj].value
+#            else:
+#                rt = wfpt_dict[conds[i_cond]].value
+#            #loop over responses
+#            for i_resp in range(2):
+#                if i_resp==0:
+#                    t_rt = rt[rt > 0]
+#                else:
+#                    t_rt = rt[rt < 0]
+#                if len(t_rt)>=(n_q*2):
+#                    cond_ind = i_cond * 2 + i_resp
+#                    subj_dict['q'][i_subj, cond_ind, :] = \
+#                    [scoreatpercentile(abs(t_rt),x) for x in quantiles]
+#                    group_dict['q'][cond_ind, :] += subj_dict['q'][i_subj,cond_ind,:]
+#                    count[cond_ind] += 1
+#                else:
+#                    subj_dict['q'][i_subj, i_cond * 2 + i_resp, :] = np.NaN
+#                subj_dict['prob'][i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
+#                subj_dict['n'][i_subj, i_cond * 2 + i_resp] = len(t_rt)
+#
+#    #compute group values
+#    group_dict['prob'] = np.mean(subj_dict['prob'], 0)
+#    group_dict['n'] = np.sum(subj_dict['n'],0)
+#    for i_c in range(n_conds * 2):
+#        group_dict['q'][i_c] /= count[i_c]
+#
+#    #sort
+#    idx = np.argsort(group_dict['prob'])
+#    group_dict['prob'] = group_dict['prob'][idx]
+#    group_dict['q'] = group_dict['q'][idx,:]
+#    group_dict['n'] = group_dict['n'][idx,:]
+#    subj_dict['prob'] = subj_dict['prob'][:,idx]
+#    subj_dict['q'] = subj_dict['q'][:,idx,:]
+#    subj_dict['n'] = subj_dict['n'][:,idx]
+#
+#    conds = array(conds)[(idx // 2)]
+#
+#    return group_dict, subj_dict, conds, idx
+
+def quantiles_summary(hm, is_observed, n_samples,
+                      quantiles = (10, 30, 50, 70, 90), sorted_idx = None,
+                      cdf_range  = (-5, 5)):
+
     #Init
     n_q = len(quantiles)
     if hm.is_group_model:
@@ -926,71 +996,110 @@ def empirical_summary(hm, quantiles = (10, 30, 50, 70, 90)):
     else:
         n_subj = 1
         is_group = False
+    if is_observed:
+        n_samples = 1
+        len_trace = 1
+    else:
+        db =hm.mc.db
+        len_trace = db.trace('a').length()
+        params = hddm.generate.gen_rand_params()
+
     wfpt_dict = hm.params_dict['wfpt'].subj_nodes
     conds = wfpt_dict.keys()
     n_conds = len(conds)
-    group_dict = {}; subj_dict = {}
-    group_dict['q'] = zeros((n_conds * 2, n_q))
-    count = zeros(n_conds * 2)
-    subj_dict['q'] = zeros((n_subj, n_conds * 2, n_q))
-    subj_dict['prob'] = zeros((n_subj, n_conds * 2))
-    subj_dict['n'] = zeros((n_subj, n_conds*2))
+    temp_dict = {}
+    group_dict = {}; subj_dict = [None]*n_subj;
+    count = zeros((n_conds * 2, n_samples))
+    temp_dict['q'] = zeros((n_conds * 2, n_samples, n_q))
+    temp_dict['prob'] = zeros((n_conds * 2, n_samples))
+    temp_dict['n'] = zeros((n_conds*2, n_samples))
+    group_dict = deepcopy(temp_dict)
+    for i_subj in range(n_subj):
+        subj_dict[i_subj] = deepcopy(temp_dict)
 
-    #loop over conditions and subjs
-    print "plotting the following conditions: "
-    for i_cond in range(n_conds):
-        print conds[i_cond]
-        for i_subj in range(n_subj):
-            #get rt
-            if is_group:
-                rt = wfpt_dict[conds[i_cond]][i_subj].value
-            else:
-                rt = wfpt_dict[conds[i_cond]].value
-            #loop over responses
-            for i_resp in range(2):
-                if i_resp==0:
-                    t_rt = rt[rt > 0]
+    #loop over subjs
+    for i_subj in range(n_subj):
+        #get wfpt nodes
+        if is_group:
+            wfpt = [x[i_subj] for x in hm.params_dict['wfpt'].subj_nodes.values()]
+        else:
+            wfpt = hm.params_dict['wfpt'].subj_nodes.values()
+        #loop over conds
+        for i_cond in range(n_conds):
+            wfpt_params = dict(wfpt[i_cond].parents)
+            data_len = len(wfpt[i_cond].value)
+            for i_sample in xrange(n_samples):
+                #get rt
+                if is_observed:
+                    rt = wfpt[i_cond].value
                 else:
-                    t_rt = rt[rt < 0]
-                if len(t_rt)>=n_q:
+                    #get params
+                    sample_idx = ((len_trace - 1) // (n_samples - 1)) * i_sample 
+                    for key in params.iterkeys():
+                        if isinstance(wfpt_params[key], pm.Node):
+                            node = wfpt_params[key]
+                            name = node.__name__
+                            params[key] = db.trace(name)[sample_idx]
+                    #generate rt
+                    rt = hddm.generate.gen_rts(params, samples=data_len, range_=cdf_range,
+                                               dt=1e-3, intra_sv=1., structured=False,
+                                               subj_idx=None, method='cdf')
+                #loop over responses
+                for i_resp in range(2):
                     cond_ind = i_cond * 2 + i_resp
-                    subj_dict['q'][i_subj, cond_ind, :] = \
-                    [scoreatpercentile(abs(t_rt),x) for x in quantiles]
-                    group_dict['q'][cond_ind, :] += subj_dict['q'][i_subj,cond_ind,:]
-                    count[cond_ind] += 1
-                else:
-                    subj_dict['q'][i_subj, i_cond * 2 + i_resp, :] = np.NaN
-                subj_dict['prob'][i_subj, i_cond * 2 + i_resp] = 1.*len(t_rt) / len(rt)
-                subj_dict['n'][i_subj, i_cond * 2 + i_resp] = len(t_rt)
+                    if i_resp==0:
+                        t_rt = rt[rt > 0]
+                    else:
+                        t_rt = rt[rt < 0]
+                    #get n_q
+                    if len(t_rt)>=n_q:
+                        t_quan = [scoreatpercentile(abs(t_rt),x) for x in quantiles]
+                        subj_dict[i_subj]['q'][cond_ind, i_sample, :] = t_quan
+                        group_dict['q'][cond_ind, i_sample, :] += t_quan
+                        count[cond_ind, i_sample] += 1
+                    else:
+                        subj_dict[i_subj]['q'][cond_ind, i_sample, :] = np.NaN
+                    t_prob = 1.*len(t_rt) / len(rt)
+                    subj_dict[i_subj]['prob'][cond_ind, i_sample] = t_prob
+                    group_dict['prob'][cond_ind, i_sample] += t_prob
+
+                    subj_dict[i_subj]['n'][cond_ind, i_sample] = len(t_rt)
+                    group_dict['n'][cond_ind, i_sample] = len(t_rt)
+
+
 
     #compute group values
-    group_dict['prob'] = np.mean(subj_dict['prob'], 0)
-    group_dict['n'] = np.sum(subj_dict['n'],0)
+    group_dict['prob'] /= n_subj
     for i_c in range(n_conds * 2):
-        group_dict['q'][i_c] /= count[i_c]
-    
+        for i_sample in xrange(n_samples):
+            group_dict['q'][i_c, i_sample,:] /= count[i_c, i_sample]
     #sort
-    idx = np.argsort(group_dict['prob'])
-    group_dict['prob'] = group_dict['prob'][idx]
-    group_dict['q'] = group_dict['q'][idx,:]
-    group_dict['n'] = group_dict['n'][idx,:]
-    subj_dict['prob'] = subj_dict['prob'][:,idx]
-    subj_dict['q'] = subj_dict['q'][:,idx,:]    
-    subj_dict['n'] = subj_dict['n'][:,idx]
-    
-    conds = array(conds)[(idx // 2)]
-    
-    return group_dict, subj_dict, conds
+    if sorted_idx == None:
+        sorted_idx = np.argsort(group_dict['prob'][:,0]).flatten()
+    group_dict['prob'] = group_dict['prob'][sorted_idx,:]
+    group_dict['q'] = group_dict['q'][sorted_idx,:,:]
+    group_dict['n'] = group_dict['n'][sorted_idx,:]
+    for i_subj in range(n_subj):
+        subj_dict[i_subj]['prob'] = subj_dict[i_subj]['prob'][sorted_idx,:]
+        subj_dict[i_subj]['q'] = subj_dict[i_subj]['q'][sorted_idx,:, :]
+        subj_dict[i_subj]['n'] = subj_dict[i_subj]['n'][sorted_idx, :]
 
-def _draw_qp_plot(group_dict, subj_dict, conds, plot_subj, conds_to_plot, cond_str = ''):
-    
-    colors  = ['b', 'g', 'c', 'm', 'r', 'y', 'k'] 
-    n_subj = subj_dict['q'].shape[0]
-    n_q = subj_dict['q'].shape[2]
+    conds = array(conds)[(sorted_idx // 2)]
+    return group_dict, subj_dict, conds, sorted_idx
+
+
+
+def _draw_qp_plot(dict, conds, conds_to_plot, title_str,
+                  marker, handle = None):
+
+    colors  = ['b', 'g', 'c', 'm', 'r', 'y', 'k']
+    n_q = dict['q'].shape[2]
     n_conds = len(conds)//2
-    
+    n_samples = dict['prob'].shape[1]
     #group plot
-    plt.figure()
+    if handle == None:
+        f = plt.figure()
+        handle = f.add_subplot(111)
     color_counter = -1
     for i_c in range(n_conds):
         #check if we need to plot this condition
@@ -1005,54 +1114,27 @@ def _draw_qp_plot(group_dict, subj_dict, conds, plot_subj, conds_to_plot, cond_s
                 idx = (n_conds * 2) - 1 - i_c
             #get color of marker
             cc = colors[color_counter % len(colors)]
-            if np.isnan(group_dict['prob'][idx]):
-                continue
             #plot it
-            g_handle = plt.plot(ones(n_q)*group_dict['prob'][idx], 
-                                group_dict['q'][idx,:],'%sd' % cc)
+            for i_sample in range(n_samples):
+                if np.isnan(dict['prob'][idx, i_sample]):
+                    continue
+                handle.plot(ones(n_q)*dict['prob'][idx,i_sample],
+                                  dict['q'][idx,i_sample,:],'%s%s' % (cc, marker))
 
     #add title and labels
-    plt.gcf().canvas.set_window_title('QP: group %s' % cond_str)
-    plt.title('group QP plot %s' % cond_str)
-    plt.xlabel('probability')
-    plt.ylabel('RT')
-    plt.xlim([-0.05, 1.05])
-
-    #subj plots
-    if plot_subj:
-        s_handle = [None]*n_subj
-        color_counter = -1
-        for i_subj in range(n_subj):
-            plt.figure()
-            for i_c in range(n_conds):
-                if i_c not in conds_to_plot:
-                    continue
-                color_counter += 1
-                for i_resp in range(2):
-                    if i_resp == 0:
-                        idx = i_c
-                    else:
-                        idx = (n_conds * 2) - 1 - i_c
-                    cc = colors[color_counter % len(colors)]
-                    if np.isnan(subj_dict['prob'][i_subj,idx]):
-                        continue                    
-                    s_handle[i_subj] = plt.plot(ones(n_q)*subj_dict['prob'][i_subj,idx], 
-                                                subj_dict['q'][i_subj,idx,:],'%sd' % cc)
+    if title_str != None:
+        plt.gcf().canvas.set_window_title(title_str)
+        plt.title(title_str)
+        plt.xlabel('probability')
+        plt.ylabel('RT')
+        plt.xlim([-0.05, 1.05])
     
-            #add title and labels
-            plt.gcf().canvas.set_window_title('QP: %d (%s)' % (i_subj, cond_str))
-            plt.title('QP: subj %d %s' % (i_subj, cond_str))
-            plt.xlabel('probability')
-            plt.ylabel('RT')
-            plt.xlim([-0.05, 1.05])
-            
-        return [g_handle, s_handle]
-    
-    else:
-        return [g_handle]
+    handle.get_figure().canvas.draw()
+    return handle
 
 
-def qp_plot(hm, values_to_use= None, plot_subj = True, split_func = lambda x:0):
+def qp_plot(hm, values_to_use= None, plot_subj = True, split_func = lambda x:0,
+            cdf_range = (-5, 5)):
     """
     generate a quantile-probability plot
     Input:
@@ -1078,8 +1160,9 @@ def qp_plot(hm, values_to_use= None, plot_subj = True, split_func = lambda x:0):
         is_group = False
 
     #get group and subj dicts
-    group_dict, subj_dict, conds = empirical_summary(hm, quantiles = quantiles)
-    
+    obs_group_d, obs_subj_d, conds, sorted_idx = \
+    quantiles_summary(hm, is_observed = True, n_samples = 1, quantiles = quantiles)
+
     #get splits
     keys = [split_func(x) for x in conds]
     dic  = {}
@@ -1090,60 +1173,46 @@ def qp_plot(hm, values_to_use= None, plot_subj = True, split_func = lambda x:0):
             dic[keys[i_s]] = [i_s]
     splits = dic.values()
     splits_keys = dic.keys()
-    
+
     #plot
-    handles = [None]*len(splits)
+    g_handles = [None]*len(splits)
+    s_handles = [[None]*n_subj for x in range(len(splits))]
     for i_s in range(len(splits)):
-        handles[i_s] = _draw_qp_plot(group_dict, subj_dict, conds, plot_subj, 
-                                   splits[i_s], '(%s)' % splits_keys[i_s])
+        g_handles[i_s] = _draw_qp_plot(obs_group_d, conds, splits[i_s],
+                                title_str = "QP group (%s)" % splits_keys[i_s],
+                                marker = 'd')
+        if not plot_subj:
+            continue
+        for i_subj in range(n_subj):
+            s_handles[i_s][i_subj] = _draw_qp_plot(obs_subj_d[i_subj], conds, splits[i_s],
+                                           title_str = "QP %d (%s)" % (i_subj, splits_keys[i_s]),
+                                           marker = 'd')
 
-
-    #### compute estimated quantiles
     if values_to_use == 'none':
         return
-    #get wfpt nodes
-    if is_group:
-        wfpt = [x[0] for x in hm.params_dict['wfpt'].subj_nodes.values()]
-    else:
-        wfpt = hm.params_dict['wfpt'].subj_nodes.values()
 
-    q_sim = zeros((n_conds * 2, n_q))
-    prob_sim = zeros((n_conds * 2))
+    #### compute estimated quantiles
 
-    #loop over conditions
-    for i_cond in range(n_conds):
-        params = hddm.generate.gen_rand_params()
-        wfpt_params = dict(wfpt[i_cond].parents)
-        #get params
-        for key in params.iterkeys():
-            if isinstance(wfpt_params[key], pm.Node):
-                node = wfpt_params[key]
-                if values_to_use == 'mean':
-                    if is_group:
-                        params[key] = np.mean(node.parents['mu'].trace()[:])
-                    else:
-                        params[key] = np.mean(node.trace()[:])
-
-                elif values_to_use == 'current':
-                    if is_group:
-                        params[key] = node.parents['mu'].value
-                    else:
-                        params[key] = node  .value
-
-        t_acc_sim, t_q_sim = hddm.likelihoods.wiener_summary(**params);
-        prob_sim[i_cond * 2] = t_acc_sim
-        prob_sim[i_cond * 2 + 1] = 1 - t_acc_sim
-        q_sim[i_cond * 2, :] = t_q_sim[0,:]
-        q_sim[i_cond * 2 + 1, :] = t_q_sim[1,:]
-
-    idx = np.argsort(prob_sim)
-    prob_sim = prob_sim[idx]
-    q_sim = q_sim[idx,:]
+    #get group and subj dicts
+    print "getting samples' quantiles summary"
+    i_t = time();
+    sim_group_d, sim_subj_d, conds, sorted_idx = \
+    quantiles_summary(hm, is_observed = False, n_samples = 3,
+                      quantiles = quantiles, sorted_idx = sorted_idx)
+    print "took %d seconds to prepare quantiles" % (time() - i_t)
+    sys.stdout.flush()
 
     #plot
-    for i_q in range(n_q):
-        plt.plot(prob_sim, q_sim[:,i_q],'r-o')
-
+    for i_s in range(len(splits)):
+        _draw_qp_plot(sim_group_d, conds, splits[i_s],
+                      title_str = None,
+                      marker = 'o', handle = g_handles[i_s])
+        if not plot_subj:
+            continue
+        for i_subj in range(n_subj):
+            _draw_qp_plot(sim_subj_d[i_subj], conds, splits[i_s],
+                          title_str = None,
+                          marker = 'o', handle = s_handles[i_s][i_subj])
 
 
 if __name__ == "__main__":
