@@ -1085,7 +1085,8 @@ def _draw_qp_plot(dict, conds, conds_to_plot, title_str, samples_summary,
     return handle
 
 
-def qp_plot(hm, values_to_use=None, plot_subj=True, split_func=lambda x:0,
+def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True, 
+            split_func=lambda x:0,
             samples_summary=True, n_samples=50, cdf_range=(-5, 5)):
     """
     generate a quantile-probability plot
@@ -1140,7 +1141,7 @@ def qp_plot(hm, values_to_use=None, plot_subj=True, split_func=lambda x:0,
                                            title_str = "QP %d (%s)" % (i_subj, splits_keys[i_s]),
                                            samples_summary=False, marker = 'd')
 
-    if values_to_use == 'none':
+    if n_samples == 0:
         return
 
     #### compute estimated quantiles
