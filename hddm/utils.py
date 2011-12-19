@@ -919,26 +919,59 @@ def data_plot(data, nbins=50):
     plt.show()
 
 
-def quantiles_summary(hm, is_observed, n_samples,
+def quantiles_summary(hm, method, n_samples,
                       quantiles = (10, 30, 50, 70, 90), sorted_idx = None,
                       cdf_range  = (-5, 5)):
+    """
+    generate quantiles summary of data or samples
+    Input:
+        hm - hddm model
+        method - which parameters to use for the computation of quantiles
+            'observed' - quantiles from the observed data (not using any parameters)
+            'deviance' - quantiles of data sampled using the parameters that have maximum deviance
+            'samples'  - quantiles of data generated from samples from the posterior distrbution
+        qunaitles - the qunatiles to be generated
+        sorted_idx - the condtions will be sort according to sorted_idx.
+            if sorted_idx == None then they will be sorted according to the
+                accuracy achieved in each condition.
+        cdf_range (advanced) - the range of the cdf used to generate the estimated
+            quantiles.
 
-    #Init
-    n_q = len(quantiles)
+    Ouput:
+        group_dict - a dictionary with group statistics
+        subj_dict - a list of dictionaries wih subjects statistcs
+        conds - the list of conditions sorted associated with the statistics
+        sorted_idx - the indices of the conditions such that:
+            if we set: keys = hm.params_dict['wfpt'].subj_nodes.keys()
+            than: keys[sorted_idx] == conds
+
+    """
+
+    #check if group model
     if hm.is_group_model:
         is_group = True
         n_subj = hm._num_subjs
     else:
         n_subj = 1
         is_group = False
-    if is_observed:
+
+    #check method
+    if method == 'observed':
         n_samples = 1
         len_trace = 1
-    else:
+    elif method == 'samples':
         db =hm.mc.db
-        len_trace = db.trace('a').length()
+        name = list(hm.mc.stochastics)[0].__name__
+        len_trace = db.trace(name).length()
         params = hddm.generate.gen_rand_params()
+    elif method == 'deviance':
+        db =hm.mc.db
+        params = hddm.generate.gen_rand_params()
+    else:
+        raise ValueError, "unkown method"
 
+    #Init
+    n_q = len(quantiles)
     wfpt_dict = hm.params_dict['wfpt'].subj_nodes
     conds = wfpt_dict.keys()
     n_conds = len(conds)
@@ -965,11 +998,15 @@ def quantiles_summary(hm, is_observed, n_samples,
             data_len = len(wfpt[i_cond].value)
             for i_sample in xrange(n_samples):
                 #get rt
-                if is_observed:
+                if method == 'observed':
                     rt = wfpt[i_cond].value
                 else:
+                    #get sample_idx
+                    if method == 'deviance':
+                        sample_idx  = np.argmin(db.trace('deviance')[:])
+                    else:
+                        sample_idx = ((len_trace - 1) // (n_samples - 1)) * i_sample
                     #get params
-                    sample_idx = ((len_trace - 1) // (n_samples - 1)) * i_sample
                     for key in params.iterkeys():
                         if isinstance(wfpt_params[key], pm.Node):
                             node = wfpt_params[key]
@@ -1007,7 +1044,10 @@ def quantiles_summary(hm, is_observed, n_samples,
     group_dict['prob'] /= n_subj
     for i_c in range(n_conds * 2):
         for i_sample in xrange(n_samples):
-            group_dict['q'][i_c, i_sample,:] /= count[i_c, i_sample]
+            if count[i_c, i_sample] > 0:
+                group_dict['q'][i_c, i_sample,:] /= count[i_c, i_sample]
+            else:
+                group_dict['q'][i_c, i_sample,:] = np.NaN
     #sort
     if sorted_idx == None:
         sorted_idx = np.argsort(group_dict['prob'][:,0]).flatten()
@@ -1026,6 +1066,17 @@ def quantiles_summary(hm, is_observed, n_samples,
 
 def _draw_qp_plot(dict, conds, conds_to_plot, title_str, samples_summary,
                   marker, handle = None):
+    """
+    draw QP plot
+    Input:
+        dict - subject/group dictionary from qunatiles_summary
+        conds - conditions from quantiles_summary
+        conds_to_plot - a list of conds to plot
+        title_str - the title of the plot
+        samples_summary - sould we plot only samples sammury and not the samples themselves
+        maarker - marker used in plot
+        handle - axes's handle
+    """
 
     colors  = ['b', 'g', 'c', 'm', 'r', 'y', 'k']
     n_q = dict['q'].shape[2]
@@ -1085,25 +1136,30 @@ def _draw_qp_plot(dict, conds, conds_to_plot, title_str, samples_summary,
     return handle
 
 
-def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True, 
-            split_func=lambda x:0,
-            samples_summary=True, n_samples=50, cdf_range=(-5, 5)):
+def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
+            split_func=lambda x:0, method = None, samples_summary=True,
+            n_samples=50, cdf_range=(-5, 5)):
     """
     generate a quantile-probability plot
     Input:
         hm - hddm model
-        values_to_use - which values will be used to compute the estimated quantiles.
+        qunatiles - the quantiles that are going to be displyed
+        plot_subj - generate a QP plot for each subject as well
+        split_func - split the plot into several plots according to the output of
+            the function
+        method - which values will be used to compute the estimated quantiles.
             may be one of the followings:
-            -'mean': mean value of each parameter
-            -'current': the current value of each parameter
-            -'none'   : not printing any estimated quantiles
-
-
+            -'none'   : display only observed quantiles
+            -'deviance': use the point of maximal deviance (close to maximal likelihood)
+            -'samples': samples n_samples and plot them all (not recommended)
+            -'samples_summary': samples n_samples and plot the mean and 95 credible set of them
+        n_samples - see method
+        cdf_range (advanced) - the range of the cdf used to generate the estimated
+            quantiles.
     """
 
     #### compute empirical quantiles
     #Init
-    quantiles = [10, 30, 50, 70, 90];
     n_q = len(quantiles)
     if hm.is_group_model:
         is_group = True
@@ -1114,7 +1170,7 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
 
     #get group and subj dicts
     obs_group_d, obs_subj_d, conds, sorted_idx = \
-    quantiles_summary(hm, is_observed = True, n_samples = 1, quantiles = quantiles)
+    quantiles_summary(hm, 'observed', n_samples = 1, quantiles = quantiles)
 
     #get splits
     keys = [split_func(x) for x in conds]
@@ -1141,8 +1197,14 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
                                            title_str = "QP %d (%s)" % (i_subj, splits_keys[i_s]),
                                            samples_summary=False, marker = 'd')
 
-    if n_samples == 0:
+    if (method == None) or (method == 'none'):
         return
+    elif (method == 'deviance'):
+        quantiles_method = 'deviance'
+    elif method == 'samples':
+        quantiles_method = 'samples'
+    else:
+        raise ValueError, "unknown method"
 
     #### compute estimated quantiles
 
@@ -1150,8 +1212,8 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
     print "getting quantiles summary of samples"
     i_t = time();
     sim_group_d, sim_subj_d, conds, sorted_idx = \
-    quantiles_summary(hm, is_observed = False, n_samples = n_samples,
-                      quantiles = quantiles, sorted_idx = sorted_idx)
+    quantiles_summary(hm, method=method, n_samples=n_samples,
+                      quantiles=quantiles, sorted_idx=sorted_idx)
     print "took %d seconds to prepare quantiles" % (time() - i_t)
     sys.stdout.flush()
 
