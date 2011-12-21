@@ -1150,12 +1150,16 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
         method - which values will be used to compute the estimated quantiles.
             may be one of the followings:
             -'none'   : display only observed quantiles
-            -'deviance': use the point of maximal deviance (close to maximal likelihood)
+            -'deviance': use the point of minimum deviance
             -'samples': samples n_samples and plot them all (not recommended)
             -'samples_summary': samples n_samples and plot the mean and 95 credible set of them
         n_samples - see method
         cdf_range (advanced) - the range of the cdf used to generate the estimated
             quantiles.
+            
+        TODO:
+            there should be an option to use the average value of the parameters to create samples.
+            it make much more sense than 'deviance'
     """
 
     #### compute empirical quantiles
