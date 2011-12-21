@@ -93,7 +93,7 @@ cdef double pdf_V(double x, double v, double V, double a, double z, double err) 
     cdef double p  = ftt_01w(tt, z, err) #get f(t|0,1,w)
   
     # convert to f(t|v,a,w)
-    return p*exp(((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
+    return exp(log(p) + ((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
 
 cpdef double full_pdf(double x, double v, double V, double a, double
                       z, double Z, double t, double T, double err, int
