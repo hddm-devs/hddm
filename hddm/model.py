@@ -19,7 +19,7 @@ import hddm
 import kabuki
 
 from kabuki.hierarchical import Parameter
-from copy import deepcopy
+from copy import copy
 from time import time
 
 # try:
@@ -221,15 +221,17 @@ class HDDM(kabuki.Hierarchical):
         TODO: move this func to hierarchical
         """
 
-        #init s_model (copy of self)
-        s_model = deepcopy(self)
-        s_model.is_group_model = False
-        subjs = s_model._subjs
+        #init
+        subjs = self._subjs
         n_subjs = len(subjs)
 
-        #create self.nodes
-        if not self.nodes:
-            self.create_nodes()
+        #delete self.nodes
+        if self.nodes:
+            del self.nodes
+        s_model = deepcopy(self)
+        s_model.is_group_model = False
+        self.create_nodes()
+
 
         #loop over subjects
         for i_subj in range(n_subjs):
