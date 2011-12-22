@@ -19,6 +19,8 @@ import hddm
 import kabuki
 
 from kabuki.hierarchical import Parameter
+from copy import deepcopy
+from time import time
 
 # try:
 #     from IPython.Debugger import Tracer;
@@ -213,6 +215,40 @@ class HDDM(kabuki.Hierarchical):
 
         else:
             raise KeyError, "Groupless parameter named %s not found." % param.name
+
+    def subj_by_subj_map_init(self, **kwargs):
+        """
+        TODO: move this func to hierarchical
+        """
+
+        #init s_model (copy of self)
+        s_model = deepcopy(self)
+        s_model.is_group_model = False
+        subjs = s_model._subjs
+        n_subjs = len(subjs)
+
+        #create self.nodes
+        if not self.nodes:
+            self.create_nodes()
+
+        #loop over subjects
+        for i_subj in range(n_subjs):
+            #create and fit single subject
+            print "*!*!* fitting subject %d *!*!*" % subjs[i_subj]
+            t_data = self.data[self.data['subj_idx'] == subjs[i_subj]]
+            s_model.data = t_data;
+            s_model.create_nodes()
+            s_model.map(method='fmin_powell', runs = 1, **kwargs)
+
+            # copy to original model
+            for (name, node) in s_model.group_nodes.iteritems():
+                self.subj_nodes[name][i_subj].value = node.value
+
+        #set group nodes
+        for (name, node) in self.group_nodes.iteritems():
+            subj_values = [self.subj_nodes[name][x].value for x in range(n_subjs)]
+            node.value = np.mean(subj_values)
+            self.var_nodes[name].value = np.std(subj_values)
 
 class HDDMContaminant(HDDM):
     """Contaminant HDDM Super class
