@@ -321,6 +321,7 @@ class HDDMContaminant(HDDM):
                         plt.plot(wfpt.value[mask], np.zeros(len(mask) - len(idx)), 'b.')
                         plt.plot(wfpt.value[~mask], np.zeros(len(idx)), 'ro')
                         plt.title(wfpt.__name__)
+                        plt.xlabel('RTs for lower (negative) and upper (positive) boundary responses.')
                 #report the next higest probability outlier
                 next_outlier = max(m[m < cont_threshold])
                 print "probability of the next most probable outlier: %.2f" % next_outlier
