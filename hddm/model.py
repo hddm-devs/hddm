@@ -133,7 +133,6 @@ class HDDM(kabuki.Hierarchical):
 
         super(hddm.model.HDDM, self).__init__(data, include=include, **kwargs)
 
-
     def get_params(self):
         """Returns list of model parameters.
         """
@@ -144,7 +143,7 @@ class HDDM(kabuki.Hierarchical):
                   Parameter('v', lower=-15., upper=15., init=0.),
                   Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
                   Parameter('z', lower=.2, upper=0.8, init=.5,
-                            default=.5, var_lower=0.01, var_upper=2., optional=True),
+                            default=.5, optional=True),
                   Parameter('V', lower=0., upper=3.5, default=0,
                             optional=True),
                   Parameter('Z', lower=0., upper=1.0, init=.1,
