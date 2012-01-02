@@ -178,16 +178,6 @@ class HDDM(kabuki.Hierarchical):
                              trace=self.trace_subjs,
                              value=param.init)
 
-        elif param.name == 'V':
-            return pm.TruncatedNormal(param.full_name,
-                                      a=param.lower,
-                                      b=1000,
-                                      mu=param.group,
-                                      tau=param.var**-2,
-                                      plot=self.plot_subjs,
-                                      trace=self.trace_subjs,
-                                      value=param.init)
-
         else:
             return pm.TruncatedNormal(param.full_name,
                                       a=param.lower,
@@ -224,7 +214,7 @@ class HDDM(kabuki.Hierarchical):
     def subj_by_subj_map_init(self, runs = 2, **map_kwargs):
         """
         initialzing nodes by finding the MAP for each subject separately
-        
+
         TODO:
         check if we can move this func to hierarchical (and self.kwargs)
         because it makes more sense to put it there
