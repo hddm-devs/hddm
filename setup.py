@@ -32,6 +32,6 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.c"], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
+    ext_modules = [Extension("wfpt", ["src/wfpt.c"])]#, extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
 )
 

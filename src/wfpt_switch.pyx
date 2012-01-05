@@ -3,7 +3,7 @@
 #cython: wraparound=False
 #cython: boundscheck=False
 #
-# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010
+# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2012
 # GPLv3
 
 from copy import copy
@@ -40,12 +40,11 @@ cdef double wfpt_gsl(double x, void * params) nogil:
 
     return f
 
-
 cdef double calc_drift_dens_T(double x, double t, double v, double a, double z, double T) nogil:
     if T < 1e-4:
-        return calc_drift_dens(x,t,v,a,z,False)
+        return calc_drift_dens(x, t, v, a, z,False)
     else:
-        return 1/T * (calc_drift_dens(x,t+T/2,v,a,z,True) - calc_drift_dens(x,t-T/2,v,a,z,True))
+        return 1/T * (calc_drift_dens(x, t+T/2, v, a, z,True) - calc_drift_dens(x, t-T/2, v, a, z, True))
 
 cdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t) nogil:
     cdef int N=30
@@ -159,7 +158,7 @@ cdef double pdf_switch_precomp(double rt, int instruct, double v, double v_switc
 
     if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
-    elif t_switch < 0.08:
+    elif t_switch < 0.05:
         # Use regular likelihood
         p = full_pdf(rt, v_switch, 0, a, z, 0, t+t_switch, T, 1e-4, 2, 2, True, 1e-3)
     else: # post-switch antisaccade

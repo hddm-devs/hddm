@@ -21,7 +21,7 @@ cimport numpy as np
 cimport cython
 
 from cython.parallel import *
-cimport openmp
+#cimport openmp
 
 include "pdf.pxi"
 
@@ -45,6 +45,9 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, doub
     cdef double p
     cdef double sum_logp = 0
 
+    #if num_threads != 0:
+    #    openmp.omp_set_num_threads(num_threads)
+
     for i in prange(size, nogil=True, schedule='dynamic'):
         p = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
@@ -66,6 +69,9 @@ def wiener_like_array(np.ndarray[double, ndim=1] x, double v, double V, double a
     cdef double sum_logp = 0
 
     cdef np.ndarray[double, ndim=1] p_array = np.empty(size, dtype=np.float)
+
+    #if num_threads != 0:
+    #    openmp.omp_set_num_threads(num_threads)
 
     for i in prange(size, nogil=True, schedule='dynamic'):
         p_array[i] = full_pdf(x[i], v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)

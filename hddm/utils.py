@@ -2,12 +2,21 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
-from scipy.stats import scoreatpercentile
+import hddm
 import sys
 import table_print
-from numpy import array, zeros, empty, ones
 
-import hddm
+from scipy.stats import scoreatpercentile
+from numpy import array, zeros, ones, empty
+from copy import deepcopy
+from time import time
+
+try:
+    from IPython.Debugger import Tracer;
+except ImportError:
+    from IPython.core.debugger import Tracer;
+debug_here = Tracer()
+
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.
@@ -31,6 +40,7 @@ def flip_errors(data):
     data['rt'][idx] = -data['rt'][idx]
 
     return data
+
 
 def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     """
@@ -118,12 +128,12 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
 
     a = np.asarray(a)
     if weights is not None:
-        weights = asarray(weights)
+        weights = np.asarray(weights)
         if np.any(weights.shape != a.shape):
             raise ValueError(
                     'weights should have the same shape as a.')
         weights = weights.ravel()
-    a =  a.ravel()
+    a = a.ravel()
 
     if (range is not None):
         mn, mx = range
@@ -140,11 +150,11 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
                 range = (0, 1)
             else:
                 range = (a.min(), a.max())
-        mn, mx = [mi+0.0 for mi in range]
+        mn, mx = [mi + 0.0 for mi in range]
         if mn == mx:
             mn -= 0.5
             mx += 0.5
-        bins = np.linspace(mn, mx, bins+1, endpoint=True)
+        bins = np.linspace(mn, mx, bins + 1, endpoint=True)
     else:
         bins = np.asarray(bins)
         if (np.diff(bins) < 0).any():
@@ -161,18 +171,18 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     block = 65536
     if weights is None:
         for i in np.arange(0, len(a), block):
-            sa = np.sort(a[i:i+block])
+            sa = np.sort(a[i:i + block])
             n += np.r_[sa.searchsorted(bins[:-1], 'left'), \
                 sa.searchsorted(bins[-1], 'right')]
     else:
         zero = np.array(0, dtype=ntype)
         for i in np.arange(0, len(a), block):
-            tmp_a = a[i:i+block]
-            tmp_w = weights[i:i+block]
+            tmp_a = a[i:i + block]
+            tmp_w = weights[i:i + block]
             sorting_index = np.argsort(tmp_a)
             sa = tmp_a[sorting_index]
             sw = tmp_w[sorting_index]
-            cw = np.concatenate(([zero,], sw.cumsum()))
+            cw = np.concatenate(([zero, ], sw.cumsum()))
             bin_index = np.r_[sa.searchsorted(bins[:-1], 'left'), \
                 sa.searchsorted(bins[-1], 'right')]
             n += cw[bin_index]
@@ -182,23 +192,24 @@ def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
     if density is not None:
         if density:
             db = np.array(np.diff(bins), float)
-            return n/db/n.sum(), bins
+            return n / db / n.sum(), bins
         else:
             return n, bins
     else:
         # deprecated, buggy behavior. Remove for Numpy 2.0
         if normed:
             db = np.array(np.diff(bins), float)
-            return n/(n*db).sum(), bins
+            return n / (n * db).sum(), bins
         else:
             return n, bins
+
 
 def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn=None, thin=None, only_group_stats=False, plot=True, verbose=False):
     import kabuki
     import os.path
 
     if not os.path.isfile(fname):
-        raise ValueError("%s could not be found."%fname)
+        raise ValueError("%s could not be found." % fname)
 
     import ConfigParser
 
@@ -217,7 +228,7 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
             print "ERROR: No data file specified. Either provide data file as an argument to hddmfit or in the model specification"
             sys.exit(-1)
     if not os.path.exists(data_fname):
-        raise IOError, "Data file %s not found."%data_fname
+        raise IOError("Data file %s not found." % data_fname)
 
     data = np.recfromcsv(data_fname)
 
@@ -296,11 +307,12 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
     print "DIC: %f" % m.mc.dic
 
     if plot:
-        print "Plotting posterior predictive to %s..." % (model_name+'.png')
+        print "Plotting posterior predictive to %s..." % (model_name + '.png')
         plot_post_pred(m, fname=model_name, show=False)
         hddm.plot_posteriors(m)
 
     return m
+
 
 def EZ_subjs(data):
     params = {}
@@ -317,18 +329,18 @@ def EZ_subjs(data):
         for subj in np.unique(data['subj_idx']):
             try:
                 v, a, t = EZ_data(data[data['subj_idx'] == subj])
-                params['v_%i'%subj] = v
-                params['a_%i'%subj] = a
-                params['t_%i'%subj] = t #t-.2 if t-.2>0 else .1
-                params['z_%i'%subj] = .5
+                params['v_%i' % subj] = v
+                params['a_%i' % subj] = a
+                params['t_%i' % subj] = t  # t-.2 if t-.2>0 else .1
+                params['z_%i' % subj] = .5
             except ValueError:
                 # Subject either had 0%, 50%, or 100% correct, which does not work
                 # with easy. But we can deal with that by just not initializing the
                 # parameters for that one model.
-                params['v_%i'%subj] = None
-                params['a_%i'%subj] = None
-                params['t_%i'%subj] = None
-                params['z_%i'%subj] = None
+                params['v_%i' % subj] = None
+                params['a_%i' % subj] = None
+                params['t_%i' % subj] = None
+                params['z_%i' % subj] = None
 
     except ValueError:
         # Data array has no subj_idx -> ignore.
@@ -336,19 +348,21 @@ def EZ_subjs(data):
 
     return params
 
+
 def EZ_param_ranges(data, range_=1.):
     v, a, t = EZ_data(data)
     z = .5
-    param_ranges = {'a_lower': a-range_,
-                    'a_upper': a+range_,
-                    'z_lower': np.min(z-range_, 0),
-                    'z_upper': np.max(z+range_, 1),
-                    't_lower': t-range_ if (t-range_)>0 else 0.,
-                    't_upper': t+range_,
-                    'v_lower': v-range_,
-                    'v_upper': v+range_}
+    param_ranges = {'a_lower': a - range_,
+                    'a_upper': a + range_,
+                    'z_lower': np.min(z - range_, 0),
+                    'z_upper': np.max(z + range_, 1),
+                    't_lower': t - range_ if (t - range_) > 0 else 0.,
+                    't_upper': t + range_,
+                    'v_lower': v - range_,
+                    'v_upper': v + range_}
 
     return param_ranges
+
 
 def EZ_data(data, s=1):
     """
@@ -376,13 +390,13 @@ def EZ_data(data, s=1):
 
     # Compute statistics over data
     idx_correct = rt > 0
-    idx_error = rt < 0
     mrt = np.mean(rt[idx_correct])
     vrt = np.var(rt[idx_correct])
     pc = np.sum(idx_correct) / np.float(rt.shape[0])
 
     # Calculate EZ estimates.
     return EZ(pc, vrt, mrt, s)
+
 
 def EZ(pc, vrt, mrt, s=1):
     """
@@ -427,23 +441,24 @@ def EZ(pc, vrt, mrt, s=1):
     if (pc == 0 or pc == .5 or pc == 1):
         raise ValueError('Probability correct is either 0%, 50% or 100%')
 
-    s2 = s**2
-    logit_p = np.log(pc/(1-pc))
+    s2 = s ** 2
+    logit_p = np.log(pc / (1 - pc))
 
     # Eq. 7
-    x = ((logit_p*(pc**2 * logit_p - pc * logit_p + pc - .5)) / vrt)
+    x = ((logit_p * (pc**2 * logit_p - pc * logit_p + pc - .5)) / vrt)
     v = np.sign(pc - .5) * s * x**.25
     # Eq 5
     a = (s2 * logit_p) / v
 
-    y = (-v*a)/s2
+    y = (-v * a) / s2
     # Eq 9
-    mdt = (a/(2*v)) * ((1-np.exp(y)) / (1+np.exp(y)))
+    mdt = (a / (2 * v)) * ((1 - np.exp(y)) / (1 + np.exp(y)))
 
     # Eq 8
-    ter = mrt-mdt
+    ter = mrt - mdt
 
     return (v, a, ter)
+
 
 def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=False):
     """Calculate posterior predictive probability density function.
@@ -462,24 +477,24 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=F
     """
     if pdf is None:
         pdf = hddm.likelihoods.wfpt.pdf
-        args = ('v', 'V', 'a','z','Z', 't','T')
+        args = ('v', 'V', 'a', 'z', 'Z', 't', 'T')
 
     if x is None:
-        x = np.arange(-5,5,0.1)
+        x = np.arange(-5, 5, 0.1)
 
     trace_len = len(traces['a'])
     p = np.zeros(len(x), dtype=np.float)
 
     # Add default traces if needed parameter is excluded.
     # This makes it easier to always make the same call to pdf below
-    if not traces.has_key('V'):
+    if not 'V' in traces:
         traces['V'] = np.zeros(trace_len)
-    if not traces.has_key('T'):
+    if not 'T' in traces:
         traces['T'] = np.zeros(trace_len)
-    if not traces.has_key('Z'):
+    if not 'Z' in traces:
         traces['Z'] = np.zeros(trace_len)
-    if not traces.has_key('z'):
-        traces['z'] = np.ones(trace_len)*.5
+    if not 'z' in traces:
+        traces['z'] = np.ones(trace_len) * .5
 
     if use_mean:
         valued_args = []
@@ -489,7 +504,7 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=F
         dens = pdf(x, *valued_args)
 
     else:
-        for i in np.round(np.linspace(0, trace_len-1, samples)):
+        for i in np.round(np.linspace(0, trace_len - 1, samples)):
             valued_args = []
             # Construct arguments from traces to be passed to pdf
             for arg in args:
@@ -497,11 +512,12 @@ def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=F
             pdf_full = lambda x: pdf(x, *valued_args)
 
             p[:] += map(pdf_full, x)
-        dens = p/samples
+        dens = p / samples
 
     return dens
 
-def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fname=None, show=True, use_mean=True):
+
+def plot_post_pred(model, bins=50, interval=(-5., 5.), n_rows=3, samples=20, fname=None, show=True, use_mean=True):
     """
     plot posterior predective distribution
 
@@ -524,7 +540,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fn
              show the plots
     """
 
-    x = np.arange(interval[0],interval[1],0.05)
+    x = np.arange(interval[0], interval[1], 0.05)
     # Plot data
     x_data = np.linspace(interval[0], interval[1], bins)
 
@@ -546,7 +562,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fn
                     traces[parent_name] = parent_node.trace()
 
                 # Plot that shit ;)
-                plt.subplot(n_rows, int(np.ceil(n_subjs/n_rows)), i+1)
+                plt.subplot(n_rows, int(np.ceil(n_subjs / n_rows)), i + 1)
 
                 empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
                 plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
@@ -557,7 +573,7 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fn
                 plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
                 plt.xlim(interval)
-                plt.title("subj %i. (n=%d)" %(model._subjs[i], len(data)))
+                plt.title("subj %i. (n=%d)" % (model._subjs[i], len(data)))
 
             plt.suptitle(cond)
 
@@ -580,24 +596,25 @@ def plot_post_pred(model, bins=50, interval=(-5.,5.), n_rows = 3, samples=20, fn
             plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
 
             plt.xlim(interval)
-            plt.title("%s (n=%d)" %(cond, len(data)))
+            plt.title("%s (n=%d)" % (cond, len(data)))
             plt.legend()
 
         if fname is not None:
-            plt.savefig('%s%i.png'%(fname, figure_idx))
+            plt.savefig('%s%i.png' % (fname, figure_idx))
 
     if show:
         plt.show()
+
 
 def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the
     function is used by ppd_test)
     """
     model.params_include.keys()
-    params = {'a':0, 'v': 0, 't':0, 'z': 0.5, 'Z': 0 , 'T': 0 , 'V': 0}
+    params = {'a': 0, 'v': 0, 't':0, 'z': 0.5, 'Z': 0, 'T': 0, 'V': 0}
     if not np.isscalar(idx):
         for (key, value) in params.iteritems():
-            params[key] = np.ones(len(idx))*value
+            params[key] = np.ones(len(idx)) * value
     #example for local_name:  a,v,t,z....
     #example for parent_full_name: v(['cond1'])3
     for local_name in model.params_include.keys():
@@ -609,6 +626,7 @@ def hddm_parents_trace(model, obs_node, idx):
 
     return params
 
+
 def _gen_statistics():
     """generate different statistical tests from ppd_test."""
     statistics = []
@@ -616,7 +634,7 @@ def _gen_statistics():
     ##accuracy test
     test = {}
     test['name'] = 'acc'
-    test['func'] = lambda rts: sum(rts > 0)/len(rts)
+    test['func'] = lambda rts: sum(rts > 0) / len(rts)
     statistics.append(test)
 
     ##quantile statistics of absolute response time
@@ -624,13 +642,14 @@ def _gen_statistics():
     for q in quantiles:
         test = {}
         test['name'] = 'q%d' % q
-        test['func'] = lambda rts,q=q: scoreatpercentile(np.abs(rts), q)
+        test['func'] = lambda rts, q=q: scoreatpercentile(np.abs(rts), q)
         statistics.append(test)
 
     return statistics
 
-def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 1,
-             table_width = 10, labels_dict = None):
+
+def ppd_test(hm, n_samples=1000, confidence=95, plot_verbose=0, verbose=1,
+             table_width=10, labels_dict=None):
     """
     Test statistics over the posterior predictive distibution.
 
@@ -657,6 +676,9 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
 
         labels_dict - (optional) a dictionary of labels for the table, where the keys are
             the different conditions and the values are the labels of table
+
+    Output:
+        subj_res/group_res : can be used to reprint the table
     """
 
     #if input is tuple than hm is a group model and we are in a recursion
@@ -668,7 +690,7 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
     else:
         #break group model to subjects models
         if hm.is_group_model:
-            group_res = [None]*hm._num_subjs
+            group_res = [None] * hm._num_subjs
             for i in range(hm._num_subjs):
                 print "--- Results for subj %d ---" % (hm._subjs[i])
                 nodes_tuple = [(item[0], item[1][i]) for item in hm.params_include['wfpt'].subj_nodes.items()]
@@ -688,9 +710,9 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
             nodes = [x[1] for x in items]
 
     #get statistics
-    stats  = _gen_statistics()
+    stats = _gen_statistics()
 
-    conf_lb = ((100 - confidence)/ 2.)
+    conf_lb = ((100 - confidence) / 2.)
     conf_ub = (100 - conf_lb)
 
     subj_res = {}
@@ -702,7 +724,7 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         subj_res[cond] = {}
         name = node.__name__
 
-        if verbose>=2:
+        if verbose >= 2:
             print "computing stats for %s" % cond
 
         #when loading from the db, the trace is not assign to the variables
@@ -710,21 +732,20 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         len_trace = len(model.mc.db.trace('a')[:])
         thin = max(int(len_trace // n_samples), 1)
         n_samples = int(len_trace // thin)
-        res = np.zeros((len(stats),n_samples))
+        res = np.zeros((len(stats), n_samples))
         obs = np.zeros(len(stats))
         all_params = hddm_parents_trace(model, node, np.arange(0, len_trace, thin))
         #simulate data and compute stats
         params = {}
         for i in xrange(n_samples):
-            if verbose >= 4 and ((i+1) % 100)==0:
-                print "created samples for %d params" % (i+1)
+            if verbose >= 4 and ((i + 1) % 100) == 0:
+                print "created samples for %d params" % (i + 1)
             sys.stdout.flush()
             for key in all_params.iterkeys():
                 params[key] = all_params[key][i]
-            samples = hddm.generate.gen_rts(params, len(node.value), dt=1e-3,method='cdf')
+            samples = hddm.generate.gen_rts(params, len(node.value), dt=1e-3, method='cdf')
             for i_stat in xrange(len(stats)):
                 res[i_stat][i] = stats[i_stat]['func'](samples)
-
 
         #compute stats of oberved data
         for i_stat in range(len(stats)):
@@ -734,13 +755,13 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         for i_stat in range(len(stats)):
             stats_name = stats[i_stat]['name']
             out_conf = False
-            p = sum(res[i_stat] < obs[i_stat])*1./len(res[i_stat]) * 100
-            if (p < conf_lb) or (p>conf_ub):
+            p = sum(res[i_stat] < obs[i_stat]) * 1. / len(res[i_stat]) * 100
+            if (p < conf_lb) or (p > conf_ub):
                 if verbose >= 3:
-                    print "*!*!* %s :: %s %.1f" % (name,stats[i_stat]['name'], p )
+                    print "*!*!* %s :: %s %.1f" % (name, stats[i_stat]['name'], p)
                 out_conf = True
             #plot that shit
-            if (plot_verbose==2) or (out_conf and plot_verbose >= 1):
+            if (plot_verbose == 2) or (out_conf and plot_verbose >= 1):
                 pm.Matplot.gof_plot(res[i_stat], obs[i_stat], nbins=30, name=name, verbose=0)
                 plt.title('%s : %.1f' % (stats[i_stat]['name'], p))
             #save results to subj_res
@@ -758,7 +779,27 @@ def ppd_test(hm, n_samples = 1000, confidence = 95, plot_verbose = 0, verbose = 
         print_ppd_test_result_for_subject(subj_res, labels_dict, table_width)
     return subj_res
 
-def print_ppd_test_result_for_subject(subj_res, labels_dict = None, width = 10):
+
+#def qp_plot_for_ppd_test(subj_res):
+#    q_names = ['q10', 'q30', 'q50', 'q70', 'q90']
+#    conds = subj_res.keys();
+#    n_conds = len(conds)
+#    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+#
+#    #loop over conds
+#    for i_cond in range(n_conds):
+#        stats = subj_res[conds[i_cond]]
+#
+#        #plot observed data
+#        obs_acc = stats['acc']['obs']
+#        obs_q = [stats[x]['obs'] for x in q_names]
+#        plot(ones(n_conds)*obs_acc, obs_q, colors[])
+#        acc = stats['acc']['mean']
+
+
+
+
+def print_ppd_test_result_for_subject(subj_res, labels_dict=None, width=10):
     """
     print results of ppd_test for single subject
     Input:
@@ -777,7 +818,7 @@ def print_ppd_test_result_for_subject(subj_res, labels_dict = None, width = 10):
         labels = [labels_dict[x] for x in conds]
 
     #create table for print
-    table = [None] * (len(stats)+1)
+    table = [None] * (len(stats) + 1)
     table[0] = [''] + labels + ['sum']
     total_conf = np.zeros(n_conds, dtype=np.int)
     for i in range(len(stats)):
@@ -785,13 +826,13 @@ def print_ppd_test_result_for_subject(subj_res, labels_dict = None, width = 10):
         out_conf = [subj_res[x][stats[i]]['out_conf'] for x in conds]
         total_conf += out_conf
 
-        table[i+1] = [stats[i]] + [None]*(n_conds+1)
+        table[i + 1] = [stats[i]] + [None] * (n_conds + 1)
         for j in range(n_conds):
             if out_conf[j]:
-                table[i+1][j+1] = p[j]
+                table[i + 1][j + 1] = p[j]
             else:
-                table[i+1][j+1] = '-'
-        table[i+1][-1] = str(sum(out_conf))
+                table[i + 1][j + 1] = '-'
+        table[i + 1][-1] = str(sum(out_conf))
 
     table.append(['sum'] + map(str, list(total_conf)))
 
@@ -800,9 +841,9 @@ def print_ppd_test_result_for_subject(subj_res, labels_dict = None, width = 10):
     print "----------------  stats v.s. conds ----------------\n"
     print "(quantiles of the statistics that fell out side of the confidence interval)\n"
     print table_print.indent(table, hasHeader=True,
-                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+                             wrapfunc=lambda x: table_print.wrap_onspace_strict(x, width))
 
-def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
+def print_ppd_test_result_for_group(group_res, labels_dict, width=10):
     """
     print results of ppd_test for group model
     Input:
@@ -823,7 +864,7 @@ def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
 
     #compute summary tables
     sum_stats = np.zeros((n_stats, n_conds), dtype=np.int)
-    sum_subjs =  np.zeros((n_subjs, n_conds), dtype=np.int)
+    sum_subjs = np.zeros((n_subjs, n_conds), dtype=np.int)
     for i_subj in range(n_subjs):
         for i_stat in range(n_stats):
             out_conf = [group_res[i_subj][x][stats[i_stat]]['out_conf'] for x in conds]
@@ -832,12 +873,12 @@ def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
 
 
     #print stats table
-    stats_table = [None] * (n_stats+1)
+    stats_table = [None] * (n_stats + 1)
     stats_table[0] = [''] + labels + ['sum']
     for i_stat in range(n_stats):
-        stats_table[i_stat+1] = [stats[i_stat]] + [None]*(n_conds+1)
-        stats_table[i_stat+1][1:-1] = [str(x).replace('0','-') for x in sum_stats[i_stat]]
-        stats_table[i_stat+1][-1] = str(sum(sum_stats[i_stat]))
+        stats_table[i_stat + 1] = [stats[i_stat]] + [None] * (n_conds + 1)
+        stats_table[i_stat + 1][1:-1] = [str(x).replace('0', '-') for x in sum_stats[i_stat]]
+        stats_table[i_stat + 1][-1] = str(sum(sum_stats[i_stat]))
 
     stats_table.append(['sum'] + map(str, sum_stats.sum(0)))
 
@@ -845,15 +886,15 @@ def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
     print "----------------  stats v.s. conds ----------------"
     print "(number of statistics that fell out side of the confidence interval)\n"
     print table_print.indent(stats_table, hasHeader=True,
-                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+                             wrapfunc=lambda x: table_print.wrap_onspace_strict(x, width))
 
     #print subjs table
-    subjs_table = [None] * (n_subjs+1)
+    subjs_table = [None] * (n_subjs + 1)
     subjs_table[0] = [''] + labels + ['sum']
     for i_subj in range(n_subjs):
-        subjs_table[i_subj+1] = [str(i_subj)] + [None]*(n_conds+1)
-        subjs_table[i_subj+1][1:-1] = [str(x).replace('0','-') for x in sum_subjs[i_subj]]
-        subjs_table[i_subj+1][-1] = str(sum(sum_subjs[i_subj]))
+        subjs_table[i_subj + 1] = [str(i_subj)] + [None] * (n_conds + 1)
+        subjs_table[i_subj + 1][1:-1] = [str(x).replace('0', '-') for x in sum_subjs[i_subj]]
+        subjs_table[i_subj + 1][-1] = str(sum(sum_subjs[i_subj]))
 
     subjs_table.append(['sum'] + map(str, sum_subjs.sum(0)))
 
@@ -861,17 +902,15 @@ def print_ppd_test_result_for_group(group_res, labels_dict, width = 10):
     print "----------------  subjects v.s. conds ----------------"
     print "(number of statistics that fell out side of the confidence interval)\n"
     print table_print.indent(subjs_table, hasHeader=True,
-                             wrapfunc=lambda x:table_print.wrap_onspace_strict(x,width))
+                             wrapfunc=lambda x: table_print.wrap_onspace_strict(x, width))
 
 
-
-
-def plot_posteriors(model):
+def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
 
     This is a wrapper for pymc.Matplot.plot()
     """
-    pm.Matplot.plot(model.mc)
+    pm.Matplot.plot(model.mc, **kwargs)
 
 def data_plot(data, nbins=50):
     data = hddm.utils.flip_errors(data)
@@ -880,6 +919,322 @@ def data_plot(data, nbins=50):
     plt.show()
 
 
+def quantiles_summary(hm, method, n_samples,
+                      quantiles = (10, 30, 50, 70, 90), sorted_idx = None,
+                      cdf_range  = (-5, 5)):
+    """
+    generate quantiles summary of data or samples
+    Input:
+        hm - hddm model
+        method - which parameters to use for the computation of quantiles
+            'observed' - quantiles from the observed data (not using any parameters)
+            'deviance' - quantiles of data sampled using the parameters that have maximum deviance
+            'samples'  - quantiles of data generated from samples from the posterior distrbution
+        qunaitles - the qunatiles to be generated
+        sorted_idx - the condtions will be sort according to sorted_idx.
+            if sorted_idx == None then they will be sorted according to the
+                accuracy achieved in each condition.
+        cdf_range (advanced) - the range of the cdf used to generate the estimated
+            quantiles.
+
+    Ouput:
+        group_dict - a dictionary with group statistics
+        subj_dict - a list of dictionaries wih subjects statistcs
+        conds - the list of conditions sorted associated with the statistics
+        sorted_idx - the indices of the conditions such that:
+            if we set: keys = hm.params_dict['wfpt'].subj_nodes.keys()
+            than: keys[sorted_idx] == conds
+
+    """
+
+    #check if group model
+    if hm.is_group_model:
+        is_group = True
+        n_subj = hm._num_subjs
+    else:
+        n_subj = 1
+        is_group = False
+
+    #check method
+    if method == 'observed':
+        n_samples = 1
+        len_trace = 1
+    elif method == 'samples':
+        db =hm.mc.db
+        name = list(hm.mc.stochastics)[0].__name__
+        len_trace = db.trace(name).length()
+        params = hddm.generate.gen_rand_params()
+    elif method == 'deviance':
+        db =hm.mc.db
+        params = hddm.generate.gen_rand_params()
+    else:
+        raise ValueError, "unkown method"
+
+    #Init
+    n_q = len(quantiles)
+    wfpt_dict = hm.params_dict['wfpt'].subj_nodes
+    conds = wfpt_dict.keys()
+    n_conds = len(conds)
+    temp_dict = {}
+    group_dict = {}; subj_dict = [None]*n_subj;
+    count = zeros((n_conds * 2, n_samples))
+    temp_dict['q'] = zeros((n_conds * 2, n_samples, n_q))
+    temp_dict['prob'] = zeros((n_conds * 2, n_samples))
+    temp_dict['n'] = zeros((n_conds*2, n_samples))
+    group_dict = deepcopy(temp_dict)
+    for i_subj in range(n_subj):
+        subj_dict[i_subj] = deepcopy(temp_dict)
+
+    #loop over subjs
+    for i_subj in range(n_subj):
+        #get wfpt nodes
+        if is_group:
+            wfpt = [x[i_subj] for x in hm.params_dict['wfpt'].subj_nodes.values()]
+        else:
+            wfpt = hm.params_dict['wfpt'].subj_nodes.values()
+        #loop over conds
+        for i_cond in range(n_conds):
+            wfpt_params = dict(wfpt[i_cond].parents)
+            data_len = len(wfpt[i_cond].value)
+            for i_sample in xrange(n_samples):
+                #get rt
+                if method == 'observed':
+                    rt = wfpt[i_cond].value
+                else:
+                    #get sample_idx
+                    if method == 'deviance':
+                        sample_idx  = np.argmin(db.trace('deviance')[:])
+                    else:
+                        sample_idx = ((len_trace - 1) // (n_samples - 1)) * i_sample
+                    #get params
+                    for key in params.iterkeys():
+                        if isinstance(wfpt_params[key], pm.Node):
+                            node = wfpt_params[key]
+                            name = node.__name__
+                            params[key] = db.trace(name)[sample_idx]
+                    #generate rt
+                    rt = hddm.generate.gen_rts(params, samples=data_len, range_=cdf_range,
+                                               dt=1e-3, intra_sv=1., structured=False,
+                                               subj_idx=None, method='cdf')
+                #loop over responses
+                for i_resp in range(2):
+                    cond_ind = i_cond * 2 + i_resp
+                    if i_resp==0:
+                        t_rt = rt[rt > 0]
+                    else:
+                        t_rt = rt[rt < 0]
+                    #get n_q
+                    if len(t_rt)>=n_q:
+                        t_quan = [scoreatpercentile(abs(t_rt),x) for x in quantiles]
+                        subj_dict[i_subj]['q'][cond_ind, i_sample, :] = t_quan
+                        group_dict['q'][cond_ind, i_sample, :] += t_quan
+                        count[cond_ind, i_sample] += 1
+                    else:
+                        subj_dict[i_subj]['q'][cond_ind, i_sample, :] = np.NaN
+                    t_prob = 1.*len(t_rt) / len(rt)
+                    subj_dict[i_subj]['prob'][cond_ind, i_sample] = t_prob
+                    group_dict['prob'][cond_ind, i_sample] += t_prob
+
+                    subj_dict[i_subj]['n'][cond_ind, i_sample] = len(t_rt)
+                    group_dict['n'][cond_ind, i_sample] = len(t_rt)
+
+
+
+    #compute group values
+    group_dict['prob'] /= n_subj
+    for i_c in range(n_conds * 2):
+        for i_sample in xrange(n_samples):
+            if count[i_c, i_sample] > 0:
+                group_dict['q'][i_c, i_sample,:] /= count[i_c, i_sample]
+            else:
+                group_dict['q'][i_c, i_sample,:] = np.NaN
+    #sort
+    if sorted_idx == None:
+        sorted_idx = np.argsort(group_dict['prob'][:,0]).flatten()
+    group_dict['prob'] = group_dict['prob'][sorted_idx,:]
+    group_dict['q'] = group_dict['q'][sorted_idx,:,:]
+    group_dict['n'] = group_dict['n'][sorted_idx,:]
+    for i_subj in range(n_subj):
+        subj_dict[i_subj]['prob'] = subj_dict[i_subj]['prob'][sorted_idx,:]
+        subj_dict[i_subj]['q'] = subj_dict[i_subj]['q'][sorted_idx,:, :]
+        subj_dict[i_subj]['n'] = subj_dict[i_subj]['n'][sorted_idx, :]
+
+    conds = array(conds)[(sorted_idx // 2)]
+    return group_dict, subj_dict, conds, sorted_idx
+
+
+
+def _draw_qp_plot(dict, conds, conds_to_plot, title_str, samples_summary,
+                  marker, handle = None):
+    """
+    draw QP plot
+    Input:
+        dict - subject/group dictionary from qunatiles_summary
+        conds - conditions from quantiles_summary
+        conds_to_plot - a list of conds to plot
+        title_str - the title of the plot
+        samples_summary - sould we plot only samples sammury and not the samples themselves
+        maarker - marker used in plot
+        handle - axes's handle
+    """
+
+    colors  = ['b', 'g', 'c', 'm', 'r', 'y', 'k']
+    n_q = dict['q'].shape[2]
+    n_conds = len(conds)//2
+    n_samples = dict['prob'].shape[1]
+    #group plot
+    if handle == None:
+        f = plt.figure()
+        handle = f.add_subplot(111)
+    color_counter = -1
+    for i_c in range(n_conds):
+        #check if we need to plot this condition
+        if i_c not in conds_to_plot:
+            continue
+        color_counter += 1
+        #loop over correct and incorrect reponses
+        for i_resp in range(2):
+            if i_resp == 0:
+                idx = i_c
+            else:
+                idx = (n_conds * 2) - 1 - i_c
+            #get color of marker
+            cc = colors[color_counter % len(colors)]
+            #plot it
+            if samples_summary:
+                ok_idx = ~np.isnan(dict['prob'][idx,:])
+                if sum(ok_idx) == 0:
+                    continue
+                mean_prob = np.mean(dict['prob'][idx,ok_idx])
+                xerr = np.empty((2,n_q))
+                xerr[0,:] = mean_prob - scoreatpercentile(dict['prob'][idx,ok_idx], 2.5)
+                xerr[1,:] = scoreatpercentile(dict['prob'][idx,ok_idx], 97.5) - mean_prob
+
+                mean_q = np.mean(dict['q'][idx,ok_idx,:],0)
+                yerr = np.empty((2,n_q))
+                yerr[0,:] = array([scoreatpercentile(x, 2.5) for x in dict['q'][idx,ok_idx,:].T]) - mean_q
+                yerr[1,:] = mean_q - array([scoreatpercentile(x, 97.5) for x in dict['q'][idx,ok_idx,:].T])
+                handle.errorbar(ones(n_q)*mean_prob, mean_q, yerr=yerr, xerr=xerr,
+                                marker=marker, fmt=cc)
+
+            else:
+                for i_sample in range(n_samples):
+                    if np.isnan(dict['prob'][idx, i_sample]):
+                        continue
+                    handle.plot(ones(n_q)*dict['prob'][idx,i_sample],
+                                      dict['q'][idx,i_sample,:],'%s%s' % (cc, marker))
+
+    #add title and labels
+    if title_str != None:
+        plt.gcf().canvas.set_window_title(title_str)
+        plt.title(title_str)
+        plt.xlabel('probability')
+        plt.ylabel('RT')
+        plt.xlim([-0.05, 1.05])
+
+    handle.get_figure().canvas.draw()
+    return handle
+
+
+def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
+            split_func=lambda x:0, method = None, samples_summary=True,
+            n_samples=50, cdf_range=(-5, 5)):
+    """
+    generate a quantile-probability plot
+    Input:
+        hm - hddm model
+        qunatiles - the quantiles that are going to be displyed
+        plot_subj - generate a QP plot for each subject as well
+        split_func - split the plot into several plots according to the output of
+            the function
+        method - which values will be used to compute the estimated quantiles.
+            may be one of the followings:
+            -'none'   : display only observed quantiles
+            -'deviance': use the point of minimum deviance
+            -'samples': samples n_samples and plot them all (not recommended)
+            -'samples_summary': samples n_samples and plot the mean and 95 credible set of them
+        n_samples - see method
+        cdf_range (advanced) - the range of the cdf used to generate the estimated
+            quantiles.
+            
+        TODO:
+            there should be an option to use the average value of the parameters to create samples.
+            it make much more sense than 'deviance'
+    """
+
+    #### compute empirical quantiles
+    #Init
+    n_q = len(quantiles)
+    if hm.is_group_model:
+        is_group = True
+        n_subj = hm._num_subjs
+    else:
+        n_subj = 1
+        is_group = False
+
+    #get group and subj dicts
+    obs_group_d, obs_subj_d, conds, sorted_idx = \
+    quantiles_summary(hm, 'observed', n_samples = 1, quantiles = quantiles)
+
+    #get splits
+    keys = [split_func(x) for x in conds]
+    dic  = {}
+    for i_s in range(len(keys)):
+        if dic.has_key(keys[i_s]):
+            dic[keys[i_s]].append(i_s)
+        else:
+            dic[keys[i_s]] = [i_s]
+    splits = dic.values()
+    splits_keys = dic.keys()
+
+    #plot
+    g_handles = [None]*len(splits)
+    s_handles = [[None]*n_subj for x in range(len(splits))]
+    for i_s in range(len(splits)):
+        g_handles[i_s] = _draw_qp_plot(obs_group_d, conds, splits[i_s],
+                                title_str = "QP group (%s)" % splits_keys[i_s],
+                                samples_summary=False, marker = 'd')
+        if not plot_subj:
+            continue
+        for i_subj in range(n_subj):
+            s_handles[i_s][i_subj] = _draw_qp_plot(obs_subj_d[i_subj], conds, splits[i_s],
+                                           title_str = "QP %d (%s)" % (i_subj, splits_keys[i_s]),
+                                           samples_summary=False, marker = 'd')
+
+    if (method == None) or (method == 'none'):
+        return
+    elif (method == 'deviance'):
+        quantiles_method = 'deviance'
+    elif method == 'samples':
+        quantiles_method = 'samples'
+    else:
+        raise ValueError, "unknown method"
+
+    #### compute estimated quantiles
+
+    #get group and subj dicts
+    print "getting quantiles summary of samples"
+    i_t = time();
+    sim_group_d, sim_subj_d, conds, sorted_idx = \
+    quantiles_summary(hm, method=method, n_samples=n_samples,
+                      quantiles=quantiles, sorted_idx=sorted_idx)
+    print "took %d seconds to prepare quantiles" % (time() - i_t)
+    sys.stdout.flush()
+
+    #plot
+    for i_s in range(len(splits)):
+        _draw_qp_plot(sim_group_d, conds, splits[i_s],
+                      title_str=None, samples_summary=samples_summary,
+                      marker='o', handle=g_handles[i_s])
+        if not plot_subj:
+            continue
+        for i_subj in range(n_subj):
+            _draw_qp_plot(sim_subj_d[i_subj], conds, splits[i_s],
+                          title_str = None, samples_summary=samples_summary,
+                          marker = 'o', handle = s_handles[i_s][i_subj])
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+

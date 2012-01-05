@@ -65,7 +65,7 @@ class DDM(HasTraits):
     intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])  #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -85,7 +85,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'intra_sv', 'num_samples', 'iter_plot', 'T', 'switch', 't_switch', 'v_switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot')  #, 'switch')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
@@ -288,6 +288,7 @@ class DDMPlot(HasTraits):
         #    histo = hddm.utils.histogram(self.data, bins=2*self.parameters.bins, range=(-self.parameters.T, self.parameters.T), dens=True)[0]
         #    self.plot_histo(x, histo, color='y')
 
+        # Plot analytical simple likelihood function
         if self.plot_switch and self.parameters.switch:
             self.plot_histo(x_anal, self.switch, color='r')
 
