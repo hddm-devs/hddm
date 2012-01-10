@@ -59,9 +59,6 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, doub
 
     return sum_logp
 
-def set_num_threads(num_threads):
-    openmp.omp_set_num_threads(num_threads)
-
 def wiener_like_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t,
                 double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t size = x.shape[0]

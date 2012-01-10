@@ -3,7 +3,6 @@ from hddm.model import HDDM
 import pymc as pm
 from kabuki import Parameter
 import numpy as np
-import matplotlib.pyplot as plt
 
 try:
     import wfpt_switch
@@ -17,9 +16,7 @@ def wiener_like_antisaccade(value, instruct, v, v_switch, V_switch, a, z, t, t_s
     #     print "RT too small"
     # if t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
     #     print "Condition not met"
-    logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err)
-    if np.isnan(logp):
-        print locals()
+    logp = wfpt_switch.wiener_like_antisaccade_precomp(value, instruct, v, v_switch, V_switch, a, z, t, t_switch, T, err, evals=50)
     return logp
 
 WienerAntisaccade = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
@@ -39,12 +36,16 @@ class HDDMSwitch(HDDM):
                   Parameter('vcc', lower=0, upper=10.),
                   Parameter('a', lower=.5, upper=4.5),
                   Parameter('t', lower=0., upper=.5, init=0.05),
-                  Parameter('tcc', lower=0.0, upper=1.0),
+                  Parameter('tcc', lower=0.001, upper=1.0),
                   Parameter('T', lower=0, upper=.5, init=.1, default=0, optional=True),
                   Parameter('Vcc', lower=0, upper=2., default=0, optional=True),
                   Parameter('wfpt', is_bottom_node=True)]
 
         return params
+
+    def get_var_node(self, param):
+        #return pm.Gamma(param.full_name, alpha=.3, beta=.3)
+        return pm.Uniform(param.full_name, lower=1e-7, upper=10)
 
     def get_bottom_node(self, param, params):
         if param.name == 'wfpt':

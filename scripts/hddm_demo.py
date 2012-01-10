@@ -54,18 +54,18 @@ class DDM(HasTraits):
     # Paremeters
     z = Range(0, 1., .5)
     sz = Range(0, 1., .0)
-    v = Range(-3,3.,-2.)
+    v = Range(-20.,20.,-2.)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
     ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
     switch = Bool(False)
     t_switch = Range(0,2.,.3)
-    v_switch = Range(-3.,3.,1.)
+    v_switch = Range(-20.,20.,1.)
     intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])  #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -85,7 +85,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot')  #, 'switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'switch', 't_switch', 'v_switch', 'intra_sv')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
