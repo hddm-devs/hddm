@@ -240,7 +240,7 @@ class HDDM(kabuki.Hierarchical):
             print "*!*!* fitting subject %d *!*!*" % subjs[i_subj]
             t_data = self.data[self.data['subj_idx'] == subjs[i_subj]]
             t_data = rec_drop_fields(t_data, ['data_idx'])
-            s_model = HDDM(data = t_data, include=self.include,
+            s_model = type(self)(data = t_data, include=self.include,
                            **t_kwargs)
             s_model.map(method='fmin_powell', runs = runs, **map_kwargs)
 
