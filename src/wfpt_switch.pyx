@@ -155,7 +155,7 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40, double t_switch_cutoff=.01):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40, double t_switch_cutoff=.02):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -178,13 +178,21 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[in
     # Compute density
     for x in range(evals):
         eval_dens[x] = a * (<double>x/(evals-1))
+        #if x == evals-1:
+        #    eval_dens[x] = a - 1e-3
         if t_switch < t_switch_cutoff:
             # If too small, approximate drift-density with normal distribution
             drift_density[x] = gsl_ran_gaussian_pdf(eval_dens[x] - (t_switch*v + z*a), sqrt(t_switch))
         else:
             drift_density[x] = calc_drift_dens_T(eval_dens[x], t_switch, v, a, z*a, T)
         if np.isnan(drift_density[x]) or drift_density[x] < 0 or fabs(drift_density[x]) > 100:
-            print x, t_switch, v, a, z*a, T
+
+            if (drift_density[x] < 0 and drift_density[x] > -1e-2) or x == 1:
+                drift_density[x] = 0
+            else:
+                print eval_dens[x], drift_density[x], x, t_switch, v, a, z*a, T
+                # Ran into numerical stability issues, abort.
+                return -np.inf
         #    return 0
 
     # Init spline

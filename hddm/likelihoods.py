@@ -2,7 +2,6 @@ from __future__ import division
 import pymc as pm
 import numpy as np
 import scipy as sp
-
 np.seterr(divide='ignore')
 
 try:
@@ -222,8 +221,18 @@ Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 
 class wfpt_gen(stats.distributions.rv_continuous):
     sampling_method = 'cdf'
     dt = 1e-4
+    err=1e-4
+    nT=2
+    nZ=2
+    use_adaptive=1
+    simps_err=1e-3
+
     def _argcheck(self, *args):
         return True
+
+    def _logp(self, x, v, V, a, z, Z, t, T):
+        """Log-likelihood for the full DDM using the interpolation method"""
+        return hddm.wfpt.wiener_like(x, v, V, a, z, Z, t, T, self.err, self.nT, self.nZ, self.use_adaptive, self.simps_err)
 
     def _pdf(self, x, v, V, a, z, Z, t, T):
         if np.isscalar(x):
@@ -294,6 +303,7 @@ References:
 Fast and accurate calculations for first-passage times in Wiener diffusion models
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
+
 
 
 
