@@ -135,10 +135,14 @@ class HDDM(kabuki.Hierarchical):
         else:
             self.wiener_params = wiener_params
         wp = self.wiener_params
-        self.wfpt = hddm.likelihoods.general_WienerFullIntrp_variable(err=wp['err'], nT=wp['nT'], nZ=wp['nZ'], use_adaptive=wp['use_adaptive'], simps_err=wp['simps_err'])
+
+        self.wfpt = deepcopy(hddm.likelihoods.wfpt_like)
+
+        self.wfpt.rv.wiener_params = wp
+
         self.kwargs = kwargs
 
-        super(hddm.model.HDDM, self).__init__(data, include=include, **kwargs)
+        super(hddm.HDDM, self).__init__(data, include=include, **kwargs)
 
     def get_params(self):
         """Returns list of model parameters.
@@ -198,15 +202,15 @@ class HDDM(kabuki.Hierarchical):
         """
         if param.name == 'wfpt':
             return self.wfpt(param.full_name,
-                             value=param.data['rt'].flatten(),
-                             v=params['v'],
-                             a=params['a'],
-                             z=self.get_node('z',params),
-                             t=params['t'],
-                             Z=self.get_node('Z',params),
-                             T=self.get_node('T',params),
-                             V=self.get_node('V',params),
-                             observed=True)
+                                  value=param.data['rt'].flatten(),
+                                  v=params['v'],
+                                  a=params['a'],
+                                  z=self.get_node('z',params),
+                                  t=params['t'],
+                                  Z=self.get_node('Z',params),
+                                  T=self.get_node('T',params),
+                                  V=self.get_node('V',params),
+                                  observed=True)
 
         else:
             raise KeyError, "Groupless parameter named %s not found." % param.name

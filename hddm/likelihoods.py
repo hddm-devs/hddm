@@ -2,6 +2,9 @@ from __future__ import division
 import pymc as pm
 import numpy as np
 import scipy as sp
+
+from kabuki.utils import stochastic_from_scipy_dist
+
 np.seterr(divide='ignore')
 
 try:
@@ -38,8 +41,6 @@ def general_WienerCont(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
                                        dtype=np.float,
                                        mv=False)
 
-
-
 def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
     """Log-likelihood for the simple DDM"""
     return hddm.wfpt.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
@@ -48,191 +49,21 @@ WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                       logp=wiener_like_multi,
                                       dtype=np.float)
 
-def wiener_like(value, v, V, z, Z, t, T, a, err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
-    """Log-likelihood for the full DDM using the interpolation method"""
-    return hddm.wfpt.wiener_like(value, v, V, a, z, Z, t, T, err, nT, nZ, use_adaptive, simps_err)
-
-
-def general_WienerFullIntrp_variable(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
-    _like = lambda  value, v, V, z, Z, t, T, a, err=err, nT=nT, nZ=nZ, \
-    use_adaptive=use_adaptive, simps_err=simps_err: \
-    wiener_like(value, v, V, z, Z, t, T, a,\
-                err=err, nT=nT, nZ=nZ, use_adaptive=use_adaptive, simps_err=simps_err)
-    _like.__doc__ = wiener_like.__doc__
-    return pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                       logp=_like,
-                                       dtype=np.float,
-                                       mv=False)
-
-WienerFullIntrp = pm.stochastic_from_dist(name="Wiener Diffusion Process",
-                                       logp=wiener_like,
-                                       dtype=np.float,
-                                       mv=False)
-
-def wiener_summary(v, V, a, z, Z, t, T, quan = (10, 30, 50, 70, 90),
-                   cdf_bound=5, dt=1e-3):
-    """
-    provide RT distribution statistics.
-    Input:
-        v, V, a, z, Z, t, T - DDM parameters
-        quan - list of quantiles to compute
-        cdf_bound, dt - advance arguments to create the cdf
-
-    Output:
-        accuracy - the chance of hitting the upper boundary
-        RTs - a 2-by-n matrix, where n is the number of quantiles.
-            The first row hold the RT at the requested quantiles
-            of the upper boundary. The second row hold the same for the
-            lower boundary
-    """
-
-    n_steps = int(cdf_bound/dt)
-    l_cdf = np.empty((2, n_steps), dtype=np.double)
-    val = np.empty((2, len(quan)), dtype=np.double)
-
-    #compute defective cdf for each boundary
-    for i_resp in range(2):
-        if i_resp==0:
-            sign = 1
-        else:
-            sign = -1;
-        for i in xrange(n_steps):
-            rt = (dt*i) * sign
-            pdf = hddm.wfpt.full_pdf(rt, v, V, a, z, Z, t, T, 1e-4)
-            if i==0:
-                l_cdf[i_resp,i] = pdf
-            else:
-                l_cdf[i_resp,i] = l_cdf[i_resp,i-1] + pdf
-
-    #compute accuracy
-    acc = l_cdf[0,-1] / (l_cdf[:,-1].sum())
-
-    #normalize cdf
-    l_cdf[0,:] -= l_cdf[0,0]
-    for i_resp in range(2):
-        l_cdf[i_resp,:] /= l_cdf[i_resp,-1]
-
-    #get quantiles
-    for i_resp in range(2):
-        q_idx = 0
-        for i in xrange(n_steps):
-            if l_cdf[i_resp,i] > (quan[q_idx] / 100.):
-                val[i_resp,q_idx] = dt*i - dt/2;
-                q_idx += 1
-                if q_idx>=len(quan):
-                    break
-
-    return acc, val
-
-
-
-################################
-# Linear Ballistic Accumulator
-
-def LBA_like(value, a, z, t, V, v0, v1=0., logp=True, normalize_v=False):
-    """Linear Ballistic Accumulator PDF
-    """
-    if z is None:
-        z = a/2.
-
-    #print a, z, t, v, V
-    prob = hddm.lba.lba_like(np.asarray(value, dtype=np.double), z, a, t, V, v0, v1, int(logp), int(normalize_v))
-    return prob
-
-LBA = pm.stochastic_from_dist(name='LBA likelihood',
-                              logp=LBA_like,
-                              dtype=np.float,
-                              mv=True)
-
-# Scipy Distributions
-from scipy import stats, integrate
-
-def expectedfunc(self, fn=None, args=(), lb=None, ub=None, conditional=False):
-    '''calculate expected value of a function with respect to the distribution
-
-    only for standard version of distribution,
-    location and scale not tested
-
-    Parameters
-    ----------
-        all parameters are keyword parameters
-        fn : function (default: identity mapping)
-           Function for which integral is calculated. Takes only one argument.
-        args : tuple
-           argument (parameters) of the distribution
-        lb, ub : numbers
-           lower and upper bound for integration, default is set to the support
-           of the distribution
-        conditional : boolean (False)
-           If true then the integral is corrected by the conditional probability
-           of the integration interval. The return value is the expectation
-           of the function, conditional on being in the given interval.
-
-    Returns
-    -------
-        expected value : float
-    '''
-    if fn is None:
-        def fun(x, *args):
-            return x*self.pdf(x, *args)
-    else:
-        def fun(x, *args):
-            return fn(x)*self.pdf(x, *args)
-    if lb is None:
-        lb = self.a
-    if ub is None:
-        ub = self.b
-    if conditional:
-        invfac = self.sf(lb,*args) - self.sf(ub,*args)
-    else:
-        invfac = 1.0
-    return integrate.quad(fun, lb, ub,
-                                args=args)[0]/invfac
-
-import types
-stats.distributions.rv_continuous.expectedfunc = types.MethodType(expectedfunc,None,stats.distributions.rv_continuous)
-
-class lba_gen(stats.distributions.rv_continuous):
-    def _pdf(self, x, a, z, t, V, v0, v1):
-        """Linear Ballistic Accumulator PDF
-        """
-        return np.asscalar(hddm.lba.lba_like(np.asarray(x, dtype=np.double), z, a, t, V, v0, v1))
-
-lba = lba_gen(a=0, b=5, name='LBA', longname="""Linear Ballistic Accumulator likelihood function.""", extradoc="""Linear Ballistic Accumulator likelihood function. Models two choice decision making as a race between two independet linear accumulators towards one threshold. Once one crosses the threshold, an action with the corresponding RT is performed.
-
-Parameters:
-***********
-z: width of starting point distribution
-a: threshold
-t: non-decision time
-V: inter-trial variability in drift-rate
-v0: drift-rate of first accumulator
-v1: drift-rate of second accumulator
-
-References:
-***********
-The simplest complete model of choice response time: linear ballistic accumulation.
-Brown SD, Heathcote A; Cogn Psychol. 2008 Nov ; 57(3): 153-78
-
-Getting more from accuracy and response time data: methods for fitting the linear ballistic accumulator.
-Donkin C, Averell L, Brown S, Heathcote A; Behav Res Methods. 2009 Nov ; 41(4): 1095-110
-""")
+from scipy import stats
 
 class wfpt_gen(stats.distributions.rv_continuous):
+    wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
+                                  'use_adaptive':1,
+                                  'simps_err':1e-3}
     sampling_method = 'cdf'
-    dt = 1e-4
-    err=1e-4
-    nT=2
-    nZ=2
-    use_adaptive=1
-    simps_err=1e-3
+    dt=1e-4
 
     def _argcheck(self, *args):
         return True
 
     def _logp(self, x, v, V, a, z, Z, t, T):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like(x, v, V, a, z, Z, t, T, self.err, self.nT, self.nZ, self.use_adaptive, self.simps_err)
+        return hddm.wfpt.wiener_like(x, v, V, a, z, Z, t, T, self.wiener_params['err'], self.wiener_params['nT'], self.wiener_params['nZ'], self.wiener_params['use_adaptive'], self.wiener_params['simps_err'])
 
     def _pdf(self, x, v, V, a, z, Z, t, T):
         if np.isscalar(x):
@@ -246,10 +77,11 @@ class wfpt_gen(stats.distributions.rv_continuous):
 
     def _rvs(self, v, V, a, z, Z, t, T):
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}
+        print self._size
         sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
         return sampled_rts
 
-wfpt = wfpt_gen(name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+wfpt_like = stochastic_from_scipy_dist(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
 Parameters:
 ***********
@@ -263,6 +95,8 @@ References:
 Fast and accurate calculations for first-passage times in Wiener diffusion models
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
+
+
 
 class wfpt_switch_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
