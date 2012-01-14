@@ -122,7 +122,7 @@ cpdef double pdf_switch(double rt, int instruct, double v, double v_switch, doub
 
     return p
 
-def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -132,7 +132,7 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=
         return -np.inf
 
     for i in prange(size, nogil=True):
-        p = pdf_switch(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch(rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             with gil:
                 return -np.inf
@@ -155,7 +155,7 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[int, ndim=1] instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40, double t_switch_cutoff=.02):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40, double t_switch_cutoff=.02):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
@@ -199,9 +199,9 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[in
     gsl_spline_init(spline, eval_dens, drift_density, evals)
 
     for i in range(size):
-        p = pdf_switch_precomp(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch_precomp(rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if np.isnan(log(p)):
-            print p, rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err
+            print p, rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err
         if p == 0:
             return -np.inf
         sum_logp += log(p)

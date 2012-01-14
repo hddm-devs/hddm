@@ -202,15 +202,15 @@ class HDDM(kabuki.Hierarchical):
         """
         if param.name == 'wfpt':
             return self.wfpt(param.full_name,
-                                  value=param.data['rt'].flatten(),
-                                  v=params['v'],
-                                  a=params['a'],
-                                  z=self.get_node('z',params),
-                                  t=params['t'],
-                                  Z=self.get_node('Z',params),
-                                  T=self.get_node('T',params),
-                                  V=self.get_node('V',params),
-                                  observed=True)
+                             value=param.data['rt'].flatten(),
+                             v=params['v'],
+                             a=params['a'],
+                             z=self.get_node('z',params),
+                             t=params['t'],
+                             Z=self.get_node('Z',params),
+                             T=self.get_node('T',params),
+                             V=self.get_node('V',params),
+                             observed=True)
 
         else:
             raise KeyError, "Groupless parameter named %s not found." % param.name
