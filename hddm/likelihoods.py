@@ -2,8 +2,9 @@ from __future__ import division
 import pymc as pm
 import numpy as np
 import scipy as sp
+from scipy import stats
 
-from kabuki.utils import stochastic_from_scipy_dist
+from kabuki.utils import scipy_stochastic
 
 np.seterr(divide='ignore')
 
@@ -41,16 +42,6 @@ def general_WienerCont(err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3):
                                        dtype=np.float,
                                        mv=False)
 
-def wiener_like_multi(value, v, V, a, z, Z, t, T, multi=None):
-    """Log-likelihood for the simple DDM"""
-    return hddm.wfpt.wiener_like_multi(value, v, V, a, z, Z, t, T, .001, multi=multi)
-
-WienerMulti = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                      logp=wiener_like_multi,
-                                      dtype=np.float)
-
-from scipy import stats
-
 class wfpt_gen(stats.distributions.rv_continuous):
     wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
                                   'use_adaptive':1,
@@ -69,9 +60,10 @@ class wfpt_gen(stats.distributions.rv_continuous):
         if np.isscalar(x):
             out = hddm.wfpt.full_pdf(x, v, V, a, z, Z, t, T, self.dt)
         else:
-            out = np.empty_like(x)
-            for i in xrange(len(x)):
-                out[i] = hddm.wfpt.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
+            out = hddm.wfpt.pdf_array(x, v[0], V[0], a[0], z[0], Z[0], t[0], T[0], self.dt, logp=False)
+            #out = np.empty_like(x)
+            #for i in xrange(len(x)):
+            #    out[i] = hddm.wfpt.full_pdf(x[i], v[i], V[i], a[i], z[i], Z[i], t[i], T[i], self.dt)
 
         return out
 
@@ -81,7 +73,7 @@ class wfpt_gen(stats.distributions.rv_continuous):
         sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
         return sampled_rts
 
-wfpt_like = stochastic_from_scipy_dist(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
+wfpt_like = scipy_stochastic(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
 Parameters:
 ***********
@@ -95,51 +87,6 @@ References:
 Fast and accurate calculations for first-passage times in Wiener diffusion models
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
-
-
-
-class wfpt_switch_gen(stats.distributions.rv_continuous):
-    def _argcheck(self, *args):
-        return True
-
-    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
-        if np.isscalar(x):
-            #out = np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4, evals=100))
-            out = hddm.wfpt_switch.pdf_switch(np.array([x]), 1, v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
-            #out = hddm.wfpt_switch.pdf_switch(x, v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4)
-        else:
-            out = np.empty_like(x)
-            for i in xrange(len(x)):
-                #out[i] = np.exp(hddm.sandbox.model.wiener_like_antisaccade(np.array([x[i]]), np.array([1]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4))
-                out[i] = hddm.wfpt_switch.pdf_switch(np.array([x[i]]), 1, v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
-
-        return out
-
-    def _rvs(self, v, v_switch, V_switch, a, z, t, t_switch, T):
-        all_rts_generated=False
-        while(not all_rts_generated):
-            out = hddm.generate.gen_antisaccade_rts({'v':v, 'z':z, 't':t, 'a':a, 'v_switch':v_switch, 'V_switch':V_switch, 't_switch':t_switch, 'Z':0, 'V':0, 'T':T}, samples_anti=self._size, samples_pro=0)[0]
-            if (len(out) == self._size):
-                all_rts_generated=True
-        return hddm.utils.flip_errors(out)['rt']
-
-wfpt_switch = wfpt_switch_gen(name='wfpt switch', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
-
-Parameters:
-***********
-v: drift-rate
-a: threshold
-z: bias [0,1]
-t: non-decision time
-
-References:
-***********
-Fast and accurate calculations for first-passage times in Wiener diffusion models
-Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
-""")
-
-
-
 
 def wiener_like_gpu(value, v, V, a, z, t, out, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""
