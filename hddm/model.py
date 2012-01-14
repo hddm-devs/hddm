@@ -139,58 +139,71 @@ class HDDM(kabuki.Hierarchical):
         # These boundaries are largely based on a meta-analysis of
         # reported fit values.
         # See: Matzke & Wagenmakers 2009
-        params = [Parameter('a', lower=.3, upper=4),
-                  Parameter('v', lower=-15., upper=15., init=0.),
-                  Parameter('t', lower=.1, upper=.9, init=.1), # Change lower to .2 as in MW09?
-                  Parameter('z', lower=.2, upper=0.8, init=.5,
-                            default=.5, optional=True),
-                  Parameter('V', lower=0., upper=3.5, default=0,
-                            optional=True),
-                  Parameter('Z', lower=0., upper=1.0, init=.1,
-                            default=0, optional=True),
-                  Parameter('T', lower=0., upper=0.8, init=.1,
-                            default=0, optional=True),
-                  Parameter('wfpt', is_bottom_node=True)]
+        all_var_stoch_params = {'lower' : 1e-3, 'upper': 100, 'value': 1}
 
-        return params
+        # a
+        a_group_stoch_params = {'lower': 0.3, 'upper':1e3, 'value':1}
+        a_subj_stoch_params = {'a': 0.3, 'b': 100, 'value': 1}
+        a = Parameter('a', group_stoch=pm.Uniform, group_stoch_params=a_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=a_subj_stoch_params)
 
-    def get_subj_node(self, param):
-        """Create and return a Normal (in case of an effect or
-        drift-parameter) or Truncated Normal (otherwise) distribution
-        for 'param' centered around param.group with standard deviation
-        param.var and initialization value param.init.
+        # v
+        v_group_stoch_params = {'mu': 0.3, 'tau':15**-2, 'value':0}
+        v_subj_stoch_params = {'value': 0}
+        v = Parameter('v', group_stoch=pm.Normal, group_stoch_params=v_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.Normal, subj_stoch_params=v_subj_stoch_params)
 
-        This is used for the individual subject distributions.
+        # t
+        t_group_stoch_params = {'lower': 0.1, 'upper':1e3, 'value':0.1}
+        t_subj_stoch_params = {'a': 0.1, 'b': 1e3, 'value': 0.1}
+        t = Parameter('t', group_stoch=pm.Uniform, group_stoch_params=t_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=t_subj_stoch_params)
 
-        """
-        if param.name.startswith('e') or param.name.startswith('v'):
-            return pm.Normal(param.full_name,
-                             mu=param.group,
-                             tau=param.var**-2,
-                             plot=self.plot_subjs,
-                             trace=self.trace_subjs,
-                             value=param.init)
+        # z
+        z_group_stoch_params = {'alpha': 1, 'beta':1, 'value':0.5}
+        z_subj_stoch_params = {'value': 0.5}
+        z_var_stoch_params = {'lower' : 1, 'upper': 1e5, 'value': 1}
+        z = Parameter('z', group_stoch=pm.Beta, group_stoch_params=z_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=z_var_stoch_params,
+                      subj_stoch=pm.Beta, subj_stoch_params=z_subj_stoch_params,
+                      group_label='alpha', var_label='beta', var_type='sample_size',
+                      transform=lambda mu,n: (mu*n, (1-mu)*n),
+                      optional=True, default=0.5)
 
-        elif param.name == 'V':
-            return pm.TruncatedNormal(param.full_name,
-                                      a=param.lower,
-                                      b=1000,
-                                      mu=param.group,
-                                      tau=param.var**-2,
-                                      plot=self.plot_subjs,
-                                      trace=self.trace_subjs,
-                                      value=param.init)
+        #V
+        V_group_stoch_params = {'lower': 1e-3, 'upper':1e3, 'value':1}
+        V_subj_stoch_params = {'a': 1e-3, 'b': 1e3, 'value': 1}
+        V = Parameter('V', group_stoch=pm.Uniform, group_stoch_params=V_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=V_subj_stoch_params,
+                      optional=True, default=0)
 
-        else:
-            return pm.TruncatedNormal(param.full_name,
-                                      a=param.lower,
-                                      b=param.upper,
-                                      mu=param.group,
-                                      tau=param.var**-2,
-                                      plot=self.plot_subjs,
-                                      trace = self.trace_subjs,
-                                      value=param.init)
+        #Z
+        Z_group_stoch_params = {'lower': 0, 'upper':1, 'value':0.1}
+        Z_subj_stoch_params = {'a': 0, 'b': 1, 'value': 1}
+        Z = Parameter('Z', group_stoch=pm.Uniform, group_stoch_params=Z_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=Z_subj_stoch_params,
+                      optional=True, default=0)
 
+        #T
+        T_group_stoch_params = {'lower': 0, 'upper':1e3, 'value':0.01}
+        T_subj_stoch_params = {'a': 1e-3, 'b': 1e3, 'value': 0.01}
+        T = Parameter('T', group_stoch=pm.Uniform, group_stoch_params=T_group_stoch_params,
+                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
+                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=T_subj_stoch_params,
+                      optional=True, default=0)
+        
+        #wfpt
+        wfpt = Parameter('wfpt', is_bottom_node=True)
+
+
+        return [a, v, t, z, V, T, Z, wfpt]
+
+ 
     def get_bottom_node(self, param, params):
         """Create and return the wiener likelihood distribution
         supplied in 'param'.
