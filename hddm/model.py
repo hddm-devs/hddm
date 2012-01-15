@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import hddm
 
 import kabuki
-
+import kabuki.step_methods as steps
 from kabuki.hierarchical import Parameter
 
 # try:
@@ -139,7 +139,7 @@ class HDDM(kabuki.Hierarchical):
         # These boundaries are largely based on a meta-analysis of
         # reported fit values.
         # See: Matzke & Wagenmakers 2009
-        all_var_stoch_params = {'lower' : 1e-3, 'upper': 100, 'value': 1}
+        all_var_stoch_params = {'lower' : 1e-10, 'upper': 100, 'value': 1}
 
         # a
         a_group_stoch_params = {'lower': 0.3, 'upper':1e3, 'value':1}
@@ -155,7 +155,9 @@ class HDDM(kabuki.Hierarchical):
         v = Parameter('v', group_stoch=pm.Normal, group_stoch_params=v_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.Normal, subj_stoch_params=v_subj_stoch_params,
-                      transform=lambda mu,var:(mu, var**-2))
+                      transform=lambda mu,var:(mu, var**-2),
+                      group_step_method=steps.NormalPriorNormal,
+                      var_step_method=steps.UniformPriorNormalstd)
 
         # t
         t_group_stoch_params = {'lower': 0.1, 'upper':1e3, 'value':0.1}
