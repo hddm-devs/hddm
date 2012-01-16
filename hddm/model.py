@@ -179,8 +179,8 @@ class HDDM(kabuki.Hierarchical):
                       optional=True, default=0.5)
 
         #V
-        V_group_stoch_params = {'lower': 1e-3, 'upper':1e3, 'value':1}
-        V_subj_stoch_params = {'a': 1e-3, 'b': 1e3, 'value': 1}
+        V_group_stoch_params = {'lower': 0, 'upper':1e3, 'value':1}
+        V_subj_stoch_params = {'a': 0, 'b': 1e3, 'value': 1}
         V = Parameter('V', group_stoch=pm.Uniform, group_stoch_params=V_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=V_subj_stoch_params,
@@ -198,7 +198,7 @@ class HDDM(kabuki.Hierarchical):
 
         #T
         T_group_stoch_params = {'lower': 0, 'upper':1e3, 'value':0.01}
-        T_subj_stoch_params = {'a': 1e-3, 'b': 1e3, 'value': 0.01}
+        T_subj_stoch_params = {'a': 0, 'b': 1e3, 'value': 0.01}
         T = Parameter('T', group_stoch=pm.Uniform, group_stoch_params=T_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=T_subj_stoch_params,
