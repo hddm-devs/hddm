@@ -77,13 +77,31 @@ class HDDMSwitch(HDDM):
                   Parameter('vcc', lower=0, upper=10.),
                   Parameter('a', lower=.5, upper=4.5),
                   Parameter('t', lower=0., upper=.5, init=0.05),
-                  Parameter('tcc', lower=0.001, upper=1.0),
+                  Parameter('tcc', lower=0.01, upper=1.0),
                   Parameter('T', lower=0, upper=.5, init=.1, default=0, optional=True),
                   Parameter('Vcc', lower=0, upper=2., default=0, optional=True),
                   Parameter('wfpt_anti', is_bottom_node=True),
                   Parameter('wfpt_pro', is_bottom_node=True)]
 
         return params
+
+    def get_subj_node(self, param):
+        """Create and return a Normal (in case of an effect or
+        drift-parameter) or Truncated Normal (otherwise) distribution
+        for 'param' centered around param.group with standard deviation
+        param.var and initialization value param.init.
+
+        This is used for the individual subject distributions.
+
+        """
+        return pm.TruncatedNormal(param.full_name,
+                                  a=param.lower,
+                                  b=param.upper,
+                                  mu=param.group,
+                                  tau=param.var**-2,
+                                  plot=self.plot_subjs,
+                                  trace=self.trace_subjs,
+                                  value=param.init)
 
     def get_var_node(self, param):
         #return pm.Gamma(param.full_name, alpha=.3, beta=.3)
