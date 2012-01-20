@@ -147,6 +147,7 @@ class HDDM(kabuki.Hierarchical):
         a = Parameter('a', group_stoch=pm.Uniform, group_stoch_params=a_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=a_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # v
@@ -155,6 +156,7 @@ class HDDM(kabuki.Hierarchical):
         v = Parameter('v', group_stoch=pm.Normal, group_stoch_params=v_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.Normal, subj_stoch_params=v_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       group_step_method=steps.NormalPriorNormal,
                       var_step_method=steps.UniformPriorNormalstd)
@@ -165,6 +167,7 @@ class HDDM(kabuki.Hierarchical):
         t = Parameter('t', group_stoch=pm.Uniform, group_stoch_params=t_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=t_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # z
@@ -184,6 +187,7 @@ class HDDM(kabuki.Hierarchical):
         V = Parameter('V', group_stoch=pm.Uniform, group_stoch_params=V_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=V_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
 
@@ -193,6 +197,7 @@ class HDDM(kabuki.Hierarchical):
         Z = Parameter('Z', group_stoch=pm.Uniform, group_stoch_params=Z_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=Z_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
 
@@ -202,11 +207,12 @@ class HDDM(kabuki.Hierarchical):
         T = Parameter('T', group_stoch=pm.Uniform, group_stoch_params=T_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.TruncatedNormal, subj_stoch_params=T_subj_stoch_params,
+                      group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
         
         #wfpt
-        wfpt = Parameter('wfpt', is_bottom_node=True)
+        wfpt = Parameter('wfpt', is_bottom_node=True, subj_stoch=self.wfpt)
 
 
         return [a, v, t, z, V, T, Z, wfpt]
