@@ -1,3 +1,4 @@
+
 from __future__ import division
 
 import numpy as np
@@ -338,7 +339,7 @@ def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     return (data, params)
 
 def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None,
-                            num_subjs=10, include = (), noise=.05):
+                            num_subjs=10, include=(), noise=.05):
     """Generate simulated RTs with multiple conditions.
 
         :Optional:
@@ -442,7 +443,7 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
 
     """
 
-    if cond_params == None:
+    if cond_params is None:
         cond_params, combined_params = gen_cond_params_v(n_conds)
     else:
         combined_params = cond_params_to_combined_params(cond_params)

@@ -11,13 +11,6 @@ from numpy import array, zeros, ones, empty
 from copy import deepcopy
 from time import time
 
-try:
-    from IPython.Debugger import Tracer;
-except ImportError:
-    from IPython.core.debugger import Tracer;
-debug_here = Tracer()
-
-
 def flip_errors(data):
     """Flip sign for lower boundary responses.
 
@@ -460,152 +453,6 @@ def EZ(pc, vrt, mrt, s=1):
     return (v, a, ter)
 
 
-def pdf_of_post_pred(traces, pdf=None, args=None, x=None, samples=30, use_mean=False):
-    """Calculate posterior predictive probability density function.
-
-    :Arguments:
-        traces : dict
-            A dictionary of traces (e.g. MCMC._dict_container).
-        pdf : func
-            A pdf to generate the posterior predictive from [default=wfpt].
-        args : tuple
-            Tuple of arguments to be supplied to the pdf
-            [default=('v', 'V', 'a','z','Z', 't','T')].
-        use_mean : bool
-            Whether to use the mean of or samples from the trace.
-
-    """
-    if pdf is None:
-        pdf = hddm.likelihoods.wfpt.pdf
-        args = ('v', 'V', 'a', 'z', 'Z', 't', 'T')
-
-    if x is None:
-        x = np.arange(-5, 5, 0.1)
-
-    trace_len = len(traces['a'])
-    p = np.zeros(len(x), dtype=np.float)
-
-    # Add default traces if needed parameter is excluded.
-    # This makes it easier to always make the same call to pdf below
-    if not 'V' in traces:
-        traces['V'] = np.zeros(trace_len)
-    if not 'T' in traces:
-        traces['T'] = np.zeros(trace_len)
-    if not 'Z' in traces:
-        traces['Z'] = np.zeros(trace_len)
-    if not 'z' in traces:
-        traces['z'] = np.ones(trace_len) * .5
-
-    if use_mean:
-        valued_args = []
-        # Construct arguments from traces to be passed to pdf
-        for arg in args:
-            valued_args.append(np.mean(traces[arg][:]))
-        dens = pdf(x, *valued_args)
-
-    else:
-        for i in np.round(np.linspace(0, trace_len - 1, samples)):
-            valued_args = []
-            # Construct arguments from traces to be passed to pdf
-            for arg in args:
-                valued_args.append(traces[arg][i])
-            pdf_full = lambda x: pdf(x, *valued_args)
-
-            p[:] += map(pdf_full, x)
-        dens = p / samples
-
-    return dens
-
-
-def plot_post_pred(model, bins=50, interval=(-5., 5.), n_rows=3, samples=20, fname=None, show=True, use_mean=True):
-    """
-    plot posterior predective distribution
-
-    :Arguments:
-        model : HDDM object
-             hddm model
-
-    :Optional:
-        bins : int
-             number of bins in the histogram of the data
-        interval : (int, int)
-             a tuple for the time interval which will be presented
-        n_rows : int
-             number of rows in each figure
-        fname : str
-             the file name which the images will be saved to
-        use_mean : bool
-            Whether to use the mean of or samples from the trace.
-        show : bool
-             show the plots
-    """
-
-    x = np.arange(interval[0], interval[1], 0.05)
-    # Plot data
-    x_data = np.linspace(interval[0], interval[1], bins)
-
-    figure_idx = 0
-    wfpt = model.params_dict['wfpt'].subj_nodes
-    for (cond, nodes) in wfpt.iteritems():
-        plt.figure()
-        figure_idx += 1
-        #group model
-        if model.is_group_model:
-            n_subjs = model._num_subjs
-            for i, subj_node in enumerate(nodes):
-                data = subj_node.value
-                # Walk through nodes and collect traces
-                traces = {}
-                for parent_name, parent_node in subj_node.parents.iteritems():
-                    if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
-                        continue
-                    traces[parent_name] = parent_node.trace()
-
-                # Plot that shit ;)
-                plt.subplot(n_rows, int(np.ceil(n_subjs / n_rows)), i + 1)
-
-                empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
-                plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
-
-                # Plot analytical
-                analytical_dens = pdf_of_post_pred(traces, x=x, samples=samples, use_mean=use_mean)
-
-                plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
-
-                plt.xlim(interval)
-                plt.title("subj %i. (n=%d)" % (model._subjs[i], len(data)))
-
-            plt.suptitle(cond)
-
-        else:
-            node = nodes
-            data = node.value
-            # Walk through nodes and collect traces
-            traces = {}
-            for parent_name, parent_node in node.parents.iteritems():
-                if np.isscalar(parent_node) or type(parent_node) is list or type(parent_node) is pm.ListContainer:
-                    continue
-                traces[parent_name] = parent_node.trace()
-
-            empirical_dens = histogram(data, bins=bins, range=interval, density=True)[0]
-            plt.plot(x_data, empirical_dens, color='b', lw=2., label='data')
-
-            # Plot analytical
-            analytical_dens = pdf_of_post_pred(traces, x=x, samples=samples)
-
-            plt.plot(x, analytical_dens, '--', color='g', label='estimate', lw=2.)
-
-            plt.xlim(interval)
-            plt.title("%s (n=%d)" % (cond, len(data)))
-            plt.legend()
-
-        if fname is not None:
-            plt.savefig('%s%i.png' % (fname, figure_idx))
-
-    if show:
-        plt.show()
-
-
 def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the
     function is used by ppd_test)
@@ -682,7 +529,7 @@ def ppd_test(hm, n_samples=1000, confidence=95, plot_verbose=0, verbose=1,
     """
 
     #if input is tuple than hm is a group model and we are in a recursion
-    if type(hm) == type(()):
+    if isinstance(hm, tuple):
         #get conds, nodes, and hm
         conds = [x[0] for x in hm[1]]
         nodes = [x[1] for x in hm[1]]
@@ -778,25 +625,6 @@ def ppd_test(hm, n_samples=1000, confidence=95, plot_verbose=0, verbose=1,
     if verbose >= 1:
         print_ppd_test_result_for_subject(subj_res, labels_dict, table_width)
     return subj_res
-
-
-#def qp_plot_for_ppd_test(subj_res):
-#    q_names = ['q10', 'q30', 'q50', 'q70', 'q90']
-#    conds = subj_res.keys();
-#    n_conds = len(conds)
-#    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-#
-#    #loop over conds
-#    for i_cond in range(n_conds):
-#        stats = subj_res[conds[i_cond]]
-#
-#        #plot observed data
-#        obs_acc = stats['acc']['obs']
-#        obs_q = [stats[x]['obs'] for x in q_names]
-#        plot(ones(n_conds)*obs_acc, obs_q, colors[])
-#        acc = stats['acc']['mean']
-
-
 
 
 def print_ppd_test_result_for_subject(subj_res, labels_dict=None, width=10):
@@ -911,6 +739,7 @@ def plot_posteriors(model, **kwargs):
     This is a wrapper for pymc.Matplot.plot()
     """
     pm.Matplot.plot(model.mc, **kwargs)
+
 
 def data_plot(data, nbins=50):
     data = hddm.utils.flip_errors(data)
@@ -1156,7 +985,7 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
         n_samples - see method
         cdf_range (advanced) - the range of the cdf used to generate the estimated
             quantiles.
-            
+
         TODO:
             there should be an option to use the average value of the parameters to create samples.
             it make much more sense than 'deviance'

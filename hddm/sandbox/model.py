@@ -92,6 +92,8 @@ class HDDMSwitch(HDDM):
     def get_bottom_node(self, param, params):
         if param.name == 'wfpt_anti':
             data = param.data[param.data['instruct'] == 1]
+            if len(data) == 0:
+                return None
             return wfpt_switch_like(param.full_name,
                                     value=data['rt'],
                                     v=params['vpp'],
@@ -105,6 +107,8 @@ class HDDMSwitch(HDDM):
                                     observed=True)
         elif param.name == 'wfpt_pro':
             data = param.data[param.data['instruct'] == 0]
+            if len(data) == 0:
+                return None
             return hddm.likelihoods.wfpt_like(param.full_name,
                                               value=data['rt'],
                                               v=params['vpp'],

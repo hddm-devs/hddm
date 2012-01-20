@@ -23,16 +23,6 @@ from copy import copy, deepcopy
 from time import time
 from matplotlib.mlab import rec_drop_fields
 
-try:
-    from IPython.Debugger import Tracer;
-except ImportError:
-    try:
-        from IPython.core.debugger import Tracer;
-    except ImportError:
-        Tracer = lambda x:x
-debug_here = Tracer()
-
-
 class HDDM(kabuki.Hierarchical):
     """Implements the hierarchical Ratcliff drift-diffusion model
     using the Navarro & Fuss likelihood and numerical integration over
