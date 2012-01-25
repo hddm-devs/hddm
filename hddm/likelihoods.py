@@ -69,7 +69,6 @@ class wfpt_gen(stats.distributions.rv_continuous):
 
     def _rvs(self, v, V, a, z, Z, t, T):
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}
-        print self._size
         sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
         return sampled_rts
 

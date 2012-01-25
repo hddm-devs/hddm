@@ -73,8 +73,8 @@ class HDDMSwitch(HDDM):
             raise AttributeError, 'data has to contain a field name instruct.'
 
     def get_params(self):
-        params = [Parameter('vpp', lower=-10, upper=0.),
-                  Parameter('vcc', lower=0, upper=10.),
+        params = [Parameter('vpp', lower=-20, upper=0.),
+                  Parameter('vcc', lower=0, upper=20.),
                   Parameter('a', lower=.5, upper=4.5),
                   Parameter('t', lower=0., upper=.5, init=0.05),
                   Parameter('tcc', lower=0.01, upper=1.0),
