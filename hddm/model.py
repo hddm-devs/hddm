@@ -151,15 +151,13 @@ class HDDM(kabuki.Hierarchical):
                       transform=lambda mu,var:(mu, var**-2))
 
         # v
-        v_group_stoch_params = {'mu': 0.3, 'tau':15**-2, 'value':0}
+        v_group_stoch_params = {'mu': 0, 'tau':15**-2, 'value':0}
         v_subj_stoch_params = {'value': 0}
         v = Parameter('v', group_stoch=pm.Normal, group_stoch_params=v_group_stoch_params,
                       var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
                       subj_stoch=pm.Normal, subj_stoch_params=v_subj_stoch_params,
                       group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2),
-                      group_step_method=steps.NormalPriorNormal,
-                      var_step_method=steps.UniformPriorNormalstd)
+                      transform=lambda mu,var:(mu, var**-2))
 
         # t
         t_group_stoch_params = {'lower': 0.1, 'upper':1e3, 'value':0.1}
