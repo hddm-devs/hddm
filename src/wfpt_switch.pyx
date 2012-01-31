@@ -13,7 +13,8 @@ cimport numpy as np
 cimport cython
 from cython.parallel import *
 
-include "gsl/gsl.pxi"
+from cython_gsl cimport *
+
 include "pdf.pxi"
 
 ctypedef double * double_ptr
