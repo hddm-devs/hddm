@@ -139,37 +139,31 @@ class HDDM(kabuki.Hierarchical):
         # These boundaries are largely based on a meta-analysis of
         # reported fit values.
         # See: Matzke & Wagenmakers 2009
-        all_var_stoch_params = {'lower' : 1e-10, 'upper': 100, 'value': 1}
-
-        # a
-        a_group_stoch_params = {'lower': 0.3, 'upper':1e3, 'value':1}
-        a_subj_stoch_params = {'a': 0.3, 'b': 100, 'value': 1}
-        a = Parameter('a', group_stoch=pm.Uniform, group_stoch_params=a_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=a_subj_stoch_params,
+        basic_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
+        
+        a_g = Knode(pm.Uniform, lower=0.3, upper=1e3, value=1)
+        a_subj = Knode(pm.TruncatedNormal, a=0.3, b=1e3, value=1)
+        # a        
+        a = Parameter('a', group_knod=a_g, var_knode=deepcopy(basic_var), subj_knode=a_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # v
-        v_group_stoch_params = {'mu': 0, 'tau':15**-2, 'value':0}
-        v_subj_stoch_params = {'value': 0}
-        v = Parameter('v', group_stoch=pm.Normal, group_stoch_params=v_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.Normal, subj_stoch_params=v_subj_stoch_params,
+        v_g = Knode(pm.Normal, mu=0, tau=15**-2, value=0, step_method=kabuki.steps.kNormalNormal)        
+        v_subj = Knode(pm.Nomral, value=0)
+        v = Parameter('v', group_knod=v_g, var_knode=deepcopy(basic_var), subj_knode=v_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # t
-        t_group_stoch_params = {'lower': 0.1, 'upper':1e3, 'value':0.1}
-        t_subj_stoch_params = {'a': 0.1, 'b': 1e3, 'value': 0.1}
-        t = Parameter('t', group_stoch=pm.Uniform, group_stoch_params=t_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=t_subj_stoch_params,
+        t_g = Knode(pm.Uniform, lower=0.1, upper=1e3, value=0.1)
+        t_subj = Knode(pm.TruncatedNormal, a=0.1, b=1e3, value=1)
+        t = Parameter('t', group_knode=t_g, var_knode=deepcopy(basic_var), subj_knode=t_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # z
-        z_group_stoch_params = {'alpha': 1, 'beta':1, 'value':0.5}
+        z_g = Knode(pm.Beta, alpha=1, beta=1, value=0.5)
         z_subj_stoch_params = {'value': 0.5}
         z_var_stoch_params = {'lower' : 1, 'upper': 1e5, 'value': 1}
         z = Parameter('z', group_stoch=pm.Beta, group_stoch_params=z_group_stoch_params,
