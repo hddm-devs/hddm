@@ -201,6 +201,8 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, np.ndarray[in
     for i in prange(size, nogil=True):
         p = pdf_switch_precomp(rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
+            gsl_spline_free (spline)
+            gsl_interp_accel_free (acc)
             with gil:
                 return -np.inf
         sum_logp += log(p)
