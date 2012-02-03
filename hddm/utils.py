@@ -11,13 +11,6 @@ from numpy import array, zeros, ones, empty
 from copy import deepcopy
 from time import time
 
-try:
-    from IPython.Debugger import Tracer;
-except ImportError:
-    from IPython.core.debugger import Tracer;
-debug_here = Tracer()
-
-
 def flip_errors(data):
     """Flip sign for lower boundary responses.
 
@@ -1156,7 +1149,7 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
         n_samples - see method
         cdf_range (advanced) - the range of the cdf used to generate the estimated
             quantiles.
-            
+
         TODO:
             there should be an option to use the average value of the parameters to create samples.
             it make much more sense than 'deviance'

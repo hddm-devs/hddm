@@ -20,13 +20,6 @@ import kabuki
 
 from kabuki.hierarchical import Parameter
 
-# try:
-#     from IPython.Debugger import Tracer;
-# except ImportError:
-#     from IPython.core.debugger import Tracer;
-# debug_here = Tracer()
-
-
 class HDDM(kabuki.Hierarchical):
     """Implements the hierarchical Ratcliff drift-diffusion model
     using the Navarro & Fuss likelihood and numerical integration over
