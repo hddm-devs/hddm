@@ -193,8 +193,8 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
             else:
                 print eval_dens[x], drift_density[x], x, t_switch, v, a, z*a, T
                 # Ran into numerical stability issues, abort.
-            gsl_spline_free (spline)
-            gsl_interp_accel_free (acc)
+                gsl_spline_free (spline)
+                gsl_interp_accel_free (acc)
                 return -np.inf
         #    return 0
 
