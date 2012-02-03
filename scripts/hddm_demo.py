@@ -12,28 +12,18 @@ if __name__ == "__main__":
 
 import matplotlib.pyplot as plt
 
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
 
-from enthought.traits.api import HasTraits, Instance, Range,\
+from traits.api import HasTraits, Instance, Range,\
                                 Array, on_trait_change, Property,\
                                 cached_property, Bool, Button, Tuple,\
                                 Any, Int, Str, Float, Delegate, Dict
-from enthought.traits.ui.view import View, Item
-from enthought.traits.ui.wx.editor import Editor
-from enthought.traits.ui.basic_editor_factory import BasicEditorFactory
-
-from math import sqrt
+from traitsui.view import View, Item
 
 import numpy as np
-import pylab as pl
-import scipy as sp
 import time
 
-import enthought.traits.ui
+#import enthought.traits.ui
 
 try:
     from IPython.Debugger import Tracer; debug_here = Tracer()
@@ -56,18 +46,18 @@ class DDM(HasTraits):
     # Paremeters
     z = Range(0, 1., .5)
     sz = Range(0, 1., .0)
-    v = Range(-3,3.,-2.)
+    v = Range(-40.,40.,-2.)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
     ster = Range(0,2.,.0)
     a = Range(0.,10.,2.)
     switch = Bool(False)
     t_switch = Range(0,2.,.3)
-    v_switch = Range(-3.,3.,1.)
+    v_switch = Range(-20.,20.,1.)
     intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a'])  #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'urgency'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -87,7 +77,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot')  #, 'switch')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'switch', 't_switch', 'v_switch', 'intra_sv')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
@@ -200,7 +190,8 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_switch(self):
-        pdf = hddm.likelihoods.wfpt_switch.pdf(self.x_analytical,
+        from hddm.sandbox.model import wfpt_switch_like
+        pdf = wfpt_switch_like.rv.pdf(self.x_analytical,
                                                self.parameters.v,
                                                self.parameters.v_switch,
                                                self.parameters.sv,
@@ -212,10 +203,11 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_wiener(self):
-        pdf = hddm.likelihoods.wfpt.pdf(self.x_analytical, self.parameters.v,
-                                        self.parameters.sv, self.parameters.a,
-                                        self.parameters.z, self.parameters.sz,
-                                        self.parameters.ter, self.parameters.ster)
+        from hddm.likelihoods import wfpt_like
+        pdf = wfpt_like.rv.pdf(self.x_analytical, self.parameters.v,
+                               self.parameters.sv, self.parameters.a,
+                               self.parameters.z, self.parameters.sz,
+                               self.parameters.ter, self.parameters.ster)
         return pdf
 
     @timer

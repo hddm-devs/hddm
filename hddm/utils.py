@@ -452,8 +452,6 @@ def EZ(pc, vrt, mrt, s=1):
 
     return (v, a, ter)
 
-
-
 def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the
     function is used by ppd_test)
@@ -496,13 +494,13 @@ def _gen_statistics():
     return statistics
 
 
-
 def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
 
     This is a wrapper for pymc.Matplot.plot()
     """
     pm.Matplot.plot(model.mc, **kwargs)
+
 
 def data_plot(data, nbins=50):
     data = hddm.utils.flip_errors(data)

@@ -39,7 +39,7 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double
         return y
 
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t,
-                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8, int num_threads=0):
+                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -60,7 +60,7 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double V, double a, doub
     return sum_logp
 
 def wiener_like_array(np.ndarray[double, ndim=1] x, double v, double V, double a, double z, double Z, double t,
-                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8, int num_threads=0):
+                double T, double err, int nT=10, int nZ=10, bint use_adaptive=1, double simps_err=1e-8):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double sum_logp = 0
