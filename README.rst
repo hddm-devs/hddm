@@ -116,7 +116,7 @@ The following commands require admin rights
 
 ::
 
-    aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran lapack-dev
+    aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
 
 You can either install the package automatically from pypi:
 
