@@ -300,9 +300,9 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
     print "DIC: %f" % m.mc.dic
 
     if plot:
-        print "Plotting posterior predictive to %s..." % (model_name + '.png')
-        plot_post_pred(m, fname=model_name, show=False)
         hddm.plot_posteriors(m)
+        print "Plotting posterior predictive to %s..." % (model_name + '.png')
+        kabuki.analyze.plot_posterior_predidctive(m, value_range=np.linspace(-3, 3, 100), prefix=model_name)
 
     return m
 
