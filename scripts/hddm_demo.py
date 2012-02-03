@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 """
 brownian() implements one dimensional Brownian motion (i.e. the Wiener process).
 """
 import wx
 
 import matplotlib
+
 # We want matplotlib to use a wxPython backend
 if __name__ == "__main__":
     matplotlib.use('WXAgg')
