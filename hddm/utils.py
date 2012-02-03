@@ -302,7 +302,7 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
     if plot:
         hddm.plot_posteriors(m)
         print "Plotting posterior predictive to %s..." % (model_name + '.png')
-        kabuki.analyze.plot_posterior_predidctive(m, value_range=np.linspace(-3, 3, 100), prefix=model_name)
+        kabuki.analyze.plot_posterior_predictive(m, value_range=np.linspace(-3, 3, 100), savefig=True)
 
     return m
 
