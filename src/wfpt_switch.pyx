@@ -208,11 +208,8 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
         if np.isnan(log(p)):
             print p, rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err
         if p == 0:
-		    free(drift_density)
-		    free(eval_dens)
-            gsl_spline_free (spline)
-            gsl_interp_accel_free (acc)
-            return -np.inf
+            sum_logp = -np.inf
+            break
         sum_logp += log(p)
 
     free(drift_density)
