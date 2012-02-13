@@ -205,48 +205,6 @@ class HDDM(kabuki.Hierarchical):
         else:
             raise KeyError, "Groupless parameter named %s not found." % param.name
 
-    def subj_by_subj_map_init(self, runs = 2, **map_kwargs):
-        """
-        initialzing nodes by finding the MAP for each subject separately
-
-        TODO:
-        check if we can move this func to hierarchical (and self.kwargs)
-        because it makes more sense to put it there
-        """
-
-        #check if nodes were created. if they were it cause problems for deepcopy
-        assert (not self.nodes), "function should be used before nodes are initialized."
-
-
-        #init
-        subjs = self._subjs
-        n_subjs = len(subjs)
-        t_kwargs = deepcopy(self.kwargs)
-        t_kwargs['is_group_model'] = False
-        if t_kwargs.has_key('bias'):
-            del t_kwargs['bias']
-
-        self.create_nodes()
-
-        #loop over subjects
-        for i_subj in range(n_subjs):
-            #create and fit single subject
-            print "*!*!* fitting subject %d *!*!*" % subjs[i_subj]
-            t_data = self.data[self.data['subj_idx'] == subjs[i_subj]]
-            t_data = rec_drop_fields(t_data, ['data_idx'])
-            s_model = HDDM(data = t_data, include=self.include,
-                           **t_kwargs)
-            s_model.map(method='fmin_powell', runs = runs, **map_kwargs)
-
-            # copy to original model
-            for (name, node) in s_model.group_nodes.iteritems():
-                self.subj_nodes[name][i_subj].value = node.value
-
-        #set group nodes
-        for (name, node) in self.group_nodes.iteritems():
-            subj_values = [self.subj_nodes[name][x].value for x in range(n_subjs)]
-            node.value = np.mean(subj_values)
-            self.var_nodes[name].value = np.std(subj_values)
 
 class HDDMContaminant(HDDM):
     """Contaminant HDDM Super class
