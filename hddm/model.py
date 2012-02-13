@@ -18,7 +18,8 @@ import hddm
 
 import kabuki
 import kabuki.step_methods as steps
-from kabuki.hierarchical import Parameter
+from kabuki.hierarchical import Parameter, Knode
+from copy import deepcopy
 
 # try:
 #     from IPython.Debugger import Tracer;
@@ -133,83 +134,76 @@ class HDDM(kabuki.Hierarchical):
 
         super(hddm.model.HDDM, self).__init__(data, include=include, **kwargs)
 
-    def get_params(self):
+    def create_params(self):
         """Returns list of model parameters.
         """
         # These boundaries are largely based on a meta-analysis of
         # reported fit values.
         # See: Matzke & Wagenmakers 2009
-        basic_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
-        
-        a_g = Knode(pm.Uniform, lower=0.3, upper=1e3, value=1)
-        a_subj = Knode(pm.TruncatedNormal, a=0.3, b=1e3, value=1)
-        # a        
-        a = Parameter('a', group_knod=a_g, var_knode=deepcopy(basic_var), subj_knode=a_subj,
+        basic_var = Knode(pm.Uniform, {'lower':1e-10, 'upper':100, 'value':1})
+
+        a_g = Knode(pm.Uniform, {'lower':0.3, 'upper':1e3, 'value':1})
+        a_subj = Knode(pm.TruncatedNormal, {'a':0.3, 'b':1e3, 'value':1})
+        # a
+        a = Parameter('a', group_knode=a_g, var_knode=deepcopy(basic_var), subj_knode=a_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # v
-        v_g = Knode(pm.Normal, mu=0, tau=15**-2, value=0, step_method=kabuki.steps.kNormalNormal)        
-        v_subj = Knode(pm.Nomral, value=0)
-        v = Parameter('v', group_knod=v_g, var_knode=deepcopy(basic_var), subj_knode=v_subj,
+        v_g = Knode(pm.Normal, {'mu':0, 'tau':15**-2, 'value':0}, step_method=kabuki.steps.kNormalNormal)
+        v_subj = Knode(pm.Normal, {'value':0})
+        v = Parameter('v', group_knode=v_g, var_knode=deepcopy(basic_var), subj_knode=v_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # t
-        t_g = Knode(pm.Uniform, lower=0.1, upper=1e3, value=0.1)
-        t_subj = Knode(pm.TruncatedNormal, a=0.1, b=1e3, value=1)
+        t_g = Knode(pm.Uniform, {'lower':0.1, 'upper':1e3, 'value':0.1})
+        t_subj = Knode(pm.TruncatedNormal, {'a':0.1, 'b':1e3, 'value':0.1})
         t = Parameter('t', group_knode=t_g, var_knode=deepcopy(basic_var), subj_knode=t_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
 
         # z
-        z_g = Knode(pm.Beta, alpha=1, beta=1, value=0.5)
-        z_subj_stoch_params = {'value': 0.5}
-        z_var_stoch_params = {'lower' : 1, 'upper': 1e5, 'value': 1}
-        z = Parameter('z', group_stoch=pm.Beta, group_stoch_params=z_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=z_var_stoch_params,
-                      subj_stoch=pm.Beta, subj_stoch_params=z_subj_stoch_params,
+        z_g = Knode(pm.Beta, {'alpha':1, 'beta':1, 'value':0.5})
+        z_var = Knode(pm.Uniform, {'lower' : 1, 'upper': 1e5, 'value': 1})
+        z_subj = Knode(pm.Beta, {'value':0.5})
+        z = Parameter('z', group_knode=z_g, var_knode=z_var, subj_knode=z_subj,
                       group_label='alpha', var_label='beta', var_type='sample_size',
                       transform=lambda mu,n: (mu*n, (1-mu)*n),
                       optional=True, default=0.5)
 
         #V
-        V_group_stoch_params = {'lower': 0, 'upper':1e3, 'value':1}
-        V_subj_stoch_params = {'a': 0, 'b': 1e3, 'value': 1}
-        V = Parameter('V', group_stoch=pm.Uniform, group_stoch_params=V_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=V_subj_stoch_params,
+        V_g = Knode(pm.Uniform, {'lower': 0, 'upper':1e3, 'value':1})
+        V_subj = Knode(pm.TruncatedNormal, {'a': 0, 'b': 1e3, 'value': 1})
+        V = Parameter('V', group_knode=V_g, var_knode=deepcopy(basic_var), subj_knode=V_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
 
         #Z
-        Z_group_stoch_params = {'lower': 0, 'upper':1, 'value':0.1}
-        Z_subj_stoch_params = {'a': 0, 'b': 1, 'value': 1}
-        Z = Parameter('Z', group_stoch=pm.Uniform, group_stoch_params=Z_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=Z_subj_stoch_params,
+        Z_g = Knode(pm.Uniform, {'lower': 0, 'upper':1, 'value':0.1})
+        Z_subj = Knode(pm.TruncatedNormal, {'a': 0, 'b': 1, 'value': 1})
+        Z = Parameter('Z', group_knode=Z_g, var_knode=deepcopy(basic_var), subj_knode=Z_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
 
         #T
-        T_group_stoch_params = {'lower': 0, 'upper':1e3, 'value':0.01}
-        T_subj_stoch_params = {'a': 0, 'b': 1e3, 'value': 0.01}
-        T = Parameter('T', group_stoch=pm.Uniform, group_stoch_params=T_group_stoch_params,
-                      var_stoch=pm.Uniform, var_stoch_params=all_var_stoch_params,
-                      subj_stoch=pm.TruncatedNormal, subj_stoch_params=T_subj_stoch_params,
+        T_g = Knode(pm.Uniform, {'lower': 0, 'upper':1e3, 'value':0.01})
+        T_subj = Knode(pm.TruncatedNormal, {'a': 0, 'b': 1e3, 'value': 0.01})
+        T = Parameter('T', group_knode=T_g, var_knode=deepcopy(basic_var), subj_knode=T_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),
                       optional=True, default=0)
-        
+
         #wfpt
-        wfpt = Parameter('wfpt', is_bottom_node=True, subj_stoch=self.wfpt)
+        wfpt_knode = Knode(self.wfpt)
+        wfpt = Parameter('wfpt', is_bottom_node=True, subj_knode=wfpt_knode)
 
 
         return [a, v, t, z, V, T, Z, wfpt]
 
- 
+
     def get_bottom_node(self, param, params):
         """Create and return the wiener likelihood distribution
         supplied in 'param'.
