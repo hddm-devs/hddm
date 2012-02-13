@@ -192,13 +192,13 @@ class DDMPlot(HasTraits):
     def _get_switch(self):
         from hddm.sandbox.model import wfpt_switch_like
         pdf = wfpt_switch_like.rv.pdf(self.x_analytical,
-                                               self.parameters.v,
-                                               self.parameters.v_switch,
-                                               self.parameters.sv,
-                                               self.parameters.a, self.parameters.z,
-                                               self.parameters.ter,
-                                               self.parameters.t_switch,
-                                               self.parameters.ster)
+                                      self.parameters.v,
+                                      self.parameters.v_switch,
+                                      self.parameters.sv,
+                                      self.parameters.a, self.parameters.z,
+                                      self.parameters.ter,
+                                      self.parameters.t_switch,
+                                      self.parameters.ster)
         return pdf
 
     @timer
