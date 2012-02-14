@@ -2,10 +2,11 @@
 Introduction
 ************
 
-:Date: August 17, 2011
+:Date: February 14, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://github.com/hddm-devs/hddm
+:Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
 :Version: 0.2alpha
@@ -18,11 +19,7 @@ HDDM is a python module that implements Hierarchical Bayesian estimation of Drif
 New features in 0.2
 ===================
 
-* Multithreading support: make use of all those cores
-
-* Contaminant model: allows you to remove outliers
-
-* Many bugfixes
+* To come...
 
 Features
 ========
