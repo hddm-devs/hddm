@@ -138,7 +138,7 @@ We provide an automatic installer based on the scipy superpack by Chris Fonnesbe
 Getting started
 ===============
 
-Check out the documentation_ for a tutorial_ for how to use HDDM.
+Check out the documentation_ or the tutorial_ on how to use HDDM.
 
 Join our low-traffic `mailing list`_.
 
