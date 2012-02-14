@@ -140,6 +140,8 @@ Getting started
 
 Check out the documentation_ for a tutorial_ for how to use HDDM.
 
+Join our low-traffic `mailing list`_.
+
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
 .. _PyMC: http://code.google.com/p/pymc/
@@ -152,3 +154,4 @@ Check out the documentation_ for a tutorial_ for how to use HDDM.
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _script: https://raw.github.com/hddm-devs/hddm/master/install_osx.sh
+.. _mailing list: https://groups.google.com/group/hddm-users/
