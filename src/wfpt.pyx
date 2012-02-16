@@ -2,7 +2,6 @@
 #cython: cdivision=True
 #cython: wraparound=False
 #cython: boundscheck=False
-#
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
 #
@@ -104,6 +103,34 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, V, a, z, Z, t, T, double 
 
 def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t, \
                      double T, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
+    """Generate RTs by evaluating the CDF."""
+
+    cdef np.ndarray[double, ndim=1] x = np.arange(cdf_lb, cdf_ub, dt)
+    cdef np.ndarray[double, ndim=1] cdf
+    cdef np.ndarray[double, ndim=1] pdf
+    cdef np.ndarray[double, ndim=1] rts = np.empty(samples, dtype=np.double)
+    cdef np.ndarray[double, ndim=1] f = np.random.rand(samples)
+    cdef np.ndarray[int, ndim=1] idx
+    cdef np.ndarray[double, ndim=1] delay
+
+    pdf = pdf_array(x, v, V, a, z, Z, 0, 0, dt)
+    cdf = np.cumsum(pdf)
+
+    cdf /= cdf[x.shape[0]-1]
+
+    idx = np.searchsorted(cdf, f)
+    rts = x[idx]
+
+    if T==0:
+        rts += np.sign(rts)*t
+    else:
+        delay = (np.random.rand(samples)*T + (t - T/2.))
+        rts += np.sign(rts)*delay
+
+    return rts
+
+def gen_rts_from_cdf_old(double v, double V, double a, double z, double Z, double t, \
+                     double T, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
 
     cdef np.ndarray[double, ndim=1] x = np.arange(cdf_lb, cdf_ub, dt)
     cdef np.ndarray[double, ndim=1] l_cdf = np.empty(x.shape[0], dtype=np.double)
@@ -123,6 +150,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
     cdef np.ndarray[double, ndim=1] f = np.random.rand(samples)
     cdef np.ndarray[double, ndim=1] delay
 
+
     if T!=0:
         delay = (np.random.rand(samples)*T + (t - T/2.))
     for i from 0 <= i < samples:
@@ -134,6 +162,7 @@ def gen_rts_from_cdf(double v, double V, double a, double z, double Z, double t,
             rt = rt + np.sign(rt)*delay[i]
         rts[i] = rt
     return rts
+
 
 def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1] cont_x, double v, \
                                  double V, double a, double z, double Z, double t, double T, double t_min, \
