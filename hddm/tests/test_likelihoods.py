@@ -79,15 +79,17 @@ class TestWfpt(unittest.TestCase):
         params = hddm.generate.gen_rand_params(include=('V','Z','T'))
 
         # Generate random valid RTs
-        rts = params['t'] + params['T'] + rand(500)*2
+        rts = params['t'] + params['T'] + rand(50)*2
         p = hddm.wfpt.pdf_array(rts, params['v'], params['V'],
                                 params['a'], params['z'], params['Z'], params['t'],
                                 params['T'], 1e-4, logp=True)
+
         summed_logp = np.sum(p)
 
         summed_logp_like = hddm.wfpt.wiener_like(rts, params['v'],
                                                  params['V'], params['a'], params['z'], params['Z'],
                                                  params['t'], params['T'], 1e-4)
+
         np.testing.assert_almost_equal(summed_logp, summed_logp_like, 2)
 
         self.assertTrue(-np.Inf == hddm.wfpt.wiener_like(np.array([1.,2.,3.,0.]), 1, 0, 2, .5, 0, 0, 0, 1e-4)), "wiener_like_simple should have returned -np.Inf"
@@ -296,7 +298,7 @@ class TestWfptSwitch(unittest.TestCase):
         for tests in range(self.tests):
             vpp, vcc, tcc, t, a = self.gen_rand_params()
 
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), vpp, vcc, 0, a, .5, t, tcc, 0, err))
+            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-4))
             integ, error = sp.integrate.quad(func, a=-5, b=5)
 
             np.testing.assert_almost_equal(integ, 1, 2)
