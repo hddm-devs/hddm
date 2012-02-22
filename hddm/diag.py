@@ -10,11 +10,6 @@ from scipy.stats import scoreatpercentile
 from time import time
 from operator import attrgetter
 
-try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    pass
-
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
 

@@ -72,6 +72,10 @@ class wfpt_gen(stats.distributions.rv_continuous):
         sampled_rts = hddm.generate.gen_rts(param_dict, method=self.sampling_method, samples=self._size, dt=self.dt)
         return sampled_rts
 
+    def random(self, v=1., V=0., a=2, z=.5, Z=.1, t=.3, T=.1, size=100):
+        self._size = size
+        return self._rvs(v, V, a, z, Z, t, T)
+
 wfpt_like = scipy_stochastic(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
 Parameters:

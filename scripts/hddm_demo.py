@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 """
 brownian() implements one dimensional Brownian motion (i.e. the Wiener process).
 """
 import wx
 
 import matplotlib
+
 # We want matplotlib to use a wxPython backend
 if __name__ == "__main__":
     matplotlib.use('WXAgg')
@@ -190,13 +192,13 @@ class DDMPlot(HasTraits):
     def _get_switch(self):
         from hddm.sandbox.model import wfpt_switch_like
         pdf = wfpt_switch_like.rv.pdf(self.x_analytical,
-                                               self.parameters.v,
-                                               self.parameters.v_switch,
-                                               self.parameters.sv,
-                                               self.parameters.a, self.parameters.z,
-                                               self.parameters.ter,
-                                               self.parameters.t_switch,
-                                               self.parameters.ster)
+                                      self.parameters.v,
+                                      self.parameters.v_switch,
+                                      self.parameters.sv,
+                                      self.parameters.a, self.parameters.z,
+                                      self.parameters.ter,
+                                      self.parameters.t_switch,
+                                      self.parameters.ster)
         return pdf
 
     @timer

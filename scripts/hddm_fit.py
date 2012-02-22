@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import hddm
@@ -34,7 +34,6 @@ if __name__=='__main__':
     parser.add_argument('-og', action="store_true", dest="only_group_stats", default=False, help='Output only group stats.')
     parser.add_argument('-np', action='store_true', dest='no_plots', default=False, help='Do not generate output plots.')
 
-    parser.add_argument('-n', '--num_threads', action="store", dest="num_threads", type=int, help='number of threads to use')
     parser.add_argument('model')
     parser.add_argument('data')
 

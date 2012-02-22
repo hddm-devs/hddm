@@ -300,9 +300,9 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
     print "DIC: %f" % m.mc.dic
 
     if plot:
-        print "Plotting posterior predictive to %s..." % (model_name + '.png')
-        plot_post_pred(m, fname=model_name, show=False)
         hddm.plot_posteriors(m)
+        print "Plotting posterior predictive..."
+        kabuki.analyze.plot_posterior_predictive(m, value_range=np.linspace(-3, 3, 100), savefig=True)
 
     return m
 
@@ -451,7 +451,6 @@ def EZ(pc, vrt, mrt, s=1):
     ter = mrt - mdt
 
     return (v, a, ter)
-
 
 def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the

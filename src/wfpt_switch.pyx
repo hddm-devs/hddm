@@ -78,7 +78,7 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
             #print x, t, v, a, z, n, term
             #return 0
 
-    return 2 * exp(v*(x-z)) * summed # Had a 2* before, but this seems to be wrong.
+    return 2 * exp(v*(x-z)) * summed
 
 cdef double pdf_post_switch(double rt, double v, double v_switch,
                              double V_switch, double a, double z, double t,
@@ -208,9 +208,8 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
         if np.isnan(log(p)):
             print p, rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err
         if p == 0:
-            gsl_spline_free (spline)
-            gsl_interp_accel_free (acc)
-            return -np.inf
+            sum_logp = -np.inf
+            break
         sum_logp += log(p)
 
     free(drift_density)

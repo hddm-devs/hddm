@@ -2,10 +2,11 @@
 Introduction
 ************
 
-:Date: August 17, 2011
+:Date: February 14, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://github.com/hddm-devs/hddm
+:Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
 :Version: 0.2alpha
@@ -18,11 +19,7 @@ HDDM is a python module that implements Hierarchical Bayesian estimation of Drif
 New features in 0.2
 ===================
 
-* Multithreading support: make use of all those cores
-
-* Contaminant model: allows you to remove outliers
-
-* Many bugfixes
+* To come...
 
 Features
 ========
@@ -116,7 +113,7 @@ The following commands require admin rights
 
 ::
 
-    aptitude install python python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
+    aptitude install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
 
 You can either install the package automatically from pypi:
 
@@ -138,7 +135,9 @@ We provide an automatic installer based on the scipy superpack by Chris Fonnesbe
 Getting started
 ===============
 
-Check out the documentation_ for a tutorial_ for how to use HDDM.
+Check out the documentation_ or the tutorial_ on how to use HDDM.
+
+Join our low-traffic `mailing list`_.
 
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
@@ -152,3 +151,4 @@ Check out the documentation_ for a tutorial_ for how to use HDDM.
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _script: https://raw.github.com/hddm-devs/hddm/master/install_osx.sh
+.. _mailing list: https://groups.google.com/group/hddm-users/

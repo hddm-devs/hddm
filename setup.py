@@ -3,12 +3,6 @@ from distutils.extension import Extension
 import numpy as np
 import os
 
-#gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
-
-#if gsl_include == '':
-#    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-#    sys.exit(-1)
-
 setup(
     name="HDDM",
     version="0.2a",
@@ -24,7 +18,7 @@ setup(
     setup_requires=['NumPy >=1.3.0', 'kabuki >= 0.2a', 'pymc'],
     include_dirs = [np.get_include()],
     classifiers=[
-                'Development Status :: 5 - Production/Stable',
+                'Development Status :: 4 - Beta/Unstable',
                 'Environment :: Console',
                 'Operating System :: OS Independent',
                 'Intended Audience :: Science/Research',
