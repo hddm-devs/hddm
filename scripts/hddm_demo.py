@@ -77,7 +77,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'switch', 't_switch', 'v_switch', 'intra_sv')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'switch', 't_switch', 'v_switch', 'intra_sv', 'T')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
@@ -95,7 +95,7 @@ class DDM(HasTraits):
     def _get_rts(self):
         if not self.switch:
             # Use faster cdf method
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-5, 5))
+            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-self.T, self.T))
         else:
             # Simulate individual drifts
             return hddm.generate._gen_rts_from_simulated_drift(self.params_dict, samples=self.num_samples, dt=self.dt, intra_sv=self.intra_sv)[0]
@@ -296,7 +296,7 @@ class DDMPlot(HasTraits):
             self.plot_dens()
 
         if self.plot_drifts:
-            t = np.linspace(0.0, 5., 5. / 1e-4)
+            t = np.linspace(0.0, self.parameters.T, self.parameters.T / 1e-4)
             drifts = self.parameters.drifts
             for drift in drifts:
                 # Make sure drift is not longer than x-axis
