@@ -72,5 +72,5 @@ full bayesian integration is extremely slow. The model creation and
 sampling then might look like this (assuming we imported hddm and
 loaded the data as above):
 
->>> model = hddm.HDDM(data, include=('V','Z','T'), depends_on={'v':'difficulty'})
+>>> model = hddm.HDDM(data, include=('V','Z','T'), bias=True, depends_on={'v':'difficulty'})
 >>> model.sample(10000, burn=5000)

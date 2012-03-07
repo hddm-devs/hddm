@@ -253,6 +253,17 @@ produces the following output:
     Plotting posterior predictive...
 
 
-The first you can see when examining the recovered parameter values is that the mean of the group distributions (i.e. a, t, v('hard',) and v('easy',)) is that they match very well the parameters we used to generate the data from. So by pooling the very little data we had on each subject we can make useful inference about the group parameters.
+The first you can see when examining the recovered parameter values is
+that the mean of the group distributions (i.e. a, t, v('hard',) and
+v('easy',)) is that they match very well the parameters we used to
+generate the data from. So by pooling the very little data we had on
+each subject we can make useful inference about the group parameters.
 
-The second thing you can see is that individual subject parameters are very close to the group mean (this is also indicated by the fact that the *var posteriors, the variance of the group distribution -- representing the spread of the individual subject parameters). This property is called *shrinkage*. Intuitively, if we can not make meaningful inference about individual subjects we will assume that they are distributed as the rest of the group.
+The second thing you can see is that individual subject parameters
+(ending with the index of the subject) are very close to the group
+mean (this is also indicated by the fact that the var posteriors, the
+variance of the group distribution -- representing the spread of the
+individual subject parameters). This property is called
+*shrinkage*. Intuitively, if we can not make meaningful inference
+about individual subjects we will assume that they are distributed as
+the rest of the group.
