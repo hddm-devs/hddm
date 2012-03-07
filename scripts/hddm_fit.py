@@ -39,8 +39,6 @@ if __name__=='__main__':
 
     results = parser.parse_args()
 
-    hddm.num_threads = results.num_threads
-
     hddm.utils.parse_config_file(results.model, data=results.data,
                                  samples=results.samples,
                                  burn=results.burn, thin=results.thin,

@@ -48,11 +48,7 @@ drift-rate depends on difficulty:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.conf
 
-The [model] tag specifies that parameters following the tag are model
-parameters. In this case, the 'data' parameter tells HDDM where the
-input data is to be found.
-
-The optional tag [depends_on] specifies DDM parameters that depend on
+The (optional) tag [depends] specifies DDM parameters that depend on
 data. In our case, we want to estimate separate drift-rates (v) for
 the conditions found in the data column 'difficulty'.
 
@@ -62,7 +58,8 @@ posterior and how many samples to discard as burn-in (as in any MCMC
 case, often it takes the MCMC chains some time to converge to the true
 posterior so that one would not want to use the initial samples to
 draw inferences about the true parameters; for details please read up
-on MCMC approaches).
+on MCMC approaches). Note that you can also specify these parameters
+via the command line.
 
 Our model specification is now complete and we can fit the model by
 calling hddmfit:
