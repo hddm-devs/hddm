@@ -20,7 +20,7 @@ include "pdf.pxi"
 ctypedef double * double_ptr
 ctypedef void * void_ptr
 
-from libc.math cimport sqrt
+from libc.math cimport *
 
 cdef extern from "stdlib.h":
     void free(void* ptr)
@@ -107,13 +107,13 @@ cdef double pdf_post_switch(double rt, double v, double v_switch,
 
     return result
 
-cpdef double pdf_switch(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
+cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
     cdef double p
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
         return 0
 
-    if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
+    if (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
     elif t_switch < 0.001:
         # Use regular likelihood
@@ -133,7 +133,7 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, double v, double v_sw
         return -np.inf
 
     for i in prange(size, nogil=True):
-        p = pdf_switch(rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if p == 0:
             with gil:
                 return -np.inf
@@ -204,9 +204,9 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
     gsl_spline_init(spline, eval_dens, drift_density, evals)
 
     for i in range(size):
-        p = pdf_switch_precomp(rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
         if np.isnan(log(p)):
-            print p, rt[i], 1, v, v_switch, V_switch, a, z, t, t_switch, T, err
+            print p, rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err
         if p == 0:
             sum_logp = -np.inf
             break
@@ -219,13 +219,13 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
 
     return sum_logp
 
-cdef double pdf_switch_precomp(double rt, int instruct, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
+cdef double pdf_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
     cdef double p
 
     if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
         return 0
 
-    if instruct == 0 or (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
+    if (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
         p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
     #elif t_switch < 0.05:
         # Use regular likelihood

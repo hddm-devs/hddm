@@ -79,15 +79,17 @@ class TestWfpt(unittest.TestCase):
         params = hddm.generate.gen_rand_params(include=('V','Z','T'))
 
         # Generate random valid RTs
-        rts = params['t'] + params['T'] + rand(500)*2
+        rts = params['t'] + params['T'] + rand(50)*2
         p = hddm.wfpt.pdf_array(rts, params['v'], params['V'],
                                 params['a'], params['z'], params['Z'], params['t'],
                                 params['T'], 1e-4, logp=True)
+
         summed_logp = np.sum(p)
 
         summed_logp_like = hddm.wfpt.wiener_like(rts, params['v'],
                                                  params['V'], params['a'], params['z'], params['Z'],
                                                  params['t'], params['T'], 1e-4)
+
         np.testing.assert_almost_equal(summed_logp, summed_logp_like, 2)
 
         self.assertTrue(-np.Inf == hddm.wfpt.wiener_like(np.array([1.,2.,3.,0.]), 1, 0, 2, .5, 0, 0, 0, 1e-4)), "wiener_like_simple should have returned -np.Inf"
@@ -296,7 +298,7 @@ class TestWfptSwitch(unittest.TestCase):
         for tests in range(self.tests):
             vpp, vcc, tcc, t, a = self.gen_rand_params()
 
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), vpp, vcc, 0, a, .5, t, tcc, 0, err))
+            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-4))
             integ, error = sp.integrate.quad(func, a=-5, b=5)
 
             np.testing.assert_almost_equal(integ, 1, 2)
@@ -390,19 +392,19 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
-class wfpt_switch_precomp_gen(hddm.likelihoods.wfpt_switch_gen):
-    """Helper function for testing wiener_like_antisaccade_precomp."""
-    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
-        if np.isscalar(x):
-            out = np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), v, v_switch, V_switch, a, z, t, t_switch, T, 1e-4, evals=100))
-        else:
-            out = np.empty_like(x)
-            for i in xrange(len(x)):
-                out[i] = np.exp(hddm.sandbox.model.wiener_like_antisaccade_precomp(np.array([x[i]]), np.array([1]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4))
+#class wfpt_switch_precomp_gen(hddm.likelihoods.wfpt_switch_gen):
+#    """Helper function for testing wiener_like_antisaccade_precomp."""
+#    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
+#        if np.isscalar(x):
+#            out = np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), v, v_switch, V_sw#itch, a, z, t, t_switch, T, 1e-4, evals=100))
+#        else:
+#            out = np.empty_like(x)
+#            for i in xrange(len(x)):
+#                out[i] = np.exp(hddm.sandbox.model.wiener_like_antisaccade_precomp(np.array([x[i]]), np.array([1]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4))
 
-        return out
+#        return out
 
-wfpt_switch_precomp = wfpt_switch_precomp_gen(name='wfpt switch')
+wfpt_switch_precomp = hddm.sandbox.model.wfpt_switch_like
 
 if __name__=='__main__':
     print "Run nosetest."

@@ -38,7 +38,7 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
         else:
             out = np.empty_like(x)
             for i in xrange(len(x)):
-                out[i] = wfpt_switch.pdf_switch(np.array([x[i]]), 1., v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
+                out[i] = wfpt_switch.pdf_switch(np.array([x[i]]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4)
 
         return out
 
