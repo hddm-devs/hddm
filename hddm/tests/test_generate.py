@@ -13,13 +13,13 @@ from nose import SkipTest
 
 class TestGenerate(unittest.TestCase):
     def test_compare_sampled_data_to_analytic(self):
-        sampler = hddm.likelihoods.wfpt
+        sampler = hddm.likelihoods.wfpt_like
         sampler.sample_method = 'cdf'
         sampler.dt = 1e-6
         self._test_compare_samples_to_analytic(sampler)
-        
+
     def test_compare_drift_simulated_data_to_analytic(self):
-        sampler = hddm.likelihoods.wfpt
+        sampler = hddm.likelihoods.wfpt_like
         sampler.sample_method = 'drifts'
         self._test_compare_samples_to_analytic(sampler)
 

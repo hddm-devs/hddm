@@ -36,7 +36,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
     model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
 
     return model
-        
+
 class TestMulti(unittest.TestCase):
     def runTest(self):
         pass
@@ -44,12 +44,12 @@ class TestMulti(unittest.TestCase):
     def test_diff_v(self, samples=1000):
         m = diff_model('v', subj=False, change=.5, samples=samples)
         return m
-    
+
     def test_diff_a_subj(self, samples=1000):
         raise SkipTest("Disabled.")
         m = diff_model('a', subj=True, change=-.5, samples=samples)
         return m
-    
+
 class TestSingle(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingle, self).__init__(*args, **kwargs)
@@ -84,44 +84,11 @@ class TestSingle(unittest.TestCase):
 
         return mc
 
-    def test_HDDMGPU(self, assert_=True):
-        try:
-            import pycuda
-        except ImportError:
-            raise SkipTest("Disabled.")
-        include = ['V']
-        data, params_true = hddm.generate.gen_rand_data(samples=500, include=include)
-        model = hddm.model.HDDMGPU(data, include=include, no_bias=False, is_group_model=False)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        check_model(mc, params_true, assert_=assert_)
-
-    def test_lba(self):
-        raise SkipTest("Disabled.")
-        model = hddm.model.HLBA(self.data, is_group_model=False, normalize_v=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        #self.check_model(mc, self.params_true_lba)
-        print model.params_est
-        return model
-
-    def test_lba_subj(self):
-        raise SkipTest("Disabled.")
-        model = hddm.model.HLBA(self.data_subj, is_group_model=True, normalize_v=True)
-        nodes = model.create()
-        mc = pm.MCMC(nodes)
-        mc.sample(self.samples, burn=self.burn)
-        #self.check_model(mc, self.params_true_lba)
-        print model.params_est
-        return model
-    
     def test_cont(self, assert_=False):
         params_true = gen_rand_params(include = ())
         data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)
         data[0]['rt'] = min(abs(data['rt']))/2.
-        data[1]['rt'] = max(abs(data['rt'])) + 0.8           
+        data[1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.HDDMContaminant(data, bias=True, is_group_model=False)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
@@ -135,11 +102,11 @@ class TestSingle(unittest.TestCase):
     def test_cont_subj(self, assert_=False):
         data_samples = 200
         num_subjs = 2
-        data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None, 
+        data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None,
                                                         samples=data_samples, noise=0.0001,include=())
         for i in range(num_subjs):
             data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
-            data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8           
+            data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.model.HDDMContaminant(data, bias=True, is_group_model=True)
         hm.sample(self.samples, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)

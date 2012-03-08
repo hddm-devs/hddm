@@ -310,7 +310,7 @@ class TestWfptSwitch(unittest.TestCase):
         for tests in range(self.tests):
             vpp, vcc, tcc, t, a = self.gen_rand_params()
 
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade(np.array([x]), np.array([1]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-6))
+            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade(np.array([x]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-6))
             integ, error = sp.integrate.quad(func, a=-5, b=5)
 
             np.testing.assert_almost_equal(integ, 1, 2)
@@ -334,7 +334,7 @@ class TestWfptSwitch(unittest.TestCase):
         for tests in range(self.tests):
             vpp, vcc, tcc, t, a = self.gen_rand_params()
             tcc += .1 # Test for bigger tcc
-            sampler = hddm.likelihoods.wfpt_switch
+            sampler = hddm.sandbox.model.wfpt_switch_like
 
             [D, p_value] = kstest(sampler.rvs, sampler.cdf,
                                   args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=1000)
@@ -350,7 +350,7 @@ class TestWfptSwitch(unittest.TestCase):
             vpp, vcc, tcc, t, a = self.gen_rand_params()
             tcc = 0.02
 
-            sampler = hddm.likelihoods.wfpt_switch
+            sampler = hddm.sandbox.model.wfpt_switch_like
 
             [D, p_value] = kstest(sampler.rvs, sampler.cdf,
                                   args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=1000)
@@ -359,52 +359,6 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
-    def test_ks_precomp_small_tcc(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-            tcc = 0.02
-
-            sampler = wfpt_switch_precomp
-
-            [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=1000)
-
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
-    def test_ks_precomp(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-            tcc += 0.1
-
-            sampler = wfpt_switch_precomp
-
-            [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=1000)
-
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
-
-#class wfpt_switch_precomp_gen(hddm.likelihoods.wfpt_switch_gen):
-#    """Helper function for testing wiener_like_antisaccade_precomp."""
-#    def _pdf(self, x, v, v_switch, V_switch, a, z, t, t_switch, T):
-#        if np.isscalar(x):
-#            out = np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), np.array([1]), v, v_switch, V_sw#itch, a, z, t, t_switch, T, 1e-4, evals=100))
-#        else:
-#            out = np.empty_like(x)
-#            for i in xrange(len(x)):
-#                out[i] = np.exp(hddm.sandbox.model.wiener_like_antisaccade_precomp(np.array([x[i]]), np.array([1]), v[i], v_switch[i], V_switch[i], a[i], z[i], t[i], t_switch[i], T[i], 1e-4))
-
-#        return out
-
-wfpt_switch_precomp = hddm.sandbox.model.wfpt_switch_like
 
 if __name__=='__main__':
     print "Run nosetest."
