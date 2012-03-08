@@ -8,8 +8,6 @@ HDDM 0.2 (First publicly announced release)
 ===========================================
 
 * Better model initialization that shouldn't fail.
-* HDDMContUnif model class that models outliers to come from a uniform
-  distribution. Has method to clean up data too.
 * Many bugfixes.
 * Major internal overhaul.
 

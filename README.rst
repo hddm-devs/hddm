@@ -2,7 +2,7 @@
 Introduction
 ************
 
-:Date: February 14, 2012
+:Date: March 8, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://github.com/hddm-devs/hddm
