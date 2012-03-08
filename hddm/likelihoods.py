@@ -4,7 +4,7 @@ import numpy as np
 import scipy as sp
 from scipy import stats
 
-from kabuki.utils import scipy_stochastic
+from kabuki.distributions import scipy_stochastic
 
 np.seterr(divide='ignore')
 
