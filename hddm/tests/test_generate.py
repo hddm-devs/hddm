@@ -16,12 +16,12 @@ class TestGenerate(unittest.TestCase):
         sampler = hddm.likelihoods.wfpt_like
         sampler.sample_method = 'cdf'
         sampler.dt = 1e-6
-        self._test_compare_samples_to_analytic(sampler)
+        self._test_compare_samples_to_analytic(sampler.rv)
 
     def test_compare_drift_simulated_data_to_analytic(self):
         sampler = hddm.likelihoods.wfpt_like
         sampler.sample_method = 'drifts'
-        self._test_compare_samples_to_analytic(sampler)
+        self._test_compare_samples_to_analytic(sampler.rv)
 
     def _test_compare_samples_to_analytic(self, sampler):
         includes = [[],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
