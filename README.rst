@@ -9,17 +9,12 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.2alpha
+:Version: 0.2RC1
 
 Purpose
 =======
 
 HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models (via PyMC).
-
-New features in 0.2
-===================
-
-* To come...
 
 Features
 ========
