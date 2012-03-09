@@ -207,7 +207,7 @@ class HDDM(kabuki.Hierarchical):
 
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:
-            kwargs['value_range'] = (-5, 5)
+            kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
 if __name__ == "__main__":
