@@ -118,6 +118,18 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
     if params.has_key('v_switch') and method != 'drift':
         print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
 
+    # Set optional default values if they are not provided
+    for var_param in ('V', 'Z', 'T'):
+        if var_param not in params:
+            params[var_param] = 0
+    if 'z' not in params:
+        params['z'] = .5
+
+
+    if 'V' not in params:
+        params['V'] = 0
+    if 'Z' not in params:
+        params['Z'] = 0
     if method=='cdf_py':
         rts = _gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
