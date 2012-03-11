@@ -9,40 +9,44 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.2RC5
+:Version: 0.2RC6
 
 Purpose
 =======
 
-HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models (via PyMC).
+HDDM is a python toolbox for hierarchical Bayesian parameter
+estimation of the Drift Diffusion Model (via PyMC). Drift Diffusion
+Models are used widely in psychology and cognitive neuroscience to
+study decision making.
 
 Features
 ========
 
-HDDM provides functionalities to make Drift Diffusion analysis of
-error rates and reaction time distributions as painless as 
-possible. Here is a short list of some of its features:
-
-* Uses hierarchical bayesian estimation (via PyMC) of DDM parameters
+* Uses hierarchical Bayesian estimation (via PyMC) of DDM parameters
   to allow simultaneous estimation of subject and group parameters,
   where individual subjects are assumed to be drawn from a group
   distribution. HDDM should thus produce better estimates when less RT
   values are measured compared to other methods using maximum
-  likelihood for individual subjects (i.e. `DMAT`_ or `fast-dm`_). 
+  likelihood for individual subjects (i.e. `DMAT`_ or `fast-dm`_).
 
 * Heavily optimized likelihood functions for speed (Navarro & Fuss, 2009).
 
 * Flexible creation of complex models tailored to specific hypotheses
-  (e.g. separate drift-rate or other parameters for different task
-  conditions, or predicted changes in model parameters as a function
+  (e.g. estimation of separate drift-rates for different task
+  conditions; or predicted changes in model parameters as a function
   of other indicators like brain activity).
 
-* Easy specification of models via configuration file fosters exchange of models and research results.
+* Easy specification of models via configuration file fosters exchange
+  of models and research results.
 
-* Built-in Bayesian hypothesis testing and several convergence and goodness-of-fit diagnostics.
+* Built-in Bayesian hypothesis testing and several convergence and
+  goodness-of-fit diagnostics.
 
 Usage
 =====
+
+Command line
+------------
 
 The easiest way to use HDDM is by creating a configuration file for your model:
 
@@ -52,21 +56,60 @@ example.conf
     [depends]
     v = difficulty
 
-    [mcmc]
-    samples=10000 # Sample 5000 posterior samples
-    burn=5000 # Discard the first 100 samples as burn-in
-    thin=3 # Discard every third sample to remove autocorrelations
-
-Then call hddm:
+Then call hddm_fit.py:
 
 ::
 
-    hddm_fit.py example.conf mydata.csv
+    hddm_fit.py --samples 10000 --burn 5000 example.conf mydata.csv
+
+Python
+------
+
+Of course, you can also use HDDM directly from within Python:
+
+::
+
+   import hddm
+
+   # Load data from csv file into a NumPy structured array
+   data = hddm.load_csv('simple_difficulty.csv')
+
+   # Create a HDDM model multi object
+   model = hddm.HDDM(data, depends_on={'v':'difficulty'})
+
+   # Create model and start MCMC sampling
+   model.sample(10000, burn=5000)
+
+   # Print fitted parameters and other model statistics
+   model.print_stats()
+
+   # Plot posterior distributions and theoretical RT distributions
+   model.plot_posteriors()
+   model.plot_posterior_predictive(savefig=True)
+
 
 Installing
 ==========
 
-Below we provide instructions for how to install HDDM and all it's dependencies.
+See further below on how to install most of the necessary
+dependencies for the most common platforms.
+
+Assuming you have the dependencies, the easiest way to install HDDM is
+via pip_ ::
+
+    pip install kabuki
+    pip install hddm
+
+If you already installed a previous version of HDDM, you should
+upgrade instead ::
+
+   pip install --upgrade --no-deps kabuki
+   pip install --upgrade --no-deps hddm
+
+
+
+Dependencies
+============
 
 HDDM relies on the following packages:
 
@@ -76,7 +119,7 @@ HDDM relies on the following packages:
 
 * PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
 
-* kabuki_ 
+* kabuki_
 
 * SciPy (optional)
 
@@ -89,43 +132,32 @@ Windows
 -------
 
 The easiest way is to download and install the `Enthought Python
-Distribution`_ (EPD) which is free for academic use.
+Distribution`_ (EPD) which is free for academic use. An untested
+alternative is the Python(x,y) distribution. Please let us know your
+experiences if you test this option.
 
-After this open cmd.exe and type ::
+We recommend using pip to download and install HDDM. The easiest way
+to install pip is via easy_install. Start the windows command shell
+(cmd.exe) and type ::
 
-    easy_install hddm
+    easy_install pip
 
-to install the binary version.
-
-If you want to compile on windows, I found that the EPD
-does not seem to have OpenMP support. Downloading the mingw32 compiler
-solved the problem and compiled HDDM successfully.
 
 Linux (Debian based, such as Ubuntu)
 ------------------------------------
 
-The following commands require admin rights
+Most of HDDM's dependencies are available from your repository, you can install them by typing
 
 ::
 
     aptitude install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
 
-You can either install the package automatically from pypi:
-
-::
-
-    pip install hddm
-
-Or, you can install the package from the source directory:
-
-::
-
-    python setup.py install
+which requires sudo rights.
 
 OSX
 ---
 
-We provide an automatic installer based on the scipy superpack by Chris Fonnesbeck. Simply download and run this script_ which should install all dependencies.
+We recommend installing the `SciPy Superpack`_ maintained by Chris Fonnesbeck.
 
 Getting started
 ===============
@@ -145,5 +177,5 @@ Join our low-traffic `mailing list`_.
 .. _manual: http://ski.cog.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
-.. _script: https://raw.github.com/hddm-devs/hddm/master/install_osx.sh
 .. _mailing list: https://groups.google.com/group/hddm-users/
+.. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
