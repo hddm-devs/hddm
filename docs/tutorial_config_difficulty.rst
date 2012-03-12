@@ -1,6 +1,28 @@
 .. index:: Tutorial
 .. _chap_tutorial_config:
 
+*****************
+A note of caution
+*****************
+
+Although HDDM tries to make hierarchical Bayesian estimation as easy
+and automatic as possible, the statistical methods used to estimate
+the posterior (i.e. Markov-Chain Monte Carlo) rely on certain
+assumptions (e.g. chain-convergence). Although we encourage everyone
+to try this software, we would like to stress that you are responsible
+for making sure that the model actually works. In order to assess
+whether the necessary conditions for interpreting your results are met
+you have to have some basic grasp on what those methods do and on what
+assumptions they rest.
+
+There are multiple books introducing you to the world of hierarchical
+Bayesian estimation. Two of which we like are:
+
+`A Practical Course in Bayesian Graphical Modeling`_ by E.J. Wagenmakers and M. Lee
+
+`Doing Bayesian Data Analysis\: A Tutorial with R and BUGS`_ by J. Kruschke
+
+
 ****************************************
 Getting started: Creating a simple model
 ****************************************
@@ -26,7 +48,7 @@ data that we use here were generated from simulated DDM processes
 generative parameters. The data file can be found in the examples
 directory and is named simple_difficulty.csv (under Windows, these
 files can probably be found in
-C:\Python27\Lib\site-packages\hddm\examples). Lets take a look at what
+``C:\Python27\Lib\site-packages\hddm\examples``). Lets take a look at what
 it looks like:
 
 .. literalinclude :: ../hddm/examples/simple_difficulty.csv
@@ -170,3 +192,6 @@ looks like a normal distribution centered around a value close to 2.
    :scale: 40%
 
 Now we are ready for :ref:`part two of the tutorial <chap_tutorial_config_subjects>`.
+
+.. _A Practical Course in Bayesian Graphical Modeling: http://www.ejwagenmakers.com/BayesCourse/BayesBook.html
+.. _Doing Bayesian Data Analysis\: A Tutorial with R and BUGS: http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/

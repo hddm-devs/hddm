@@ -2,36 +2,40 @@
 Introduction
 ============
 
-Diffusion models have established themselves as the de-facto standard
-for fitting simple decision making processes. Each decision is modeled
-as a drift process that once it reaches a certain threshold executes a
-response. This simple assumption about the underlying psychological
-process has the intriguing property of reproducing the full shapes of
-reaction time distributions in simple two-choice decision making tasks.
+*NOTE*: This document is still under development.
 
-Hierarchical bayesian methods are quickly gaining popularity in
+Diffusion models have established themselves as the de-facto standard
+for modeling data from simple decision making tasks. Each decision is
+modeled as a drift process which generates a response once a
+boundary is crossed. This simple assumption about the underlying
+psychological process has the intriguing property of reproducing
+reaction time distributions and choice probability in simple two-choice
+decision making tasks.
+
+Hierarchical Bayesian methods are quickly gaining popularity in
 cognitive sciences. Traditionally, psychological models where either
 fit separately to individual subjects (thus not taking similarities of
 subjects into account) or to the whole group (thus not taking
-differences of subjects into account). Hierarchical bayesian methods
+differences of subjects into account). Hierarchical Bayesian methods
 provide a remedy for this problem by allowing group and subject
 parameters to be estimated simultaniously at different hierarchies. In
 essence, subject parameters are assumed to come from a group
-distribution. In addition, because these methods are bayesian they
-deal naturally with uncertainty and variability.
+distribution. In addition, because these methods are Bayesian they
+deal naturally with uncertainty and variability in the parameter
+estimations.
 
 HDDM_ (Hierarchical Drift Diffusion Modeling) is an open-source
 software package written in Python_ which allows (i) the construction
-of hierarchical bayesian drift models and (ii) the estimation of
+of hierarchical Bayesian drift models and (ii) the estimation of its
 posterior parameter distributions via PyMC_. For efficiency, all
-runtime critical functions are coded in cython_, heavily optimized and
+runtime critical functions are coded in Cython_, heavily optimized and
 compiled natively. User-defined models can be constructed via a simple
 configuration files or directly via HDDM library calls. To assess
 model fit, HDDM generates different statistics and comes with various
 plotting capabilities. For illustrative purposes, HDDM includes a
 graphical demo applet which simulates individual drift processes under
 user-specified parameter combinations. The code is test-covered to
-assure correct function and is propery documented. Online
+assure correct function and is properly documented. Online
 documentation and tutorials are provided.
 
 In sum, the presented software allows researches to construct and fit
@@ -48,15 +52,15 @@ diffusion model (DDM) and (ii) the linear ballistic accumulator
 (LBA). Both of these models implement decision making as an evidence
 accumulation process that executes a response upon crossing one of two
 decision boundaries. The speed of which the accumulation process
-approaches one of the two boundaries is called the drift rate and
+approaches one of the two boundaries is called the drift rate *v* and
 influences how swiftly a particular reponse is executed. The distance
-between the two boundaries influences how much evidence must be
-accumulated until a reponse is executed. A lower threshold makes
-responding faster in general but more random while a higher threshold
-leads to more cautious responding. Reaction time, however, is not
-solely comprised of the decision making process -- perception,
-movement initiation and execution all take time and are summarized
-into one variable called non-decision time.
+between the two boundaries (i.e. threshold *a*) influences how much
+evidence must be accumulated until a reponse is executed. A lower
+threshold makes responding faster in general but more random while a
+higher threshold leads to more cautious responding. Reaction time,
+however, is not solely comprised of the decision making process --
+perception, movement initiation and execution all take time and are
+summarized into one variable called non-decision time *ter*.
 
 Ratcliff Drift Diffusion Model
 ------------------------------
@@ -68,15 +72,18 @@ boundaries and initiates the corresponding response. Because there is
 noise in the drift process, the time of the boundary crossing and the
 selected response will vary between trials. The starting point of the
 drift process relative to the two boundaries can influence if one
-response has a prepotent bias. This pattern gives rise to the reaction
-time distributions of both choices and will henceforth be called the
-simple DDM.
+response has a prepotent bias *z*. This pattern gives rise to the
+reaction time distributions of both choices and will henceforth be
+called the simple DDM (see figure 1).
 
-Early on, Ratcliff noticed that this simple DDM could not account for
-two phenomena observed in decision making -- early and late
+..  figure:: DDM_drifts_w_labels.svg
+
+Later on, it was noticed that this simple DDM could not account for
+two phenomena observed in decision making tasks -- early and late
 errors. This lead to the inclusion of inter-trial variability in the
 drift-rate, the non-decision time and the starting point. Models that
 take this into account are henceforth called full DDM.
+
 
 
 Linear Ballistic Accumulator
@@ -108,38 +115,44 @@ distribution). The posterior can be computed with Bayes formula:
 
 Where P(data|\theta) is the likelihood and P(\theta) is the prior
 probability. To compute P(data) we have to integrate (or sum in the
-discrete case) across all parameter values:
+discrete case) across all parameter values.
 
-Note that the dimensionality of this integral depends on the number of
-parameters and can thus easily become impossible to derive
-analytically. Sampling methods that rely on Markov-Chain Monte Carlo
-(MCMC) have been developed that estimate the integral by drawing
-samples. These methods, albeit slow, have been used with great success
-in many different scenarios. The theoretical background of these
-sampling methods is out of the scope of this paper and are not
-required for an intuitive understanding of Bayesian parameter
-estimation.
+Note that in most scenarios this integral is analytically
+intractable. Sampling methods like Markov-Chain Monte Carlo (MCMC)
+have been developed that instead approximate the posterior directly by
+drawing samples from it, rather than analytically solving the above
+formula. These methods have been used with great success in many
+different scenarios. The theoretical background of these sampling
+methods is out of the scope of this paper.
 
 Another nice property of the Bayesian method is that it lends itself
 naturally to a hierarchical design. In such a design, parameters for
-one distribution can themselves come from a different
-distribution. This allows chaining together of distributions of
-arbitrary complexity and map the structure of the data onto the model. 
+one distribution can themselves come from a different distribution
+which allows chaining together of distributions of arbitrary
+complexity and map the structure of the data onto the model.
 
-This hierarchical property, while useful in many cases, has a
-particular benefit to cognitive modeling where data is often
-scarce. Traditionally, multiple subjects are tested on the same task
-and a model is fit to explain the subject's behavior. Using maximum
-likelihood we can either fit individual models to individual subjects
-and neglect that they are most likely more similar than not and that
-what we learn from one subject could be used for inference on other
-subjects. Alternatively, we could fit one model to all subjects and
-neglect the individual differences that most likely exist. A
-hierarchical design helps us to capture this specific design of our
-data: we can create one distribution for each individual subject
-parameter but let the parameters for these distributions come from
-another group distribution. This way, the individual subject
-distributions restrict the group distribution and vice versa. 
+This hierarchical property has a particular benefit to cognitive
+modeling where data is often scarce. Traditionally, multiple subjects
+are tested on the same task and a model is fit to explain the
+subject's behavior. Using maximum likelihood we can either fit
+individual models to individual subjects and neglect that they are
+most likely more similar than not and that what we learn from one
+subject could be used for inference on other subjects. Alternatively,
+we could fit one model to all subjects and neglect the individual
+differences that most likely exist. A hierarchical model helps us to
+capture this specific design of our data: we can create one
+distribution for each individual subject parameter but let the
+parameters for these distributions be modeled according to a group
+distribution. This way, the individual subject distributions restrict
+the group distribution and vice versa.
+
+----------------------------------------------
+Hierarchical Bayesian Drift Diffusion Modeling
+----------------------------------------------
+
+The structure of our simple hierarchical DDM can be appreciated in figure 2.
+
+..  figure:: hier_model.svg
 
 .. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/
