@@ -150,7 +150,7 @@ Most of HDDM's dependencies are available from your repository, you can install 
 
 ::
 
-    aptitude install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
+    apt-get install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
 
 which requires sudo rights.
 
