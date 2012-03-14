@@ -112,10 +112,10 @@ class HDDM(kabuki.Hierarchical):
             if include == 'all':
                 [include_params.add(param) for param in ('T','V','Z')]
             else:
-                [include_params.add(param) for param in include_params]
+                [include_params.add(param) for param in include]
 
         if bias:
-            include.add('z')
+            include_params.add('z')
 
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
