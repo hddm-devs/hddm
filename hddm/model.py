@@ -106,13 +106,13 @@ class HDDM(kabuki.Hierarchical):
         # Flip sign for lower boundary RTs
         data = hddm.utils.flip_errors(data)
 
-        include = set(include)
+        include_params = set()
 
         if include is not None:
             if include == 'all':
-                [include.add(param) for param in ('T','V','Z')]
+                [include_params.add(param) for param in ('T','V','Z')]
             else:
-                [include.add(param) for param in include]
+                [include_params.add(param) for param in include_params]
 
         if bias:
             include.add('z')
@@ -131,7 +131,7 @@ class HDDM(kabuki.Hierarchical):
 
         self.kwargs = kwargs
 
-        super(hddm.HDDM, self).__init__(data, include=include, **kwargs)
+        super(hddm.HDDM, self).__init__(data, include=include_params, **kwargs)
 
     def get_params(self):
         """Returns list of model parameters.
