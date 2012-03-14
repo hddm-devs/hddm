@@ -5,7 +5,8 @@ Introduction
 :Date: March 8, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
-:Web site: http://github.com/hddm-devs/hddm
+:Web site: http://ski.clps.brown.edu/hddm_docs
+:Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
@@ -172,9 +173,9 @@ Join our low-traffic `mailing list`_.
 .. _Cython: http://www.cython.org/
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
-.. _documentation: http://ski.cog.brown.edu/hddm_docs
-.. _tutorial: http://ski.cog.brown.edu/hddm_docs/tutorial.html
-.. _manual: http://ski.cog.brown.edu/hddm_docs/manual.html
+.. _documentation: http://ski.clps.brown.edu/hddm_docs
+.. _tutorial: http://ski.clps.brown.edu/hddm_docs/tutorial.html
+.. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _mailing list: https://groups.google.com/group/hddm-users/
