@@ -1,3 +1,4 @@
+
 from __future__ import division
 
 import numpy as np
@@ -117,6 +118,18 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
     if params.has_key('v_switch') and method != 'drift':
         print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
 
+    # Set optional default values if they are not provided
+    for var_param in ('V', 'Z', 'T'):
+        if var_param not in params:
+            params[var_param] = 0
+    if 'z' not in params:
+        params['z'] = .5
+
+
+    if 'V' not in params:
+        params['V'] = 0
+    if 'Z' not in params:
+        params['Z'] = 0
     if method=='cdf_py':
         rts = _gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
@@ -338,7 +351,7 @@ def gen_rand_data(samples=500, params=None, include=(), method='cdf'):
     return (data, params)
 
 def gen_rand_cond_subj_data(cond_params=None, samples_per_cond=100, n_conds=None,
-                            num_subjs=10, include = (), noise=.05):
+                            num_subjs=10, include=(), noise=.05):
     """Generate simulated RTs with multiple conditions.
 
         :Optional:
@@ -442,7 +455,7 @@ def gen_rand_cond_data(cond_params=None, samples_per_cond=100, n_conds=None,
 
     """
 
-    if cond_params == None:
+    if cond_params is None:
         cond_params, combined_params = gen_cond_params_v(n_conds)
     else:
         combined_params = cond_params_to_combined_params(cond_params)

@@ -8,7 +8,6 @@ import utils
 import sandbox
 
 from model import *
-from utils import plot_posteriors, plot_post_pred
 
 import wfpt
 try:
