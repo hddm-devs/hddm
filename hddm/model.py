@@ -125,9 +125,11 @@ class HDDM(kabuki.Hierarchical):
             self.wiener_params = wiener_params
         wp = self.wiener_params
 
+        #set wfpt
         self.wfpt = deepcopy(hddm.likelihoods.wfpt_like)
-
         self.wfpt.rv.wiener_params = wp
+        cdf_bound = max(np.abs(data['rt'])) + 1;
+        self.wfpt.cdf_range = (-cdf_bound, cdf_bound)
 
         self.kwargs = kwargs
 
