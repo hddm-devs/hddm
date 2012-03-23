@@ -493,6 +493,23 @@ def _gen_statistics():
 
     return statistics
 
+def gen_ppc_stats():
+    from collections import OrderedDict
+
+    stats = OrderedDict()
+    stats['accuracy'] = lambda x: np.mean(x>0)
+    stats['mean_ub'] = lambda x: np.mean(x[x>0])
+    stats['mean_lb'] = lambda x: np.mean(x[x<0])
+    stats['std_ub'] = lambda x: np.std(x[x>0])
+    stats['std_lb'] = lambda x: np.std(x[x<0])
+
+    for q in (10, 30, 50, 70, 90):
+        key = str(q) + 'q'
+        stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q)
+        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(x[x<0], q)
+
+    return stats
+
 
 def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
