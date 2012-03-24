@@ -512,7 +512,7 @@ def gen_ppc_stats():
     for q in (10, 30, 50, 70, 90):
         key = str(q) + 'q'
         stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q) if np.any(x>0) else np.nan
-        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(x[x<0], q) if np.any(x<0) else np.nan
+        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x[x<0]), q) if np.any(x<0) else np.nan
 
     return stats
 
