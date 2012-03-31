@@ -23,6 +23,7 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
         name = node.__name__
         trace = model.db.trace(name)[:]
         est = np.mean(trace)
+        node_median = np.median(trace)
         truth = params_true[name]
         lb = (50 - conf_interval/2.)
         lb_score = scoreatpercentile(trace, lb)
@@ -33,8 +34,8 @@ def check_model(model, params_true, assert_=False, conf_interval = 95):
             fell = 50
 
 
-        print "%s: Truth: %6.3f, Estimated: %6.3f, lb: %6.3f, ub: %6.3f,  fell in: %.2f" % \
-        (name, truth, est, lb_score, ub_score, fell)
+        print "%5s: Truth: %6.3f, mean: %6.3f, median: %6.3f, lb: %6.3f, ub: %6.3f,  fell in: %.2f" % \
+        (name, truth, est, node_median, lb_score, ub_score, fell)
         if (fell < lb) or (fell > ub):
             fail = True
             print "the true value of %s is outside of the confidence interval !*!*!*!*!*!*!" % name
