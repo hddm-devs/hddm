@@ -144,7 +144,7 @@ class HDDM(kabuki.Hierarchical):
         basic_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
 
         a_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=1)
-        a_subj = Knode(pm.TruncatedNormal, a=0.3, b=1e3, value=1)
+        a_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=1)
         # a
         a = Parameter('a', group_knode=a_g, var_knode=deepcopy(basic_var), subj_knode=a_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
@@ -159,7 +159,7 @@ class HDDM(kabuki.Hierarchical):
 
         # t
         t_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=0.01)
-        t_subj = Knode(pm.TruncatedNormal, a=0.1, b=1e3, value=0.1)
+        t_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=0.1)
         t = Parameter('t', group_knode=t_g, var_knode=deepcopy(basic_var), subj_knode=t_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
