@@ -504,14 +504,19 @@ def gen_ppc_stats(quantiles = (10, 30, 50, 70, 90)):
 
     stats = OrderedDict()
     stats['accuracy'] = lambda x: np.mean(x>0)
-    stats['mean_ub'] = lambda x: np.mean(x[x>0])
-    stats['mean_lb'] = lambda x: np.mean(x[x<0])
-    stats['std_ub'] = lambda x: np.std(x[x>0])
-    stats['std_lb'] = lambda x: np.std(x[x<0])
 
+    #upper bound stats
+    stats['mean_ub'] = lambda x: np.mean(x[x>0])
+    stats['std_ub'] = lambda x: np.std(x[x>0])
     for q in quantiles:
         key = str(q) + 'q'
         stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q) if np.any(x>0) else np.nan
+
+    #lower bound stats
+    stats['mean_lb'] = lambda x: np.mean(x[x<0])
+    stats['std_lb'] = lambda x: np.std(x[x<0])
+    for q in quantiles:
+        key = str(q) + 'q'
         stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x[x<0]), q) if np.any(x<0) else np.nan
 
     return stats
