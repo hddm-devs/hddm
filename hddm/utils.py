@@ -493,7 +493,7 @@ def _gen_statistics():
 
     return statistics
 
-def gen_ppc_stats():
+def gen_ppc_stats(quantiles = (10, 30, 50, 70, 90)):
     """Generate default statistics for posterior predictive check on
     RT data.
 
@@ -509,7 +509,7 @@ def gen_ppc_stats():
     stats['std_ub'] = lambda x: np.std(x[x>0])
     stats['std_lb'] = lambda x: np.std(x[x<0])
 
-    for q in (10, 30, 50, 70, 90):
+    for q in quantiles:
         key = str(q) + 'q'
         stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q) if np.any(x>0) else np.nan
         stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x[x<0]), q) if np.any(x<0) else np.nan
