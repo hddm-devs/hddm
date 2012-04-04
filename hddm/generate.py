@@ -53,6 +53,22 @@ def gen_rand_params(include=()):
     return params
 
 
+def kabuki_data_to_hddm_data(kabuki_data):
+    "transform data generate by kabuki.generate.gen_rand_data to hddm data"
+
+    kd = kabuki_data
+    dtype = ([('response', np.int), ('rt', np.float), ('subj_idx', np.int), ('condition', 'S20')])
+    data = np.empty(kd.shape, dtype = dtype)
+
+    rts = kd['data']
+    data['response'][rts>0] = 1.
+    data['response'][rts<0] = 0.
+    data['rt'] = np.abs(rts)
+    data['condition'] = kd['condition']
+    data['subj_idx'] = kd['subj_idx']
+    return data
+
+
 def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4, subj_idx=0):
     if params is None:
         params = {'v':-2.,
