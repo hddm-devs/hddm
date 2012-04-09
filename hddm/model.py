@@ -131,8 +131,6 @@ class HDDM(kabuki.Hierarchical):
         cdf_bound = max(np.abs(data['rt'])) + 1;
         self.wfpt.cdf_range = (-cdf_bound, cdf_bound)
 
-        self.kwargs = kwargs
-
         super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
 
     def create_params(self):
@@ -159,7 +157,7 @@ class HDDM(kabuki.Hierarchical):
 
         # t
         t_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=0.01)
-        t_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=0.1)
+        t_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=0.01)
         t = Parameter('t', group_knode=t_g, var_knode=deepcopy(basic_var), subj_knode=t_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2))
