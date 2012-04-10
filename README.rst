@@ -10,7 +10,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.2
+:Version: 0.3dev
 
 Purpose
 =======
