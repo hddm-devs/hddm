@@ -2,6 +2,7 @@
 
 __docformat__ = 'restructuredtext'
 
+import model
 import likelihoods
 import generate
 import utils
