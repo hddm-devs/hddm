@@ -15,6 +15,12 @@ try:
 except:
     pass
 
+
+try:
+    import lba
+except ImportError:
+    pass
+
 from kabuki.utils import load_csv, save_csv
 
 try:

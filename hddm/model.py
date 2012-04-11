@@ -19,6 +19,8 @@ import kabuki
 import kabuki.step_methods as steps
 from kabuki.hierarchical import Parameter, Knode
 from copy import deepcopy
+import scipy as sp
+from scipy import stats
 
 
 
