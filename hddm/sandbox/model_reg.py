@@ -98,8 +98,8 @@ class HDDMRegressor(hddm.model.HDDM):
         for i_reg, reg in enumerate(self.regressor):
             for arg in reg['args']:
                 reg_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
-                reg_g = Knode(pm.Normal, mu=0, tau=10**-2, value=0)
-                reg_subj = Knode(pm.Normal, value=0)
+                reg_g = Knode(pm.Normal, mu=0, tau=10**-2, value=0, step_method=kabuki.steps.kNormalNormal)
+                reg_subj = Knode(pm.Normal, value=0.5)
                 reg_param = Parameter(arg, group_knode=reg_g, var_knode=reg_var, subj_knode=reg_subj,
                           group_label = 'mu', var_label = 'tau', var_type='std',
                           transform=lambda mu,var:(mu, var**-2))
