@@ -183,7 +183,7 @@ class HDDM(kabuki.Hierarchical):
 
         #Z
         Z_g = Knode(pm.Uniform, lower=0, upper=1, value=0.1)
-        Z_subj = Knode(pm.TruncatedNormal, a=0, b=1, value=1)
+        Z_subj = Knode(pm.TruncatedNormal, a=0, b=1, value=0.1)
         Z = Parameter('Z', group_knode=Z_g, var_knode=deepcopy(basic_var), subj_knode=Z_subj,
                       group_label = 'mu', var_label = 'tau', var_type='std',
                       transform=lambda mu,var:(mu, var**-2),

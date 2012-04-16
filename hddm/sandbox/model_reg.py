@@ -1,4 +1,5 @@
 import hddm
+import kabuki
 from hddm.model import HDDM
 import pymc as pm
 from kabuki import Parameter, Knode
