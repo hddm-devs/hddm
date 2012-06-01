@@ -155,6 +155,12 @@ Most of HDDM's dependencies are available from your repository, you can install 
 
 which requires sudo rights.
 
+Optional dependencies for hddm_demo.py can be installed via
+
+::
+
+    apt-get install python-wxgtk2.8 python-traitsui
+
 OSX
 ---
 
