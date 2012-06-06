@@ -166,6 +166,10 @@ OSX
 
 We recommend installing the `SciPy Superpack`_ maintained by Chris Fonnesbeck.
 
+The Superpack requires you to install XCode which apparently does not bundle with gcc anymore (which is required by HDDM). This repository provides some appropriate installers:
+
+https://github.com/kennethreitz/osx-gcc-installer/downloads
+
 Getting started
 ===============
 
