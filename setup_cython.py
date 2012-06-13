@@ -3,7 +3,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy as np
 import os
-
+from glob import glob
 #gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
 
 #if gsl_include == '':
@@ -33,6 +33,6 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.pyx"])]#, extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
+    ext_modules = [Extension("wfpt", ["src/wfpt.pyx"] + glob("src/fast-dm/*.c"))]#, extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
 )
 
