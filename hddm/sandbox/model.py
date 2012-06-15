@@ -1,7 +1,6 @@
 import hddm
 from hddm.model import HDDM
 import pymc as pm
-from kabuki import Parameter
 from kabuki.distributions import scipy_stochastic
 import numpy as np
 from scipy import stats

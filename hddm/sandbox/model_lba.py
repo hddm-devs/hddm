@@ -8,7 +8,7 @@ import kabuki.step_methods as steps
 import scipy as sp
 
 from scipy import stats
-from kabuki.hierarchical import Parameter, Knode
+from kabuki.hierarchical import Knode
 from kabuki.distributions import scipy_stochastic
 from copy import deepcopy
 from numpy.random import rand, randn

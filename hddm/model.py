@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import hddm
 import kabuki
 import kabuki.step_methods as steps
-from kabuki.hierarchical import Parameter, Knode
+from kabuki.hierarchical import Knode
 from copy import deepcopy
 import scipy as sp
 from scipy import stats
@@ -135,99 +135,83 @@ class HDDM(kabuki.Hierarchical):
 
         super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
 
-    def create_params(self):
+    def create_knodes_set(self, name, lower=None, upper=None, init=0):
+        knodes = {}
+        if lower is None and lower is None:
+            g = Knode(pm.Uniform, '%s_group_mean' % name, lower=1e-3, upper=1e3, value=init, depends=self.depends[name])
+        else:
+            g = Knode(pm.Normal, '%s_group_mean' % name, mu=0, tau=15**-2, value=init, depends=self.depends[name])
+
+
+
+        var = Knode(pm.Uniform, '%s_group_var' % name, lower=1e-10, upper=100, value=init)
+
+        tau = Knode(pm.Deterministic, '%s_group_tau' % name, doc='%_group_tau' % name, eval=lambda x: x**-2, x=var, plot=False, trace=False)
+
+        if lower is not None or lower is not None:
+            subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g, tau=tau, a=lower, b=upper, value=init, depends=('subj_idx',), subj=True)
+        else:
+            subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau, value=init, depends=('subj_idx',), subj=True)
+
+        knodes['%s_group_mean'%name] = g
+        knodes['%s_group_var'%name] = var
+        knodes['%s_group_tau'%name] = tau
+        knodes['%s_subj'%name] = subj
+
+        return knodes
+
+    def create_knodes(self):
         """Returns list of model parameters.
         """
-        # These boundaries are largely based on a meta-analysis of
-        # reported fit values.
-        # See: Matzke & Wagenmakers 2009
-        basic_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
+        knodes = {}
+        knodes_likelihood = {}
 
-        a_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=1)
-        a_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=1)
-        # a
-        a = Parameter('a', group_knode=a_g, var_knode=deepcopy(basic_var), subj_knode=a_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2))
+        a = self.create_knodes_set('a', lower=1e-3, upper=1e3, init=1)
+        knodes.update(a)
+        knodes_likelihood['a'] = a['a_subj']
 
-        # v
-        v_g = Knode(pm.Normal, mu=0, tau=15**-2, value=0, step_method=kabuki.steps.kNormalNormal)
-        v_subj = Knode(pm.Normal, value=0)
-        v = Parameter('v', group_knode=v_g, var_knode=deepcopy(basic_var), subj_knode=v_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2))
+        v = self.create_knodes_set('v', init=0)
+        knodes.update(v)
+        knodes_likelihood['v'] = v['v_subj']
 
-        # t
-        t_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=0.01)
-        t_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=0.01)
-        t = Parameter('t', group_knode=t_g, var_knode=deepcopy(basic_var), subj_knode=t_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2))
+        t = self.create_knodes_set('t', lower=1e-3, upper=1e3, init=.01)
+        knodes.update(t)
+        knodes_likelihood['t'] = t['t_subj']
 
-        # z
-        z_g = Knode(pm.Beta, alpha=1, beta=1, value=0.5)
-        z_var = Knode(pm.Uniform, lower=1, upper=1e5, value=1)
-        z_subj = Knode(pm.Beta, value=0.5)
-        z = Parameter('z', group_knode=z_g, var_knode=z_var, subj_knode=z_subj,
-                      group_label='alpha', var_label='beta', var_type='sample_size',
-                      transform=lambda mu,n: (mu*n, (1-mu)*n),
-                      optional=True, default=0.5)
+        if 'V' in self.include:
+            V = self.create_knodes_set('V', lower=0, upper=1e3, init=1)
+            knodes.update(V)
+            knodes_likelihood['V'] = V['V_subj']
+        else:
+            knodes_likelihood['V'] = 0.
 
-        #V
-        V_g = Knode(pm.Uniform, lower=0, upper=1e3, value=1)
-        V_subj = Knode(pm.TruncatedNormal, a=0, b=1e3, value=1)
-        V = Parameter('V', group_knode=V_g, var_knode=deepcopy(basic_var), subj_knode=V_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2),
-                      optional=True, default=0)
+        if 'Z' in self.include:
+            Z = self.create_knodes_set('Z', lower=0, upper=1, init=.1)
+            knodes.update(Z)
+            knodes_likelihood['Z'] = Z['Z_subj']
+        else:
+            knodes_likelihood['Z'] = 0.
 
-        #Z
-        Z_g = Knode(pm.Uniform, lower=0, upper=1, value=0.1)
-        Z_subj = Knode(pm.TruncatedNormal, a=0, b=1, value=0.1)
-        Z = Parameter('Z', group_knode=Z_g, var_knode=deepcopy(basic_var), subj_knode=Z_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2),
-                      optional=True, default=0)
+        if 'T' in self.include:
+            T = self.create_knodes_set('T', lower=0, upper=1e3, init=.01)
+            knodes.update(T)
+            knodes_likelihood['T'] = T['T_subj']
+        else:
+            knodes_likelihood['T'] = 0.
 
-        #T
-        T_g = Knode(pm.Uniform, lower=0, upper=1e3, value=0.01)
-        T_subj = Knode(pm.TruncatedNormal, a=0, b=1e3, value=0.01)
-        T = Parameter('T', group_knode=T_g, var_knode=deepcopy(basic_var), subj_knode=T_subj,
-                      group_label = 'mu', var_label = 'tau', var_type='std',
-                      transform=lambda mu,var:(mu, var**-2),
-                      optional=True, default=0)
+        if 'z' in self.include:
+            z = self.create_knodes_set('z', lower=0, upper=1, init=.5)
+            knodes.update(z)
+            knodes_likelihood['z'] = z['z_subj']
+        else:
+            knodes_likelihood['z'] = .5
 
         #wfpt
-        wfpt_knode = Knode(self.wfpt)
-        wfpt = Parameter('wfpt', is_bottom_node=True, subj_knode=wfpt_knode)
+        wfpt = Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **knodes_likelihood)
 
+        knodes['wfpt'] = wfpt
 
-        return [a, v, t, z, V, T, Z, wfpt]
-
-
-    def get_bottom_node(self, param, params):
-        """Create and return the wiener likelihood distribution
-        supplied in 'param'.
-
-        'params' is a dictionary of all parameters on which the data
-        depends on (i.e. condition and subject).
-
-        """
-        if param.name == 'wfpt':
-            return self.wfpt(param.full_name,
-                             value=param.data['rt'].flatten(),
-                             v=params['v'],
-                             a=params['a'],
-                             z=self.get_node('z',params),
-                             t=params['t'],
-                             Z=self.get_node('Z',params),
-                             T=self.get_node('T',params),
-                             V=self.get_node('V',params),
-                             observed=True)
-
-        else:
-            raise KeyError, "Groupless parameter named %s not found." % param.name
-
+        return knodes.values
 
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:
