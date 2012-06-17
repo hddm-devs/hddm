@@ -164,50 +164,50 @@ class HDDM(kabuki.Hierarchical):
         """Returns list of model parameters.
         """
         knodes = {}
-        knodes_likelihood = {}
+        wfpt_parents = {}
 
         a = self.create_knodes_set('a', lower=1e-3, upper=1e3, init=1)
         knodes.update(a)
-        knodes_likelihood['a'] = a['a_subj']
+        wfpt_parents['a'] = a['a_subj']
 
         v = self.create_knodes_set('v', init=0)
         knodes.update(v)
-        knodes_likelihood['v'] = v['v_subj']
+        wfpt_parents['v'] = v['v_subj']
 
         t = self.create_knodes_set('t', lower=1e-3, upper=1e3, init=.01)
         knodes.update(t)
-        knodes_likelihood['t'] = t['t_subj']
+        wfpt_parents['t'] = t['t_subj']
 
         if 'V' in self.include:
             V = self.create_knodes_set('V', lower=0, upper=1e3, init=1)
             knodes.update(V)
-            knodes_likelihood['V'] = V['V_subj']
+            wfpt_parents['V'] = V['V_subj']
         else:
-            knodes_likelihood['V'] = 0.
+            wfpt_parents['V'] = 0.
 
         if 'Z' in self.include:
             Z = self.create_knodes_set('Z', lower=0, upper=1, init=.1)
             knodes.update(Z)
-            knodes_likelihood['Z'] = Z['Z_subj']
+            wfpt_parents['Z'] = Z['Z_subj']
         else:
-            knodes_likelihood['Z'] = 0.
+            wfpt_parents['Z'] = 0.
 
         if 'T' in self.include:
             T = self.create_knodes_set('T', lower=0, upper=1e3, init=.01)
             knodes.update(T)
-            knodes_likelihood['T'] = T['T_subj']
+            wfpt_parents['T'] = T['T_subj']
         else:
-            knodes_likelihood['T'] = 0.
+            wfpt_parents['T'] = 0.
 
         if 'z' in self.include:
             z = self.create_knodes_set('z', lower=0, upper=1, init=.5)
             knodes.update(z)
-            knodes_likelihood['z'] = z['z_subj']
+            wfpt_parents['z'] = z['z_subj']
         else:
-            knodes_likelihood['z'] = .5
+            wfpt_parents['z'] = .5
 
         #wfpt
-        wfpt = Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **knodes_likelihood)
+        wfpt = Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
 
         knodes['wfpt'] = wfpt
 
