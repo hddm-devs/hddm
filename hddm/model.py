@@ -137,7 +137,7 @@ class HDDM(kabuki.Hierarchical):
 
     def create_knodes_set(self, name, lower=None, upper=None, init=0):
         knodes = {}
-        if lower is None and lower is None:
+        if lower is None and upper is None:
             g = Knode(pm.Uniform, '%s_group_mean' % name, lower=1e-3, upper=1e3, value=init, depends=self.depends[name])
         else:
             g = Knode(pm.Normal, '%s_group_mean' % name, mu=0, tau=15**-2, value=init, depends=self.depends[name])
@@ -148,7 +148,7 @@ class HDDM(kabuki.Hierarchical):
 
         tau = Knode(pm.Deterministic, '%s_group_tau' % name, doc='%_group_tau' % name, eval=lambda x: x**-2, x=var, plot=False, trace=False)
 
-        if lower is not None or lower is not None:
+        if lower is not None or upper is not None:
             subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g, tau=tau, a=lower, b=upper, value=init, depends=('subj_idx',), subj=True)
         else:
             subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau, value=init, depends=('subj_idx',), subj=True)
