@@ -348,7 +348,7 @@ def gen_rand_data(params, method='cdf', **kwargs):
                 supplied, takes random values.
             method : string
                 method to generate samples
-            the rest of the arguments are forward to kabuki.generate.gen_rand_data
+            the rest of the arguments are forwarded to kabuki.generate.gen_rand_data
 
        :Returns:
             data array with RTs

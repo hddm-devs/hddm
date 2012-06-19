@@ -27,12 +27,15 @@ from nose import SkipTest
 
 
 def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
-    params = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
-    params[param] = [params[param], params[param]+change]
+    params_cond_a = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
+    params_cond_b = copy(params_cond_a)
+    params_cond_b[param] += change
 
-    data, tmp, tmp2 = hddm.generate.gen_rand_cond_data(cond_params=params, n_conds=2, samples_per_cond=samples)
+    params = {'A': params_cond_a, 'B': params_cond_b}
 
-    model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
+    data, subj_params = hddm.generate.gen_rand_data(params, subjs=num_subjs, samples=samples)
+
+    model = hddm.model.HDDM(data, depends_on={param:['condition']}, is_group_model=subj)
 
     return model
 
@@ -66,25 +69,25 @@ class TestSingle(unittest.TestCase):
     def test_HDDM(self, assert_=True):
         includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
-            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include, method='cdf')
+            params = hddm.generate.gen_rand_params(include=include)
+            data, params_true = hddm.generate.gen_rand_data(params, samples=500)
             model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
-            mc = model.mcmc()
-            mc.sample(self.samples, burn=self.burn)
-            check_model(mc, params_true, assert_=assert_)
+            model.sample(self.samples, burn=self.burn)
+            check_model(model.mc, params_true, assert_=assert_)
 
-        return mc
+        return model.mc
 
     def test_HDDM_group(self, assert_=True):
         raise SkipTest("Disabled.")
         includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
         for include in includes:
-            data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
+            params = hddm.generate.gen_rand_params(include=include)
+            data, params_true = hddm.generate.gen_rand_subj_data(params, samples=500, num_subjs=5)
             model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=True)
-            mc = model.mcmc()
-            mc.sample(self.samples, burn=self.burn)
-            check_model(mc, params_true, assert_=assert_)
+            model.sample(self.samples, burn=self.burn)
+            check_model(model.mc, params_true, assert_=assert_)
 
-        return mc
+        return model.mc
 
     def test_cont(self, assert_=False):
         raise SkipTest("Disabled.")
