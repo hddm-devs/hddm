@@ -63,7 +63,6 @@ def check_rejection(model, assert_=True):
                 print msg
 
 
-
 def test_params_on_data(params, data, include=(), depends_on=None, conf_interval=95):
     thin = 1
     samples = 10000
@@ -190,7 +189,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         params_set[j]['v'] = all_v[j]
         full_params['v(%d,)'%j] = params_set[j]['v']
 
-    data = hddm.generate.gen_rand_data(params_set, samples=150)
+    data, params = hddm.generate.gen_rand_data(params_set, samples=150)
 
     print "Using the following params: \n %s" % str_params(full_params)
 
@@ -210,7 +209,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         print "working on model %d" % i_params
 
         model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params],
-                                include = include, depends_on  = {'v':['cond']})#, init_value=params)
+                                include = include, depends_on  = {'v':['condition']})#, init_value=params)
         i_t = time()
         if use_db:
             dbname = 'speed.' + str(time()) + '.db'
