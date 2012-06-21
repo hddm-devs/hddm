@@ -4,10 +4,9 @@ import matplotlib.pyplot as plt
 import pymc as pm
 import hddm
 import sys
-import table_print
 
 from scipy.stats import scoreatpercentile
-from numpy import array, zeros, ones, empty
+from numpy import array, zeros, ones
 from copy import deepcopy
 from time import time
 
@@ -271,7 +270,7 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
             thin = 2
 
-    group_params = ['v', 'V', 'a', 'z', 'Z', 't', 'T']
+    group_params = ['v', 'sv', 'a', 'z', 'sz', 't', 'st']
 
     # Get depends
     depends = {}
@@ -457,7 +456,7 @@ def hddm_parents_trace(model, obs_node, idx):
     function is used by ppd_test)
     """
     model.params_include.keys()
-    params = {'a': 0, 'v': 0, 't':0, 'z': 0.5, 'Z': 0, 'T': 0, 'V': 0}
+    params = {'a': 0, 'v': 0, 't':0, 'z': 0.5, 'sz': 0, 'st': 0, 'sv': 0}
     if not np.isscalar(idx):
         for (key, value) in params.iteritems():
             params[key] = np.ones(len(idx)) * value

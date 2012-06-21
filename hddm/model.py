@@ -48,10 +48,10 @@ class HDDM(kabuki.Hierarchical):
     :Optional:
         include : iterable
             Optional inter-trial variability parameters to include.
-             Can be any combination of 'V', 'Z' and 'T'. Passing the string
+             Can be any combination of 'sv', 'sz' and 'st'. Passing the string
             'all' will include all three.
 
-            Note: Including 'Z' and/or 'T' will increase run time significantly!
+            Note: Including 'sz' and/or 'st' will increase run time significantly!
 
             is_group_model : bool
                 If True, this results in a hierarchical
@@ -97,8 +97,8 @@ class HDDM(kabuki.Hierarchical):
 
                  :Parameters:
                      * err: Error bound for wfpt (default 1e-4)
-                     * nT: Maximum depth for numerical integration for T (default 2)
-                     * nZ: Maximum depth for numerical integration for Z (default 2)
+                     * n_st: Maximum depth for numerical integration for st (default 2)
+                     * n_sz: Maximum depth for numerical integration for Z (default 2)
                      * use_adaptive: Whether to use adaptive numerical integration (default True)
                      * simps_err: Error bound for Simpson integration (default 1e-3)
 
@@ -114,7 +114,7 @@ class HDDM(kabuki.Hierarchical):
 
         if include is not None:
             if include == 'all':
-                [include_params.add(param) for param in ('T','V','Z')]
+                [include_params.add(param) for param in ('st','sv','sz')]
             else:
                 [include_params.add(param) for param in include]
 
@@ -122,7 +122,7 @@ class HDDM(kabuki.Hierarchical):
             include_params.add('z')
 
         if wiener_params is None:
-            self.wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
+            self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                                   'use_adaptive':1,
                                   'simps_err':1e-3}
         else:
@@ -173,12 +173,12 @@ class HDDM(kabuki.Hierarchical):
         knodes.update(self._create_knodes_set('a', lower=1e-3, upper=1e3, value=1))
         knodes.update(self._create_knodes_set('v', value=0))
         knodes.update(self._create_knodes_set('t', lower=1e-3, upper=1e3, value=.01))
-        if 'V' in self.include:
-            knodes.update(self._create_knodes_set('V', lower=0, upper=1e3, value=1))
-        if 'Z' in self.include:
-            knodes.update(self._create_knodes_set('Z', lower=0, upper=1, value=.1))
-        if 'T' in self.include:
-            knodes.update(self._create_knodes_set('T', lower=0, upper=1e3, value=.01))
+        if 'sv' in self.include:
+            knodes.update(self._create_knodes_set('sv', lower=0, upper=1e3, value=1))
+        if 'sz' in self.include:
+            knodes.update(self._create_knodes_set('sz', lower=0, upper=1, value=.1))
+        if 'st' in self.include:
+            knodes.update(self._create_knodes_set('st', lower=0, upper=1e3, value=.01))
         if 'z' in self.include:
             knodes.update(self._create_knodes_set('z', lower=0, upper=1, value=.5))
 
@@ -195,9 +195,9 @@ class HDDM(kabuki.Hierarchical):
         wfpt_parents['v'] = knodes['v%s' % postfix]
         wfpt_parents['t'] = knodes['t%s' % postfix]
 
-        wfpt_parents['V'] = knodes['V%s' % postfix] if 'V' in self.include else 0
-        wfpt_parents['Z'] = knodes['Z%s' % postfix] if 'Z' in self.include else 0
-        wfpt_parents['T'] = knodes['T%s' % postfix] if 'T' in self.include else 0
+        wfpt_parents['sv'] = knodes['sv%s' % postfix] if 'sv' in self.include else 0
+        wfpt_parents['sz'] = knodes['sz%s' % postfix] if 'sz' in self.include else 0
+        wfpt_parents['st'] = knodes['st%s' % postfix] if 'st' in self.include else 0
         wfpt_parents['z'] = knodes['z%s' % postfix] if 'z' in self.include else 0.5
 
         return Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
@@ -247,13 +247,13 @@ class HDDMTransform(HDDM):
             subj = Knode(pm.InvLogit, 'z_subj', ltheta=subj_trans,
                                    plot=True, trace=True, subj=True)
 
-            knodes['z_subj_trans'] = subj_trans
-            knodes['z_subj'] = subj
-
-            knodes['z'] = g
             knodes['z_trans'] = g_trans
+            knodes['z'] = g
             knodes['z_var'] = var
             knodes['z_tau'] = tau
+
+            knodes['z_subj_trans'] = subj_trans
+            knodes['z_subj'] = subj
 
         else:
             g_trans = Knode(pm.Normal, 'z_trans', mu=0, tau=15**-2,
@@ -263,8 +263,8 @@ class HDDMTransform(HDDM):
             g = Knode(pm.InvLogit, 'z', ltheta=g_trans, plot=True,
                       trace=True )
 
-            knodes['z'] = g
             knodes['z_trans'] = g_trans
+            knodes['z'] = g
 
         return knodes
 
@@ -330,7 +330,7 @@ class HDDMTransform(HDDM):
             elif name == 'a':
                 knodes.update(self._create_knodes_set_lower_bound(name, value=np.log(1.5)))
 
-            elif name in ('V', 'Z', 'T'):
+            elif name in ('sv', 'sz', 'st'):
                 knodes.update(self._create_knodes_set_lower_bound(name, value=np.log(.1)))
 
             elif name == 'v':

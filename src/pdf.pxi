@@ -5,7 +5,7 @@
 
 cimport cython
 
-include "integrate.pxi"
+#include "integrate.pxi"
 
 #from libc.math cimport tan, sin, cos, log, exp, sqrt, fmax, pow, ceil, floor, fabs, M_PI
 
@@ -51,13 +51,13 @@ cdef double ftt_01w(double tt, double w, double err) nogil:
         upper = <int>(ceil((K-1)/2.))
         for k from lower <= k <= upper: # loop over k
             p+=(w+2*k)*exp(-(pow((w+2*k),2))/2/tt) # increment sum
-        p/=sqrt(2*M_PI*pow(tt,3)) # add constant term
-  
+        p/=sqrt(2*M_PI*pow(tt,3)) # add con_stant term
+
     else: # if large t is better...
         K=<int>(ceil(kl)) # round to smallest integer meeting error
         for k from 1 <= k <= K:
             p+=k*exp(-(pow(k,2))*(M_PI**2)*tt/2)*sin(k*M_PI*w) # increment sum
-        p*=M_PI # add constant term
+        p*=M_PI # add con_stant term
 
     return p
 
@@ -74,66 +74,66 @@ cdef double pdf(double x, double v, double a, double w, double err) nogil:
 
     cdef double tt = x/a**2 # use normalized time
     cdef double p = ftt_01w(tt, w, err) #get f(t|0,1,w)
-  
+
     # convert to f(t|v,a,w)
     return p*exp(-v*a*w -(pow(v,2))*x/2.)/(pow(a,2))
 
-cdef double pdf_V(double x, double v, double V, double a, double z, double err) nogil:
-    """Compute the likelihood of the drift diffusion model f(t|v,a,z,V) using the method    
+cdef double pdf_sv(double x, double v, double sv, double a, double z, double err) nogil:
+    """Compute the likelihood of the drift diffusion model f(t|v,a,z,sv) using the method
     and implementation of Navarro & Fuss, 2009.
-    V is the std of the drift rate
+    sv is the std of the drift rate
     """
     if x <= 0:
         return 0
-    
-    if V==0:
-        return pdf(x, v, a, z, err) 
-        
+
+    if sv==0:
+        return pdf(x, v, a, z, err)
+
     cdef double tt = x/(pow(a,2)) # use normalized time
     cdef double p  = ftt_01w(tt, z, err) #get f(t|0,1,w)
-  
-    # convert to f(t|v,a,w)
-    return exp(log(p) + ((a*z*V)**2 - 2*a*v*z - (v**2)*x)/(2*(V**2)*x+2))/sqrt((V**2)*x+1)/(a**2)
 
-cpdef double full_pdf(double x, double v, double V, double a, double
-                      z, double Z, double t, double T, double err, int
-                      nT=2, int nZ=2, bint use_adaptive=1, double
+    # convert to f(t|v,a,w)
+    return exp(log(p) + ((a*z*sv)**2 - 2*a*v*z - (v**2)*x)/(2*(sv**2)*x+2))/sqrt((sv**2)*x+1)/(a**2)
+
+cpdef double full_pdf(double x, double v, double sv, double a, double
+                      z, double sz, double t, double st, double err, int
+                      n_st=2, int n_sz=2, bint use_adaptive=1, double
                       simps_err=1e-3) nogil:
     """full pdf"""
 
     # Check if parpameters are valid
-    if z<0 or z>1 or a<0 or ((fabs(x)-(t-T/2.))<0) or (z+Z/2.>1) or (z-Z/2.<0) or (t-T/2.<0) or (t<0):
+    if z<0 or z>1 or a<0 or ((fabs(x)-(t-st/2.))<0) or (z+sz/2.>1) or (z-sz/2.<0) or (t-st/2.<0) or (t<0):
         return 0
 
     # transform x,v,z if x is upper bound response
     if x > 0:
         v = -v
         z = 1.-z
-    
-    x = fabs(x)
-    
-    if T<1e-3:
-        T = 0
-    if Z <1e-3:
-        Z = 0  
 
-    if (Z==0):
-        if (T==0): #V=0,Z=0,T=0
-            return pdf_V(x - t, v, V, a, z, err)
-        else:      #V=0,Z=0,T=$
+    x = fabs(x)
+
+    if st<1e-3:
+        st = 0
+    if sz <1e-3:
+        sz = 0
+
+    if (sz==0):
+        if (st==0): #sv=0,sz=0,st=0
+            return pdf_sv(x - t, v, sv, a, z, err)
+        else:      #sv=0,sz=0,st=$
             if use_adaptive>0:
-                return adaptiveSimpsons_1D(x,  v, V, a, z, t, err, z, z, t-T/2., t+T/2., simps_err, nT)
+                return adaptiveSimpsons_1D(x,  v, sv, a, z, t, err, z, z, t-st/2., t+st/2., simps_err, n_st)
             else:
-                return simpson_1D(x, v, V, a, z, t, err, z, z, 0, t-T/2., t+T/2., nT)
-            
-    else: #Z=$
-        if (T==0): #V=0,Z=$,T=0
+                return simpson_1D(x, v, sv, a, z, t, err, z, z, 0, t-st/2., t+st/2., n_st)
+
+    else: #sz=$
+        if (st==0): #sv=0,sz=$,st=0
             if use_adaptive:
-                return adaptiveSimpsons_1D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., t, t, simps_err, nZ)
+                return adaptiveSimpsons_1D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., t, t, simps_err, n_sz)
             else:
-                return simpson_1D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., nZ, t, t , 0)
-        else:      #V=0,Z=$,T=$
+                return simpson_1D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., n_sz, t, t , 0)
+        else:      #sv=0,sz=$,st=$
             if use_adaptive:
-                return adaptiveSimpsons_2D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., t-T/2., t+T/2., simps_err, nZ, nT)
+                return adaptiveSimpsons_2D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., t-st/2., t+st/2., simps_err, n_sz, n_st)
             else:
-                return simpson_2D(x, v, V, a, z, t, err, z-Z/2., z+Z/2., nZ, t-T/2., t+T/2., nT)
+                return simpson_2D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., n_sz, t-st/2., t+st/2., n_st)

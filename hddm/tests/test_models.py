@@ -8,7 +8,7 @@ import hddm
 from hddm.diag import check_model
 
 def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
-    params_cond_a = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
+    params_cond_a = {'v':.5, 'a':2., 'z':.5, 't': .3, 'st':0., 'sv':0., 'sz':0.}
     params_cond_b = copy(params_cond_a)
     params_cond_b[param] += change
 
@@ -24,15 +24,15 @@ class TestMulti(unittest.TestCase):
     def runTest(self):
         pass
 
-    def test_diff_v(self, samples=1000):
+    def test_diff_v(self, samples=100):
         m = diff_model('v', subj=False, change=.5, samples=samples)
         return m
 
-    def test_diff_a(self, samples=1000):
+    def test_diff_a(self, samples=100):
         m = diff_model('a', subj=False, change=-.5, samples=samples)
         return m
 
-    def test_diff_a_subj(self, samples=1000):
+    def test_diff_a_subj(self, samples=100):
         raise SkipTest("Disabled.")
         m = diff_model('a', subj=True, change=-.5, samples=samples)
         return m
@@ -41,14 +41,14 @@ class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
 
-        self.samples = 5000
-        self.burn = 2500
+        self.samples = 50
+        self.burn = 10
 
     def runTest(self):
         return
 
     def test_HDDM(self, assert_=False):
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, samples=500, subjs=1)
@@ -60,7 +60,7 @@ class TestSingleBreakdown(unittest.TestCase):
         return model.mc
 
     def test_HDDM_group(self, assert_=False):
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, samples=500, subjs=5)
@@ -72,7 +72,7 @@ class TestSingleBreakdown(unittest.TestCase):
         return model.mc
 
     def test_HDDMTransform(self, assert_=False):
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, samples=500, subjs=1)
@@ -84,7 +84,7 @@ class TestSingleBreakdown(unittest.TestCase):
         return model.mc
 
     def test_HDDMTransform_group(self, assert_=False):
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, samples=500, subjs=5)

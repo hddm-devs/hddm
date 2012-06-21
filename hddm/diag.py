@@ -107,7 +107,7 @@ def run_accuracy_test(nTimes=20, include=(), stop_when_fail = True):
         positive = sum(data['response'])
         print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
         print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
-        % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
+        % (params['a'], params['t'], params['v'], params['z'], params['st'], params['sv'], params['sz'])
         ok, res = test_params_on_data(params, data, include=include)
 
         if stop_when_fail and not ok:
