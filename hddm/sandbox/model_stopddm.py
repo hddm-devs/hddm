@@ -12,11 +12,22 @@ def ss_error_logp(value, ssd, v, V, a, z, Z, t, T, ssrt):
     """ss_error_logp"""
     data = value[value < ssd+ssrt]
     num_outliers = np.sum([value > ssd+ssrt])
-    #if num_outliers > 0:
-    #    return -np.inf
+    if num_outliers > 0:
+        return -np.inf
     logp_error = hddm.wfpt.wiener_like(data, v, V, a, z, Z, t, T, 1e-4)
+    #compute normalization
+    x, cdf = hddm.wfpt.gen_cdf(v, V, a, z, Z, t, T)
+    x_lb, lb_cdf, x_ub, ub_cdf = hddm.wfpt.split_cdf(x, cdf)
 
-    return logp_error + num_outliers * np.log(.01)
+    p_norm = 0
+    for s in ssd:
+        lb_cutoff = np.where([x_lb > s+ssrt])[1][0]
+        ub_cutoff = np.where([x_ub > s+ssrt])[1][0]
+        p_lb = 1-lb_cdf[lb_cutoff]
+        p_ub = 1-ub_cdf[ub_cutoff]
+        p_norm += np.log(p_lb + p_ub)
+
+    return logp_error - p_norm + num_outliers * np.log(.01)
 
 ss_error_like = pm.stochastic_from_dist(name="ss_error_like",
                                         logp=ss_error_logp,
@@ -87,8 +98,8 @@ class StopDDM(hddm.HDDM):
         basic_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
 
         # ssrt
-        ssrt_g = Knode(pm.Uniform, lower=1e-3, upper=1, value=0.2)
-        ssrt_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1, value=0.2)
+        ssrt_g = Knode(pm.Uniform, lower=1e-3, upper=1e3, value=0.2)
+        ssrt_subj = Knode(pm.TruncatedNormal, a=1e-3, b=1e3, value=0.2)
         ssrt = Parameter('ssrt', group_knode=ssrt_g,
                          var_knode=deepcopy(basic_var),
                          subj_knode=ssrt_subj, group_label='mu',
@@ -138,7 +149,7 @@ class StopDDM(hddm.HDDM):
                                  observed=True)
 
         elif param.name == 'ss_inhib':
-            data = copy(param.data[(param.data['ss_presented'] == 1) & (param.data['inhibited'] == 1)])
+            data = copy(param.data[(param.data['ss_presented'] == True) & (param.data['inhibited'] == True)])
             uniq_ssds = np.unique(data['ssd'])
             ssd_inhib_trials = []
             for uniq_ssd in uniq_ssds:

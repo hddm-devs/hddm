@@ -22,7 +22,7 @@ setup(
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     install_requires=['NumPy >=1.3.0', 'kabuki'],
     setup_requires=['NumPy >=1.3.0', 'kabuki'],
-    include_dirs = [np.get_include()],
+    include_dirs = [np.get_include(), 'src/fast-dm'],
     cmdclass = {'build_ext': build_ext},
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
