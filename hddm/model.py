@@ -218,6 +218,17 @@ class HDDM(kabuki.Hierarchical):
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
 class HDDMTransform(HDDM):
+    def pre_sample(self):
+        if not self.is_group_model:
+            return
+
+        includes = [include + '_trans' for include in self.include]
+        params = ['v', 't_trans', 'a_trans'] + includes
+
+        nodes = self.nodes_db['node'][self.nodes_db['knode_name'].isin(params)]
+        for node in nodes:
+            self.mc.use_step_method(steps.kNormalNormal, node)
+
     def _create_knodes_set_z(self):
         name = 'z'
         knodes = OrderedDict()
