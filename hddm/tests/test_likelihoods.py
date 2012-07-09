@@ -359,6 +359,18 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
+def test_cmp_cdf_pdf(repeats=10):
+    #compare PDF to CDF
+    x = np.linspace(-5, 5, 500)
+    for i in range(repeates):
+        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz'))
+        pdf = hddm.wfpt.pdf_array(x, params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'])
+        cum_pdf = np.cumsum(pdf)
+        cum_pdf /= cum_pdf[-1]
+
+        cdf = hddm.wfpt.cdf(params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'])
+
+        np.testing.assert_array_almost_equal(cdf, cum_cdf, 5)
 
 if __name__=='__main__':
     print "Run nosetest."

@@ -3,6 +3,7 @@ import pymc as pm
 import numpy as np
 import scipy as sp
 from scipy import stats
+from scipy.stats.mstats import mquantiles
 
 from kabuki.distributions import scipy_stochastic
 
@@ -77,6 +78,46 @@ class wfpt_gen(stats.distributions.rv_continuous):
     def random(self, v=1., V=0., a=2, z=.5, Z=.1, t=.3, T=.1, size=100):
         self._size = size
         return self._rvs(v, V, a, z, Z, t, T)
+
+    def ks(self, x, v, sv, a, z, sz, t, st):
+        """KS-distance between empirical and theoretical quantiles.
+        """
+        quantiles = (.005, .1, .3, .5, .7, .9, .995)
+        probs = (.095, .2, .2, .2, .2, .095)
+        cum_probs = np.cumsum(probs)
+
+        x_ub = x[x>0]
+        x_lb = x[x<0]
+
+        # extract empirical quantiles
+        q_ub_emp = mquantiles(x_ub, prob=quantiles)
+        q_lb_emp = mquantiles(x_lb, prob=quantiles)
+
+        # generate CDF
+        x_cdf, cdf = hddm.wfpt.gen_cdf(v, sv, a, z, sz, t, st)
+        x_cdf_ub, cdf_ub, x_cdf_lb, cdf_lb = hddm.wfpt.split_cdf(x_cdf, cdf)
+
+        # normalize CDFs
+        cdf_ub /= cdf_ub[-1]
+        cdf_lb /= cdf_lb[-1]
+
+        # extract theoretical quantiles
+        q_ub_theo_idx = np.searchsorted(x_cdf_ub, q_ub_emp)
+        q_lb_theo_idx = np.searchsorted(x_cdf_lb, q_lb_emp)
+
+        p_ub_theo = cdf_ub[q_ub_theo_idx]
+        p_lb_theo = cdf_lb[q_lb_theo_idx]
+
+        chi2_ub,_ = stats.chisquare(p_ub_theo, cum_probs)
+        chi2_lb,_ = stats.chisquare(p_lb_theo, cum_probs)
+
+        return chi2_ub + chi2_lb
+
+
+
+
+
+
 
 wfpt_like = scipy_stochastic(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
