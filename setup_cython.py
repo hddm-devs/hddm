@@ -4,11 +4,6 @@ from Cython.Distutils import build_ext
 import numpy as np
 import os
 from glob import glob
-#gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
-
-#if gsl_include == '':
-#    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-#    sys.exit(-1)
 
 setup(
     name="HDDM",
