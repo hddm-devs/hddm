@@ -3,12 +3,7 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy as np
 import os
-
-#gsl_include = os.popen('gsl-config --cflags').read()[2:-1]
-
-#if gsl_include == '':
-#    print "Couldn't find gsl-config. Make sure it's installed and in the path."
-#    sys.exit(-1)
+from glob import glob
 
 setup(
     name="HDDM",
@@ -22,7 +17,7 @@ setup(
     description="HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.",
     install_requires=['NumPy >=1.3.0', 'kabuki'],
     setup_requires=['NumPy >=1.3.0', 'kabuki'],
-    include_dirs = [np.get_include()],
+    include_dirs = [np.get_include(), 'src/fast-dm'],
     cmdclass = {'build_ext': build_ext},
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
@@ -33,6 +28,6 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.pyx"])]#, extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
+    ext_modules = [Extension("wfpt", ["src/wfpt.pyx"] + glob("src/fast-dm/*.c"))]#, extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
 )
 

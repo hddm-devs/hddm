@@ -359,6 +359,48 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
+def test_cmp_cdf_pdf(repeats=10):
+    """Comparing wfpt PDF to CDF."""
+    x = np.linspace(-5, 5, 1001)
+    for i in range(repeats):
+        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
+        pdf = hddm.wfpt.pdf_array(x, params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'], 1e-4)
+        cum_pdf = np.cumsum(pdf)
+        cum_pdf /= cum_pdf[-1]
+
+        x_cdf, cdf = hddm.wfpt.gen_cdf(params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'])
+
+        np.testing.assert_array_equal(x, x_cdf)
+        np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
+
+def test_chisquare_min(repeats=10):
+    for i in range(repeats):
+        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
+
+        wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
+        samples = wfpt.random(size=50000, **params)
+        chisquare = wfpt.chisquare(samples, **params)
+
+        # compare it to other chisquares around that area
+        params_test = copy(params)
+        for test_param in ('v', 'sv', 'a', 'z', 'sz', 't', 'st'):
+            params_test[test_param] += .05
+
+        chisquare_cmp = wfpt.chisquare(samples, **params_test)
+
+        assert chisquare < chisquare_cmp
+
+        # compare it to other chisquares around that area
+        params_test = copy(params)
+        for test_param in ('v', 'sv', 'a', 'z', 'sz', 't', 'st'):
+            params_test[test_param] -= .05
+
+        chisquare_cmp = wfpt.chisquare(samples, **params_test)
+
+        assert chisquare < chisquare_cmp
+
+
+
 
 if __name__=='__main__':
     print "Run nosetest."

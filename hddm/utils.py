@@ -26,7 +26,8 @@ def flip_errors(data):
         return data
 
     # Copy data
-    data = np.array(data)
+    data = data.copy()
+    
     # Flip sign for lower boundary response
     idx = data['response'] == 0
     data['rt'][idx] = -data['rt'][idx]

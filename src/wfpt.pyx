@@ -25,6 +25,7 @@ from cython.parallel import *
 
 #include "pdf.pxi"
 include 'integrate.pxi'
+include 'cdf.pxi'
 
 def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t, double st, double err, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
     cdef Py_ssize_t size = x.shape[0]
@@ -167,3 +168,30 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     return sum_logp
 
+def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3., int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
+
+    if cdf_array is None:
+        cdf_array = np.empty(2*N+1, dtype=np.double)
+
+    cdef np.ndarray[double, ndim=1] x = np.linspace(-time, time, 2*N+1)
+
+    cdef double* cdf_ptr = cdf(v, sv, a, z, sz, t, st, precision, N, time, <double *> cdf_array.data)
+
+    return x, cdf_array
+
+def split_cdf(x, np.ndarray[double, ndim=1] data, int N=500):
+    x = x.copy()
+    data = data.copy()
+
+    # lower bound is reversed
+    x_lb = -x[:N-1][::-1]
+    lb = data[:N-1][::-1]
+    # lower bound is cumulative in the wrong direction
+    lb = np.cumsum(np.concatenate([np.array([0]), -np.diff(lb)]))
+
+    x_ub = x[N:]
+    ub = data[N:]
+    # ub does not start at 0
+    ub -= ub[0]
+
+    return (x_lb, lb, x_ub, ub)

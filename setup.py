@@ -2,6 +2,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 import numpy as np
 import os
+from glob import glob
 
 setup(
     name="HDDM",
@@ -25,6 +26,6 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.c"])]
+    ext_modules = [Extension("wfpt", ["src/wfpt.c"] + glob("src/fast-dm/*.c"))]
 )
 
