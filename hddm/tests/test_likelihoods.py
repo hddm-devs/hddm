@@ -10,7 +10,7 @@ from hddm.likelihoods import *
 from hddm.generate import *
 from scipy.integrate import *
 from scipy.stats import kstest
-
+from scipy.optimize import fmin_powell
 from nose import SkipTest
 
 np.random.seed(3123)
@@ -379,14 +379,14 @@ def test_chisquare_min(repeats=10):
 
         wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
         samples = wfpt.random(size=50000, **params)
-        chisquare = wfpt.chisquare(samples, **params)
+        chisquare = wfpt.objective(samples, **params)
 
         # compare it to other chisquares around that area
         params_test = copy(params)
         for test_param in ('v', 'sv', 'a', 'z', 'sz', 't', 'st'):
             params_test[test_param] += .05
 
-        chisquare_cmp = wfpt.chisquare(samples, **params_test)
+        chisquare_cmp = wfpt.objective(samples, **params_test)
 
         assert chisquare < chisquare_cmp
 
@@ -395,11 +395,24 @@ def test_chisquare_min(repeats=10):
         for test_param in ('v', 'sv', 'a', 'z', 'sz', 't', 'st'):
             params_test[test_param] -= .05
 
-        chisquare_cmp = wfpt.chisquare(samples, **params_test)
+        chisquare_cmp = wfpt.objective(samples, **params_test)
 
         assert chisquare < chisquare_cmp
 
+def test_chisquare_recovery(repeats=10):
+    for i in range(repeats):
+        params = hddm.generate.gen_rand_params()
 
+        wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
+        samples = wfpt.random(size=50000, **params)
+
+        obj = lambda (v, a, t): wfpt.objective(samples, v=v, a=a, t=t, z=.5, sv=0, st=0, sz=0)
+
+        recovered_params = fmin_powell(obj, [1, 2, .3])
+
+        print [params['v'], params['a'], params['t']]
+        print recovered_params
+        #np.testing.assert_array_almost_equal([params['v'], params['a'], params['t']], recovered_params, 1)
 
 
 if __name__=='__main__':

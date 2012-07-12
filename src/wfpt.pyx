@@ -184,13 +184,13 @@ def split_cdf(x, np.ndarray[double, ndim=1] data, int N=500):
     data = data.copy()
 
     # lower bound is reversed
-    x_lb = -x[:N-1][::-1]
-    lb = data[:N-1][::-1]
+    x_lb = -x[:N][::-1]
+    lb = data[:N][::-1]
     # lower bound is cumulative in the wrong direction
     lb = np.cumsum(np.concatenate([np.array([0]), -np.diff(lb)]))
 
-    x_ub = x[N:]
-    ub = data[N:]
+    x_ub = x[N+1:]
+    ub = data[N+1:]
     # ub does not start at 0
     ub -= ub[0]
 

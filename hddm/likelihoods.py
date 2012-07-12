@@ -79,19 +79,17 @@ class wfpt_gen(stats.distributions.rv_continuous):
         self._size = size
         return self._rvs(v, sv, a, z, sz, t, st)
 
-    def chisquare(self, x, v, sv, a, z, sz, t, st):
+    def objective(self, data, v, sv, a, z, sz, t, st, **kwargs):
         """Chi square between empirical and theoretical quantiles.
         """
-        quantiles = (.005, .1, .3, .5, .7, .9, .995)
-        probs = (.005, .095, .2, .2, .2, .2, .095)
-        cum_probs = np.cumsum(probs)
+        quantiles = np.array((.005, .1, .3, .5, .7, .9, .995))
 
-        x_ub = x[x>0]
-        x_lb = -x[x<0]
+        data_ub = data[data>0]
+        data_lb = -data[data<0]
 
         # extract empirical quantiles
-        q_ub_emp = mquantiles(x_ub, prob=quantiles)
-        q_lb_emp = mquantiles(x_lb, prob=quantiles)
+        q_ub_emp = mquantiles(data_ub, prob=quantiles)
+        q_lb_emp = mquantiles(data_lb, prob=quantiles)
 
         # generate CDF
         x_cdf, cdf = hddm.wfpt.gen_cdf(v, sv, a, z, sz, t, st)
@@ -108,8 +106,8 @@ class wfpt_gen(stats.distributions.rv_continuous):
         p_ub_theo = cdf_ub[q_ub_theo_idx]
         p_lb_theo = cdf_lb[q_lb_theo_idx]
 
-        chi2_ub,_ = stats.chisquare(p_ub_theo, cum_probs)
-        chi2_lb,_ = stats.chisquare(p_lb_theo, cum_probs)
+        chi2_ub,_ = stats.chisquare(p_ub_theo, quantiles)
+        chi2_lb,_ = stats.chisquare(p_lb_theo, quantiles)
 
         return chi2_ub + chi2_lb
 
