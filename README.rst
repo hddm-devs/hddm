@@ -59,7 +59,7 @@ example.conf
 
 Then call hddm_fit.py:
 
-::
+.. code-block:: bash
 
     hddm_fit.py --samples 10000 --burn 5000 example.conf mydata.csv
 
@@ -68,7 +68,7 @@ Python
 
 Of course, you can also use HDDM directly from within Python:
 
-::
+.. code-block:: python
 
    import hddm
 
