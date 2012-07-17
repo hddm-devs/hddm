@@ -82,7 +82,11 @@ class wfpt_gen(stats.distributions.rv_continuous):
     def objective(self, data, v, sv, a, z, sz, t, st, **kwargs):
         """Chi square between empirical and theoretical quantiles.
         """
+        if t - st/2. < 0 or z - sz/2. < 0 or z + sz/2. > 1 or a < 0 or sv < 0 or st < 0 or sz < 0:
+            return np.inf
+
         quantiles = np.array((.005, .1, .3, .5, .7, .9, .995))
+        diff_quantiles = np.diff(quantiles)
 
         data_ub = data[data>0]
         data_lb = -data[data<0]
@@ -106,8 +110,15 @@ class wfpt_gen(stats.distributions.rv_continuous):
         p_ub_theo = cdf_ub[q_ub_theo_idx]
         p_lb_theo = cdf_lb[q_lb_theo_idx]
 
-        chi2_ub,_ = stats.chisquare(p_ub_theo, quantiles)
-        chi2_lb,_ = stats.chisquare(p_lb_theo, quantiles)
+        diff_ub_theo = np.diff(p_ub_theo)
+        diff_lb_theo = np.diff(p_lb_theo)
+
+        # chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(p_ub_theo))
+        # chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(p_lb_theo))
+        err = np.sum(diff_quantiles - diff_ub_theo)**2 + np.sum(diff_quantiles - diff_lb_theo)**2
+
+        chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(p_ub_theo))
+        chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(p_lb_theo))
 
         return chi2_ub + chi2_lb
 

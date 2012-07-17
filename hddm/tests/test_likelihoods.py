@@ -373,6 +373,14 @@ def test_cmp_cdf_pdf(repeats=10):
         np.testing.assert_array_equal(x, x_cdf)
         np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
 
+def test_cdf_invalid():
+    params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
+
+    wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
+    samples = wfpt.random(size=50000, **params)
+
+    print wfpt.objective(samples, v=1, a=2, t=-3, z=.5, sv=0, st=0, sz=0)
+
 def test_chisquare_min(repeats=10):
     for i in range(repeats):
         params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
@@ -399,19 +407,22 @@ def test_chisquare_min(repeats=10):
 
         assert chisquare < chisquare_cmp
 
+
 def test_chisquare_recovery(repeats=10):
     for i in range(repeats):
         params = hddm.generate.gen_rand_params()
 
         wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
         samples = wfpt.random(size=50000, **params)
+        params_set = [params['v'], params['a'], params['t']]
 
         obj = lambda (v, a, t): wfpt.objective(samples, v=v, a=a, t=t, z=.5, sv=0, st=0, sz=0)
 
-        recovered_params = fmin_powell(obj, [1, 2, .3])
+        recovered_params = fmin_powell(obj, params_set, disp=True)
 
-        print [params['v'], params['a'], params['t']]
+        print params_set
         print recovered_params
+
         #np.testing.assert_array_almost_equal([params['v'], params['a'], params['t']], recovered_params, 1)
 
 
