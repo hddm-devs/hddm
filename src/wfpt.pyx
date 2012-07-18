@@ -168,7 +168,8 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     return sum_logp
 
-def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3., int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
+def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3., 
+            int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
 
     if cdf_array is None:
         cdf_array = np.empty(2*N+1, dtype=np.double)
@@ -179,18 +180,19 @@ def gen_cdf(double v, double sv, double a, double z, double sz, double t, double
 
     return x, cdf_array
 
-def split_cdf(x, np.ndarray[double, ndim=1] data, int N=500):
-    x = x.copy()
-    data = data.copy()
+def split_cdf(np.ndarray[double, ndim=1] x, np.ndarray[double, ndim=1] data):
+    
+    #get length of data
+    cdef int N = (len(data) -1) / 2 
 
     # lower bound is reversed
-    x_lb = -x[:N][::-1]
-    lb = data[:N][::-1]
+    cdef np.ndarray[double, ndim=1] x_lb = -x[:N][::-1]
+    cdef np.ndarray[double, ndim=1] lb = data[:N][::-1]
     # lower bound is cumulative in the wrong direction
     lb = np.cumsum(np.concatenate([np.array([0]), -np.diff(lb)]))
 
-    x_ub = x[N+1:]
-    ub = data[N+1:]
+    cdef np.ndarray[double, ndim=1] x_ub = x[N+1:]
+    cdef np.ndarray[double, ndim=1] ub = data[N+1:]
     # ub does not start at 0
     ub -= ub[0]
 

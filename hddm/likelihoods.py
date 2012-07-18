@@ -82,7 +82,7 @@ class wfpt_gen(stats.distributions.rv_continuous):
     def objective(self, data, v, sv, a, z, sz, t, st, **kwargs):
         """Chi square between empirical and theoretical quantiles.
         """
-        if t - st/2. < 0 or z - sz/2. < 0 or z + sz/2. > 1 or a < 0 or sv < 0 or st < 0 or sz < 0:
+        if t - st/2. < 0 or z - sz/2. < 0 or z + sz/2. > 1 or a <= 0 or sv < 0 or st < 0 or sz < 0:
             return np.inf
 
         quantiles = np.array((.005, .1, .3, .5, .7, .9, .995))
@@ -98,6 +98,9 @@ class wfpt_gen(stats.distributions.rv_continuous):
         # generate CDF
         x_cdf, cdf = hddm.wfpt.gen_cdf(v, sv, a, z, sz, t, st)
         x_cdf_lb, cdf_lb, x_cdf_ub, cdf_ub = hddm.wfpt.split_cdf(x_cdf, cdf)
+        assert(min(np.diff(cdf_ub)) >= 0)
+        assert(min(np.diff(cdf_lb)) >= 0)
+
 
         # normalize CDFs
         cdf_ub /= cdf_ub[-1]
