@@ -5,7 +5,11 @@ import pymc as pm
 import hddm
 import sys
 
+from scipy import stats
 from scipy.stats import scoreatpercentile
+from scipy.stats.mstats import mquantiles
+from scipy.optimize import fmin_powell
+
 from numpy import array, zeros, ones
 from copy import deepcopy
 from time import time
@@ -27,7 +31,7 @@ def flip_errors(data):
 
     # Copy data
     data = data.copy()
-    
+
     # Flip sign for lower boundary response
     idx = data['response'] == 0
     data['rt'][idx] = -data['rt'][idx]
@@ -851,6 +855,63 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
                           title_str = None, samples_summary=samples_summary,
                           marker = 'o', handle = s_handles[i_s][i_subj])
 
+
+def _quantiles_objective(ub_data_qval, lb_data_qval, gen_cdf_func, diff_quantiles, params):
+
+
+
+    # generate CDF
+    x_cdf, cdf = gen_cdf_func(**params)
+    x_cdf_lb, cdf_lb, x_cdf_ub, cdf_ub = hddm.wfpt.split_cdf(x_cdf, cdf)
+
+    # normalize CDFs
+    cdf_ub /= cdf_ub[-1]
+    cdf_lb /= cdf_lb[-1]
+
+    # extract theoretical RT indices
+    ub_theo_idx = np.searchsorted(x_cdf_ub, ub_data_qval)
+    lb_theo_idx = np.searchsorted(x_cdf_lb, lb_data_qval)
+
+    #get probablities associated with theoretical RT indices
+    ub_theo_p = cdf_ub[ub_theo_idx]
+    lb_theo_p = cdf_lb[lb_theo_idx]
+
+    #chisquare
+    diff_ub_theo = np.diff(ub_theo_p)
+    diff_lb_theo = np.diff(lb_theo_p)
+    chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(ub_theo_p))
+    chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(lb_theo_p))
+    score = chi2_ub + chi2_lb
+
+    assert(score > 0)
+
+    return score
+
+def quantiles_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, quantiles = (.005, .1, .3, .5, .7, .9, .995)):
+
+    quantiles = np.array(quantiles)
+    diff_quantiles = np.diff(quantiles)
+    opt_keys = opt_kwargs.keys()
+    opt_values = opt_kwargs.values()
+    params = fixed_kwargs.copy()
+
+    data_ub = data[data>0]
+    data_lb = -data[data<0]
+
+    # extract value of quantiles
+    ub_data_qval = mquantiles(data_ub, prob=quantiles)
+    lb_data_qval = mquantiles(data_lb, prob=quantiles)
+
+    def objective(values):
+        params.update(zip(opt_keys, values))
+        return _quantiles_objective(ub_data_qval, lb_data_qval, gen_cdf_func,
+                                                 diff_quantiles, params)
+
+    opt_values = fmin_powell(objective, opt_values, disp=True)
+
+    opt_res = dict(zip(opt_keys, opt_values))
+
+    return opt_res
 
 if __name__ == "__main__":
     import doctest

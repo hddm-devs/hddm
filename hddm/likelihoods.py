@@ -79,52 +79,6 @@ class wfpt_gen(stats.distributions.rv_continuous):
         self._size = size
         return self._rvs(v, sv, a, z, sz, t, st)
 
-    def objective(self, data, v, sv, a, z, sz, t, st, **kwargs):
-        """Chi square between empirical and theoretical quantiles.
-        """
-        if t - st/2. < 0 or z - sz/2. < 0 or z + sz/2. > 1 or a <= 0 or sv < 0 or st < 0 or sz < 0:
-            return np.inf
-
-        quantiles = np.array((.005, .1, .3, .5, .7, .9, .995))
-        diff_quantiles = np.diff(quantiles)
-
-        data_ub = data[data>0]
-        data_lb = -data[data<0]
-
-        # extract empirical quantiles
-        q_ub_emp = mquantiles(data_ub, prob=quantiles)
-        q_lb_emp = mquantiles(data_lb, prob=quantiles)
-
-        # generate CDF
-        x_cdf, cdf = hddm.wfpt.gen_cdf(v, sv, a, z, sz, t, st)
-        x_cdf_lb, cdf_lb, x_cdf_ub, cdf_ub = hddm.wfpt.split_cdf(x_cdf, cdf)
-        assert(min(np.diff(cdf_ub)) >= 0)
-        assert(min(np.diff(cdf_lb)) >= 0)
-
-
-        # normalize CDFs
-        cdf_ub /= cdf_ub[-1]
-        cdf_lb /= cdf_lb[-1]
-
-        # extract theoretical quantiles
-        q_ub_theo_idx = np.searchsorted(x_cdf_ub, q_ub_emp)
-        q_lb_theo_idx = np.searchsorted(x_cdf_lb, q_lb_emp)
-
-        p_ub_theo = cdf_ub[q_ub_theo_idx]
-        p_lb_theo = cdf_lb[q_lb_theo_idx]
-
-        diff_ub_theo = np.diff(p_ub_theo)
-        diff_lb_theo = np.diff(p_lb_theo)
-
-        # chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(p_ub_theo))
-        # chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(p_lb_theo))
-        err = np.sum(diff_quantiles - diff_ub_theo)**2 + np.sum(diff_quantiles - diff_lb_theo)**2
-
-        chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(p_ub_theo))
-        chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(p_lb_theo))
-
-        return chi2_ub + chi2_lb
-
 
 wfpt_like = scipy_stochastic(wfpt_gen, name='wfpt', longname="""Wiener first passage time likelihood function""", extradoc="""Wiener first passage time (WFPT) likelihood function of the Ratcliff Drift Diffusion Model (DDM). Models two choice decision making tasks as a drift process that accumulates evidence across time until it hits one of two boundaries and executes the corresponding response. Implemented using the Navarro & Fuss (2009) method.
 
