@@ -105,10 +105,12 @@ class HDDM(kabuki.Hierarchical):
     """
 
     def __init__(self, data, bias=False,
-                 include=(), wiener_params=None, **kwargs):
+                 include=(), wiener_params=None, group_only_nodes=(), **kwargs):
 
         # Flip sign for lower boundary RTs
         data = hddm.utils.flip_errors(data)
+
+        self.all_param_names = ('v', 'sv', 'a', 'z', 'sz', 't', 'st')
 
         include_params = set()
 
@@ -135,12 +137,14 @@ class HDDM(kabuki.Hierarchical):
         cdf_bound = max(np.abs(data['rt'])) + 1;
         self.wfpt.cdf_range = (-cdf_bound, cdf_bound)
 
+        self.group_only_nodes = group_only_nodes
+
         super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
 
     def _create_knodes_set(self, name, lower=None, upper=None, value=0):
         knodes = OrderedDict()
 
-        if self.is_group_model:
+        if self.is_group_model and name not in self.group_only_nodes:
             if lower is None and upper is None:
                 g = Knode(pm.Normal, '%s' % name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
             else:
@@ -185,20 +189,22 @@ class HDDM(kabuki.Hierarchical):
         return knodes
 
     def _create_wfpt_knode(self, knodes):
-        if self.is_group_model:
-            postfix = '_subj'
-        else:
-            postfix = ''
+        knode_name = {}
+        for param_name in self.all_param_names:
+            if self.is_group_model and param_name not in self.group_only_nodes:
+                knode_name[param_name] = '{name}_subj'.format(name=param_name)
+            else:
+                knode_name[param_name] = param_name
 
         wfpt_parents = OrderedDict()
-        wfpt_parents['a'] = knodes['a%s' % postfix]
-        wfpt_parents['v'] = knodes['v%s' % postfix]
-        wfpt_parents['t'] = knodes['t%s' % postfix]
+        wfpt_parents['a'] = knodes[knode_name['a']]
+        wfpt_parents['v'] = knodes[knode_name['v']]
+        wfpt_parents['t'] = knodes[knode_name['t']]
 
-        wfpt_parents['sv'] = knodes['sv%s' % postfix] if 'sv' in self.include else 0
-        wfpt_parents['sz'] = knodes['sz%s' % postfix] if 'sz' in self.include else 0
-        wfpt_parents['st'] = knodes['st%s' % postfix] if 'st' in self.include else 0
-        wfpt_parents['z'] = knodes['z%s' % postfix] if 'z' in self.include else 0.5
+        wfpt_parents['sv'] = knodes[knode_name['sv']] if 'sv' in self.include else 0
+        wfpt_parents['sz'] = knodes[knode_name['sz']] if 'sz' in self.include else 0
+        wfpt_parents['st'] = knodes[knode_name['st']] if 'st' in self.include else 0
+        wfpt_parents['z'] = knodes[knode_name['z']] if 'z' in self.include else 0.5
 
         return Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
 
