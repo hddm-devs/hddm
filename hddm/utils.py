@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pymc as pm
 import hddm
 import sys
+import kabuki
 
 from scipy import stats
 from scipy.stats import scoreatpercentile
@@ -856,59 +857,77 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
                           marker = 'o', handle = s_handles[i_s][i_subj])
 
 
-def _quantiles_objective(ub_data_qval, lb_data_qval, gen_cdf_func, diff_quantiles, params):
-
-
+def _quantiles_chisquare_objective(emp_rt, n_samples, freq_obs, gen_cdf_func, params):
+    """
+    objective function for quantile chi square optimization
+    Input:
+        emp_rt <array> - the empirical rt values in the tested quantiles
+        gen_cdf_fun <function> - a cdf generating function
+        n_samples <int> - number of samples in the data
+        freq_obs <array> - the frequancy of observed values in each bin
+        params - the parameters of teh cdf generating function
+    """
 
     # generate CDF
-    x_cdf, cdf = gen_cdf_func(**params)
-    x_cdf_lb, cdf_lb, x_cdf_ub, cdf_ub = hddm.wfpt.split_cdf(x_cdf, cdf)
-
-    # normalize CDFs
-    cdf_ub /= cdf_ub[-1]
-    cdf_lb /= cdf_lb[-1]
+    try:
+        x_cdf, cdf = gen_cdf_func(**params)
+    except ValueError:
+        return np.inf
 
     # extract theoretical RT indices
-    ub_theo_idx = np.searchsorted(x_cdf_ub, ub_data_qval)
-    lb_theo_idx = np.searchsorted(x_cdf_lb, lb_data_qval)
+    theo_idx = np.searchsorted(x_cdf, emp_rt)
 
     #get probablities associated with theoretical RT indices
-    ub_theo_p = cdf_ub[ub_theo_idx]
-    lb_theo_p = cdf_lb[lb_theo_idx]
+    theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
     #chisquare
-    diff_ub_theo = np.diff(ub_theo_p)
-    diff_lb_theo = np.diff(lb_theo_p)
-    chi2_ub,_ = stats.chisquare(diff_quantiles, np.diff(ub_theo_p))
-    chi2_lb,_ = stats.chisquare(diff_quantiles, np.diff(lb_theo_p))
-    score = chi2_ub + chi2_lb
-
-    assert(score > 0)
+    theo_proportion = np.diff(theo_cdf)
+    freq_exp = theo_proportion * n_samples
+    score,_ = stats.chisquare(freq_obs, freq_exp)
 
     return score
 
-def quantiles_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, quantiles = (.005, .1, .3, .5, .7, .9, .995)):
+def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, quantiles = (.1, .3, .5, .7, .9 )):
+    """
+    quantile chi square optimization
+    Input:
+        data
+        gen_cdf_fun <function> - a cdf generating function
+        opt_kwargs <dict> - a dictionary of the parameters that are going to be optimized with their inital value
+        fixed_kwargs <dict> - a dictionary of additional parameters and their value
+        quantiles <sequance> - the quantiles sequance
+    """
 
+    #get proportion of data fall between the quantiles
     quantiles = np.array(quantiles)
-    diff_quantiles = np.diff(quantiles)
+    pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
+    neg_proportion = pos_proportion[::-1]
+    proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
+    n_samples = len(data)
+
+    # extract empirical RT at the quantiles
+    ub_emp_rt = mquantiles(data[data>0], prob=quantiles)
+    lb_emp_rt = -mquantiles(-data[data<0], prob=quantiles)
+    emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
+
+    #get frequancy of observed values
+    freq_obs = np.zeros(len(proportion))
+    freq_obs[:len(quantiles)+1] = sum(data<0) * neg_proportion
+    freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
+
+    #define objective
     opt_keys = opt_kwargs.keys()
     opt_values = opt_kwargs.values()
     params = fixed_kwargs.copy()
-
-    data_ub = data[data>0]
-    data_lb = -data[data<0]
-
-    # extract value of quantiles
-    ub_data_qval = mquantiles(data_ub, prob=quantiles)
-    lb_data_qval = mquantiles(data_lb, prob=quantiles)
-
     def objective(values):
         params.update(zip(opt_keys, values))
-        return _quantiles_objective(ub_data_qval, lb_data_qval, gen_cdf_func,
-                                                 diff_quantiles, params)
+        return _quantiles_chisquare_objective(emp_rt=emp_rt, gen_cdf_func=gen_cdf_func,
+                                              n_samples=n_samples, freq_obs=freq_obs, params=params)
 
+    #optimize
     opt_values = fmin_powell(objective, opt_values, disp=True)
 
+    #prepare output
     opt_res = dict(zip(opt_keys, opt_values))
 
     return opt_res

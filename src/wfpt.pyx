@@ -171,6 +171,10 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3., 
             int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
 
+    if (sv < 0) or (a <=0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2.>1) or \
+    (z-sz/2.<0) or (t-st/2.<0) or (t<0):
+        raise ValueError("at least one of the parameters is out of the support")
+
     if cdf_array is None:
         cdf_array = np.empty(2*N+1, dtype=np.double)
 

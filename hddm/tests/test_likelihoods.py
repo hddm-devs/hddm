@@ -409,21 +409,54 @@ def test_chisquare_min(repeats=10):
 
 
 def test_chisquare_recovery(repeats=10):
-    for i in range(repeats):
-        params = hddm.generate.gen_rand_params()
 
-        wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
-        samples = wfpt.random(size=50000, **params)
-        params_set = [params['v'], params['a'], params['t']]
+    #init
+    initial_value = {'a': 1,
+                     'v': 0,
+                     'z': 0.5,
+                     't': 0.01,
+                     'st': 0,
+                     'sv': 0,
+                     'sz': 0}
 
-        obj = lambda (v, a, t): wfpt.objective(samples, v=v, a=a, t=t, z=.5, sv=0, st=0, sz=0)
+    all_params = set(['a','v','t','z','st','sz','sv'])
+    include_sets = [set(['a','v','t']),
+                  set(['a','v','t','sv']),
+                  set(['a','v','t','st']),
+                  set(['a','v','t','sz'])]
 
-        recovered_params = fmin_powell(obj, params_set, disp=True)
+    wfpt = hddm.likelihoods.wfpt_gen(name='wfpt', longname="Wiener")
 
-        print params_set
-        print recovered_params
+    for include in include_sets:
+        for i in range(repeats):
+            #generate params
+            true_params = hddm.generate.gen_rand_params(include)
 
-        #np.testing.assert_array_almost_equal([params['v'], params['a'], params['t']], recovered_params, 1)
+            #generate samples
+            samples = wfpt.random(size=50000, **true_params)
+
+            #set opt_params and fixed_params
+            opt_params = {}
+            fixed_params = {}
+            for param in include:
+                opt_params[param] = initial_value[param]
+            for param in all_params.differnce(include):
+                fixed_params[param] = params[true_param]
+
+            #optimize
+            recovered_params = hddm.utils.quantiles_optimization(samples, hddm.wfpt.gen_cdf,
+                                                                 opt_params, fixed_params)
+
+            #compare results to true values
+            opt_values = np.zeros(len(include))
+            recoverd_params = np.zeros(len(include))
+            for (idx, param) in enumerate(opt_params.iterkeys()):
+                true_values[idx] = true_params[param]
+                recovered_values[idx] = recovered_paramsppar
+            print opt_params
+            print recovered_params
+
+            np.testing.assert_array_almost_equal(true_values, recovered_values, 2)
 
 
 if __name__=='__main__':
