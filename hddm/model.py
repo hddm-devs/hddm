@@ -224,12 +224,18 @@ class HDDM(kabuki.Hierarchical):
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
 class HDDMTransform(HDDM):
+    trans_nodes = ('a', 't', 'z', 'sz', 'sv', 'st')
     def pre_sample(self):
         if not self.is_group_model:
             return
 
-        includes = [include + '_trans' for include in self.include]
-        params = ['v', 't_trans', 'a_trans'] + includes
+        params = []
+        for name in self.all_param_names:
+            if name in self.include and name not in self.group_only_nodes:
+                if name in self.trans_nodes:
+                    params.append(name + '_trans')
+                else:
+                    params.append(name)
 
         nodes = self.nodes_db['node'][self.nodes_db['knode_name'].isin(params)]
         for node in nodes:
@@ -239,7 +245,7 @@ class HDDMTransform(HDDM):
         name = 'z'
         knodes = OrderedDict()
 
-        if self.is_group_model:
+        if self.is_group_model and 'z' not in self.group_only_nodes:
             g_trans = Knode(pm.Normal,
                       'z_trans',
                       mu=0,
@@ -261,16 +267,16 @@ class HDDMTransform(HDDM):
                                tau=tau, value=0, depends=('subj_idx',),
                                subj=True, plot=False)
 
-            subj = Knode(pm.InvLogit, 'z_subj', ltheta=subj_trans,
-                                   plot=True, trace=True, subj=True)
+            subj = Knode(pm.InvLogit, 'z_subj', ltheta=subj_trans, depends=('subj_idx',),
+                         plot=True, trace=True, subj=True)
 
-            knodes['z_trans'] = g_trans
-            knodes['z'] = g
-            knodes['z_var'] = var
-            knodes['z_tau'] = tau
+            knodes['z_trans']      = g_trans
+            knodes['z']            = g
+            knodes['z_var']        = var
+            knodes['z_tau']        = tau
 
             knodes['z_subj_trans'] = subj_trans
-            knodes['z_subj'] = subj
+            knodes['z_subj']       = subj
 
         else:
             g_trans = Knode(pm.Normal, 'z_trans', mu=0, tau=15**-2,
@@ -288,7 +294,7 @@ class HDDMTransform(HDDM):
 
     def _create_knodes_set_lower_bound(self, name, value=0):
         knodes = OrderedDict()
-        if self.is_group_model:
+        if self.is_group_model and name not in self.group_only_nodes:
             g_trans = Knode(pm.Normal, '%s_trans' % name, mu=0,
                             tau=15**-2, value=value,
                             depends=self.depends[name], plot=False)
@@ -327,7 +333,7 @@ class HDDMTransform(HDDM):
     def _create_knodes_set(self, name, lower=None, upper=None, value=0):
         knodes = OrderedDict()
 
-        if self.is_group_model:
+        if self.is_group_model and name not in self.group_only_nodes:
             var = Knode(pm.Uniform, '%s_var' % name,
                         lower=1e-10, upper=100, value=.1)
 

@@ -106,6 +106,16 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return model.mc
 
+    def test_HDDMTransform_group_only_group_nodes(self, assert_=False):
+        group_only_nodes = [[], ['z'], ['z', 'st'], ['v', 'a']]
+        for nodes in group_only_nodes:
+            params = hddm.generate.gen_rand_params(include=nodes)
+            data, params_true = hddm.generate.gen_rand_data(params, samples=500, subjs=5)
+            model = hddm.model.HDDMTransform(data, include=nodes, group_only_nodes=nodes, is_group_model=True)
+            for node in nodes:
+                self.assertNotIn(node+'_subj', model.nodes_db.index)
+                self.assertIn(node, model.nodes_db.index)
+
     def test_cont(self, assert_=False):
         raise SkipTest("Disabled.")
         params_true = hddm.generate.gen_rand_params(include=())
