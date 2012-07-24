@@ -440,23 +440,22 @@ def test_chisquare_recovery(repeats=10):
             fixed_params = {}
             for param in include:
                 opt_params[param] = initial_value[param]
-            for param in all_params.differnce(include):
-                fixed_params[param] = params[true_param]
+            for param in all_params.difference(include):
+                fixed_params[param] = true_params[param]
 
             #optimize
-            recovered_params = hddm.utils.quantiles_optimization(samples, hddm.wfpt.gen_cdf,
-                                                                 opt_params, fixed_params)
+            recovered_params = hddm.utils.quantiles_chi2square_optimization(samples, hddm.wfpt.gen_cdf,
+                                                                 opt_params, fixed_params, n_iter=2)
 
             #compare results to true values
-            opt_values = np.zeros(len(include))
-            recoverd_params = np.zeros(len(include))
-            for (idx, param) in enumerate(opt_params.iterkeys()):
+            true_values = np.zeros(len(include))
+            recovered_values = np.zeros(len(include))
+            for (idx, param) in enumerate(include):
                 true_values[idx] = true_params[param]
-                recovered_values[idx] = recovered_paramsppar
-            print opt_params
-            print recovered_params
+                recovered_values[idx] = recovered_params[param]
+                print '%s: %.3f %.3f' % (param, true_params[param], recovered_params[param])
 
-            np.testing.assert_array_almost_equal(true_values, recovered_values, 2)
+            np.testing.assert_array_almost_equal(true_values, recovered_values, 1)
 
 
 if __name__=='__main__':

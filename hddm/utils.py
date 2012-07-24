@@ -887,7 +887,8 @@ def _quantiles_chisquare_objective(emp_rt, n_samples, freq_obs, gen_cdf_func, pa
 
     return score
 
-def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, quantiles = (.1, .3, .5, .7, .9 )):
+def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, n_iter=10,
+                                      quantiles = (.1, .3, .5, .7, .9 ), max_inital_values_tries = 100):
     """
     quantile chi square optimization
     Input:
@@ -924,11 +925,31 @@ def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwar
         return _quantiles_chisquare_objective(emp_rt=emp_rt, gen_cdf_func=gen_cdf_func,
                                               n_samples=n_samples, freq_obs=freq_obs, params=params)
 
-    #optimize
-    opt_values = fmin_powell(objective, opt_values, disp=True)
+    #optimize n_iter times
+    best_fopt = np.inf
+    for i in xrange(n_iter):
+
+        #generate inital+values
+        zero_prob = True
+        initial_values_tries_counter = 0
+        while zero_prob and (max_inital_values_tries > initial_values_tries_counter):
+            initial_values_tries_counter += 1
+            initial_values = opt_values + np.random.rand(len(opt_values))
+            if not np.isinf(objective(initial_values)):
+                zero_prob = False
+        if zero_prob:
+            print opt_values
+            raise ValueError("cannot generating inital values. try increasing max_inital_values_tries")
+
+        #optimize
+        print initial_values
+        results = fmin_powell(objective, initial_values, full_output=True)
+        if results[1] < best_fopt:
+            best_fopt = results[1]
+            best_opt_values = results[0]
 
     #prepare output
-    opt_res = dict(zip(opt_keys, opt_values))
+    opt_res = dict(zip(opt_keys, best_opt_values))
 
     return opt_res
 
