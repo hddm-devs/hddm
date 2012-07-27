@@ -15,13 +15,14 @@ from collections import OrderedDict
 import numpy as np
 import pymc as pm
 import matplotlib.pyplot as plt
-
 import hddm
 import kabuki
 import kabuki.step_methods as steps
+import scipy as sp
+
 from kabuki.hierarchical import Knode
 from copy import deepcopy
-import scipy as sp
+from scipy.optimize import fmin_powell
 from scipy import stats
 
 
@@ -129,11 +130,13 @@ class HDDM(kabuki.Hierarchical):
             self.wiener_params = wiener_params
         wp = self.wiener_params
 
-        #set wfpt
-        self.wfpt = deepcopy(hddm.likelihoods.wfpt_like)
-        self.wfpt.rv.wiener_params = wp
+        #set cdf_range
         cdf_bound = max(np.abs(data['rt'])) + 1;
-        self.wfpt.cdf_range = (-cdf_bound, cdf_bound)
+        cdf_range = (-cdf_bound, cdf_bound)
+
+        #set wfpt class
+        self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(wp, sampling_method='cdf',
+                                                                          cdf_range=cdf_range)
 
         super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
 
@@ -200,7 +203,7 @@ class HDDM(kabuki.Hierarchical):
         wfpt_parents['st'] = knodes['st%s' % postfix] if 'st' in self.include else 0
         wfpt_parents['z'] = knodes['z%s' % postfix] if 'z' in self.include else 0.5
 
-        return Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
+        return Knode(self.wfpt_class, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
 
     def create_knodes(self):
         """Returns list of model parameters.
@@ -216,6 +219,40 @@ class HDDM(kabuki.Hierarchical):
         if 'value_range' not in kwargs:
             kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
+
+    def quantiles_chi2square_optimization_single(self, quantiles=(.1, .3, .5, .7, .9 ), verbose=1):
+
+        if self.is_group_model:
+            raise NotImplementedError
+        else:
+            self._quantiles_chi2square_optimization_single(quantiles, verbose)
+
+
+    def _quantiles_chi2square_optimization_single(self, quantiles, verbose):
+
+        #get obs_nodes
+        obs_nodes = self.get_observeds()['node']
+
+        #get all stochastic parents of observed nodes
+        db = self.nodes_db
+        parents = db[(db.stochastic == True) & (db.observed == False)]['node']
+        values = [x.value for x in parents]
+
+        #set quantiles for each observed_node
+        [obs.set_qunatiles_stats(quantiles) for obs in obs_nodes]
+
+        #define objective
+        def objective(values):
+            for (i, value) in enumerate(values):
+                parents[i].value = value
+            return sum([obs.chisquare() for obs in obs_nodes])
+
+        #optimze
+        results = fmin_powell(objective, values, full_output=True)
+
+        if verbose > 0:
+            print self.values
+
 
 class HDDMTransform(HDDM):
     def pre_sample(self):

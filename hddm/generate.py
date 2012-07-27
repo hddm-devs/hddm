@@ -326,7 +326,7 @@ def gen_rand_data(params, method='cdf', **kwargs):
 
     """
 
-    wfpt = deepcopy(hddm.likelihoods.wfpt_like)
+    wfpt = generate_wfpt_stochastic_class(sampling_method=method)
     wfpt.method = method
 
 

@@ -95,6 +95,85 @@ Fast and accurate calculations for first-passage times in Wiener diffusion model
 Navarro & Fuss - Journal of Mathematical Psychology, 2009 - Elsevier
 """)
 
+
+
+def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
+
+    #set wiener_params
+    if wiener_params is None:
+        wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
+                      'use_adaptive':1,
+                      'simps_err':1e-3}
+    wp = wiener_params
+
+    #create likelihood function
+    def wfpt_like(x, v, sv, a, z, sz, t, st):
+        return hddm.wfpt.wiener_like(x, v, sv, a, z, sz, t, st, wp['err'], wp['n_st'],
+                                      wp['n_sz'], wp['use_adaptive'], wp['simps_err'])
+
+    #create random function
+    def random(v, sv, a, z, sz, t, st, size=1):
+        param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
+        sampled_rts = hddm.generate.gen_rts(param_dict, method=sampling_method,
+                                            samples=size, dt=sampling_dt, range_=cdf_range)
+
+    #set pymc node
+    wfpt_pymc = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
+
+
+    #turn pymc node into the final wfpt_node
+    class wfpt_node(wfpt_pymc):
+
+        def cdf_vec(self):
+            return hddm.wfpt.gen_cdf(time=cdf_range[1], **self.parents)
+
+        def set_qunatiles_stats(self, quantiles):
+            """
+            """
+            data = self.value
+
+            #get proportion of data fall between the quantiles
+            quantiles = np.array(quantiles)
+            pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
+            neg_proportion = pos_proportion[::-1]
+            proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
+            self._n_samples = len(data)
+
+            # extract empirical RT at the quantiles
+            ub_emp_rt = mquantiles(data[data>0], prob=quantiles)
+            lb_emp_rt = -mquantiles(-data[data<0], prob=quantiles)
+            self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
+
+            #get frequancy of observed values
+            freq_obs = np.zeros(len(proportion))
+            freq_obs[:len(quantiles)+1] = sum(data<0) * neg_proportion
+            freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
+            self._freq_obs = freq_obs
+
+        def chisquare(self):
+            """
+            """
+            # generate CDF
+            try:
+                x_cdf, cdf = self.cdf_vec()
+            except ValueError:
+                return np.inf
+
+            # extract theoretical RT indices
+            theo_idx = np.searchsorted(x_cdf, self._emp_rt)
+
+            #get probablities associated with theoretical RT indices
+            theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
+
+            #chisquare
+            theo_proportion = np.diff(theo_cdf)
+            freq_exp = theo_proportion * self._n_samples
+            score,_ = stats.chisquare(self._freq_obs, freq_exp)
+
+            return score
+
+    return wfpt_node
+
 def wiener_like_gpu(value, v, sv, a, z, t, out, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""
     # Check if parameters are in allowed range
