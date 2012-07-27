@@ -25,8 +25,147 @@ import scipy as sp
 from scipy import stats
 
 
+class AccumulatorModel(kabuki.Hierarchical):
+    def create_family_normal(self, name, value=0):
+        knodes = OrderedDict()
 
-class HDDM(kabuki.Hierarchical):
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Normal, '%s' % name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
+            var = Knode(pm.Uniform, '%s_var' % name, lower=1e-10, upper=100, value=.1)
+            tau = Knode(pm.Deterministic, '%s_tau' % name, doc='%s_tau' % name, eval=lambda x: x**-2, x=var, plot=False, trace=False)
+            subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau, value=value, depends=('subj_idx',), subj=True)
+            knodes['%s'%name] = g
+            knodes['%s_var'%name] = var
+            knodes['%s_tau'%name] = tau
+            knodes['%s_subj'%name] = subj
+
+        else:
+            knodes[name] = Knode(pm.Normal, name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
+
+        return knodes
+
+
+    def create_family_trunc_normal(self, name, value=0, lower=None,
+                                   upper=None, var_lower=1e-10, var_upper=100, var_value=.1):
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Uniform, '%s' % name, lower=lower,
+                      upper=upper, value=value, depends=self.depends[name])
+            var = Knode(pm.Uniform, '%s_var' % name, lower=var_lower,
+                        upper=var_upper, value=var_value)
+            tau = Knode(pm.Deterministic, '%s_tau' % name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        plot=False, trace=False)
+            subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g,
+                         tau=tau, a=lower, b=upper, value=value,
+                         depends=('subj_idx',), subj=True)
+
+            knodes['%s'%name] = g
+            knodes['%s_var'%name] = var
+            knodes['%s_tau'%name] = tau
+            knodes['%s_subj'%name] = subj
+
+        else:
+            knodes[name] = Knode(pm.Uniform, name, lower=lower,
+                                 upper=upper, value=value, depends=self.depends[name])
+
+        return knodes
+
+
+    def create_family_invlogit(self, name, value, g_mu=0, g_tau=15**-2,
+                               var_lower=1e-10, var_upper=100, var_value=.1):
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g_trans = Knode(pm.Normal,
+                      '%s_trans'%name,
+                      mu=g_mu,
+                      tau=g_tau,
+                      #logit transformed value
+                      value=np.log(value) - np.log(1-value),
+                      depends=self.depends[name],
+                      plot=False
+            )
+
+            g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True, trace=True)
+
+            var = Knode(pm.Uniform, '%s_var'%name, lower=var_lower, upper=var_upper, value=var_value)
+
+            tau = Knode(pm.Deterministic, '%s_tau'%name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        plot=False, trace=False)
+
+            subj_trans = Knode(pm.Normal, '%s_subj_trans'%name, mu=g_trans,
+                               tau=tau, value=np.log(value)-np.log(1-value), depends=('subj_idx',),
+                               subj=True, plot=False)
+
+            subj = Knode(pm.InvLogit, '%s_subj'%name, ltheta=subj_trans, depends=('subj_idx',),
+                         plot=True, trace=True, subj=True)
+
+            knodes['%s_trans'%name]      = g_trans
+            knodes['%s'%name]            = g
+            knodes['%s_var'%name]        = var
+            knodes['%s_tau'%name]        = tau
+
+            knodes['%s_subj_trans'%name] = subj_trans
+            knodes['%s_subj'%name]       = subj
+
+        else:
+            g_trans = Knode(pm.Normal, '%s_trans'%name, mu=g_mu, tau=g_tau,
+                            value=np.log(value), depends=self.depends[name],
+                            plot=False)
+
+            g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
+                      trace=True )
+
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s'%name] = g
+
+        return knodes
+
+    def create_family_exp(self, name, value=0, g_mu=0, g_tau=15**-2, var_lower=1e-10, var_upper=100, var_value=.1):
+        knodes = OrderedDict()
+        if self.is_group_model and name not in self.group_only_nodes:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu,
+                            tau=g_tau, value=np.log(value),
+                            depends=self.depends[name], plot=False)
+
+            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
+
+            var = Knode(pm.Uniform, '%s_var' % name,
+                        lower=var_lower, upper=var_upper, value=var_value)
+
+            tau = Knode(pm.Deterministic, '%s_tau' % name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        plot=False, trace=False)
+
+            subj_trans = Knode(pm.Normal, '%s_subj_trans'%name, mu=g_trans,
+                         tau=tau, value=np.log(value), depends=('subj_idx',),
+                         subj=True)
+
+            subj = Knode(pm.Deterministic, '%s_subj'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=subj_trans, depends=('subj_idx',), plot=True, trace=True, subj=True)
+
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s'%name] = g
+            knodes['%s_var'%name] = var
+            knodes['%s_tau'%name] = tau
+            knodes['%s_subj_trans'%name] = subj_trans
+            knodes['%s_subj'%name]       = subj
+
+        else:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu,
+                            tau=g_tau, value=np.log(value),
+                            depends=self.depends[name], plot=False)
+
+            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s'%name] = g
+
+        return knodes
+
+
+class HDDMBase(AccumulatorModel):
     """Implements the hierarchical Ratcliff drift-diffusion model
     using the Navarro & Fuss likelihood and numerical integration over
     the variability parameters.
@@ -139,56 +278,9 @@ class HDDM(kabuki.Hierarchical):
 
         self.group_only_nodes = group_only_nodes
 
-        super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
+        super(HDDMBase, self).__init__(data, include=include_params, **kwargs)
 
-    def _create_knodes_set(self, name, lower=None, upper=None, value=0):
-        knodes = OrderedDict()
-
-        if self.is_group_model and name not in self.group_only_nodes:
-            if lower is None and upper is None:
-                g = Knode(pm.Normal, '%s' % name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
-            else:
-                g = Knode(pm.Uniform, '%s' % name, lower=1e-3, upper=1e3, value=value, depends=self.depends[name])
-
-            var = Knode(pm.Uniform, '%s_var' % name, lower=1e-10, upper=100, value=.1)
-
-            tau = Knode(pm.Deterministic, '%s_tau' % name, doc='%s_tau' % name, eval=lambda x: x**-2, x=var, plot=False, trace=False)
-
-            if lower is None and upper is None:
-                subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau, value=value, depends=('subj_idx',), subj=True)
-            else:
-                subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g, tau=tau, a=lower, b=upper, value=value, depends=('subj_idx',), subj=True)
-
-            knodes['%s'%name] = g
-            knodes['%s_var'%name] = var
-            knodes['%s_tau'%name] = tau
-            knodes['%s_subj'%name] = subj
-
-        else:
-            if lower is None and upper is None:
-                knodes[name] = Knode(pm.Normal, name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
-            else:
-                knodes[name] = Knode(pm.Uniform, name, lower=1e-3, upper=1e3, value=value, depends=self.depends[name])
-
-        return knodes
-
-    def _create_model_knodes(self):
-        knodes = OrderedDict()
-        knodes.update(self._create_knodes_set('a', lower=1e-3, upper=1e3, value=1))
-        knodes.update(self._create_knodes_set('v', value=0))
-        knodes.update(self._create_knodes_set('t', lower=1e-3, upper=1e3, value=.01))
-        if 'sv' in self.include:
-            knodes.update(self._create_knodes_set('sv', lower=0, upper=1e3, value=1))
-        if 'sz' in self.include:
-            knodes.update(self._create_knodes_set('sz', lower=0, upper=1, value=.1))
-        if 'st' in self.include:
-            knodes.update(self._create_knodes_set('st', lower=0, upper=1e3, value=.01))
-        if 'z' in self.include:
-            knodes.update(self._create_knodes_set('z', lower=0, upper=1, value=.5))
-
-        return knodes
-
-    def _create_wfpt_knode(self, knodes):
+    def create_wfpt_knode(self, knodes):
         knode_name = {}
         for param_name in self.all_param_names:
             if self.is_group_model and param_name not in self.group_only_nodes:
@@ -208,22 +300,35 @@ class HDDM(kabuki.Hierarchical):
 
         return Knode(self.wfpt, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
 
-    def create_knodes(self):
-        """Returns list of model parameters.
-        """
-        knodes = self._create_model_knodes()
-
-        knodes['wfpt'] = self._create_wfpt_knode(knodes)
-
-        return knodes.values()
-
-
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:
             kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
-class HDDMTransform(HDDM):
+class HDDMTruncated(HDDMBase):
+   def create_knodes(self):
+        """Returns list of model parameters.
+        """
+
+        knodes = OrderedDict()
+        knodes.update(self.create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
+        knodes.update(self.create_family_normal('v', value=0))
+        knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
+        if 'sv' in self.include:
+            knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
+        if 'sz' in self.include:
+            knodes.update(self.create_family_trunc_normal('sz', lower=0, upper=1, value=.1))
+        if 'st' in self.include:
+            knodes.update(self.create_family_trunc_normal('st', lower=0, upper=1e3, value=.01))
+        if 'z' in self.include:
+            knodes.update(self.create_family_trunc_normal('z', lower=0, upper=1, value=.5))
+
+        knodes['wfpt'] = self.create_wfpt_knode(knodes)
+
+        return knodes.values()
+
+
+class HDDM(HDDMBase):
     trans_nodes = ('a', 't', 'z', 'sz', 'sv', 'st')
     def pre_sample(self):
         if not self.is_group_model:
@@ -241,137 +346,23 @@ class HDDMTransform(HDDM):
         for node in nodes:
             self.mc.use_step_method(steps.kNormalNormal, node)
 
-    def _create_knodes_set_z(self):
-        name = 'z'
+    def create_knodes(self):
         knodes = OrderedDict()
+        knodes.update(self.create_family_exp('a', value=1))
+        knodes.update(self.create_family_normal('v', value=0))
+        knodes.update(self.create_family_exp('t', value=.01))
+        if 'sv' in self.include:
+            knodes.update(self.create_family_exp('sv', value=1))
+        if 'sz' in self.include:
+            knodes.update(self.create_family_exp('sz', value=.1))
+        if 'st' in self.include:
+            knodes.update(self.create_family_exp('st', value=.01))
+        if 'z' in self.include:
+            knodes.update(self.create_family_invlogit('z', value=.5))
 
-        if self.is_group_model and 'z' not in self.group_only_nodes:
-            g_trans = Knode(pm.Normal,
-                      'z_trans',
-                      mu=0,
-                      tau=15**-2,
-                      value=0,
-                      depends=self.depends[name],
-                      plot=False
-            )
+        knodes['wfpt'] = self.create_wfpt_knode(knodes)
 
-            g = Knode(pm.InvLogit, 'z', ltheta=g_trans, plot=True, trace=True)
-
-            var = Knode(pm.Uniform, 'z_var', lower=1e-10, upper=100, value=.1)
-
-            tau = Knode(pm.Deterministic, 'z_tau',
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
-
-            subj_trans = Knode(pm.Normal, 'z_subj_trans', mu=g_trans,
-                               tau=tau, value=0, depends=('subj_idx',),
-                               subj=True, plot=False)
-
-            subj = Knode(pm.InvLogit, 'z_subj', ltheta=subj_trans, depends=('subj_idx',),
-                         plot=True, trace=True, subj=True)
-
-            knodes['z_trans']      = g_trans
-            knodes['z']            = g
-            knodes['z_var']        = var
-            knodes['z_tau']        = tau
-
-            knodes['z_subj_trans'] = subj_trans
-            knodes['z_subj']       = subj
-
-        else:
-            g_trans = Knode(pm.Normal, 'z_trans', mu=0, tau=15**-2,
-                            value=0, depends=self.depends[name],
-                            plot=False )
-
-            g = Knode(pm.InvLogit, 'z', ltheta=g_trans, plot=True,
-                      trace=True )
-
-            knodes['z_trans'] = g_trans
-            knodes['z'] = g
-
-        return knodes
-
-
-    def _create_knodes_set_lower_bound(self, name, value=0):
-        knodes = OrderedDict()
-        if self.is_group_model and name not in self.group_only_nodes:
-            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=0,
-                            tau=15**-2, value=value,
-                            depends=self.depends[name], plot=False)
-
-            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
-
-            var = Knode(pm.Uniform, '%s_var' % name,
-                        lower=1e-10, upper=100, value=.1)
-
-            tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
-
-            subj = Knode(pm.Lognormal, '%s_subj' % name, mu=g,
-                         tau=tau, value=np.exp(value), depends=('subj_idx',),
-                         subj=True)
-
-            knodes['%s_trans'%name] = g_trans
-            knodes['%s'%name] = g
-            knodes['%s_var'%name] = var
-            knodes['%s_tau'%name] = tau
-            knodes['%s_subj'%name] = subj
-
-        else:
-            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=0,
-                            tau=15**-2, value=value,
-                            depends=self.depends[name], plot=False)
-
-            g = Knode(pm.log, '%s' % name, x=g_trans, plot=True)
-            knodes['%s_trans'%name] = g_trans
-            knodes['%s'%name] = g
-
-        return knodes
-
-
-    def _create_knodes_set(self, name, lower=None, upper=None, value=0):
-        knodes = OrderedDict()
-
-        if self.is_group_model and name not in self.group_only_nodes:
-            var = Knode(pm.Uniform, '%s_var' % name,
-                        lower=1e-10, upper=100, value=.1)
-
-            tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
-
-            knodes['%s_var'%name] = var
-            knodes['%s_tau'%name] = tau
-
-            if name=='z':
-                knodes.update(self._create_knodes_set_z())
-
-            elif name == 't':
-                knodes.update(self._create_knodes_set_lower_bound(name, value=np.log(0.1)))
-
-            elif name == 'a':
-                knodes.update(self._create_knodes_set_lower_bound(name, value=np.log(1.5)))
-
-            elif name in ('sv', 'sz', 'st'):
-                knodes.update(self._create_knodes_set_lower_bound(name, value=np.log(.1)))
-
-            elif name == 'v':
-                g = Knode(pm.Normal, '%s' % name, mu=0,
-                          tau=15**-2, value=value, depends=self.depends[name])
-
-                subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau, value=value, depends=('subj_idx',), subj=True)
-
-                knodes['%s'%name] = g
-                knodes['%s_subj'%name] = subj
-
-        else:
-            if lower is None and upper is None:
-                knodes[name] = Knode(pm.Normal, name, mu=0, tau=15**-2, value=value, depends=self.depends[name])
-            else:
-                knodes[name] = Knode(pm.Uniform, name, lower=1e-3, upper=1e3, value=value, depends=self.depends[name])
-
-        return knodes
+        return knodes.values()
 
 if __name__ == "__main__":
     import doctest
