@@ -297,6 +297,8 @@ class HDDMBase(AccumulatorModel):
         if bias:
             include_params.add('z')
 
+        self.include = include_params
+
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                                   'use_adaptive':1,
@@ -313,7 +315,7 @@ class HDDMBase(AccumulatorModel):
 
         self.group_only_nodes = group_only_nodes
 
-        super(HDDMBase, self).__init__(data, include=include_params, **kwargs)
+        super(HDDMBase, self).__init__(data, **kwargs)
 
     def create_wfpt_knode(self, knodes):
         wfpt_parents = OrderedDict()
@@ -382,7 +384,8 @@ class HDDM(HDDMBase):
         knodes.update(self.create_family_normal('v', value=0))
         knodes.update(self.create_family_exp('t', value=.01))
         if 'sv' in self.include:
-            knodes.update(self.create_family_exp('sv', value=1))
+            knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
+            #knodes.update(self.create_family_exp('sv', value=1))
         if 'sz' in self.include:
             knodes.update(self.create_family_exp('sz', value=.1))
         if 'st' in self.include:
