@@ -356,7 +356,6 @@ class HDDMTruncated(HDDMBase):
 
 
 class HDDM(HDDMBase):
-    trans_nodes = ('a', 't', 'z', 'sz', 'sv', 'st')
     def pre_sample(self):
         if not self.is_group_model:
             return
