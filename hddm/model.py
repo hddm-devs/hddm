@@ -19,6 +19,7 @@ import hddm
 import kabuki
 import kabuki.step_methods as steps
 import scipy as sp
+import inspect
 
 from kabuki.hierarchical import Knode
 from copy import deepcopy
@@ -138,6 +139,7 @@ class HDDM(kabuki.Hierarchical):
         self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(wp, sampling_method='cdf',
                                                                           cdf_range=cdf_range)
 
+        self._kwargs = kwargs
         super(hddm.model.HDDM, self).__init__(data, include=include_params, **kwargs)
 
     def _create_knodes_set(self, name, lower=None, upper=None, value=0):
@@ -220,26 +222,109 @@ class HDDM(kabuki.Hierarchical):
             kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
-    def quantiles_chi2square_optimization_single(self, quantiles=(.1, .3, .5, .7, .9 ), verbose=1):
+    def _create_an_average_model(self):
+        """
+        create an average model for group model quantiles optimization.
 
+        The function return an instance of the model that was initialize with the same parameters as the
+        original model but with the is_group_model argument set to False.
+        since it depends on the specifics of the class it should be implemented by the user for each new class.
+        """
+
+        #this code only check that the arguments are as expected, i.e. the constructor was not change
+        #since we wrote this function
+        init_args = set(inspect.getargspec(self.__init__).args)
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        assert known_args == init_args, "Arguments of the constructor are not as expected"
+
+        #create the avg model
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        return avg_model
+
+
+    def quantiles_chi2square_optimization(self, quantiles=(.1, .3, .5, .7, .9 ), verbose=1):
+        """
+        quantile optimization using chi^2.
+        Input:
+            quantiles <sequance> - a sequance of quantiles.
+                the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+            verbose <int> - verbose
+        Output:
+            results <dict> - a results dictionary of the parameters values.
+            The values of the nodes in single subject model is update according to the results.
+            The nodes of group models are not updated
+        """
+
+        #run optimization for group model
         if self.is_group_model:
-            raise NotImplementedError
+
+            #get all obs nodes
+            obs_db = self.get_observeds()
+
+            #create an average model (avergae of all subjects)
+            try:
+                average_model = self._create_an_average_model()
+            except AttributeError:
+                raise AttributeError("User must define _create_an_average_model in order to use the quantiles optimization method")
+
+            #group obs nodes according to their tag and (condittion)
+            #and for each group average the quantiles
+            n_sample = {}; freq_obs = {}; emp_rt = {}
+            for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
+
+                #set quantiles for each observed_node
+                obs_nodes = tag_obs_db.node;
+                [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
+
+                #get n_samples, freq_obs, and emp_rt
+                stats = [obs.get_quantiles_stats() for obs in obs_nodes]
+                n_samples = sum([x.n_samples for x in stats])
+                freq_obs = sum(np.array([x.freq_obs for x in stats]),0)
+                emp_rt = np.mean(np.array([x.emp_rt for x in stats]),0)
+
+                #set average quantiles  to have the same statitics
+                obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
+                node_name = obs_knode.create_node_name(tag) #get node name
+                average_node = average_model.nodes_db.ix[node_name]['node'] #get the average node
+                average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
+
+            #optimize
+            results = average_model._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=False,
+                                                           verbose=verbose)
+
+
+        #run optimization for single subject model
         else:
-            self._quantiles_chi2square_optimization_single(quantiles, verbose)
+            results = self._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=True,
+                                                           verbose=verbose)
+
+        return results
 
 
-    def _quantiles_chi2square_optimization_single(self, quantiles, verbose):
+    def _quantiles_chi2square_optimization_single(self, quantiles, compute_stats, verbose):
+        """
+        function used by quantiles_chi2square_optimization to fit the a single subject model
+        Input:
+         quantiles <sequance> - same as in quantiles_chi2square_optimization
+         cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
+             compute_quantiles_stats method
+            verbose <int> - verbose
+
+        Output:
+            results <dict> - same as in quantiles_chi2square_optimization
+        """
 
         #get obs_nodes
         obs_nodes = self.get_observeds()['node']
+
+        #set quantiles for each observed_node (if needed)
+        if compute_stats:
+            [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
 
         #get all stochastic parents of observed nodes
         db = self.nodes_db
         parents = db[(db.stochastic == True) & (db.observed == False)]['node']
         values = [x.value for x in parents]
-
-        #set quantiles for each observed_node
-        [obs.set_qunatiles_stats(quantiles) for obs in obs_nodes]
 
         #define objective
         def objective(values):
@@ -252,6 +337,8 @@ class HDDM(kabuki.Hierarchical):
 
         if verbose > 0:
             print self.values
+
+        return results
 
 
 class HDDMTransform(HDDM):
