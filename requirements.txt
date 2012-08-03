@@ -1,6 +1,5 @@
 Cython==0.16
 Distutils2==1.0a4
-HDDM==0.3dev
 argparse==1.2.1
 numpy==1.6.2
 pandas==0.8.1
