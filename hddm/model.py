@@ -24,8 +24,16 @@ from copy import deepcopy
 import scipy as sp
 from scipy import stats
 
-
 class AccumulatorModel(kabuki.Hierarchical):
+    def __init__(self, data, **kwargs):
+        # Flip sign for lower boundary RTs
+        data = hddm.utils.flip_errors(data)
+
+        self.group_only_nodes = kwargs.pop('group_only_nodes', ())
+
+        super(AccumulatorModel, self).__init__(data, **kwargs)
+
+
     def create_family_normal(self, name, value=0, g_mu=None,
                              g_tau=15**-2, var_lower=1e-10,
                              var_upper=100, var_value=.1):
@@ -280,24 +288,18 @@ class HDDMBase(AccumulatorModel):
 
     """
 
-    def __init__(self, data, bias=False,
-                 include=(), wiener_params=None, group_only_nodes=(), **kwargs):
+    def __init__(self, data, bias=False, include=(),
+                 wiener_params=None, **kwargs):
 
-        # Flip sign for lower boundary RTs
-        data = hddm.utils.flip_errors(data)
-
-        include_params = set()
-
+        self.include = set()
         if include is not None:
             if include == 'all':
-                [include_params.add(param) for param in ('st','sv','sz')]
+                [self.include.add(param) for param in ('st','sv','sz')]
             else:
-                [include_params.add(param) for param in include]
+                [self.include.add(param) for param in include]
 
         if bias:
-            include_params.add('z')
-
-        self.include = include_params
+            self.include.add('z')
 
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
@@ -312,8 +314,6 @@ class HDDMBase(AccumulatorModel):
         self.wfpt.rv.wiener_params = wp
         cdf_bound = max(np.abs(data['rt'])) + 1;
         self.wfpt.cdf_range = (-cdf_bound, cdf_bound)
-
-        self.group_only_nodes = group_only_nodes
 
         super(HDDMBase, self).__init__(data, **kwargs)
 

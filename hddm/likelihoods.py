@@ -153,3 +153,4 @@ WienerGPU = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                     logp=wiener_like_gpu,
                                     dtype=np.float32,
                                     mv=False)
+

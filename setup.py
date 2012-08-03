@@ -26,6 +26,7 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.c"] + glob("src/fast-dm/*.c"))]
+    ext_modules = [Extension("wfpt", ["src/wfpt.c"] + glob("src/fast-dm/*.c")),
+                   Extension("lba", ["src/lba.c"])]
 )
 

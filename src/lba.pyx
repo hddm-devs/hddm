@@ -1,11 +1,9 @@
-#!/usr/bin/python 
+#cython: embedsignature=True
+#cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
 #
-# Cython version of the Navarro & Fuss, 2009 DDM PDF. Based directly
-# on the following code by Navarro & Fuss:
-# http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
-#
-#
-# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010 
+# Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010
 # GPLv3
 from __future__ import division
 from copy import copy
@@ -55,22 +53,20 @@ cdef DTYPE_t fptpdf_single(DTYPE_t t, double z, double a, double driftrate, doub
     cdef double aminuszu=a-zu
     cdef double azu=aminuszu/zs
     cdef double azumax=(aminuszu-z)/zs
-    
+
     return (driftrate*(norm_cdf(azu)-norm_cdf(azumax)) + sddrift*(norm_pdf(azumax)-norm_pdf(azu)))/z
 
-@cython.wraparound(False)
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, unsigned int logp=0, unsigned int normalize_v=0):
+def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, bint logp=False, bint normalize_v=False):
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = <unsigned int> value.shape[0]
     cdef unsigned int i = 0
     cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty_like(value)
 
     assert sv >= 0, "sv must be larger than 0"
-    
+
     if normalize_v == 1:
         v1 = 1 - v0
-        
+
     if a <= z:
         #print "Starting point larger than threshold!"
         return -np.Inf
@@ -91,14 +87,13 @@ def lba_like(cnp.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter,
 
 
 # Backed up if in the future multiple responses are to be supported
-@cython.boundscheck(False) # turn of bounds-checking for entire function
-def lba_like_old(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] resps, double z, double a, double ter, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, unsigned int logp=0):
+def lba_like_multi(cnp.ndarray[DTYPE_t, ndim=1] value, cnp.ndarray[DTYPE_t, ndim=1] resps, double z, double a, double ter, cnp.ndarray[DTYPE_t, ndim=1] drift, double sv, unsigned int logp=0):
     # Rescale parameters so as to fit in the same range as the DDM
     cdef cnp.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef unsigned int nresp = value.shape[0]
     cdef unsigned int i
     cdef cnp.ndarray[DTYPE_t, ndim=1] probs = np.empty(nresp, dtype=DTYPE)
-    
+
     if a <= z:
         #print "Starting point larger than threshold!"
         return -np.Inf
