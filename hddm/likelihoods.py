@@ -68,10 +68,10 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
                                       wp['n_sz'], wp['use_adaptive'], wp['simps_err'])
 
     #create random function
-    def random(v, sv, a, z, sz, t, st, size=1):
+    def random(v, sv, a, z, sz, t, st, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
-        sampled_rts = hddm.generate.gen_rts(param_dict, method=sampling_method,
-                                            samples=size, dt=sampling_dt, range_=cdf_range)
+        return hddm.generate.gen_rts(param_dict, method=sampling_method,
+                                    samples=size, dt=sampling_dt, range_=cdf_range)
 
     #create wfpt class
     wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
@@ -147,6 +147,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     pymc_class.compute_quantiles_stats = compute_quantiles_stats
     pymc_class.set_quantiles_stats = set_quantiles_stats
     pymc_class.chisquare = chisquare
+
+
+#create default Wfpt class
+Wfpt = generate_wfpt_stochastic_class()
 
 def wiener_like_gpu(value, v, sv, a, z, t, out, err=1e-4):
     """Log-likelihood for the simple DDM including contaminants"""

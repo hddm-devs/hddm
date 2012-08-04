@@ -333,10 +333,11 @@ class HDDM(kabuki.Hierarchical):
             return sum([obs.chisquare() for obs in obs_nodes])
 
         #optimze
-        results = fmin_powell(objective, values, full_output=True)
+        fmin_powell(objective, values)
+        results = self.values
 
         if verbose > 0:
-            print self.values
+            print results
 
         return results
 
