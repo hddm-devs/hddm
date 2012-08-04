@@ -147,8 +147,8 @@ def test_chisquare_recovery_single_subject(repeats=10):
                      'sz': 0}
 
     all_params = set(['a','v','t','z','st','sz','sv'])
-    include_sets = [set(['a','v','t','st']),
-                  set(['a','v','t','sz']),
+    include_sets = [set(['a','v','t']),
+                  set(['a','v','t','st']),
                   set(['a','v','t','sz']),
                   set(['a','v','t','sv'])]
 
