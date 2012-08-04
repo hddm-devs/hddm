@@ -75,7 +75,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #create wfpt class
     wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
-    wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf(time=cdf_range[1], **self.parents)
+    wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf(time=cdf_range[1], precision=3., **self.parents)
 
     #add quantiles functions
     add_quantiles_functions_to_pymc_class(wfpt)

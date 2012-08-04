@@ -147,20 +147,22 @@ def test_chisquare_recovery_single_subject(repeats=10):
                      'sz': 0}
 
     all_params = set(['a','v','t','z','st','sz','sv'])
-    include_sets = [set(['a','v','t']),
-                  set(['a','v','t','sv']),
-                  set(['a','v','t','st']),
-                  set(['a','v','t','sz'])]
+    include_sets = [set(['a','v','t','st']),
+                  set(['a','v','t','sz']),
+                  set(['a','v','t','sz']),
+                  set(['a','v','t','sv'])]
 
     wfpt = hddm.likelihoods.generate_wfpt_stochastic_class()
     v = [0, 0.5, 0.75, 1.]
     n_conds = len(v)
 
+    np.random.seed(1)
     for include in include_sets:
         for i in range(repeats):
             #generate params for experiment with n_conds conditions
             org_params = hddm.generate.gen_rand_params(include)
             merged_params = org_params.copy()
+            del merged_params['v']
             cond_params = {};
             for i in range(n_conds):
                 #create a set of parameters for condition i
@@ -177,7 +179,7 @@ def test_chisquare_recovery_single_subject(repeats=10):
             print merged_params
 
             #generate samples
-            samples, _ = hddm.generate.gen_rand_data(cond_params, size=500)
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=5000)
 
             #optimize
             h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
