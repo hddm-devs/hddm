@@ -12,13 +12,9 @@ from scipy.stats import kstest
 from nose import SkipTest
 
 class TestGenerate(unittest.TestCase):
-    def test_compare_sampled_data_to_analytic(self):
-        sampler = hddm.likelihoods.wfpt_like
-        sampler.sample_method = 'cdf'
-        sampler.dt = 1e-6
-        self._test_compare_samples_to_analytic(sampler.rv)
 
     def test_compare_drift_simulated_data_to_analytic(self):
+        raise SkipTest("The function used KStest in the past, but since Wfpt is not scipy_distribution anymore it does not work")
         sampler = hddm.likelihoods.wfpt_like
         sampler.sample_method = 'drifts'
         self._test_compare_samples_to_analytic(sampler.rv)
@@ -28,6 +24,7 @@ class TestGenerate(unittest.TestCase):
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
             [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st']), N=1000)
+                                  args=(params['v'], params['sv'], params['a'], params['z'],
+                                        params['sz'], params['t'], params['st']), N=1000)
             print 'p_value: %f' % p_value
             self.assertTrue(p_value > 0.05)
