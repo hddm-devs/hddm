@@ -67,14 +67,29 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
         return hddm.wfpt.wiener_like(x, v, sv, a, z, sz, t, st, wp['err'], wp['n_st'],
                                       wp['n_sz'], wp['use_adaptive'], wp['simps_err'])
 
+
     #create random function
     def random(v, sv, a, z, sz, t, st, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
         return hddm.generate.gen_rts(param_dict, method=sampling_method,
                                     samples=size, dt=sampling_dt, range_=cdf_range)
 
+    #create pdf function
+    def pdf(self, x):
+        kwargs = wp.copy()
+        kwargs.update(self.parents)
+        if np.isscalar(x):
+            out = hddm.wfpt.full_pdf(x, **kwargs)
+        else:
+            out = hddm.wfpt.pdf_array(x, logp=False, **kwargs)
+
+        return out
+
     #create wfpt class
     wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
+
+    #add pdf and cdf_vec to the class
+    wfpt.pdf = pdf
     wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf(time=cdf_range[1], precision=3., **self.parents)
 
     #add quantiles functions
