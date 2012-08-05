@@ -45,7 +45,7 @@ class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
 
-        self.size = 50
+        self.iter = 50
         self.burn = 10
 
     def runTest(self):
@@ -59,7 +59,7 @@ class TestSingleBreakdown(unittest.TestCase):
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
             model = model_class(data, include=include, bias='z' in include, is_group_model=False)
             model.map()
-            model.sample(self.size, burn=self.burn)
+            model.sample(self.iter, burn=self.burn)
             check_model(model.mc, params_true, assert_=assert_)
 
         return model.mc
@@ -72,7 +72,7 @@ class TestSingleBreakdown(unittest.TestCase):
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
             model = model_class(data, include=include, bias='z' in include, is_group_model=True)
             model.approximate_map()
-            model.sample(self.size, burn=self.burn)
+            model.sample(self.iter, burn=self.burn)
             check_model(model.mc, params_true, assert_=assert_)
 
         return model.mc
@@ -97,7 +97,7 @@ class TestSingleBreakdown(unittest.TestCase):
         data[0]['rt'] = min(abs(data['rt']))/2.
         data[1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.HDDMContUnif(data, bias=True, is_group_model=False)
-        hm.sample(self.size, burn=self.burn)
+        hm.sample(self.iter, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
         cont_idx = cont_res['cont_idx']
@@ -116,7 +116,7 @@ class TestSingleBreakdown(unittest.TestCase):
             data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
             data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.model.HDDMContUnif(data, bias=True, is_group_model=True)
-        hm.sample(self.size, burn=self.burn)
+        hm.sample(self.iter, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
         for i in range(num_subjs):
