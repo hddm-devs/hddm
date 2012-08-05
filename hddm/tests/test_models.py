@@ -1,5 +1,6 @@
 from __future__ import division
 from copy import copy
+import itertools
 
 import unittest
 import numpy as np
@@ -19,7 +20,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, size=500):
 
     data, subj_params = hddm.generate.gen_rand_data(params, subjs=num_subjs, size=size)
 
-    model = hddm.model.HDDM(data, depends_on={param:['condition']}, is_group_model=subj)
+    model = hddm.model.HDDMTruncated(data, depends_on={param:['condition']}, is_group_model=subj)
 
     return model
 
@@ -52,10 +53,11 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM(self, assert_=False):
         includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        for include in includes:
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
-            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
+            model = model_class(data, include=include, bias='z' in include, is_group_model=False)
             model.map()
             model.sample(self.size, burn=self.burn)
             check_model(model.mc, params_true, assert_=assert_)
@@ -64,39 +66,29 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM_group(self, assert_=False):
         includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        for include in includes:
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
-            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=True)
+            model = model_class(data, include=include, bias='z' in include, is_group_model=True)
             model.approximate_map()
             model.sample(self.size, burn=self.burn)
             check_model(model.mc, params_true, assert_=assert_)
 
         return model.mc
 
-    def test_HDDMTransform(self, assert_=False):
-        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        for include in includes:
-            params = hddm.generate.gen_rand_params(include=include)
-            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
-            model = hddm.model.HDDMTransform(data, include=include, bias='z' in include, is_group_model=False)
-            model.map()
-            model.sample(self.size, burn=self.burn)
-            check_model(model.mc, params_true, assert_=assert_)
+    def test_HDDM_group_only_group_nodes(self, assert_=False):
+        group_only_nodes = [[], ['z'], ['z', 'st'], ['v', 'a']]
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
 
-        return model.mc
-
-    def test_HDDMTransform_group(self, assert_=False):
-        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        for include in includes:
-            params = hddm.generate.gen_rand_params(include=include)
+        for nodes, model_class in itertools.product(group_only_nodes, model_classes):
+            params = hddm.generate.gen_rand_params(include=nodes)
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
-            model = hddm.model.HDDMTransform(data, include=include, bias='z' in include, is_group_model=True)
-            model.approximate_map()
-            model.sample(self.size, burn=self.burn)
-            check_model(model.mc, params_true, assert_=assert_)
+            model = model_class(data, include=nodes, group_only_nodes=nodes, is_group_model=True)
+            for node in nodes:
+                self.assertNotIn(node+'_subj', model.nodes_db.index)
+                self.assertIn(node, model.nodes_db.index)
 
-        return model.mc
 
     def test_cont(self, assert_=False):
         raise SkipTest("Disabled.")
