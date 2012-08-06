@@ -175,7 +175,6 @@ def test_chisquare_recovery_single_subject(repeats=10):
 
             #optimize
             h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
-            print "optimizing"
             recovered_params = h.quantiles_chi2square_optimization(verbose=0)
 
             #compare results to true values
