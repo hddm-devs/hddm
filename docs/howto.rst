@@ -220,8 +220,8 @@ We can often come up with different viable hypotheses about which
 parameters might be influenced by our experimental conditions. Above
 you can see how you can create these different models using the
 depends_on keyword. To compare which model does a better job at
-explaining the data you can compare the DIC_ scores emitted when
-calling:
+explaining the data you can compare the DIC_ scores (lower is better)
+emitted when calling:
 
 ::
 
