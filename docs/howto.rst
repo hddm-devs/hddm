@@ -1,5 +1,5 @@
-Howto
-=====
+How-to
+======
 
 Include bias and inter-trial variability
 ----------------------------------------
@@ -52,9 +52,6 @@ off/on rather than drug: 0/1).
 
 Assess model convergence
 ------------------------
-
-Assessing model convergence
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When using MCMC sampling it is critical to make sure that our chains
 have converged. This basically means that we are sampling from the
