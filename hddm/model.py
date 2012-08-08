@@ -46,7 +46,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                         upper=var_upper, value=var_value)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
                         doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
+                        plot=False, trace=False, hidden=True)
             subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau,
                          value=value, depends=('subj_idx',),
                          subj=True, plot=self.plot_subjs)
@@ -76,7 +76,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                         upper=var_upper, value=var_value)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
                         doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
+                        plot=False, trace=False, hidden=True)
             subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g,
                          tau=tau, a=lower, b=upper, value=value,
                          depends=('subj_idx',), subj=True, plot=self.plot_subjs)
@@ -113,7 +113,8 @@ class AccumulatorModel(kabuki.Hierarchical):
                             tau=g_tau,
                             value=value_trans,
                             depends=self.depends[name],
-                            plot=False
+                            plot=False,
+                            hidden=True
             )
 
             g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
@@ -124,16 +125,16 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
                         % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
+                        plot=False, trace=False, hidden=True)
 
             subj_trans = Knode(pm.Normal, '%s_subj_trans'%name,
                                mu=g_trans, tau=tau, value=value_trans,
                                depends=('subj_idx',), subj=True,
-                               plot=False)
+                               plot=False, hidden=True)
 
             subj = Knode(pm.InvLogit, '%s_subj'%name,
                          ltheta=subj_trans, depends=('subj_idx',),
-                         plot=self.plot_subjs, trace=True, subj=self.plot_subjs)
+                         plot=self.plot_subjs, trace=True, subj=True)
 
             knodes['%s_trans'%name]      = g_trans
             knodes['%s'%name]            = g
@@ -146,7 +147,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             g_trans = Knode(pm.Normal, '%s_trans'%name, mu=g_mu,
                             tau=g_tau, value=value_trans,
-                            depends=self.depends[name], plot=False)
+                            depends=self.depends[name], plot=False, hidden=True)
 
             g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
                       trace=True )
@@ -168,25 +169,25 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
                             tau=g_tau, value=value_trans,
-                            depends=self.depends[name], plot=False)
+                            depends=self.depends[name], plot=False, hidden=True)
 
-            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name,
-                      eval=lambda x: np.exp(x), x=g_trans, plot=True)
+            g = Knode(pm.Deterministic, '%s'%name, eval=lambda x: np.exp(x),
+                      x=g_trans, plot=True)
 
             var = Knode(pm.Uniform, '%s_var' % name,
                         lower=var_lower, upper=var_upper, value=var_value)
 
-            tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
-                        plot=False, trace=False)
+            tau = Knode(pm.Deterministic, '%s_tau' % name, eval=lambda x: x**-2,
+                        x=var, plot=False, trace=False, hidden=True)
 
             subj_trans = Knode(pm.Normal, '%s_subj_trans'%name, mu=g_trans,
                          tau=tau, value=value_trans, depends=('subj_idx',),
-                         subj=True, plot=False)
+                         subj=True, plot=False, hidden=True)
 
-            subj = Knode(pm.Deterministic, '%s_subj'%name,
-                         doc='%s'%name, eval=lambda x: np.exp(x), x=subj_trans,
-                         depends=('subj_idx',), plot=self.plot_subjs, trace=True, subj=True)
+            subj = Knode(pm.Deterministic, '%s_subj'%name, eval=lambda x: np.exp(x),
+                         x=subj_trans,
+                         depends=('subj_idx',), plot=self.plot_subjs,
+                         trace=True, subj=True)
 
             knodes['%s_trans'%name]      = g_trans
             knodes['%s'%name]            = g
@@ -198,7 +199,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
                             tau=g_tau, value=value_trans,
-                            depends=self.depends[name], plot=False)
+                            depends=self.depends[name], plot=False, hidden=True)
 
             g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
             knodes['%s_trans'%name] = g_trans
