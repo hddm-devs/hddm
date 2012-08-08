@@ -14,15 +14,12 @@ from collections import OrderedDict
 
 import numpy as np
 import pymc as pm
-import matplotlib.pyplot as plt
 
 import hddm
 import kabuki
 import kabuki.step_methods as steps
 from kabuki.hierarchical import Knode
 from copy import deepcopy
-import scipy as sp
-from scipy import stats
 
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
