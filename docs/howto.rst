@@ -1,6 +1,30 @@
 How-to
 ======
 
+Code subject responses
+----------------------
+
+There are two ways you can code subject responses (these are te values
+you put the 'response' column in your data file). You can either use
+accuracy-coding where 1 means correct and 0 means error, or you can
+use direction-coding where 1 means left and 0 means right (this could
+also code for stimulus A and B instead of left and right). HDDM
+interprets 0 and 1 responses as lower and upper boundary responses,
+respectively, so it has no preference one way or another.
+
+In most cases it is more direct to use accuracy coding because
+drift-rate will be directly associated with performance. However, if a
+certain response direction or stimulus type has a higher probability
+of being correct and you want to estimate bias, you can *not* use
+accuracy coding (see the next paragraph for how to include a bias
+parameter). Instead, you should use direction (or stimulus) coding and
+estimate separate drift-rates for each condition (e.g. left response
+correct vs. right response correct). A sanity check of whether you
+coded the responses correctly is that drift-rate for left-response
+correct trials (i.e. upper boundary; 1) is positive and drift-rate for
+right-response correct trials (i.e. lower boundary; 0) is negative
+(assuming subjects are above chance).
+
 Include bias and inter-trial variability
 ----------------------------------------
 
