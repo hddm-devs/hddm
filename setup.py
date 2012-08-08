@@ -1,8 +1,16 @@
 from distutils.core import setup
 from distutils.extension import Extension
-import numpy as np
-import os
 from glob import glob
+try:
+    from Cython.Build import cythonize
+    ext_modules = cythonize([Extension("wfpt", ["src/wfpt.pyx"] + glob("src/fast-dm/*.c")),
+                   Extension("lba", ["src/lba.pyx"])])
+
+except ImportError:
+    ext_modules = [Extension("wfpt", ["src/wfpt.c"] + glob("src/fast-dm/*.c")),
+                   Extension("lba", ["src/lba.c"])]
+
+import numpy as np
 
 setup(
     name="HDDM",
@@ -26,7 +34,6 @@ setup(
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
-    ext_modules = [Extension("wfpt", ["src/wfpt.c"] + glob("src/fast-dm/*.c")),
-                   Extension("lba", ["src/lba.c"])]
+    ext_modules = ext_modules
 )
 

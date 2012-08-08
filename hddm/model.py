@@ -384,6 +384,7 @@ class HDDM(HDDMBase):
         knodes.update(self.create_family_normal('v', value=0))
         knodes.update(self.create_family_exp('t', value=.01))
         if 'sv' in self.include:
+            # TW: Use kabuki.utils.HalfCauchy, S=10, value=1 instead?
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
             #knodes.update(self.create_family_exp('sv', value=1))
         if 'sz' in self.include:
