@@ -4,8 +4,8 @@ How-to
 Code subject responses
 ----------------------
 
-There are two ways you can code subject responses (these are te values
-you put the 'response' column in your data file). You can either use
+There are two ways you can code subject responses (these are the values
+you put in the 'response' column in your data file). You can either use
 accuracy-coding where 1 means correct and 0 means error, or you can
 use direction-coding where 1 means left and 0 means right (this could
 also code for stimulus A and B instead of left and right). HDDM
@@ -34,6 +34,12 @@ included as follows:
 ::
 
    model = hddm.HDDM(data, bias=True, include=('sv', 'st', 'sz'))
+
+or:
+
+::
+
+   model = hddm.HDDM(data, include=('z', 'sv', 'st', 'sz'))
 
 Where *sv* is inter-trial variability in drift-rate, *st* is inter-trial
 variability in non-decision time and *sz* is inter-trial variability in
@@ -96,8 +102,8 @@ When calling:
 
     model.print_stats()
 
-There is a column called MC error. These values should not be much
-larger than ~0.001. However, this is a very weak statistic and by no
+There is a column called MC error. These values should not be smaller then 1%
+of the posterior std. However, this is a very weak statistic and by no
 means sufficient to assess convergence.
 
 
