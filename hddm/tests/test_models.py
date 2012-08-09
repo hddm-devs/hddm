@@ -139,7 +139,7 @@ def test_chisquare_recovery_single_subject(repeats=10):
                      'sz': 0}
 
     all_params = set(['a','v','t','z','st','sz','sv'])
-    include_sets = [set(['a','v','t']),
+    include_sets = [set(['a','v','t','sz','z']),
                   set(['a','v','t','st']),
                   set(['a','v','t','sz']),
                   set(['a','v','t','sv'])]
@@ -171,11 +171,11 @@ def test_chisquare_recovery_single_subject(repeats=10):
             print merged_params
 
             #generate samples
-            samples, _ = hddm.generate.gen_rand_data(cond_params, size=5000)
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
 
             #optimize
             h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
-            recovered_params = h.quantiles_chi2square_optimization(verbose=0)
+            recovered_params = h.quantiles_chi2square_optimization(verbose=0, quantiles=np.linspace(0.05,0.95,10))
 
             #compare results to true values
             index = ['observed', 'estimated']

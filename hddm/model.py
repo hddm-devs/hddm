@@ -211,24 +211,9 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return knodes
 
+
     def _create_an_average_model(self):
-        """
-        create an average model for group model quantiles optimization.
-
-        The function return an instance of the model that was initialize with the same parameters as the
-        original model but with the is_group_model argument set to False.
-        since it depends on the specifics of the class it should be implemented by the user for each new class.
-        """
-
-        #this code only check that the arguments are as expected, i.e. the constructor was not change
-        #since we wrote this function
-        init_args = set(inspect.getargspec(self.__init__).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
-        assert known_args == init_args, "Arguments of the constructor are not as expected"
-
-        #create the avg model
-        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
-        return avg_model
+        raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
 
 
     def quantiles_chi2square_optimization(self, quantiles=(.1, .3, .5, .7, .9 ), verbose=1):
@@ -258,7 +243,6 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #group obs nodes according to their tag and (condittion)
             #and for each group average the quantiles
-            n_sample = {}; freq_obs = {}; emp_rt = {}
             for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
 
                 #set quantiles for each observed_node
@@ -413,6 +397,8 @@ class HDDMBase(AccumulatorModel):
     def __init__(self, data, bias=False, include=(),
                  wiener_params=None, **kwargs):
 
+        self._kwargs = kwargs
+
         self.include = set()
         if include is not None:
             if include == 'all':
@@ -438,8 +424,6 @@ class HDDMBase(AccumulatorModel):
         #set wfpt class
         self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(wp, cdf_range=cdf_range)
 
-        self._kwargs = kwargs
-
         super(HDDMBase, self).__init__(data, **kwargs)
 
     def create_wfpt_knode(self, knodes):
@@ -459,6 +443,27 @@ class HDDMBase(AccumulatorModel):
         if 'value_range' not in kwargs:
             kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
+
+
+    def _create_an_average_model(self):
+        """
+        create an average model for group model quantiles optimization.
+
+        The function return an instance of the model that was initialize with the same parameters as the
+        original model but with the is_group_model argument set to False.
+        since it depends on the specifics of the class it should be implemented by the user for each new class.
+        """
+
+        #this code only check that the arguments are as expected, i.e. the constructor was not change
+        #since we wrote this function
+        init_args = set(inspect.getargspec(self.__init__).args)
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        assert known_args == init_args, "Arguments of the constructor are not as expected"
+
+        #create the avg model
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        return avg_model
+
 
 class HDDMTruncated(HDDMBase):
    def create_knodes(self):
