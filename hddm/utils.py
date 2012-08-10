@@ -4,8 +4,13 @@ import matplotlib.pyplot as plt
 import pymc as pm
 import hddm
 import sys
+import kabuki
 
+from scipy import stats
 from scipy.stats import scoreatpercentile
+from scipy.stats.mstats import mquantiles
+from scipy.optimize import fmin_powell
+
 from numpy import array, zeros, ones
 from copy import deepcopy
 from time import time
@@ -27,7 +32,7 @@ def flip_errors(data):
 
     # Copy data
     data = data.copy()
-    
+
     # Flip sign for lower boundary response
     idx = data['response'] == 0
     data['rt'][idx] = -data['rt'][idx]
@@ -851,6 +856,102 @@ def qp_plot(hm, quantiles = (10, 30, 50, 70, 90), plot_subj=True,
                           title_str = None, samples_summary=samples_summary,
                           marker = 'o', handle = s_handles[i_s][i_subj])
 
+
+def _quantiles_chisquare_objective(emp_rt, n_samples, freq_obs, gen_cdf_func, params):
+    """
+    objective function for quantile chi square optimization
+    Input:
+        emp_rt <array> - the empirical rt values in the tested quantiles
+        gen_cdf_fun <function> - a cdf generating function
+        n_samples <int> - number of samples in the data
+        freq_obs <array> - the frequancy of observed values in each bin
+        params - the parameters of teh cdf generating function
+    """
+
+    # generate CDF
+    try:
+        x_cdf, cdf = gen_cdf_func(**params)
+    except ValueError:
+        return np.inf
+
+    # extract theoretical RT indices
+    theo_idx = np.searchsorted(x_cdf, emp_rt)
+
+    #get probablities associated with theoretical RT indices
+    theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
+
+    #chisquare
+    theo_proportion = np.diff(theo_cdf)
+    freq_exp = theo_proportion * n_samples
+    score,_ = stats.chisquare(freq_obs, freq_exp)
+
+    return score
+
+def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, n_iter=10,
+                                      quantiles = (.1, .3, .5, .7, .9 ), max_inital_values_tries = 100):
+    """
+    quantile chi square optimization
+    Input:
+        data
+        gen_cdf_fun <function> - a cdf generating function
+        opt_kwargs <dict> - a dictionary of the parameters that are going to be optimized with their inital value
+        fixed_kwargs <dict> - a dictionary of additional parameters and their value
+        quantiles <sequance> - the quantiles sequance
+    """
+
+    #get proportion of data fall between the quantiles
+    quantiles = np.array(quantiles)
+    pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
+    neg_proportion = pos_proportion[::-1]
+    proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
+    n_samples = len(data)
+
+    # extract empirical RT at the quantiles
+    ub_emp_rt = mquantiles(data[data>0], prob=quantiles)
+    lb_emp_rt = -mquantiles(-data[data<0], prob=quantiles)
+    emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
+
+    #get frequancy of observed values
+    freq_obs = np.zeros(len(proportion))
+    freq_obs[:len(quantiles)+1] = sum(data<0) * neg_proportion
+    freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
+
+    #define objective
+    opt_keys = opt_kwargs.keys()
+    opt_values = opt_kwargs.values()
+    params = fixed_kwargs.copy()
+    def objective(values):
+        params.update(zip(opt_keys, values))
+        return _quantiles_chisquare_objective(emp_rt=emp_rt, gen_cdf_func=gen_cdf_func,
+                                              n_samples=n_samples, freq_obs=freq_obs, params=params)
+
+    #optimize n_iter times
+    best_fopt = np.inf
+    for i in xrange(n_iter):
+
+        #generate inital+values
+        zero_prob = True
+        initial_values_tries_counter = 0
+        while zero_prob and (max_inital_values_tries > initial_values_tries_counter):
+            initial_values_tries_counter += 1
+            initial_values = opt_values + np.random.rand(len(opt_values))
+            if not np.isinf(objective(initial_values)):
+                zero_prob = False
+        if zero_prob:
+            print opt_values
+            raise ValueError("cannot generating inital values. try increasing max_inital_values_tries")
+
+        #optimize
+        print initial_values
+        results = fmin_powell(objective, initial_values, full_output=True)
+        if results[1] < best_fopt:
+            best_fopt = results[1]
+            best_opt_values = results[0]
+
+    #prepare output
+    opt_res = dict(zip(opt_keys, best_opt_values))
+
+    return opt_res
 
 if __name__ == "__main__":
     import doctest

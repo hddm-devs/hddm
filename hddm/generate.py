@@ -124,12 +124,18 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
             params[var_param] = 0
     if 'z' not in params:
         params['z'] = .5
-
-
     if 'sv' not in params:
         params['sv'] = 0
     if 'sz' not in params:
         params['sz'] = 0
+
+    #check sample
+    if isinstance(samples, tuple): #this line is because pymc stochastic use tuple for sample size
+        if samples == ():
+            samples = 1
+        else:
+            samples = samples[0]
+
     if method=='cdf_py':
         rts = _gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
@@ -326,12 +332,8 @@ def gen_rand_data(params, method='cdf', **kwargs):
 
     """
 
-    wfpt = deepcopy(hddm.likelihoods.wfpt_like)
-    wfpt.method = method
-
-
     # Create RT data
-    data, subj_params = kabuki.generate.gen_rand_data(wfpt, params, **kwargs)
+    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
     return data, subj_params

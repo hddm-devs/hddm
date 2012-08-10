@@ -49,8 +49,14 @@ cdef double* cdf(double v, double sv, double a, double z, double sz, double t, d
     for i from 1 <= i <= N:
         output[N-i] = F_get_val(fc, i*dt, a*z)
 
-    F_delete (fc)
 
+    #make sure that order of the output is not affected by random errors
+    for i from 1 <= i <= (2*N):
+        if output[i] < output[i-1]:
+            output[i] = output[i-1]
+
+    #free memory
+    F_delete (fc)
     free(params)
 
     return output
