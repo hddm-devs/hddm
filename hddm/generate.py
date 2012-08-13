@@ -50,6 +50,8 @@ def gen_rand_params(include=()):
         params['pi'] = max(rand()*0.1,0.01)
 #        params['gamma'] = rand()
 
+    assert hddm.diag.check_params_valid(**params)
+
     return params
 
 
@@ -331,9 +333,19 @@ def gen_rand_data(params, method='cdf', **kwargs):
             parameter values
 
     """
+    from numpy import inf
+
+    # set valid param ranges
+    bounds = {'a': (0.5, inf),
+              'z': (0.1, 0.9),
+              't': (0, inf),
+              'st': (0, inf),
+              'sv': (0, inf),
+              'sz': (0, 1)
+    }
 
     # Create RT data
-    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params, **kwargs)
+    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params, check_valid_func=hddm.diag.check_params_valid, bounds=bounds, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
     return data, subj_params

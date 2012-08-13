@@ -1,30 +1,32 @@
-
 import unittest
 
-import pymc as pm
-
 import hddm
-from hddm.likelihoods import *
-from hddm.generate import *
-from scipy.integrate import *
-from scipy.stats import kstest
+from scipy.stats import ks_2samp, kstest
+import numpy as np
 
 from nose import SkipTest
 
 class TestGenerate(unittest.TestCase):
-
     def test_compare_drift_simulated_data_to_analytic(self):
         raise SkipTest("The function used KStest in the past, but since Wfpt is not scipy_distribution anymore it does not work")
-        sampler = hddm.likelihoods.wfpt_like
-        sampler.sample_method = 'drifts'
-        self._test_compare_samples_to_analytic(sampler.rv)
+        includes = [[],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
+        Stochastic = hddm.likelihoods.generate_wfpt_stochastic_class(sampling_method='drift')
+        for include in includes:
+            params = hddm.generate.gen_rand_params(include=include)
+            stoch = Stochastic('temp', size=1000, **params)
+            [D, p_value] = kstest(stoch.rvs, stoch.cdf, N=1000)
+            print 'p_value: %f' % p_value
+            self.assertTrue(p_value > 0.05)
 
-    def _test_compare_samples_to_analytic(self, sampler):
+    def test_cdf_samples_to_drift_samples(self):
+        np.random.seed(100)
         includes = [[],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
-            [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(params['v'], params['sv'], params['a'], params['z'],
-                                        params['sz'], params['t'], params['st']), N=1000)
+            Stoch_drift = hddm.likelihoods.generate_wfpt_stochastic_class(sampling_method='drift')
+            Stoch_cdf = hddm.likelihoods.generate_wfpt_stochastic_class(sampling_method='cdf')
+            stoch_drift = Stoch_drift('temp', size=1000, **params)
+            stoch_cdf = Stoch_cdf('temp', size=1000, **params)
+            [D, p_value] = ks_2samp(stoch_cdf.random(), stoch_drift.random())
             print 'p_value: %f' % p_value
             self.assertTrue(p_value > 0.05)

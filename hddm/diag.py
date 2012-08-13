@@ -10,6 +10,21 @@ from scipy.stats import scoreatpercentile
 from time import time
 from operator import attrgetter
 
+def check_params_valid(**params):
+    a = params.get('a')
+    v = params.get('v')
+    z = params.get('z', .5)
+    t = params.get('t')
+    sv = params.get('sv', 0)
+    st = params.get('st', 0)
+    sz = params.get('sz', 0)
+
+    if (sv < 0) or (a <= 0) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2. > 1) or \
+    (z-sz/2. < 0) or (t-st/2. < 0) or (t < 0) or (st < 0):
+        return False
+    else:
+        return True
+
 def check_model(model, params_true, assert_=False, conf_interval = 95):
     """calculate the posterior estimate error if hidden parameters are known (e.g. when simulating data)."""
 
