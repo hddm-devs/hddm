@@ -74,11 +74,6 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
         return hddm.generate.gen_rts(param_dict, method=sampling_method,
                                     samples=size, dt=sampling_dt, range_=cdf_range)
 
-    #create random function
-    def rvs(self, size=None):#v, sv, a, z, sz, t, st, size=None):
-        param_dict = self.parents #{'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
-        return hddm.generate.gen_rts(param_dict, method=sampling_method,
-                                    samples=size, dt=sampling_dt, range_=cdf_range)
 
     #create pdf function
     def pdf(self, x):
@@ -91,38 +86,12 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
         return out
 
-    def _cdf(self, x):
-        assert np.isscalar(x)
-
-        x_cdf, cdf = hddm.wfpt.gen_cdf(time=np.abs(x), precision=3., **self.parents)
-        x_lb, lb_cdf, x_ub, ub_cdf = hddm.wfpt.split_cdf(x_cdf, cdf)
-        if x < 0:
-            return lb_cdf[-1]
-        else:
-            return ub_cdf[-1]
-
-    def cdf(self, x):
-        raise NotImplementedError, "call cdf_vec instead."
-        kwargs = wp.copy()
-        kwargs.update(self.parents)
-        if np.isscalar(x):
-            out = self._cdf(x)
-        else:
-            out = np.empty(x.shape)
-            for i, val in enumerate(x):
-                out[i] = self._cdf(val)
-
-        return out
-
     #create wfpt class
     wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
 
     #add pdf and cdf_vec to the class
     wfpt.pdf = pdf
     wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf(time=cdf_range[1], precision=3., **self.parents)
-    wfpt.cdf = cdf
-    wfpt._cdf = _cdf
-    wfpt.rvs = rvs
 
     #add quantiles functions
     add_quantiles_functions_to_pymc_class(wfpt)
