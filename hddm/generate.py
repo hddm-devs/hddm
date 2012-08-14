@@ -336,8 +336,8 @@ def gen_rand_data(params, method='cdf', **kwargs):
     from numpy import inf
 
     # set valid param ranges
-    bounds = {'a': (0.5, inf),
-              'z': (0.1, 0.9),
+    bounds = {'a': (0, inf),
+              'z': (0, 1),
               't': (0, inf),
               'st': (0, inf),
               'sv': (0, inf),
