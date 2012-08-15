@@ -17,7 +17,7 @@ HDDM 0.3
 * MAP approximation of hierarchical models for better initialization.
 * Improved documentation (check out the `How-to`_ section).
 * Chi-square fitting using the Ratcliff quantile method.
-
+* Posterior predictive checks.
 
 HDDM 0.2 (First publicly announced release)
 ===========================================
