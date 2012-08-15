@@ -227,6 +227,8 @@ class HDDMBase(AccumulatorModel):
         if include is not None:
             if include == 'all':
                 [self.include.add(param) for param in ('st','sv','sz')]
+            elif isinstance(include, str):
+                self.include.add(include)
             else:
                 [self.include.add(param) for param in include]
 
