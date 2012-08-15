@@ -1,0 +1,17 @@
+errors:
+
+- optimising less than 2 parameters (other than z) does not work
+
+feature requests:
+
+- Auswahl des Schätzalgoritmus (ks; Chi) über die Exp. Datei.
+  z.B. "method ks"
+
+- Einfügen von Ausreisserkriterien für die Reaktionszeiten:
+  "upper 5.0"
+  "lower 0.1"
+
+- Umskalieren der Parameter für die Optimierung auf einen Wertebereich
+  von minus unendlich bis plus unendlich.
+
+- Evtl. Sinnvollere Gruppierung der Parameter in der Ausgabe?

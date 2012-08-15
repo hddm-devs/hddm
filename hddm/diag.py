@@ -63,8 +63,7 @@ def check_rejection(model, assert_=True):
                 print msg
 
 
-
-def test_params_on_data(params, data, include=(), depends_on = None, conf_interval = 95):
+def test_params_on_data(params, data, include=(), depends_on=None, conf_interval=95):
     thin = 1
     samples = 10000
     burn = 10000
@@ -104,11 +103,11 @@ def run_accuracy_test(nTimes=20, include=(), stop_when_fail = True):
     n_data = 300
     for i_time in range(nTimes):
         params = hddm.generate.gen_rand_params(include)
-        data,temp = hddm.generate.gen_rand_data(n_data, params)
+        data,temp = hddm.generate.gen_rand_data(params, samples=n_data)
         positive = sum(data['response'])
         print "generated %d data_points (%d positive %d negative)" % (len(data), positive, len(data) - positive)
         print "testing params: a:%.3f, t:%.3f, v:%.3f, z: %.3f, T: %.3f, V: %.3f Z: %.3f" \
-        % (params['a'], params['t'], params['v'], params['z'], params['T'], params['V'], params['Z'])
+        % (params['a'], params['t'], params['v'], params['z'], params['st'], params['sv'], params['sz'])
         ok, res = test_params_on_data(params, data, include=include)
 
         if stop_when_fail and not ok:
@@ -128,7 +127,7 @@ def str_params(params):
 
 def gen_cond_data_and_params(n_data,  n_conds = 3, include = ()):
     params = hddm.generate.gen_rand_params(include)
-    params_set = [None]*n_conds
+    params_set = {}
     params_true = copy(params)
     all_v = np.linspace(min(0,params['v']/2) , max(params['v']*2, 3), n_conds)
     del params_true['v']
@@ -138,7 +137,7 @@ def gen_cond_data_and_params(n_data,  n_conds = 3, include = ()):
         params_true['v(%d,)'%i] = all_v[i]
 
 
-    cond_data, temp = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=int(n_data/n_conds))
+    cond_data, temp = hddm.generate.gen_rand_data(params_set, samples=int(n_data/n_conds))
     positive = sum(cond_data['response'])
     print "generated %d data_points (%d positive %d negative)" % \
     (len(cond_data), positive, len(cond_data) - positive)
@@ -182,7 +181,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
 
     initial_params = hddm.generate.gen_rand_params(include=include)
     full_params = copy(initial_params)
-    params_set = [None]*n_conds
+    params_set = {}
     v_0 = rand()
     all_v = np.linspace(v_0, max(4,v_0*n_conds), n_conds)
     for j in range(n_conds):
@@ -190,7 +189,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         params_set[j]['v'] = all_v[j]
         full_params['v(%d,)'%j] = params_set[j]['v']
 
-    data = hddm.generate.gen_rand_cond_data(params_set, samples_per_cond=150)
+    data, params = hddm.generate.gen_rand_data(params_set, samples=150)
 
     print "Using the following params: \n %s" % str_params(full_params)
 
@@ -210,7 +209,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         print "working on model %d" % i_params
 
         model = hddm.model.HDDM(data, bias=True, wiener_params=all_wp[i_params],
-                                include = include, depends_on  = {'v':['cond']})#, init_value=params)
+                                include = include, depends_on  = {'v':['condition']})#, init_value=params)
         i_t = time()
         if use_db:
             dbname = 'speed.' + str(time()) + '.db'
@@ -221,7 +220,7 @@ def test_acc_full_intrp(include = (), n_conds = 6, use_db=False):
         nodes = model.create()
         mc = pm.MCMC(nodes)
         i_res['mc'][i_params] = mc
-        [mc.use_step_method(pm.Metropolis, x,proposal_sd=0.5) for x in mc.stochastics]
+        [mc.use_step_method(pm.Metropolis, x, proposal_sd=0.5) for x in mc.stochastics]
 
         i_t = time()
         mc.sample(burn+1, burn)

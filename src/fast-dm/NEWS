@@ -1,0 +1,48 @@
+release 29 (13 January 2008)
+* bug fix: for fixed z, big values of sz were not correctly recognised
+* cosmetic fixes
+
+release 28 (10 December 2007)
+* bug fix (one of the fixes for release 27 introduced a new bug)
+* minor cosmetic improvements
+
+release 27 (22 November 2007)
+* bug fixes
+* cosmetic fixes to make the source code more readable
+* on Unix/Linux, use the BLAS library if available to speed up some
+  computations
+* add "-h" command line options to construct-sample and fast-dm
+* add "-c" option for fast-dm to continue interrupted runs
+
+release 26 (9 March 2007)
+* minor optimisations
+
+release 25 (20 January 2007)
+* minor bug fixes and optimisations
+
+release 24 (28 November 2006)
+* cosmetic fixes
+
+release 23 (16 November 2006)
+* the names of the "log" and "save" commands were swapped
+* new control file format (use "*" in templates instead of "%d")
+* allow 1.0 as the new minimal precision
+* assorted fixes
+
+release 19 (6 November 2006):
+* construct samples can now generate random samples
+  (command line option -r)
+
+release 18 (29 October 2006):
+* allow to fix the parameter z
+* output the distance between empirical and theoretical CDF
+  as a p value
+
+release 17 (16 October 2006):
+* introduce experiment control files
+* support for experimental conditions
+* support for z depending on experimental conditions
+* beginning of a user manual in the file "MANUAL"
+
+release 9 (17 September 2006):
+* first public release

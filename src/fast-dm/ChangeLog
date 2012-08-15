@@ -1,0 +1,1509 @@
+commit 7bce87dd08c52eb598c34655b0a1a4cb362610f0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jan 13 11:31:55 2008 +0100
+
+    comment grammar fixes
+
+commit 7813402cb08330852d1d09e3451295beb38c4b03
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jan 13 11:28:59 2008 +0100
+
+    bug fix: allow the full range of sz for fixed z
+
+commit 8a721456d92a404c3d7446da4d7f91551300ef4b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Jan 11 12:10:37 2008 +0100
+
+    deal with truncation errors in Q_KS
+
+commit 1ad833f70b3436454374a2b434cf9f78bfe89075
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Jan 11 10:21:02 2008 +0100
+
+    cosmetic fixes: replace a few forgotten "terr" with "t0"
+
+commit 19b785ba04bf68e83c0f4b0ebf08b856d3d64a1b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 10 17:54:41 2007 +0000
+
+    prepare for fast-dm release 28
+
+commit 8413761ab2672f5442cecfb1de2486ef75855f9e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 10 17:39:33 2007 +0000
+
+    Choose new tuning parameters for set_precision.
+
+    The automatic tuning of discretisation parameters reacted to a bug in
+    the t0-integration by choosing very small step sizes in some
+    directions.  Now that the bug is removed, the "optimal" step sizes
+    transpire to be bigger, leading to speed improvements for high
+    precisions.
+
+commit 9f49655fc608d1a1d8e186ca18244e5d1f6d5f63
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 10 17:33:02 2007 +0000
+
+    update the parameter tuning scripts
+
+commit 45af4227d75f48b38a0a9188042bfc03f43bfb8d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Dec 6 22:59:13 2007 +0000
+
+    check for invalid parameters
+
+commit c03ea10b299696d75c434d6a25d08ad6f04de259
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 3 20:51:16 2007 +0000
+
+    cosmetic fixes
+
+commit 3e2bf62fea02cd436c0da0e682e5bf970ff70568
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 3 20:51:11 2007 +0000
+
+    bug fix for the t-integration for small st0
+
+commit 33ede76797ce2a37c7b977e093b243e6bc622e4d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Dec 3 12:09:44 2007 +0000
+
+    cosmetic fixes
+
+commit f2408d1e98b02918021b8bef729a94eb0f9b561e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 29 14:53:36 2007 +0000
+
+    construct-samples: fix a typo in the help message
+
+commit 22b6c2cf12811b38cd57b85cfb3cc69a16287ae3
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 23 11:00:51 2007 +0000
+
+    remove obsolete files
+
+commit c62ffada8d1f6caa46c1630efa8a7d8d8fb93788
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 22 13:24:47 2007 +0000
+
+    prepare for fast-dm release 27
+
+commit 4d8f7506cc61a31bb879b4878bd8180085ddda0a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 19 10:48:56 2007 +0000
+
+    construct-samples: protect against rounding errors
+
+commit b6f8b8ce82e1361e6f4dbf81ab72d6629c295022
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 16 14:34:57 2007 +0000
+
+    fix an integer overflow
+
+commit 0500c56a336e8abbd8244bc8d23357cd7d7411e0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 15 22:48:08 2007 +0000
+
+    Clean up library use, use BLAS if available.
+
+commit b0e40ff77440b1cf4c2b19986c4ef6c18c14dd93
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 15 22:20:26 2007 +0000
+
+    cosmetic fixes
+
+commit 3e096950e2a61166516f3934997640457b244062
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 15 21:29:25 2007 +0000
+
+    minor optimisation for F_st_get_F
+
+commit 2a77529d8172dae9253b5c2783faea6264fdbc26
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 15 20:04:45 2007 +0000
+
+    bug fix: sometimes the t-integration did not work correctly for st0>0
+
+commit de306e5da3f9515a70b714675433a9f3fbd9f8b5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 14 12:28:16 2007 +0000
+
+    doc fixes
+
+commit c51748a437d0b153f6b42984779fe18d7aa51651
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Nov 13 14:12:26 2007 +0000
+
+    construct-samples: include the sample size into the information file
+
+commit 8eb2b55c5221d0e0a72d8bbd0b7648f9e405ba8a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Nov 13 14:08:44 2007 +0000
+
+    fast-dm: minor fixes
+
+commit 55e35d68b1659976fe218d5faa5fdbc2d48903a5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Oct 26 14:31:06 2007 +0100
+
+    Write the construct-samples parameter file after generating the data.
+    This reduces the chance of spurios parameter files lying around.
+
+commit dade51ae2a9a6b1ad9cc651b1b83557016992eac
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 22:51:16 2007 +0100
+
+    update the NEWS file
+
+commit a5b528326ead0eb6f2df9247458be739b9b2f967
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 22:39:13 2007 +0100
+
+    fast-dm: implement continue mode via '-c' command line option
+
+commit 30494197a429b77b3d09e2951f5b10ebf071e55f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 21:51:38 2007 +0100
+
+    make construct-samples more user friendly
+
+commit 59de5d6d9ba94065102a8823a6e1d5c90637a3e7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 26 13:09:02 2007 +0100
+
+    fix a corner case in find_best_log_p
+
+commit eae6f55abf34581607fa36a1e8f72162ca6eabe1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 20:16:30 2007 +0100
+
+    minor fixes to the contact information
+
+commit 84b29b0e980fb151f31fe9239a080bdbd5b2382d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 20:12:53 2007 +0100
+
+    Move everything KS specific into the new source file method-ks.c.
+
+    This rearrangement of code makes the structure of the program clearer.
+    Is also allows to experiment with different optimisation criteria
+    more easily.
+
+commit 2bd1f1ec055f5db54b41521a25631cdf195e5027
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 19:41:34 2007 +0100
+
+    Move 'samples_name' into 'struct sample'.
+
+commit 9e1e8f1bcbf6f059bf75c662bc810b45f2736b72
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Oct 25 19:01:13 2007 +0100
+
+    MANUAL: fix a typo
+
+commit fbafbb0794e99b20acc40a071aa137955946f18f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 21 11:31:40 2007 +0100
+
+    experiment.c: minor fixes
+
+commit 3e55c4dc4763ca8b8b7e47167320711d6e9c41a6
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 20 22:51:18 2007 +0100
+
+    dataset.c: minor doc fix
+
+commit 47add2a270cdbd44b2454fa0a0247df511038f41
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jun 4 10:03:04 2007 +0100
+
+    fast-dm/main.c: remove some unnecessary brackets
+
+commit bf1f71057b92f2fa5e4cb1130de34cd5c974f999
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue May 15 00:13:28 2007 +0100
+
+    MANUAL: fix a typo
+
+commit aff099ddef2533c370ea3507dc1ab004921cad94
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon May 14 23:36:40 2007 +0100
+
+    white space fixes
+
+commit 316617bf6a24f9ddb850b12cfbf5524884bfcce6
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Mar 13 12:44:38 2007 +0000
+
+    fast-dm/main.c: bug fix
+
+    Add a missing test to see whether a fixed value of z is compatible
+    with the current value of sz.
+
+commit e42763084a01009bef60d6780a63d8a19700f2cc
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Mar 9 11:20:24 2007 +0000
+
+    fast-dm release 26
+
+commit 1a60e29053c3f91d3ae9cf5d261c43c5548487e9
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Mar 1 00:23:15 2007 +0000
+
+    minor fixes
+
+commit 5217c724da3ab1eb5746e87371617b7b5b8a7e53
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Feb 28 23:59:02 2007 +0000
+
+    New implementation of tune-local.
+
+commit c6a93434be739e4d794b64fc28b69e96950b3232
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Feb 28 23:43:39 2007 +0000
+
+    tune-local.c: consider all parameters again
+
+commit 0018c17dd0ff7ef68fc3a9e0ca3ccf5336bdf6a0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Feb 27 14:28:39 2007 +0000
+
+    new prerelase version 25.90
+
+commit d81b3f1ca3081c0f36c218841ab903997e6ad441
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Feb 27 14:26:32 2007 +0000
+
+    cdf.c: new discretisation parameter values
+
+commit 960fcd4fbd0479fad424b02402e0defc02277b65
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Feb 21 15:15:44 2007 +0000
+
+    fast-dm: rename old TUNE_DTERR to new TUNE_DT0
+
+commit f831e2020dfdd263a5822f1098a583cc6deda7a7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Feb 20 22:03:41 2007 +0000
+
+    fast-dm/pde2.c: new file (currently unused)
+
+    This is an alternative implementation of the PDE solver, which does
+    the LU factorisation only once and then uses this repeatedly.
+    Unfortunately the code is slower than the old version in pde.c.
+
+commit 2f2d4875d6db19e4c29032f7a715310a046c9caa
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Feb 20 21:18:09 2007 +0000
+
+    pde.c: minor speed optimisations in solve_tridiag()
+
+commit 768ef4157a3097aa8dfe41367dd5bf83a30ab996
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Feb 18 23:24:17 2007 +0000
+
+    fast-dm/tune-params.c: switch to use simplex2, start tuning again
+
+commit 29727535db124b5d92deed88187dc38cce9232db
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jan 22 17:04:10 2007 +0000
+
+    fast-dm release 25
+
+commit b7918cbf7451894b9e157042c452ffdf13103195
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jan 22 16:58:43 2007 +0000
+
+    fast-dm/main.c: fix the default initial value for sv
+
+commit e9e73dd4c7578a462ff9dd81703f43eb6753ed8f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jan 18 13:58:39 2007 +0000
+
+    prepare for fast-dm release 25
+
+commit 8b7e75420f1046d682b71bac92027ab59af24e2d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jan 18 13:54:28 2007 +0000
+
+    main.c: use new default values for the optimisation
+
+commit b9b3a715ed45de429384071cc03bbb1124d74083
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 19:16:35 2007 +0000
+
+    simplex2.c: fiddle a bit more with the simplex algorithm
+
+commit 9f5ccaa1af36c19404ff15212d9c5eddcf3ed90f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 13:51:23 2007 +0000
+
+    use the new simplex2 function for fast-dm
+
+commit e563246986b2a9aa26254e3f1d91b633f9d71e53
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 13:22:16 2007 +0000
+
+    simplex2.c: faithfully implement the simplex variant from numerical receipes
+
+    This changes the mechanism for the acceptance of reflections and extended
+    reflections slightly to exactly reflect the description at
+    http://www.research.ibm.com/infoecon/paps/html/amec99_bundle/node8.html
+
+commit 93be2f837a39f8a8db4edd310df8d3a40b9df445
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 12:37:53 2007 +0000
+
+    Add a new simplex implementation with 2-valued objective function.
+
+    The new simplex method uses lexicographical ordering, i.e. a value
+    (a1,a2) is considered bettter than (b1,b2) if either a1<b1 or if a1=b1
+    and a2<b2.  This allows a cleaner implementation of the penalties for
+    invalid parameter values.
+
+commit a18ba82c2766fa60fecef049119ff8ba45b091eb
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 12:33:35 2007 +0000
+
+    xmalloc.c: remove unused include statement
+
+commit 50d12a77ebf8674cc1b1680f68e24208d575f560
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jan 16 12:33:00 2007 +0000
+
+    simplex.c: minor bug fix
+
+commit 6c106550621e3e4b8552ee555491c98745bf2c7f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 27 21:59:22 2006 +0000
+
+    fast-dm release 24
+
+commit d1b85aa0fe853edd7ef7a9ee73cc68c805e4a26b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 27 21:54:31 2006 +0000
+
+    Don't abort the whole run on encountering an invalid data file.
+
+    experiment.c (experiment_get_dataset): if an error in a data file is
+    found, just emit a message and try the next file instead.
+
+    file.c: new function 'file_message' to emit non-fatal error messages.
+
+commit 7a3a45d8410251aa16c0ab0d3678e6a56007d156
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 27 21:51:57 2006 +0000
+
+    TODO: simplex fails for less than 2 variables
+
+commit 1a39ae5acb0a037cf405c67fda87c90084125bfb
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 27 21:51:11 2006 +0000
+
+    main.c: give CPU time only up to 0.1 seconds
+
+commit 44bde76928f1c5a69c7ec0870dc2ba8795326314
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 22 09:07:05 2006 +0000
+
+    fast-dm/experiment.c: add missing newline after warning message
+
+commit 49831cba5ed0121733494f717a755faa6d84fced
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Nov 21 10:56:31 2006 +0000
+
+    Rearrange the directory structure.
+
+    Move old pde/src/ to new fast-dm/.
+    Move old pde/tex/ to new pde/VV06/.
+    New directory pde/VV06b/.
+
+commit 1ccfa38973739fa3a4f78950b4001f2fe29c609e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Nov 16 21:46:16 2006 +0000
+
+    Fast-dm release 23.
+
+    This is the fast-dm version described in the article "Fast-dm: A Free
+    Program for Efficient Diffusion Model Analysis".  Changes include:
+
+    * update the ChangeLog and NEWS files
+    * update the MANUAL
+    * swap the names of the "log" and "save" commands
+
+commit 210eb9e15d44e2b94afd44dbb451d7d65587a324
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Nov 12 21:21:17 2006 +0000
+
+    pde/src/MANUAL: minor fixes
+
+commit 384c8d2cc2fa31b585ae0b00fc988e3d0ff2aa05
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Nov 12 16:29:19 2006 +0000
+
+    construct-samples.c: allow to construct several samples in one run
+
+commit 43f97d9c6040405c5ad5c88d51920a5ac131c421
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 18:20:05 2006 +0000
+
+    minor fixes
+
+commit ba9a8cd2e5fe8f864549c7c85525e6a0fa23d8e1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 18:19:50 2006 +0000
+
+    dataset.c: new function dataset_print_commands
+
+commit ed5b1d99b40e685acde0752f494af6fc6203677f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 15:24:47 2006 +0000
+
+    experiment.c: allow 1 as the new minimal precision
+
+commit f418c2e9280fce4e1c02174cc54cfab02a701b70
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 15:14:19 2006 +0000
+
+    experiment.c: allow 1 as the new minimal precision
+
+commit 0ec0603a4708f05b2110470ba0263a60451bf1a7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 15:12:00 2006 +0000
+
+    main.c: add a free version of T_to_p
+
+commit 97bc03f389eb527d6454e1d87c968c9ed06a523f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 13:47:07 2006 +0000
+
+    fast-dm release 22
+
+commit fb7b24bbc38591611aa814d829c5eebd5a1c01cd
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 13:36:10 2006 +0000
+
+    tab2.ctl: slightly higher precision, write a summary
+
+commit c8261567fdb31d0723249290477367723a81525f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 13:34:48 2006 +0000
+
+    experiment.c: use nicer headings for the summary file
+
+commit 62a9013ebdb3003111651bc919062ab6e5d4a1f4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 13:31:33 2006 +0000
+
+    main.c: new implementation of T_to_p
+
+commit ac037302e3e2c075be641d467b4b545a735787a9
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 13:15:27 2006 +0000
+
+    TODO: one item done
+
+commit e14f5da872e3489b98780352b585e234d615bbaa
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Nov 10 12:22:10 2006 +0000
+
+    misc. fixes and clean-ups
+
+commit 5da0fe4881dfef87e165bfaf146eaff2e3d7e6a1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 8 17:06:50 2006 +0000
+
+    use * instead of %d in file name templates
+
+commit dfb1f299aecdd4297369d73405acd50d22772ec5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 8 15:09:46 2006 +0000
+
+    files.c: new file (get data file names)
+
+commit efc2024b214b9aa02430573bd8b734c33d166ee5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 8 15:08:43 2006 +0000
+
+    container.c: new function 'array_sort'
+
+commit 5a970248aae213127ffbaee556e5034bf854178d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 8 15:08:20 2006 +0000
+
+    xmalloc.c: new function 'xstrndup'
+
+commit 23db2d1a6419db87bd44ef163bfc93874d69025d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 8 13:08:34 2006 +0000
+
+    Update the MS Windows compatibility hacks.
+
+    New files "win32dir.c" and "win32dir.h", containing a dirent
+    implementation for MS Windows.
+
+    Rename old "erc.c" to new "win32erf.c" for consistency.
+
+commit efe053b581bafbbd796502a40123b99c7d9056ac
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Nov 6 12:54:20 2006 +0000
+
+    prepare for fast-dm release 19
+
+commit d67ce1090f16f1d044df1a99f49ff9ab62fa4660
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 1 13:45:50 2006 +0000
+
+    Makefile.am: add a dependency to "jvrandom.h"
+
+commit 2f8eb25a35a8e15496bd0f147f4144eb71dd857f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 1 13:45:14 2006 +0000
+
+    construct-samples.c: allow to generate random samples as well as regular ones
+
+    The new command line option "-r" generates randomised samples.
+    Without "-r" the programm still generates regular samples from the
+    1/N-quantiles of the distribution.
+
+    Also fix the "-p" (precision) option and clean up the code.
+
+commit 77df65709c7f482604f5e2d16a30e34b1e431d97
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Nov 1 13:42:50 2006 +0000
+
+    experiment.c: cosmetic fix
+
+commit e1d80b841d307a773b90e770f9def94130961387
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Oct 30 11:33:56 2006 +0000
+
+    pde/src/compare: new target (compare results with Joachim)
+
+commit 319e8d29a5b8531a2ce9221c8db66511e266e767
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 29 19:34:23 2006 +0000
+
+    prepare for fast-dm release 18
+
+commit c24071f3ccf04a3b3523f6713212bb94bceaf023
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 29 19:26:51 2006 +0000
+
+    Allow to fix the parameter "z".
+
+commit e84b7f8256f0c0ee3ad231a01f7adf772aa98664
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Oct 29 18:20:18 2006 +0000
+
+    pde/src/main.c: fix logic error in find_best_log_p
+
+commit c622553c246a540311fa7dbfe73cf2a364879681
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Oct 16 20:26:27 2006 +0100
+
+    prepare for fast-dm release 17
+
+commit 7e81b8b3437863f3e7f99668d4c450d89128e241
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Oct 16 20:24:54 2006 +0100
+
+    Continue the code review for the file "main.c".
+
+    Minor bug fix in 'find_best_log_p'.
+    Clean up the code, new function 'KS_get_z'.
+
+commit 12a24c8eb509a570c02a291e279a1fe6c1e091eb
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Oct 10 20:53:14 2006 +0100
+
+    fast-dm release 16
+
+commit 33358457ab2fa3d825ac91e4a71962e899f2c427
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Oct 10 20:51:33 2006 +0100
+
+    fast-dm: minor fixes
+
+commit 6321c591fa184c70608b168caeee2e6f7a825908
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Oct 10 20:49:38 2006 +0100
+
+    fast-dm: add a manual, minor fixes
+
+    The new file MANUAL contains beginnings of the Fast-DM Users' guide.
+
+    Also I started the code review of the file "main.c": there are some
+    more comments now, and the code is simplified and cleaned up a bit.
+
+commit 80fa71ad758238b6c1df25c5e1e533837e8260ac
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Oct 10 10:28:59 2006 +0100
+
+    pde/src/main.c: ignore missing data sets.
+
+commit edfce3f53402946cf50f505f9a1543b8d3412b21
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Sun Oct 8 13:11:27 2006 +0200
+
+    pde/src/main.c: fix freeing of the KS_stat structures
+
+commit 67845c8cf5d3800aeb0dd8586f9f0fab0188df85
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 7 18:28:34 2006 +0100
+
+    fast-dm release 15
+
+commit d0fa1eee22095a27ccbf3d35db08b09c3c30abb8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 7 18:23:45 2006 +0100
+
+    Continue the fast-dm code review.
+
+    Review of "experiment.c" is finished, some fixes in "main.c" started.
+
+commit e1fdf9c1d1c992053c414fab2805b1c43ff19d6c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Oct 7 14:06:38 2006 +0100
+
+    First part of a code review.
+
+    Do a code review of "dataset.c" (complete) and "experiment.c" (partial).
+    Clean up the code, fix another memory leak, rename some functions, ...
+
+commit 4a7b1877bcbe199cfc08b0f3e51445c9df4a91fb
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Fri Oct 6 15:44:30 2006 +0200
+
+    minor fixes
+
+commit 1a99e25147780e946486faa660521551bfedc575
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Oct 6 11:38:13 2006 +0100
+
+    tune-params: major updates
+
+commit 46a8bb6db5877d3258bcff60df99933469d425da
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Oct 6 11:36:55 2006 +0100
+
+    plot-cdf: minor fix
+
+commit 1a82c0a717a2ab7d9e45cab295c99e08e62ece2c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Oct 6 11:36:05 2006 +0100
+
+    construct-samples: add -p command line option
+
+commit 2072d0374b2aabcd56b4907b0895c7e6cd7be1db
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Fri Oct 6 11:29:07 2006 +0200
+
+    fix two memory leaks
+
+commit 451beb2f629f7e09b01439b4a4b2a0d060c7c9ac
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Thu Oct 5 11:26:34 2006 +0200
+
+    minor fixes
+
+commit 0665778c1e9f86f322448694c363795b023cc113
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Oct 4 21:40:03 2006 +0100
+
+    fast-dm release 14
+
+commit c3aa0539efe1a5297fcf64a1a742ddccb0314fa4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Oct 4 20:31:58 2006 +0100
+
+    fast_dm: major clean-up
+
+commit c468d7f3dee7bd3aeef6d1b025399a60811010ed
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Oct 4 18:08:57 2006 +0100
+
+    compilation fixes
+
+commit 3287dabccc064a065ac7e8a1d5ba3ceff230215c
+Merge: ba6439c... e28b2e0...
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Oct 4 17:15:28 2006 +0100
+
+    Merge branch 'master' into save
+
+    Conflicts:
+
+    	pde/src/experiment.c
+    	pde/src/main.c
+
+commit ba6439cb41090379d1a0833cff02e5151df59374
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Wed Oct 4 11:11:54 2006 +0200
+
+    fast-dm: first complete implementation of the save command
+
+commit e28b2e07b46ace07604de93dd380b78c03b33270
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 29 18:40:03 2006 +0100
+
+    Allow to set the precision in the control file.
+
+commit aa6d831bf6e0f54682b1a8e5e8252325d3bb406d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 29 18:24:30 2006 +0100
+
+    main.c: Fix the return value of 'find_best_log_p'
+
+commit f8f6470c0dfa4fa107315f95e151fecfc693bb0f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 29 18:21:24 2006 +0100
+
+    Initial support for global save files.
+
+commit 7162a6330946a15cc68256ae9bad92e91535ba59
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 29 01:26:06 2006 +0100
+
+    pde/src/cdf.c: set_precision: better parameter values.
+
+    The new values in set_precision are obtained by new numerical
+    experiments, using tune-params.  The values seem to work at least for
+    precisions between 2 und 4.
+
+commit 68f4b6b8757cae11f515b68185e95f1fee8b62ed
+Merge: f67159b... ca70d18...
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 28 17:20:21 2006 +0100
+
+    Merge branch 'master' of voss@seehuhn.de:/srv/git/bruder
+
+commit f67159baeada9864a685d7e84cd99a2f9288c176
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 28 17:20:14 2006 +0100
+
+    fast-dm: allow to set the precision at run-time
+
+commit ca70d186458a2ab37ef894adbb3722851fe62492
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Fri Sep 15 14:51:37 2006 +0200
+
+    pde/src/main.c: implement handling of experimental conditions
+
+commit 80f4e934f73554aa9d70bf7a9240623cad5d8b6b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 27 21:14:40 2006 +0100
+
+    pde/src/xx.py: read the precision value from the command line.
+
+commit 8b212657381ff2dd6e98ed93a695f4e7a17fc053
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 27 21:56:10 2006 +0200
+
+    fast-dm: additional comments and assorted fixes
+
+commit 3e955b9466d40989b7e4b23137ce0b61079853db
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 26 18:36:39 2006 +0200
+
+    prepare for fast-dm release 11
+
+commit 048df0587f6fc9eaa0c4d4efef78ed3fe2ed8755
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 26 18:32:27 2006 +0200
+
+    fast-dm: assorted fixes
+
+    Add some descriptions for global functions written by Andreas.
+    Use _snprintf instead of snprintf on Windows.
+    Make 'file_error' behave like fprintf and use this to get
+    better error messages.
+
+commit 071f96ce20bf872946d508e5eb69478674c344b0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 26 00:15:09 2006 +0200
+
+    fast-dm: minor fixes
+
+commit 9ba62ebab1239e013c16535ecd0354e87e048a1d
+Author: Andreas Voss <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Mon Sep 25 15:17:48 2006 +0200
+
+    pde/src/README: update description and MS Windows compilation instructions
+
+commit 6b83f694f7daef1774ce33676c87586e465c78a1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 21:28:57 2006 +0200
+
+    prepare for fast-dm release 10
+
+commit d4ee029e4eb19d24197a7fc2d3ec35e2739ec378
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 21:26:13 2006 +0200
+
+    Complete the transition to experiment control files.
+
+    This commit gets rid of the old "readdata.c" file.
+    Fast-dm is now completely controlled by an experiment
+    control file, recompilation is not normally necessary
+    any more.
+
+commit f887ea0fee577846400d8d7dcd85564039060415
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 15:05:32 2006 +0200
+
+    Continue the implentationh of experiment control files.
+
+    xmalloc.c: new file, safe memory allocation
+
+    dataset.c: new file, will replace the old readdata.c eventually.
+    Most things are already moved over.
+
+    experiment.c: add more code to construct a 'struct dataset' on reading
+    a data file.
+
+commit 2fedf58b8a58a9a6c2bde01441f1b70f4b2c5115
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 00:45:27 2006 +0200
+
+    pde/src/experiment.c: new file
+
+commit b108dee7ae3f0bb6a8e184b119ec7d5c23447ebc
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 00:43:24 2006 +0200
+
+    pde/src/readdata.c: minor fix
+
+commit da15ff286d718110a6d737631ac3dcb94c3eb54c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 24 00:42:57 2006 +0200
+
+    pde/src/file.c: minor fixes
+
+commit 43ebe116272c7d5fab0e5c36cb46087618f2ebf5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 23 18:06:38 2006 +0100
+
+    rename old "pde.h" to new "fast-dm.h"
+
+commit d32987ad94e0642cb1dbe32048a777c8a84a8bd7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 23 18:01:57 2006 +0100
+
+    file.c: new file, read control and data files
+
+    This patch introduces a new 'struct file' to represent a line-based
+    input file.  "file.c" contains code to sequentially read the input lines
+    and to break them into words.
+
+commit 048a380d552f37f2ac52d592d30e8d78cf4a73f6
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 17 00:36:17 2006 +0100
+
+    finalise table 2 for the paper
+
+commit 577bc1fbf9e4cb9deffbfb261434905b1d645043
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 23:34:02 2006 +0100
+
+    finalise table 1 for the paper
+
+commit 74034f410bca4d6dfcc5a2350c9fc159de0d5bcc
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 23:04:59 2006 +0100
+
+    prepare for fast-dm release 9
+
+commit 2c2d770b3b0b9d0a3c4428a2c9f86d6219c59e54
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 22:31:43 2006 +0100
+
+    prepare for generation of table 2 in the paper
+
+commit 017567617f827cb0879d44561137de8256f56389
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 20:33:15 2006 +0100
+
+    pde/src/cdf.c: cosmetic fix
+
+commit 8b82e4e293c6f2b11415c658e178273600e072e2
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 20:23:10 2006 +0100
+
+    Settle on a final set of tuning parameters for the paper.
+
+commit e601e1ef323b310c97da88f0b40fb0b5a70c52d6
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 20:22:08 2006 +0100
+
+    pde/src/simplex.c: change the evaluation order of the initial simplex.
+
+    Change the order of function evaluations for the initial simplex, so that
+    the given base point is evaluated first.  Now you can abort the search even
+    after the first function evaluation without loosing quality.
+
+commit 4d67d279098ccd0d5fc36d723b46f23b50af4a48
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 19:53:14 2006 +0100
+
+    Generated the final "exact" data sets for table 1 of the paper.
+
+commit c825a0dc01dd8a807fed1127c8f1d6e1d5ee9b4d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 19:15:19 2006 +0100
+
+    pde/src/EZ-diff.c: bug fix, the case v=0 failed previously
+
+commit 19cb2b042c69458c61a5845e1383d5b111263561
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 03:02:03 2006 +0100
+
+    work on the tuning parameter search
+
+commit 9af4f19fcf4f5738f4b3b45c0e1f3acb4ecdfe5f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 16 00:23:47 2006 +0100
+
+    pde/src/tune-params.c: improve the score function and also consider t0
+
+commit cd0a2bcdffcc0e17b802a046ada1fb03530f12e8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 22:28:14 2006 +0100
+
+    Add .info files for the table 1 data.
+
+commit ead9dba818dbedb740203fc34931480e3c6cbb15
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 22:23:28 2006 +0100
+
+    Rename the data files for table 1.
+
+commit 80ac50a4e5ff76003a382c6fdcbfa7faa560fdd4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 22:15:22 2006 +0100
+
+    pde/src/t1-analyse.sh: reflect changes in the TeX file
+
+commit 30ee4c5f1bc5fb44c7e7273c819cd6672b3e0d61
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 17:34:45 2006 +0100
+
+    pde/src/: regenerate fast-dm data files for table 1
+
+commit e4d5f17c91530a766aae796be9190e9e11b1a9ff
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 17:25:57 2006 +0100
+
+    pde/src/: regenerate data files for table 1
+
+commit dca26c30fd940e3366544da4fcff7a312b7e3856
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 15:16:54 2006 +0100
+
+    Change the default precision to 4 again.
+
+commit 7bb8b698098520908ffaa4f43ee6fac132ed981b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 15 15:15:34 2006 +0100
+
+    Use a new set of parameters for the simulations in the paper.
+
+commit f0c436a96f8b69f600065de29663b6905a86c90a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 14 23:09:08 2006 +0100
+
+    pde/src: add more stuff to generate table 1
+
+commit 29ffcb28a0069fc0faa06dc20d2153dcae6a64b9
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 14 22:28:26 2006 +0100
+
+    pde/src: prepare to generate table 1
+
+commit 809e75b5c679f7658f0f4a3a0efb6f70e7bb967a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 14 01:58:27 2006 +0100
+
+    minor fixes for fast-dm release 8
+
+commit a4762aa27d5860fea864319d8f2c6723a186e59c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 14 01:24:57 2006 +0100
+
+    pde/src/construct-samples.c: new file
+
+commit c2ec770c70fecc5fde3b1e3e67633ab4794daba8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 13 02:07:38 2006 +0100
+
+    prepare for fast-dm release 7
+
+commit ea7b1c963a8add5216f793e125ac6a8b4ee6c963
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 13 01:20:09 2006 +0100
+
+    pde/src/cdf.c: make the remaining parameters tunable
+
+    Continue the attempt to find good values.
+
+commit e2175baff3c551b51e4187d99645ca70e777b65d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 22:21:54 2006 +0100
+
+    minor fixes
+
+commit ca939b4a38a2a95089cca1413987f10f1447c3af
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 20:40:14 2006 +0100
+
+    pde/src/tune-params.c: use the PAPI performace library
+
+commit 0061fca58e6f8b8031c2574061339d0309f3782e
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 15:32:03 2006 +0100
+
+    pde/src/tune-params.c: new file
+
+    Start looking for good parameters systematically.
+
+commit 8ed468e5a36f924e31895b8797eacd56df6f7cb4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 15:30:34 2006 +0100
+
+    pde/src/plot-cdf.c: bug fix (add forgotten F_delete call)
+
+commit 5b304be6415a696efd247baf9bff84861121842c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 15:29:52 2006 +0100
+
+    pde/src/simplex.c: comment fix
+
+commit c5dcca7d9eed646479aa2879b0358c53dbf45950
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 11:58:49 2006 +0100
+
+    pde/src/pde.h: split out tunable parameters from pde.c and cdf.c.
+
+    This introduces the defines TUNE_PDE_DT_MIN, TUNE_PDE_DT_MAX,
+    TUNE_PDE_DT_SCALE, and TUNE_DZ.
+
+commit c2487eb7db9b2adc9de8d39c68251dab887b1bd2
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Sep 12 11:56:32 2006 +0100
+
+    pde/src/TODO: new file
+
+commit cd6d8b7973ddcc8fb78c221057dbcd77f0614125
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Sep 11 22:38:48 2006 +0100
+
+    pde/src/main.c: remove misplaced \n in output
+
+commit f44ab8620a73fe88b95c60c6b8427143d1456571
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Sep 11 21:26:14 2006 +0100
+
+    consistently use the order "a z v terr sz sv st" for the parameters
+
+commit 8cd8c5bbecc35f50e5ffccec327f498a77d3842f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Sep 11 19:32:51 2006 +0100
+
+    Prepare for fast-dm release 6.
+
+    pde/src/configure.ac: update version string
+    pde/src/ChangeLog: new entries
+
+commit ce4186d910041301e3cb6aa82b45447b7bd33a2b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Sep 11 18:11:20 2006 +0100
+
+    clean up the source, minor fixes
+
+commit b7b6f7c9e3a62be393d2a30e31dea94e9bc8edf4
+Author: Andreas Voﬂ <Andreas.Voss@psychologie.uni-freiburg.de>
+Date:   Mon Sep 11 17:17:15 2006 +0200
+
+    pde/src/EZ-diff.c: new file, EZ-model to initalise the simplex method
+
+commit 65fe11183275611e0b4cac88ff1be6166099fcf6
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Sep 11 15:13:32 2006 +0100
+
+    pde/src/plot-cdf.c: MS Windows compatibility fixes
+
+commit 687db8523af3612ca29a7ec3e9ff22eede51ee7c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 10 14:19:53 2006 +0100
+
+    Prepare for fast-dm release 4.
+
+    pde/src/ChangeLog: add the changelog entries from the git revision
+      control system.
+    pde/src/configure.ac: increase the version string to 4.
+
+commit fc9787e16a71269da0c19d338a5762bc07d82611
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 10 13:46:28 2006 +0100
+
+    pde/src/plot-cdf.c: use getopt to set parameters
+
+commit 73ec73a9aba7e1e097ff4f7914756040a4be95cf
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 10 13:45:46 2006 +0100
+
+    pde/src/cdf.c: don't fail on rounding errors
+
+commit 03d7e5c112db684a9d4496fc3b3752593aa9bf4c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 9 13:42:29 2006 +0100
+
+    pde/src/fast-dm: doc fixes
+
+commit 6d0d24769a56300481f4909567f15f89010d759c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 9 13:15:41 2006 +0100
+
+    pde/src/fast-dm: clean up the source a bit
+
+commit 8533f94dfec359489abc96bef0d6f77eecffb3a8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Sep 9 12:54:12 2006 +0100
+
+    Rename old "pde/src/ks-pde.c" to new "pde/src/cdf.c".
+
+commit 41e4a1945eac3db78440d4e499e74af9e9235515
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 8 22:21:07 2006 +0100
+
+    pde/src/fast-dm: move 'get_KS' into "main.c"
+
+commit b51e232539f37b3aaf68847c8480aa509fffa621
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 8 21:54:03 2006 +0100
+
+    remove the old compare-methods target
+
+commit fc2331e54c8117c14b2398165b4e4874b55efe6c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Fri Sep 8 21:33:04 2006 +0100
+
+    pde/src/plot-cdf: new target
+
+commit 728fb4c27c96ebe1e2fe5163d2cc53cff620d06f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 7 13:57:41 2006 +0100
+
+    pde/src/ks-pde.c: always use 'terr' instead of 't_err'.
+
+commit 1a852064152f024d6915af4dbf47d9f8660d82d0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 7 13:56:28 2006 +0100
+
+    pde/src/: cosmetic fixes
+
+commit 4e7a69c76ebf2e1b65ee9fc86ad6b6f7c426fc0c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 7 13:06:02 2006 +0100
+
+    pde/src/ks-pde.c: minor fixes
+
+commit 9b38e10418e46842531bc5ddf50cdd40d555401a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Sep 7 12:19:05 2006 +0100
+
+    bruder/pde/: rename the project to fast-dm
+
+commit 205be5925c6c5a44323ed346bceb136393f06a95
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 6 12:21:13 2006 +0100
+
+    pde/src/configure.ac: increase the version string to 3
+
+commit 6a502736163244c1c375892ac158087c0df57c56
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Sep 6 12:16:53 2006 +0100
+
+    windows compatibility fixes
+
+commit 46dede97319d3650f4d685882fc4d880971dcaa5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 3 22:28:36 2006 +0100
+
+    pde/src/compare-methods.c: cosmetic white space fix
+
+commit 03fe11b10d8f24acc685bb6ce93d739ffb1db902
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 3 21:44:36 2006 +0100
+
+    [pde/src/] cosmetric fixes
+
+    Increase the version string to "2".
+
+    Make the methods to compute the positive and negative part of the CDF
+    mor similar to each other.
+
+    Split out the functions 'Phi' and 'Phi_inverse' into a new source file
+    "phi.c".
+
+commit 2d6f488ba3fce578660461e633dda0759f2b60c0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Sep 3 19:36:03 2006 +0100
+
+    pde/src/: switch the project to autoconf/automake
+
+commit 35cfaa822712ab8caa5d0911ced7d978c5feb4e7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Aug 26 23:16:42 2006 +0100
+
+    pde/src/ks-pde.c: help the compiler optimisation a bit
+
+    (was svn revision 7202)
+
+commit 8503ecf765da4c6ecb75e62fe91b66203908404a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Aug 26 22:47:30 2006 +0100
+
+    pde/src: clean up and rearrange the source files, no functional changes
+
+    (was svn revision 7201)
+
+commit 6b31aec0d5e4af8f485f1d0e773fb1a1cbed2a65
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Aug 26 21:45:15 2006 +0100
+
+    pde/src/compare-methods.c: new program
+
+    (was svn revision 7200)
+
+commit 35def816029761f4e05119c663ba0c1229aafed1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Aug 26 21:44:22 2006 +0100
+
+    pde/src/erf.c: cosmetic fixes
+
+    (was svn revision 7199)
+
+commit 48e03db969f2f07c14b82ec91196d197b1c4dae2
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Aug 26 21:43:21 2006 +0100
+
+    put all sources under the GPL
+
+    (was svn revision 7198)
+
+commit 1fef32834d089ce4445e801b0796e0a6a84bf061
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 27 18:20:34 2006 +0100
+
+    pde/src/: minor Windows compatibility fixes
+
+    (was svn revision 7152)
+
+commit 8e714816c3bb4d67505d5937ab535afeec9a4baf
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 27 17:52:09 2006 +0100
+
+    pde/src/main.c: improve robustness against rounding errors
+
+    (was svn revision 7151)
+
+commit 3bd84e647e5539568b81369311f4b77a2b978be8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jul 25 00:41:20 2006 +0100
+
+    pde/src/main.c: white space fixes
+
+    (was svn revision 7144)
+
+commit 848fca9369a4569e29d2a5c62a4eda6852bb0e3c
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jul 25 00:28:59 2006 +0100
+
+    pde/src/main.c: cosmetic changes
+
+    (was svn revision 7143)
+
+commit 52c5145c133768d2d2f64b30f603be3479d19770
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jul 25 00:14:53 2006 +0100
+
+    pde/src/main.c, pde/src/integrate.tex: clean up the integration routines
+
+    (was svn revision 7142)
+
+commit 5337fdaa4995bcb5b4bf28c5b609486f96d0e261
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Mon Jul 24 21:00:17 2006 +0100
+
+    pde/src/main.c: check for sv<0
+
+    (was svn revision 7141)
+
+commit c9583e35055226809f934e477471529bece75b0b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 9 22:01:04 2006 +0100
+
+    pde/src/main.c: bug fixes
+
+    (was svn revision 7138)
+
+commit 9a4e4e5ac7b58046309dc6fbb92537097b2d767b
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 9 21:32:43 2006 +0100
+
+    pde/src/main.c: fix a memory leak (thanks, valgrind)
+
+    (was svn revision 7137)
+
+commit 57e64d536e7f1b072c80d166c98d024ee7852746
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 9 21:26:32 2006 +0100
+
+    pde/src/main.c: implement handling of p_sv (still buggy)
+
+    (was svn revision 7136)
+
+commit b8ae770a3455e49788136f635667cd1ec399bd83
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 6 23:24:55 2006 +0100
+
+    pde/src/main.c: bug fix in the integration routine
+
+    (was svn revision 7134)
+
+commit 974f5c7dedfc0f482a38df44b2505c40003ed23a
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 6 22:49:54 2006 +0100
+
+    pde/src/main.c: implement a new, faster integration routine.
+
+    (was svn revision 7133)
+
+commit 296f78869935feccbc3fd1378c79917e4dfdd558
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Thu Jul 6 15:29:10 2006 +0100
+
+    pde/src: bug fixes
+
+    (was svn revision 7132)
+
+commit 077898ee834e73ce167cfc04774717a29803e14d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Jul 5 23:47:11 2006 +0100
+
+    pde/src: implement variability in t_err (not yet tested)
+
+    (was svn revision 7131)
+
+commit a66d3c121e145d2de9a9d15340c34e02be21ba52
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Jul 5 22:05:26 2006 +0100
+
+    pde/src: cosmetic fixes and rearrangements.
+
+    (was svn revision 7130)
+
+commit ccd44ddf0d09a84de8b75462194fe7c4a8c06865
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 2 20:27:04 2006 +0100
+
+    pde/src: updates by Andreas
+
+    (was svn revision 7125)
+
+commit f0962d4d43ef3aa20ef8b10165ceec43de8553b0
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 2 19:35:14 2006 +0100
+
+    pde/src: Add emacs local variables to customise indentation.
+
+    (was svn revision 7123)
+
+commit 1480ab4feb809e3dbae1cbbf89e06879169ca5d4
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 2 19:34:28 2006 +0100
+
+    pde/src/main.c: Bug fixes for variability in z.
+
+    (was svn revision 7122)
+
+commit f610757911ee1cbdb9da9e8499adefc284a4ab9f
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sun Jul 2 16:25:59 2006 +0100
+
+    bruder/pde/src: improve the case with variability in z
+
+    (was svn revision 7121)
+
+commit 4e62c5c7c4afc7654eb4d41e5b79d8f130a02af5
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Sat Jul 1 11:41:28 2006 +0100
+
+    bruder/pde/src: continue work on the variablity estimation
+
+    (was svn revision 7119)
+
+commit 74fbfb0f86741f2d613383e73f80eb6c9e93df01
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Jun 28 23:02:38 2006 +0100
+
+    main.c: implement variability in z
+
+    (was svn revision 7118)
+
+commit 366581aad11f4a862d5d04b1c56356657a0a0709
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Wed Jun 28 19:44:05 2006 +0100
+
+    clean up the files a bit
+
+    (was svn revision 7116)
+
+commit 1eec059971e242c5292ec5d840759121e0242d84
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 22:01:28 2006 +0100
+
+    findsteps.c: minor fixes
+
+    (was svn revision 7113)
+
+commit 364d79a320fc552c51e1f503e9cb1cc01c97f3b7
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 21:50:45 2006 +0100
+
+    pde.c: cosmetic fixes
+
+    (was svn revision 7112)
+
+commit a6952b9647521595c78c716153c1b9e998c3d5e8
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 21:39:12 2006 +0100
+
+    pde.c: solve_tridiag: bug fix, tested this time
+
+    (was svn revision 7111)
+
+commit f77ee92c81780b2d506bcfc909ae5b7c6645e67d
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 20:58:28 2006 +0100
+
+    pde.c: bug fix (solving the tridiag SLE)
+
+    (was svn revision 7110)
+
+commit d81403d6de0f207c4239b426324a880be71f6063
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 19:24:01 2006 +0100
+
+    bug fixes
+
+    (was svn revision 7109)
+
+commit 6377134e423dda820b18c53d250048d0e56e70f1
+Author: Jochen Voss <voss@seehuhn.de>
+Date:   Tue Jun 27 19:14:27 2006 +0100
+
+    Rename bruder/src/pde/ to bruder/pde/src/ .
+
+    (was svn revision 7108)

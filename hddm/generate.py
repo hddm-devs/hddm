@@ -2,7 +2,8 @@
 from __future__ import division
 
 import numpy as np
-import numpy.lib.recfunctions as rec
+from numpy.random import rand
+
 from scipy.stats import uniform, norm
 from copy import copy, deepcopy
 import random
@@ -19,9 +20,9 @@ def gen_rand_params(include=()):
                 any combination of:
 
                 * 'z' (bias, default=0.5)
-                * 'V' (inter-trial drift variability)
-                * 'Z' (inter-trial bias variability)
-                * 'T' (inter-trial non-decision time variability)
+                * 'sv' (inter-trial drift variability)
+                * 'sz' (inter-trial bias variability)
+                * 'st' (inter-trial non-decision time variability)
 
                 Special arguments are:
                 * 'all': include all of the above
@@ -30,26 +31,26 @@ def gen_rand_params(include=()):
     """
     params = {}
     if include == 'all':
-        include = ['z','V','Z','T']
+        include = ['z','sv','sz','st']
     elif include == 'all_inter':
-        include = ['V','Z','T']
+        include = ['sv','sz','st']
 
-    from numpy.random import rand
-
-    params['V'] = rand() if 'V' in include else 0
-    params['Z'] = rand()* 0.3 if 'Z' in include else 0
-    params['T'] = rand()* 0.2 if 'T' in include else 0
+    params['sv'] = rand() if 'sv' in include else 0
+    params['sz'] = rand()* 0.3 if 'sz' in include else 0
+    params['st'] = rand()* 0.2 if 'st' in include else 0
     params['z'] = .4+rand()*0.2 if 'z' in include else 0.5
 
     # Simple parameters
     params['v'] = (rand()-.5)*4
-    params['t'] = 0.2+rand()*0.3+(params['T']/2)
+    params['t'] = 0.2+rand()*0.3+(params['st']/2)
     params['a'] = 1.0+rand()
 
 
     if 'pi' in include or 'gamma' in include:
         params['pi'] = max(rand()*0.1,0.01)
 #        params['gamma'] = rand()
+
+    assert hddm.utils.check_params_valid(**params)
 
     return params
 
@@ -63,7 +64,7 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
                   't': .3,
                   't_switch': .3,
                   'z':.5,
-                  'T': 0, 'Z':0, 'V':0}
+                  'st': 0, 'sz':0, 'sv':0}
     # Generate prosaccade trials
     pro_params = copy(params)
     del pro_params['t_switch']
@@ -120,24 +121,30 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
         print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
 
     # Set optional default values if they are not provided
-    for var_param in ('V', 'Z', 'T'):
+    for var_param in ('sv', 'sz', 'st'):
         if var_param not in params:
             params[var_param] = 0
     if 'z' not in params:
         params['z'] = .5
+    if 'sv' not in params:
+        params['sv'] = 0
+    if 'sz' not in params:
+        params['sz'] = 0
 
+    #check sample
+    if isinstance(samples, tuple): #this line is because pymc stochastic use tuple for sample size
+        if samples == ():
+            samples = 1
+        else:
+            samples = samples[0]
 
-    if 'V' not in params:
-        params['V'] = 0
-    if 'Z' not in params:
-        params['Z'] = 0
     if method=='cdf_py':
         rts = _gen_rts_from_cdf(params, samples, range_, dt)
     elif method=='drift':
         rts = _gen_rts_from_simulated_drift(params, samples, dt, intra_sv)[0]
     elif method=='cdf':
-        rts = hddm.wfpt.gen_rts_from_cdf(params['v'],params['V'],params['a'],params['z'],
-                                         params['Z'],params['t'],params['T'],
+        rts = hddm.wfpt.gen_rts_from_cdf(params['v'],params['sv'],params['a'],params['z'],
+                                         params['sz'],params['t'],params['st'],
                                          samples, range_[0], range_[1], dt)
     else:
         raise TypeError, "Sampling method %s not found." % method
@@ -159,7 +166,7 @@ def kabuki_data_to_hddm_data(kabuki_data):
     "transform data generate by kabuki.generate.gen_rand_data to hddm data"
 
     kd = kabuki_data
-    dtype = ([('response', np.int), ('rt', np.float), ('subj_idx', np.float), ('condition', 'S20')])
+    dtype = ([('response', np.int), ('rt', np.float), ('subj_idx', np.int32), ('condition', 'S20')])
     data = np.empty(kd.shape, dtype = dtype)
 
     rts = kd['data']
@@ -207,16 +214,16 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         switch = False
 
     #create delay
-    if params.has_key('T'):
-        start_delay = (uniform.rvs(loc=params['t'], scale=params['T'], size=samples) \
-                       - params['T']/2.)
+    if params.has_key('st'):
+        start_delay = (uniform.rvs(loc=params['t'], scale=params['st'], size=samples) \
+                       - params['st']/2.)
     else:
         start_delay = np.ones(samples)*params['t']
 
     #create starting_points
-    if params.has_key('Z'):
-        starting_points = (uniform.rvs(loc=params['z'], scale=params['Z'], size=samples) \
-                           - params['Z']/2.)*a
+    if params.has_key('sz'):
+        starting_points = (uniform.rvs(loc=params['z'], scale=params['sz'], size=samples) \
+                           - params['sz']/2.)*a
     else:
         starting_points = np.ones(samples)*params['z']*a
 
@@ -230,8 +237,8 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         iter = 0
         y_0 = starting_points[i_sample]
         # drifting...
-        if params.has_key('V') and params['V'] != 0:
-            drift_rate = norm.rvs(v, params['V'])
+        if params.has_key('sv') and params['sv'] != 0:
+            drift_rate = norm.rvs(v, params['sv'])
         else:
             drift_rate = v
 
@@ -286,10 +293,10 @@ def pdf_with_params(rt, params):
     from the dict params.
 
     """
-    v = params['v']; V= params['V']; z = params['z']; Z = params['Z']; t = params['t'];
-    T = params['T']; a = params['a']
+    v = params['v']; V= params['sv']; z = params['z']; Z = params['sz']; t = params['t'];
+    T = params['st']; a = params['a']
     return hddm.wfpt.full_pdf(rt,v=v,V=V,a=a,z=z,Z=Z,t=t,
-                        T=T,err=1e-4, nT=2, nZ=2, use_adaptive=1, simps_err=1e-3)
+                        T=T,err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3)
 
 def _gen_rts_from_cdf(params, samples=1000):
     """Returns simulated RTs sampled from the inverse of the CDF.
@@ -306,38 +313,9 @@ def _gen_rts_from_cdf(params, samples=1000):
             gen_rts
 
     """
-    v = params['v']; V = params['V']; z = params['z']; Z = params['Z']; t = params['t'];
-    T = params['T']; a = params['a']
+    v = params['v']; V = params['sv']; z = params['z']; Z = params['sz']; t = params['t'];
+    T = params['st']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
-
-def add_contaminate_data(data, params):
-    """ add contaminated data"""
-    if not params.has_key('gamma'):
-        gamma = 1
-    else:
-        gamma = params['gamma']
-    t_min = max(np.abs(data['rt']))+0.5
-    t_max = t_min+3;
-    pi = params['pi']
-    n_cont = max(int(len(data)*pi),2)
-    n_unif = max(int(n_cont*gamma),2)
-    n_other = n_cont - n_unif
-    l_data = range(len(data))
-    cont_idx = random.sample(l_data,n_cont)
-    unif_idx = cont_idx[:n_unif]
-    other_idx = cont_idx[n_unif:]
-
-    # create guesses
-    response = np.round(uniform.rvs(0,1,size=n_unif))
-    data[unif_idx]['rt']  = uniform.rvs(0,t_max,size=n_unif) * response
-    data[unif_idx]['rt']  = response
-    data[unif_idx[0]]['rt'] = min(abs(data['rt']))/2.
-    data[unif_idx[1]]['rt'] = max(abs(data['rt'])) + 0.8
-
-    #create late responses
-    response = (np.sign(gen_rts(params, n_other))+1) / 2
-    data[other_idx]['rt']  = uniform.rvs(t_min,t_max,size=n_other) * response
-    return data
 
 def gen_rand_data(params, method='cdf', **kwargs):
     """Generate simulated RTs with random parameters.
@@ -348,71 +326,27 @@ def gen_rand_data(params, method='cdf', **kwargs):
                 supplied, takes random values.
             method : string
                 method to generate samples
-            the rest of the arguments are forward to kabuki.generate.gen_rand_data
+            the rest of the arguments are forwarded to kabuki.generate.gen_rand_data
 
        :Returns:
             data array with RTs
             parameter values
 
     """
+    from numpy import inf
 
-    wfpt = deepcopy(hddm.likelihoods.wfpt_like)
-    wfpt.method = method
-
+    # set valid param ranges
+    bounds = {'a': (0, inf),
+              'z': (0, 1),
+              't': (0, inf),
+              'st': (0, inf),
+              'sv': (0, inf),
+              'sz': (0, 1)
+    }
 
     # Create RT data
-    data, subj_params = kabuki.generate.gen_rand_data(wfpt, params, **kwargs)
+    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params, check_valid_func=hddm.utils.check_params_valid, bounds=bounds, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
     return data, subj_params
-
-
-
-def gen_correlated_rts(num_subjs=10, params=None, samples=100, correlation=.1, cor_param=None, subj_noise=.1):
-    """Generate RT data where cor_param is linearly influenced by
-    another variable.
-
-    """
-
-    if params is None:
-        params = {'v': .5, 'V': 0, 'z': .5, 'Z': 0., 't': .3, 'T': 0., 'a': 2, 'e': correlation}
-
-    if cor_param is None:
-        cor_param = 'a'
-
-    data = np.empty(samples*num_subjs, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float), ('cov', np.float)]))
-    params_subjs = []
-    # Generate RTs with given parameters (influenced by covariate)
-    trial = 0
-    for subj_idx in range(num_subjs):
-        params_subj = copy(params)
-        params_subj = _add_noise(params_subj, subj_noise)
-        params_subjs.append(params_subj)
-
-        for i in range(samples):
-            params_trial = copy(params_subj)
-            data['subj_idx'][trial] = subj_idx
-
-            # Calculate resulting cor_param values
-            data['cov'][trial] = np.random.rand()-.5
-
-            # Calculate new param values based on covariate
-            params_trial[cor_param] = data['cov'][trial] * params_subj['e'] + params_subj[cor_param]
-
-            # Generate RT (resample if it didn't reach threshold)
-            rt = np.array([])
-            while rt.shape == (0,):
-                rt = gen_rts(params_trial, samples=1, structured=False)
-
-            data['rt'][trial] = rt
-
-            trial+=1
-
-    data['response'][data['rt']>0] = 1.
-    data['response'][data['rt']<0] = 0.
-    data['rt'] = np.abs(data['rt'])
-
-    return data, params_subjs
-
-
 

@@ -2,7 +2,7 @@ import hddm
 import kabuki
 from hddm.model import HDDM
 import pymc as pm
-from kabuki import Parameter, Knode
+from kabuki import Knode
 from kabuki.distributions import scipy_stochastic
 import numpy as np
 from scipy import stats
