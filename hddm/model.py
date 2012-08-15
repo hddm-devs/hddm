@@ -344,7 +344,7 @@ class HDDM(HDDMBase):
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
             #knodes.update(self.create_family_exp('sv', value=1))
         if 'sz' in self.include:
-            knodes.update(self.create_family_exp('sz', value=.1))
+            knodes.update(self.create_family_invlogit('sz', value=.1))
         if 'st' in self.include:
             knodes.update(self.create_family_exp('st', value=.01))
         if 'z' in self.include:
