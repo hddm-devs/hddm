@@ -107,8 +107,25 @@ of the posterior std. However, this is a very weak statistic and by no
 means sufficient to assess convergence.
 
 
+Geweke statistic
+""""""""""""""""
+
+The Geweke statistic is a time-series approach that compares the mean
+and variance of segments from the beginning and end of a single
+chain. You can test your model by running:
+
+::
+
+    from kabuki.analyze import check_geweke
+    print check_geweke(model)
+
+This will print `True` if non of the test-statistics is larger than 2
+and `False` otherwise. Check the `PyMC documentation` for more
+information on this test.
+
+
 Visually inspect chains
-""""""""""""""""""""""
+"""""""""""""""""""""""
 
 The next thing to look at are the traces of the posteriors. You can
 plot them by calling:
@@ -300,3 +317,4 @@ in the `PyMC docs`_.
 
 .. _PyMC docs: http://pymc-devs.github.com/pymc/database.html#saving-data-to-disk
 .. _DIC: http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml
+.. _PyMC documentation: http://pymc-devs.github.com/pymc/modelchecking.html#formal-methods
