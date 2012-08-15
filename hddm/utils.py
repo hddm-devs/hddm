@@ -541,6 +541,35 @@ def gen_ppc_stats(quantiles = (10, 30, 50, 70, 90)):
     return stats
 
 
+def post_pred_check(model, **kwargs):
+    """Run posterior predictive check on a model.
+
+    :Arguments:
+        model : kabuki.Hierarchical
+            Kabuki model over which to compute the ppc on.
+
+    :Optional:
+        samples : int
+            How many samples to generate for each node.
+        bins : int
+            How many bins to use for computing the histogram.
+        evals : dict
+            User-defined evaluations of the statistics (by default 95 percentile and SEM).
+            :Example: {'percentile': scoreatpercentile}
+        plot : bool
+            Whether to plot the posterior predictive distributions.
+        progress_bar: bool
+            Display progress bar while sampling.
+
+
+    :Returns:
+        Hierarchical pandas.DataFrame with the different statistics.
+
+    """
+
+    stats = gen_ppc_stats()
+    return kabuki.analyze.post_pred_check(model, stats=stats, **kwargs)
+
 def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
 
