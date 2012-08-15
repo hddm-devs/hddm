@@ -173,9 +173,32 @@ Another option to assess chain convergence is to compute the R-hat
 (Gelman-Rubin) statistic. This requires multiple chains to be run. If
 all chains converged to the same stationary distribution they should
 be indistinguishable. The R-hat statistic compares between-chain
-variance to within-chain variance. While the core functionality is in
-place, an easy way to run multiple chains is currently not implemented
-in HDDM but will be made available in the future.
+variance to within-chain variance.
+
+To compute the R-hat statistic in kabuki you have to run
+multiple copies of your model:
+
+::
+
+   from kabuki.analyze import gelman_rubin
+
+   models = []
+   for i in range(5):
+       m = hddm.HDDM(data)
+       m.map()
+       m.sample(5000, burn=1000)
+       models.append(m)
+
+   gelman_rubin(models)
+
+The output is a dictionary that provides the R-hat for each parameter:
+
+::
+
+   {'a_trans': 1.0028806196268818,
+   't_trans': 1.0100017175108695,
+   'v': 1.0232548747719443}
+
 
 What to do about lack of convergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
