@@ -130,54 +130,27 @@ class TestSingleBreakdown(unittest.TestCase):
 
 
 def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
-                                         optimization_method='ML'):
+                                         optimization_method='ML', max_retries=10):
     """
     recover parameters for single subjects model using ML
     """
 
     #init
-    initial_value = {'a': 1, 'v': 0, 'z': 0.5, 't': 0.01, 'st': 0, 'sv': 0, 'sz': 0}
-
-    all_params = set(['a','v','t','z','st','sz','sv'])
     include_sets = [set(['a','v','t']),
                   set(['a','v','t','z']),
                   set(['a','v','t','st']),
                   set(['a','v','t','sz']),
                   set(['a','v','t','sv'])]
 
-    wfpt = hddm.likelihoods.generate_wfpt_stochastic_class()
-    v = [0, 0.5, 0.75, 1.]
-    n_conds = len(v)
-
-    np.random.seed(seed)
-    if true_starting_point:
-        max_retries = 1
-    else:
-        max_retries = 10
-
     #for each include set create a set of parametersm generate random data
     #and test the optimization function max_retries times.
+    v = [0, 0.5, 0.75, 1.]
+    np.random.seed(seed)
     for include in include_sets:
         for i in range(repeats):
 
             #generate params for experiment with n_conds conditions
-            org_params = hddm.generate.gen_rand_params(include)
-            merged_params = org_params.copy()
-            del merged_params['v']
-            cond_params = {};
-            for i in range(n_conds):
-
-                #create a set of parameters for condition i
-                #put them in i_params, and in cond_params[c#i]
-                i_params = org_params.copy()
-                del i_params['v']
-                i_params['v'] = v[i]
-                cond_params['c%d' %i] = i_params
-
-                #create also a set of all the parameters in on dictionary so we can compare them
-                #to our estimation at the end
-                merged_params['v(c%d)' % i] = v[i]
-
+            cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
             print "*** the true parameters ***"
             print merged_params
 
@@ -192,25 +165,10 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
             for i_tries in range(max_retries):
                 print "recovery attempt %d" % (i_tries + 1)
 
-
                 #set the starting point of the optimization to the true value
                 #of the parameters
                 if true_starting_point:
-                    for (param_name, row) in h.iter_stochastics():
-                        if param_name in ('sv_trans', 'st_trans','t_trans','a_trans'):
-                            transform = np.log
-                            org_name = '%s' %  list(row['node'].children)[0].__name__
-                        elif param_name in ('sz_trans', 'z_trans'):
-                            transform = pm.logit
-                            if param_name == 'z_trans':
-                                org_name = 'z'
-                            else:
-                                org_name = 'sz'
-                        else:
-                            org_name = param_name
-                            transform = lambda x:x
-
-                        h.nodes_db.ix[param_name]['node'].value = transform(merged_params[org_name])
+                    set_hddm_nodes_values(h, merged_params)
 
                 #optimize
                 if optimization_method == 'ML':
@@ -233,10 +191,32 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
                     #if assertion fails try to advance the model using mcmc to get
                     #out of local maximum
                     if i_tries < (max_retries - 1):
-                        h.sample(100)
+                        h.sample(500)
                         print
 
             assert recovery_ok, 'could not recover the true parameters'
+
+
+def set_hddm_nodes_values(model, params_dict):
+    """
+    set hddm nodes values according to the params_dict
+    """
+    for (param_name, row) in model.iter_stochastics():
+        if param_name in ('sv_trans', 'st_trans','t_trans','a_trans'):
+            transform = np.log
+            org_name = '%s' %  list(row['node'].children)[0].__name__
+        elif param_name in ('sz_trans', 'z_trans'):
+            transform = pm.logit
+            if param_name == 'z_trans':
+                org_name = 'z'
+            else:
+                org_name = 'sz'
+        else:
+            org_name = param_name
+            transform = lambda x:x
+
+        model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
+
 
 def test_ML_recovery_single_subject_from_random_starting_point():
     raise SkipTest("""Disabled. sometimes changes in sz and sv have little effect on logp,
