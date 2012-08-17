@@ -43,7 +43,7 @@ def gen_rand_params(include=()):
     # Simple parameters
     params['v'] = (rand()-.5)*4
     params['t'] = 0.2+rand()*0.3+(params['st']/2)
-    params['a'] = 1.0+rand()
+    params['a'] = 0.5+rand()*1.5
 
 
     if 'pi' in include or 'gamma' in include:
