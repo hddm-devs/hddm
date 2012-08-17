@@ -11,8 +11,9 @@ import kabuki
 
 import hddm
 
-def gen_rand_params(include=()):
-    """Returns a dict of DDM parameters with random values.
+def gen_single_params_set(include=()):
+    """Returns a dict of DDM parameters with random values for a singel conditin
+    the function is uded by gen_rand_params.
 
         :Optional:
             include : tuple
@@ -53,6 +54,82 @@ def gen_rand_params(include=()):
     assert hddm.utils.check_params_valid(**params)
 
     return params
+
+
+def gen_rand_params(include = (), cond_dict=None, seed=None):
+    """Returns a dict of DDM parameters with random values.
+
+        :Optional:
+            include : tuple
+                Which optional parameters include. Can be
+                any combination of:
+
+                * 'z' (bias, default=0.5)
+                * 'sv' (inter-trial drift variability)
+                * 'sz' (inter-trial bias variability)
+                * 'st' (inter-trial non-decision time variability)
+
+                Special arguments are:
+                * 'all': include all of the above
+                * 'all_inter': include all of the above except 'z'
+
+            cond_dict : dictionary
+                cond_dict is used when multiple conditions are desired.
+                the dictionary has the form of {param1: [value_1, ... , value_n], param2: [value_1, ... , value_n]}
+                and the function will output n sets of parameters. each set with values from the
+                appropriate place in the dictionary
+                for instance if cond_dict={'v': [0, 0.5, 1]} then 3 parameters set will be created.
+                the first with v=0 the second with v=0.5 and the third with v=1.
+
+            seed: float
+                random seed
+
+            Output:
+            if conditions is None:
+                params: dictionary
+                    a dictionary holding the parameters values
+            else:
+                cond_params: a dictionary holding the parameters for each one of the conditions,
+                    that has the form {'c1': params1, 'c2': params2, ...}
+                    it can be used directly as an argument in gen_rand_data.
+                merged_params:
+                     a dictionary of parameters that can be used to validate the optimization
+                     and learning algorithms.
+
+
+    """
+
+
+    #set seed
+    if seed is not None:
+        np.random.seed(seed)
+
+   #if ther is only a single condition then we can use gen_single_params_set
+    if cond_dict is None:
+       return gen_single_params_set(include=include)
+
+    #generate original parameter set
+    org_params = gen_single_params_set(include)
+
+    #create a merged set
+    merged_params = org_params.copy()
+    for name in cond_dict.iterkeys():
+        del merged_params[name]
+
+    cond_params = {};
+    n_conds = len(cond_dict.values()[0])
+    for i in range(n_conds):
+        #create a set of parameters for condition i
+        #put them in i_params, and in cond_params[c#i]
+        i_params = org_params.copy()
+        for name in cond_dict.iterkeys():
+            i_params[name] = cond_dict[name][i]
+            cond_params['c%d' %i] = i_params
+
+            #update merged_params
+            merged_params['%s(c%d)' % (name, i)] = cond_dict[name][i]
+
+    return cond_params, merged_params
 
 
 def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4, subj_idx=0):
