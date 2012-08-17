@@ -930,7 +930,7 @@ def _quantiles_chisquare_objective(emp_rt, n_samples, freq_obs, gen_cdf_func, pa
 
     return score
 
-def quantiles_chi2square_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, n_iter=10,
+def quantiles_chisquare_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwargs, n_iter=10,
                                       quantiles = (.1, .3, .5, .7, .9 ), max_inital_values_tries = 100):
     """
     quantile chi square optimization

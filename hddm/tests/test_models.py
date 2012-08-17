@@ -143,7 +143,7 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
                   set(['a','v','t','z']),
                   set(['a','v','t','st']),
                   set(['a','v','t','sz']),
-                  set(['a','v','t','sv'])]]
+                  set(['a','v','t','sv'])]
 
     wfpt = hddm.likelihoods.generate_wfpt_stochastic_class()
     v = [0, 0.5, 0.75, 1.]
@@ -216,7 +216,7 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
                 if optimization_method == 'ML':
                     recovered_params = h.ML_optimization()
                 elif optimization_method == 'chisquare':
-                    recovered_params = h.quantiles_chi2square_optimization(quantiles=np.linspace(0.05,0.95,10))
+                    recovered_params = h.quantiles_chisquare_optimization(quantiles=np.linspace(0.05,0.95,10))
                 else:
                     raise ValueError('unknown optimization method')
 

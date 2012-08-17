@@ -40,7 +40,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
 
 
-    def quantiles_chi2square_optimization(self, quantiles=(.1, .3, .5, .7, .9 )):
+    def quantiles_chisquare_optimization(self, quantiles=(.1, .3, .5, .7, .9 )):
         """
         quantile optimization using chi^2.
         Input:
@@ -85,26 +85,26 @@ class AccumulatorModel(kabuki.Hierarchical):
                 average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
 
             #optimize
-            results = average_model._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=False)
+            results = average_model._quantiles_chisquare_optimization_single(quantiles=quantiles, compute_stats=False)
 
 
         #run optimization for single subject model
         else:
-            results = self._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=True)
+            results = self._quantiles_chisquare_optimization_single(quantiles=quantiles, compute_stats=True)
 
         return results
 
 
-    def _quantiles_chi2square_optimization_single(self, quantiles, compute_stats):
+    def _quantiles_chisquare_optimization_single(self, quantiles, compute_stats):
         """
-        function used by quantiles_chi2square_optimization to fit the a single subject model
+        function used by quantiles_chisquare_optimization to fit the a single subject model
         Input:
-         quantiles <sequance> - same as in quantiles_chi2square_optimization
+         quantiles <sequance> - same as in quantiles_chisquare_optimization
          cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
 
         Output:
-            results <dict> - same as in quantiles_chi2square_optimization
+            results <dict> - same as in quantiles_chisquare_optimization
         """
 
         #get obs_nodes
@@ -136,7 +136,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         optimization of model using Maximum likelihood
 
         Output:
-            results <dict> - same as in quantiles_chi2square_optimization
+            results <dict> - same as in quantiles_chisquare_optimization
         """
 
         if self.is_group_model:
