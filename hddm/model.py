@@ -40,13 +40,12 @@ class AccumulatorModel(kabuki.Hierarchical):
         raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
 
 
-    def quantiles_chi2square_optimization(self, quantiles=(.1, .3, .5, .7, .9 ), verbose=1):
+    def quantiles_chi2square_optimization(self, quantiles=(.1, .3, .5, .7, .9 )):
         """
         quantile optimization using chi^2.
         Input:
             quantiles <sequance> - a sequance of quantiles.
                 the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
-            verbose <int> - verbose
         Output:
             results <dict> - a results dictionary of the parameters values.
             The values of the nodes in single subject model is update according to the results.
@@ -86,26 +85,23 @@ class AccumulatorModel(kabuki.Hierarchical):
                 average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
 
             #optimize
-            results = average_model._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=False,
-                                                           verbose=verbose)
+            results = average_model._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=False)
 
 
         #run optimization for single subject model
         else:
-            results = self._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=True,
-                                                           verbose=verbose)
+            results = self._quantiles_chi2square_optimization_single(quantiles=quantiles, compute_stats=True)
 
         return results
 
 
-    def _quantiles_chi2square_optimization_single(self, quantiles, compute_stats, verbose):
+    def _quantiles_chi2square_optimization_single(self, quantiles, compute_stats):
         """
         function used by quantiles_chi2square_optimization to fit the a single subject model
         Input:
          quantiles <sequance> - same as in quantiles_chi2square_optimization
          cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
-            verbose <int> - verbose
 
         Output:
             results <dict> - same as in quantiles_chi2square_optimization
@@ -133,10 +129,43 @@ class AccumulatorModel(kabuki.Hierarchical):
         fmin_powell(objective, values)
         results = self.values
 
-        if verbose > 0:
-            print results
+        return results
+
+    def ML_optimization(self):
+        """
+        optimization of model using Maximum likelihood
+
+        Output:
+            results <dict> - same as in quantiles_chi2square_optimization
+        """
+
+        if self.is_group_model:
+            raise TypeError, "ML optimization is not defined for group models"
+
+        #get obs_nodes
+        obs_nodes = self.get_observeds()['node']
+
+
+        #get all stochastic parents of observed nodes
+        db = self.nodes_db
+        parents = db[(db.stochastic == True) & (db.observed == False)]['node']
+        values = [x.value for x in parents]
+
+        #define objective
+        def objective(values):
+            for (i, value) in enumerate(values):
+                parents[i].value = value
+            try:
+                return -sum([obs.logp for obs in obs_nodes])
+            except pm.ZeroProbability:
+                return np.inf
+
+        #optimze
+        fmin_powell(objective, values)
+        results = self.values
 
         return results
+
 
 
 
