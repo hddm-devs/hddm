@@ -162,6 +162,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
 
     pymc_class.compute_quantiles_stats = compute_quantiles_stats
     pymc_class.set_quantiles_stats = set_quantiles_stats
+    pymc_class.get_quantiles_stats = get_quantiles_stats
     pymc_class.chisquare = chisquare
 
 
