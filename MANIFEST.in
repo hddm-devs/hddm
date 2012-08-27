@@ -5,6 +5,7 @@ include scripts/*.py
 include src/*.c
 include src/*.pyx
 include src/*.pxi
+include src/fast-dm/*
 recursive-include docs *.rst
 global-exclude .git
 global-exclude *~
