@@ -310,18 +310,15 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
 
     m.mcmc().sample(samples, burn=burn, thin=thin, verbose=verbose)
 
-    if only_group_stats:
-        print kabuki.analyze.print_group_stats(m.mc.stats())
-    else:
-        print kabuki.analyze.print_stats(m.mc.stats())
-
+    m.print_stats()
+    m.print_stats(fname='stats.txt')
     print "logp: %f" % m.mc.logp
     print "DIC: %f" % m.mc.dic
 
     if plot:
         m.plot_posteriors()
         print "Plotting posterior predictive..."
-        kabuki.analyze.plot_posterior_predictive(m, value_range=np.linspace(-3, 3, 100), savefig=True)
+        m.plot_posterior_predictive(savefig=True)
 
     return m
 
