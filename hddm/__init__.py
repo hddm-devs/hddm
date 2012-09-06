@@ -2,6 +2,8 @@
 
 __docformat__ = 'restructuredtext'
 
+__version__ = '0.3'
+
 import model
 import likelihoods
 import generate
