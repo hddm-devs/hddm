@@ -76,13 +76,11 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
 
     #create pdf function
-    def pdf(self, x):
-        kwargs = wp.copy()
-        kwargs.update(self.parents)
+    def pdf(self, x, v, sv, a, z, sz, t, st):
         if np.isscalar(x):
-            out = hddm.wfpt.full_pdf(x, **kwargs)
+            out = hddm.wfpt.full_pdf(x, v, sv, a, z, sz, t, st)
         else:
-            out = hddm.wfpt.pdf_array(x, logp=False, **kwargs)
+            out = hddm.wfpt.pdf_array(x, v, sv, a, z, sz, t, st, logp=False)
 
         return out
 
