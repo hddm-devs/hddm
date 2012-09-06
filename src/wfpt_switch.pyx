@@ -28,7 +28,7 @@ cdef extern from "stdlib.h":
     void* realloc(void* ptr, size_t size)
 
 cdef double wfpt_gsl(double x, void * params) nogil:
-    cdef double rt, v, v_switch, a, z, t, t_switch, f, T
+    cdef double rt, v, v_switch, a, z, t, t_switch, f, st
     rt = (<double_ptr> params)[0]
     v = (<double_ptr> params)[1]
     v_switch = (<double_ptr> params)[2]
@@ -37,17 +37,17 @@ cdef double wfpt_gsl(double x, void * params) nogil:
     z = (<double_ptr> params)[5]
     t = (<double_ptr> params)[6]
     t_switch = (<double_ptr> params)[7]
-    T = (<double_ptr> params)[8]
+    st = (<double_ptr> params)[8]
 
-    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * calc_drift_dens_T(x*a, t_switch, v, a, z*a, T)
+    f = full_pdf(rt, v_switch, V_switch, a, x, 0, t+t_switch, 0, 1e-4) * calc_drift_dens_st(x*a, t_switch, v, a, z*a, st)
 
     return f
 
-cdef double calc_drift_dens_T(double x, double t, double v, double a, double z, double T) nogil:
-    if T < 1e-4:
+cdef double calc_drift_dens_st(double x, double t, double v, double a, double z, double st) nogil:
+    if st < 1e-4:
         return calc_drift_dens(x, t, v, a, z,False)
     else:
-        return 1/T * (calc_drift_dens(x, t+T/2, v, a, z,True) - calc_drift_dens(x, t-T/2, v, a, z, True))
+        return 1/st * (calc_drift_dens(x, t+st/2, v, a, z, True) - calc_drift_dens(x, t-st/2, v, a, z, True))
 
 cpdef double calc_drift_dens(double x, double t, double v, double a, double z, bint integrate_t) nogil:
     cdef int N=40
@@ -82,7 +82,7 @@ cpdef double calc_drift_dens(double x, double t, double v, double a, double z, b
 
 cdef double pdf_post_switch(double rt, double v, double v_switch,
                              double V_switch, double a, double z, double t,
-                             double t_switch, double T, double err) nogil:
+                             double t_switch, double st, double err) nogil:
     cdef double alpha, result, error, expected
     cdef gsl_integration_workspace * W
     W = gsl_integration_workspace_alloc(1000)
@@ -97,7 +97,7 @@ cdef double pdf_post_switch(double rt, double v, double v_switch,
     params[5] = z
     params[6] = t
     params[7] = t_switch
-    params[8] = T
+    params[8] = st
 
     F.function = &wfpt_gsl
     F.params = params
@@ -107,38 +107,38 @@ cdef double pdf_post_switch(double rt, double v, double v_switch,
 
     return result
 
-cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
+cpdef double pdf_switch(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double st, double err) nogil:
     cdef double p
 
-    if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+    if fabs(rt) < t-st/2 or t < st/2 or t_switch < st/2 or t<0 or t_switch<0 or st<0 or a<=0 or z<=0 or z>=1 or st>.5:
         return 0
 
     if (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
-        p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+        p = full_pdf(rt, v, 0, a, z, 0, t, st, 1e-4, 2, 2, True, 1e-3)
     elif t_switch < 0.001:
         # Use regular likelihood
-        p = full_pdf(rt, v_switch, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+        p = full_pdf(rt, v_switch, 0, a, z, 0, t, st, 1e-4, 2, 2, True, 1e-3)
     else: # post-switch antisaccade
-        p = pdf_post_switch(rt, v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_post_switch(rt, v, v_switch, V_switch, a, z, t, t_switch, st, err)
 
     return p
 
-def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err):
+def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double st, double err):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
 
-    if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+    if np.any(np.abs(rt) < t-st/2) or t < st/2 or t_switch < st/2 or t<0 or t_switch<0 or st<0 or a<=0 or z<=0 or z>=1 or st>.5:
         return -np.inf
 
     for i in prange(size, nogil=True):
-        p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, st, err)
         if p == 0:
             with gil:
                 return -np.inf
         #if p < 0:
-        #    print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, T
+        #    print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, st
         sum_logp += log(p)
 
 
@@ -156,14 +156,14 @@ cdef gsl_spline *spline
 
 @cython.wraparound(False)
 @cython.boundscheck(False) # turn of bounds-checking for entire function
-def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err, int evals=40, double t_switch_cutoff=.02):
+def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double st, double err, int evals=40, double t_switch_cutoff=.02):
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t x
     cdef double p
     cdef double sum_logp = 0
 
-    if np.any(np.abs(rt) < t-T/2) or t < T/2 or t_switch == 0 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+    if np.any(np.abs(rt) < t-st/2) or t < st/2 or t_switch == 0 or t_switch < st/2 or t<0 or t_switch<0 or st<0 or a<=0 or z<=0 or z>=1 or st>.5:
         return -np.inf
 
     #############################
@@ -185,13 +185,13 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
             # If too small, approximate drift-density with normal distribution
             drift_density[x] = gsl_ran_gaussian_pdf(eval_dens[x] - (t_switch*v + z*a), sqrt(t_switch))
         else:
-            drift_density[x] = calc_drift_dens_T(eval_dens[x], t_switch, v, a, z*a, T)
+            drift_density[x] = calc_drift_dens_st(eval_dens[x], t_switch, v, a, z*a, st)
         if np.isnan(drift_density[x]) or drift_density[x] < 0 or fabs(drift_density[x]) > 100:
 
             if (drift_density[x] < 0 and drift_density[x] > -1e-2) or x == 1:
                 drift_density[x] = 0
             else:
-                print eval_dens[x], drift_density[x], x, t_switch, v, a, z*a, T
+                print eval_dens[x], drift_density[x], x, t_switch, v, a, z*a, st
                 # Ran into numerical stability issues, abort.
                 free(drift_density)
                 free(eval_dens)
@@ -204,9 +204,9 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
     gsl_spline_init(spline, eval_dens, drift_density, evals)
 
     for i in range(size):
-        p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err)
+        p = pdf_switch_precomp(rt[i], v, v_switch, V_switch, a, z, t, t_switch, st, err)
         if np.isnan(log(p)):
-            print p, rt[i], v, v_switch, V_switch, a, z, t, t_switch, T, err
+            print p, rt[i], v, v_switch, V_switch, a, z, t, t_switch, st, err
         if p == 0:
             sum_logp = -np.inf
             break
@@ -219,17 +219,17 @@ def wiener_like_antisaccade_precomp(np.ndarray[double, ndim=1] rt, double v, dou
 
     return sum_logp
 
-cdef double pdf_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double T, double err) nogil:
+cdef double pdf_switch_precomp(double rt, double v, double v_switch, double V_switch, double a, double z, double t, double t_switch, double st, double err) nogil:
     cdef double p
 
-    if fabs(rt) < t-T/2 or t < T/2 or t_switch < T/2 or t<0 or t_switch<0 or T<0 or a<=0 or z<=0 or z>=1 or T>.5:
+    if fabs(rt) < t-st/2 or t < st/2 or t_switch < st/2 or t<0 or t_switch<0 or st<0 or a<=0 or z<=0 or z>=1 or st>.5:
         return 0
 
     if (fabs(rt) <= t+t_switch): # Prosaccade or pre-switch
-        p = full_pdf(rt, v, 0, a, z, 0, t, T, 1e-4, 2, 2, True, 1e-3)
+        p = full_pdf(rt, v, 0, a, z, 0, t, st, 1e-4, 2, 2, True, 1e-3)
     #elif t_switch < 0.05:
         # Use regular likelihood
-        #p = full_pdf(rt, v_switch, 0, a, z, 0, t+t_switch, T, 1e-4, 2, 2, True, 1e-3)
+        #p = full_pdf(rt, v_switch, 0, a, z, 0, t+t_switch, st, 1e-4, 2, 2, True, 1e-3)
     else: # post-switch antisaccade
         p = pdf_post_switch_precomp(rt, v, v_switch, V_switch, a, z, t, t_switch, err)
 

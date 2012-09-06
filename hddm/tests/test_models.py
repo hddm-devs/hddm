@@ -1,38 +1,28 @@
 from __future__ import division
-
-import nose
-import sys
-import unittest
-from hddm.diag import *
-
-import numpy as np
-import numpy.testing
-import numpy.lib.recfunctions as rec
-import matplotlib.pyplot as plt
-
-import platform
 from copy import copy
-import subprocess
+import itertools
 
+import unittest
 import pymc as pm
+import numpy as np
+import pandas as pd
+pd.set_printoptions(precision=4)
+from nose import SkipTest
+import kabuki
 
 import hddm
+from hddm.diag import check_model
 
-from hddm.likelihoods import *
-from hddm.generate import *
-from scipy.stats import scoreatpercentile
-from numpy.random import rand
+def diff_model(param, subj=True, num_subjs=10, change=.5, size=500):
+    params_cond_a = {'v':.5, 'a':2., 'z':.5, 't': .3, 'st':0., 'sv':0., 'sz':0.}
+    params_cond_b = copy(params_cond_a)
+    params_cond_b[param] += change
 
-from nose import SkipTest
+    params = {'A': params_cond_a, 'B': params_cond_b}
 
+    data, subj_params = hddm.generate.gen_rand_data(params, subjs=num_subjs, size=size)
 
-def diff_model(param, subj=True, num_subjs=10, change=.5, samples=500):
-    params = {'v':.5, 'a':2., 'z':.5, 't': .3, 'T':0., 'V':0., 'Z':0.}
-    params[param] = [params[param], params[param]+change]
-
-    data, tmp, tmp2 = hddm.generate.gen_rand_cond_data(cond_params=params, n_conds=2, samples_per_cond=samples)
-
-    model = hddm.model.HDDM(data, depends_on={param:['cond']}, is_group_model=subj)
+    model = hddm.model.HDDMTruncated(data, depends_on={param:['condition']}, is_group_model=subj)
 
     return model
 
@@ -40,60 +30,76 @@ class TestMulti(unittest.TestCase):
     def runTest(self):
         pass
 
-    def test_diff_v(self, samples=1000):
-        m = diff_model('v', subj=False, change=.5, samples=samples)
+    def test_diff_v(self, size=100):
+        m = diff_model('v', subj=False, change=.5, size=size)
         return m
 
-    def test_diff_a(self, samples=1000):
-        m = diff_model('a', subj=False, change=-.5, samples=samples)
+    def test_diff_a(self, size=100):
+        m = diff_model('a', subj=False, change=-.5, size=size)
         return m
 
-    def test_diff_a_subj(self, samples=1000):
+    def test_diff_a_subj(self, size=100):
         raise SkipTest("Disabled.")
-        m = diff_model('a', subj=True, change=-.5, samples=samples)
+        m = diff_model('a', subj=True, change=-.5, size=size)
         return m
 
-class TestSingle(unittest.TestCase):
+class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestSingle, self).__init__(*args, **kwargs)
+        super(TestSingleBreakdown, self).__init__(*args, **kwargs)
 
-        self.samples = 10000
-        self.burn = 5000
+        self.iter = 50
+        self.burn = 10
 
     def runTest(self):
         return
 
-    def test_HDDM(self, assert_=True):
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
-        for include in includes:
-            data, params_true = hddm.generate.gen_rand_data(samples=500, include=include, method='cdf')
-            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=False)
-            mc = model.mcmc()
-            mc.sample(self.samples, burn=self.burn)
-            check_model(mc, params_true, assert_=assert_)
+    def test_HDDM(self, assert_=False):
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        for include, model_class in itertools.product(includes, model_classes):
+            params = hddm.generate.gen_rand_params(include=include)
+            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
+            model = model_class(data, include=include, bias='z' in include, is_group_model=False)
+            model.map()
+            model.sample(self.iter, burn=self.burn)
+            check_model(model.mc, params_true, assert_=assert_)
 
-        return mc
+        return model.mc
 
-    def test_HDDM_group(self, assert_=True):
-        raise SkipTest("Disabled.")
-        includes = [[], ['z'],['z', 'V'],['z', 'T'],['z', 'Z'], ['z', 'Z','T'], ['z', 'Z','T','V']]
-        for include in includes:
-            data, params_true = hddm.generate.gen_rand_subj_data(samples=500, num_subjs=5)
-            model = hddm.model.HDDM(data, include=include, bias='z' in include, is_group_model=True)
-            mc = model.mcmc()
-            mc.sample(self.samples, burn=self.burn)
-            check_model(mc, params_true, assert_=assert_)
+    def test_HDDM_group(self, assert_=False):
+        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        for include, model_class in itertools.product(includes, model_classes):
+            params = hddm.generate.gen_rand_params(include=include)
+            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+            model = model_class(data, include=include, bias='z' in include, is_group_model=True)
+            model.approximate_map()
+            model.sample(self.iter, burn=self.burn)
+            check_model(model.mc, params_true, assert_=assert_)
 
-        return mc
+        return model.mc
+
+    def test_HDDM_group_only_group_nodes(self, assert_=False):
+        group_only_nodes = [[], ['z'], ['z', 'st'], ['v', 'a']]
+        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+
+        for nodes, model_class in itertools.product(group_only_nodes, model_classes):
+            params = hddm.generate.gen_rand_params(include=nodes)
+            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+            model = model_class(data, include=nodes, group_only_nodes=nodes, is_group_model=True)
+            for node in nodes:
+                self.assertNotIn(node+'_subj', model.nodes_db.index)
+                self.assertIn(node, model.nodes_db.index)
+
 
     def test_cont(self, assert_=False):
         raise SkipTest("Disabled.")
-        params_true = gen_rand_params(include = ())
-        data, temp = hddm.generate.gen_rand_data(samples=300, params=params_true)
+        params_true = hddm.generate.gen_rand_params(include=())
+        data, temp = hddm.generate.gen_rand_data(size=300, params=params_true)
         data[0]['rt'] = min(abs(data['rt']))/2.
         data[1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.HDDMContUnif(data, bias=True, is_group_model=False)
-        hm.sample(self.samples, burn=self.burn)
+        hm.sample(self.iter, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
         cont_idx = cont_res['cont_idx']
@@ -107,12 +113,12 @@ class TestSingle(unittest.TestCase):
         data_samples = 200
         num_subjs = 2
         data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None,
-                                                        samples=data_samples, noise=0.0001,include=())
+                                                        size=data_samples, noise=0.0001,include=())
         for i in range(num_subjs):
             data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
             data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8
         hm = hddm.model.HDDMContUnif(data, bias=True, is_group_model=True)
-        hm.sample(self.samples, burn=self.burn)
+        hm.sample(self.iter, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
         for i in range(num_subjs):
@@ -121,6 +127,107 @@ class TestSingle(unittest.TestCase):
             self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
 
         return hm
+
+
+def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
+                                         optimization_method='ML', max_retries=10):
+    """
+    recover parameters for single subjects model using ML
+    """
+
+    #init
+    include_sets = [set(['a','v','t']),
+                  set(['a','v','t','z']),
+                  set(['a','v','t','st']),
+                  set(['a','v','t','sz']),
+                  set(['a','v','t','sv'])]
+
+    #for each include set create a set of parametersm generate random data
+    #and test the optimization function max_retries times.
+    v = [0, 0.5, 0.75, 1.]
+    np.random.seed(seed)
+    for include in include_sets:
+        for i in range(repeats):
+
+            #generate params for experiment with n_conds conditions
+            cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
+            print "*** the true parameters ***"
+            print merged_params
+
+            #generate samples
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
+
+            #init model
+            h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
+
+            #run optimization max_tries times
+            recovery_ok = False
+            for i_tries in range(max_retries):
+                print "recovery attempt %d" % (i_tries + 1)
+
+                #set the starting point of the optimization to the true value
+                #of the parameters
+                if true_starting_point:
+                    set_hddm_nodes_values(h, merged_params)
+
+                #optimize
+                if optimization_method == 'ML':
+                    recovered_params = h.ML_optimization()
+                elif optimization_method == 'chisquare':
+                    recovered_params = h.quantiles_chisquare_optimization(quantiles=np.linspace(0.05,0.95,10))
+                else:
+                    raise ValueError('unknown optimization method')
+
+                #compare results to true values
+                index = ['true', 'estimated']
+                df = pd.DataFrame([merged_params, recovered_params], index=index, dtype=np.float).dropna(1)
+                print df
+                try:
+                    #assert
+                    np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
+                    recovery_ok = True
+                    break
+                except AssertionError:
+                    #if assertion fails try to advance the model using mcmc to get
+                    #out of local maximum
+                    if i_tries < (max_retries - 1):
+                        h.sample(500)
+                        print
+
+            assert recovery_ok, 'could not recover the true parameters'
+
+
+def set_hddm_nodes_values(model, params_dict):
+    """
+    set hddm nodes values according to the params_dict
+    """
+    for (param_name, row) in model.iter_stochastics():
+        if param_name in ('sv_trans', 'st_trans','t_trans','a_trans'):
+            transform = np.log
+            org_name = '%s' %  list(row['node'].children)[0].__name__
+        elif param_name in ('sz_trans', 'z_trans'):
+            transform = pm.logit
+            if param_name == 'z_trans':
+                org_name = 'z'
+            else:
+                org_name = 'sz'
+        else:
+            org_name = param_name
+            transform = lambda x:x
+
+        model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
+
+
+def test_ML_recovery_single_subject_from_random_starting_point():
+    raise SkipTest("""Disabled. sometimes changes in sz and sv have little effect on logp,
+     which makes their recovery impossible""")
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=False, optimization_method='ML')
+
+def test_ML_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='ML')
+
+def test_chisquare_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='chisquare')
 
 
 if __name__=='__main__':

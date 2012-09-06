@@ -2,7 +2,7 @@
 Introduction
 ************
 
-:Date: March 8, 2012
+:Date: August 15, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://ski.clps.brown.edu/hddm_docs
@@ -10,7 +10,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the GPLv3.
-:Version: 0.2
+:Version: 0.3
 
 Purpose
 =======
@@ -96,7 +96,7 @@ See further below on how to install most of the necessary
 dependencies for the most common platforms.
 
 Assuming you have the dependencies, the easiest way to install HDDM is
-via pip_ ::
+via pip ::
 
     pip install kabuki
     pip install hddm
@@ -155,6 +155,12 @@ Most of HDDM's dependencies are available from your repository, you can install 
 
 which requires sudo rights.
 
+Optional dependencies for hddm_demo.py can be installed via
+
+::
+
+    apt-get install python-wxgtk2.8 python-traitsui
+
 OSX
 ---
 
@@ -167,7 +173,7 @@ https://github.com/kennethreitz/osx-gcc-installer/downloads
 Getting started
 ===============
 
-Check out the documentation_ or the tutorial_ on how to use HDDM.
+Check out the tutorial_ on how to get started. Further information can be found in howto_ and the documentation_.
 
 Join our low-traffic `mailing list`_.
 
@@ -179,6 +185,7 @@ Join our low-traffic `mailing list`_.
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: http://ski.clps.brown.edu/hddm_docs
 .. _tutorial: http://ski.clps.brown.edu/hddm_docs/tutorial.html
+.. _howto: http://ski.clps.brown.edu/hddm_docs/howto.html
 .. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php

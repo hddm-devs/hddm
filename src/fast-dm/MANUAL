@@ -1,0 +1,229 @@
+Fast-dm users' manual
+=====================
+
+Fast-dm is a program to efficiently estimate parameters in Ratcliff's
+diffusion model.  Valid parameters are
+
+    a = the boundary separation
+    z = the mean of the starting point of the diffusion
+    sz = the width of the support of the distribution of z
+    v = the mean of the drift
+    sv = the standard deviation of the drift
+    t0 = the mean of the non-decisional component of the reaction time
+    st0 = the width of the support of the distribution of t0
+
+The starting point is assumend to be uniformly distributed on the
+interval [z-0.5*sz,z+0.5*sz], the drift is assumed to be normally
+distributed with mean v and variance sv^2, and t0 is assumed to be
+uniformly distributed on the interval [t0-0.5*st0,t0+0.5*st0].
+
+For each run of the fast-dm program you need two kinds of input files:
+one control file which describes the experiment and one or more data
+files which contain the measured reaction times and responses.  In
+addition there are two types of output files.  All files are plain
+text files, the exact format is described below.
+
+
+Experiment control files
+------------------------
+
+An experiment control file describes one experiment.  By convention
+these files use the file name extension ".ctl".  By default fast-dm
+tries to read an experiment description from the file
+"experiment.ctl".  On systems which support command line arguments,
+you can choose a different experiment control file by calling fast-dm
+with the name of a control file as the first argument.
+
+Control files are evaluated line by line.  Empty lines and lines
+starting with "#" are ignored.  For all other lines the first word is
+interpreted as a command and the subsequent words are used as
+arguments to this command.
+
+Example 1: A simple control file could look as follows
+
+    format RESPONSE TIME
+    load "*.dat"
+    save "*.out"
+
+The first line specifies that the data files will have just two
+entries per line, namely first a 0/1 value giving the response and
+then a reaction time.  The second line instructs fast-dm to analyse
+the data files "1.dat", "2.dat", etc.  The results are written to the
+screen.
+
+Example 2: A more complicated control file is the following one:
+
+    precision 2
+    set st0 0
+    depends v stimulus
+    format stimulus RESPONSE TIME
+    load "*.dat"
+    save "*.out"
+    log "protocol"
+
+Here, the first two lines instruct fast-dm to use reduced precision
+for the computation and to not use variability for the t0 parameter
+(to speed up the analysis).  The "format" statement specifies that
+each line of the data files will contain three values, one entry
+describing the stimulus used, then the participant's response and
+finally the response time.  The "depends" statement specifies that
+different "v" parameters will be used for different stimuli, all other
+parameters are shared between all stimuli.  Datasets are read from the
+files "1.dat", "2.dat", etc. and and the results are written to the
+files "1.out", "2.out", etc. (in addition to being printed to the
+screen).  Also, a summary of all results, one line per input file, is
+written to the file "protocol".
+
+
+The following commands are valid in control files.  When present, they
+should be given in the order of the following list.
+
+  precision value
+
+    Set the precision used for the computations in the parameter
+    estimation procedure.  "value" is a real number, the minimal
+    allowed value is 1.  Larger values give higher accuracy but
+    greatly increase computation time, reasonable values are in the
+    range from 2 to 4.
+
+    This command is optional, the default precision is 3.
+
+  set param value
+
+    Fixes the parameter 'param' to 'value' instead of estimating it.
+    'param' must be one of "a", "z", "v", "t0", "sz", "sv", st0".
+    Fixing parameters, especially the variability parameters, can
+    speed up the estimation procedure significantly.
+
+    Setting the parameter "z" is treated specially, the given value is
+    treated as a multiple of "a" and must be strictly between 0 and 1.
+
+    This command is optional, default is to estimate all parameters.
+
+  depends param ...
+
+    Specifies that parameter 'param' depends on one or more
+    experimental conditions.  'param' must be one of "a", "z", "v",
+    "t0", "sz", "sv", st0".  All the remaining arguments must be
+    experimental conditions as defined on the "format" statement.
+
+    Parameters which are fixed to a value using "set" cannot depend on
+    experimental conditions.  All parameters which are not mentioned
+    in a "depends" statement are shared between experimental
+    conditions.
+
+    This command is optional.  Default is to share all parameters
+    between all experimental conditions.
+
+  format ...
+
+    Describes the format of the data files.  The arguments can be
+    arbitrary strings.  Each argument corresponds to one column in the
+    data files.  The arguments "RESPONSE" and "TIME" must occur
+    exactly once each and define the position of the response column
+    and reaction time column, respectively, in the datafile.  An
+    argument of "*" specifies that the corresponding column is to be
+    ignored.  All other arguments are interpreted as experimental
+    conditions for use in "depends" statements.
+
+    This command is required, at least RESPONSE and TIME must be
+    specified.
+
+  load "fname"
+
+    Gives the name of the data files.  This command is required.  The
+    given name may contain a single "*" to consecutively read several
+    data files.
+
+  save "fname"
+
+    Gives the name of the per-dataset log files.  The results of
+    parameter estimation, in addition to being printed to the screen,
+    are written to these files.  If the file name in the 'load'
+    contains a star, the file name given in the log command must
+    contain a star, too.
+
+    This command is optional, default is not to write a per-dataset
+    log file.  If this command is not present, "log" must be used
+    instead.
+
+  log "fname"
+
+    Gives the name of the summary log file.  This command is optional,
+    default is not to write a summary file.  If this command is not
+    present, "save" must be used instead.
+
+
+
+Data files
+----------
+
+Data files contain the participants' responses and measured reaction
+times.  Optionally they can also contain information about
+experimental conditions.  Typically each data file describes one
+session of one participant in an experiment.  By convention data files
+use the file name extension ".dat".
+
+Data files are evaluated line by line.  Empty lines and lines starting
+with "#" are ignored.  All other lines must contain the entries given
+by the "format" statement in the control file.
+
+
+Example 3.  The beginning of data file "17.dat" for "Example 2" above
+could look as follows.
+
+    # participant 17, female
+    red 0 1.723
+    black 1 0.877
+    black 1 0.933
+    red 1 1.526
+
+
+The values in the "RESPONSE" column must be either 0 or 1,
+corresponding to the two possible outcomes (a positive drift v or a
+large z both favour the outcome 1).  The entries in the "TIME" column
+must be floating point numbers, giving the reaction time in seconds.
+All other entried correspond to experimental conditions and can be
+arbitrary strings.
+
+
+
+Per-Dataset Save Files
+----------------------
+
+per-dataset save files are written if the "save" statement is used in
+the control file.  Each per-dataset log file corresponds to a data
+file.  By convention, save files use the file name extension ".out".
+
+
+Example 4.  The save file "17.out" for Example 3 above could look as
+follows.
+
+    a = 2.134450
+    z = 0.877730
+    v_red = 2.52287
+    v_black = -0.033281
+    t0 = 0.322186
+    sz = 0.100000
+    sv = 0.100000
+    st0 = 0.100000
+    p = 0.913227
+    time = 42.850000
+
+It gives the estimated parameters, one per line.  Since we allowed "v"
+to depend on the stimulus, several values for "v" are given.  In
+addition to the parameter values there are two informational entries:
+'p' gives the resulting p-value (values close to one indicate a good
+fit) and 'time' gives the CPU time used while processing this data
+set in seconds.
+
+
+
+Summary log file
+----------------
+
+A summary log file is created when the "log" command is used in the
+control file.  This log file contains one line of output for each
+dataset analysed plus a header line indicating which value is stored
+in which column.  Summary log files can be useful to import fast-dm
+results into other programs for statistical analysis.

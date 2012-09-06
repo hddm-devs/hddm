@@ -23,13 +23,6 @@ from traitsui.view import View, Item
 import numpy as np
 import time
 
-#import enthought.traits.ui
-
-try:
-    from IPython.Debugger import Tracer; debug_here = Tracer()
-except:
-    pass
-
 import hddm
 
 def timer(method):
@@ -46,7 +39,7 @@ class DDM(HasTraits):
     # Paremeters
     z = Range(0, 1., .5)
     sz = Range(0, 1., .0)
-    v = Range(-40.,40.,-2.)
+    v = Range(-4.,4.,.5)
     sv = Range(0.0,2.,0.0)
     ter = Range(0,2.,.3)
     ster = Range(0,2.,.0)
@@ -57,7 +50,7 @@ class DDM(HasTraits):
     intra_sv = Range(0.1,10.,1.)
     urgency = Range(.1,10.,1.)
 
-    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'switch', 't_switch', 'v_switch', 'intra_sv'])
+    params = Property(Array, depends_on=['z', 'sz', 'v', 'sv', 'ter', 'ster', 'a']) #, 'switch', 't_switch', 'v_switch', 'intra_sv'])
 
     # Distributions
     drifts = Property(Tuple, depends_on=['params'])
@@ -77,7 +70,7 @@ class DDM(HasTraits):
     iter_plot = Int(50)
     # Number of histogram bins
     bins = Int(200)
-    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot', 'switch', 't_switch', 'v_switch', 'intra_sv', 'T')
+    view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot') #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'T')
 
     def _get_params_dict(self):
         d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
@@ -126,7 +119,7 @@ class DDMPlot(HasTraits):
     plot_true_density = Bool(False)
     #plot_density_dist = Bool(False)
     plot_mean_rt = Bool(False)
-    plot_switch = Bool(True)
+    plot_switch = Bool(False)
     color_errors = Bool(True)
 
     x_analytical = Property(Array)
@@ -154,7 +147,7 @@ class DDMPlot(HasTraits):
                 #Item('plot_density'),
                 #Item('plot_true_density'),
                 #Item('plot_density_dist'),
-                Item('plot_switch'),
+                #Item('plot_switch'),
                 Item('color_errors'),
 		Item('go'),
 		#style='custom',
@@ -203,11 +196,11 @@ class DDMPlot(HasTraits):
 
     @timer
     def _get_wiener(self):
-        from hddm.likelihoods import wfpt_like
-        pdf = wfpt_like.rv.pdf(self.x_analytical, self.parameters.v,
-                               self.parameters.sv, self.parameters.a,
-                               self.parameters.z, self.parameters.sz,
-                               self.parameters.ter, self.parameters.ster)
+        pdf = hddm.wfpt.pdf_array(self.x_analytical,
+                                  self.parameters.v, self.parameters.sv,
+                                  self.parameters.a, self.parameters.z,
+                                  self.parameters.sz, self.parameters.ter,
+                                  self.parameters.ster, 1e-4, logp=False)
         return pdf
 
     @timer

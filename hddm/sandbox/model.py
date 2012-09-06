@@ -1,7 +1,6 @@
 import hddm
 from hddm.model import HDDM
 import pymc as pm
-from kabuki import Parameter
 from kabuki.distributions import scipy_stochastic
 import numpy as np
 from scipy import stats
@@ -141,7 +140,7 @@ class HDDMSwitch(HDDM):
         else:
             raise TypeError, "Parameter named %s not found." % param.name
 
-class HDDMRegressor(HDDM):
+class HDDMRegressor_Cavenagh(HDDM):
     def __init__(self, data, effects_on=None, use_root_for_effects=False, **kwargs):
         """Hierarchical Drift Diffusion Model analyses for Cavenagh et al, IP.
 

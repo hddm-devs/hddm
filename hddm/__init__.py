@@ -2,6 +2,7 @@
 
 __docformat__ = 'restructuredtext'
 
+import model
 import likelihoods
 import generate
 import utils
@@ -13,6 +14,12 @@ import wfpt
 try:
     import wfpt_switch
 except:
+    pass
+
+
+try:
+    import lba
+except ImportError:
     pass
 
 from kabuki.utils import load_csv, save_csv

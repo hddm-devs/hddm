@@ -10,10 +10,11 @@ Table of Contents:
 
 .. toctree::
     :maxdepth: 2
-    
+
     abstract
     intro
     tutorial
+    howto
     manual
 
 

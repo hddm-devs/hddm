@@ -1,57 +1,93 @@
-import hddm
-from hddm.model import Base
+from __future__ import division
+import numpy as np
 import pymc as pm
-from kabuki import Parameter
+import matplotlib.pyplot as plt
+import hddm
+import kabuki
+import kabuki.step_methods as steps
+import scipy as sp
+from collections import OrderedDict
 
-class HLBA(Base):
-    param_names = (('a',True), ('z',True), ('t',True), ('V',True), ('v0',True), ('v1',True), ('lba',False))
+from scipy import stats
+from kabuki.hierarchical import Knode
+from kabuki.distributions import scipy_stochastic
+from copy import deepcopy
+from numpy.random import rand, randn
 
-    def __init__(self, data, model_type=None, trace_subjs=True, normalize_v=True, no_bias=True, fix_sv=None, init=False, exclude=None, **kwargs):
-        super(self.__class__, self).__init__(data, **kwargs)
 
-        # LBA model
-        self.normalize_v = normalize_v
-        self.init_params = {}
-            
-        self.param_ranges = {'a_lower': .2,
-                             'a_upper': 4.,
-                             'v_lower': 0.1,
-                             'v_upper': 3.,
-                             'z_lower': .0,
-                             'z_upper': 2.,
-                             't_lower': .05,
-                             't_upper': 2.,
-                             'V_lower': .2,
-                             'V_upper': 2.}
-            
-        if self.normalize_v:
-            self.param_ranges['v_lower'] = 0.
-            self.param_ranges['v_upper'] = 1.
+class lba_gen(stats.distributions.rv_continuous):
 
-    def get_rootless_child(self, param, params):
-        return hddm.likelihoods.LBA(param.full_name,
-                                    value=param.data['rt'],
-                                    a=params['a'],
-                                    z=params['z'],
-                                    t=params['t'],
-                                    v0=params['v0'],
-                                    v1=params['v1'],
-                                    V=params['V'],
-                                    normalize_v=self.normalize_v,
-                                    observed=True)
+    def _argcheck(self, *args):
+        return True
 
-    def get_root_node(self, param):
-        """Create and return a prior distribution for [param]. [tag] is
-        used in case of dependent parameters.
+    def _logp(self, x, t, A, b, s, v):
+        return hddm.lba.lba_like(x, A, b, t, s, v, 0, logp=True, normalize_v=True)
+
+    def _pdf(self, x, t, A, b, s, v):
+        raise NotImplementedError
+
+    def _rvs(self, t, A, b, s, v):
+        v0 = v
+        v1 = 1 - v;
+        sampled_rts = np.empty(self._size)
+        for i_sample in xrange(self._size):
+            positive = False
+            while not positive:
+                i_v0 = randn()*s + v0
+                i_v1 = randn()*s + v1
+                if (i_v0 > 0) or (i_v1 > 0):
+                    positive = True
+                    if i_v0 > 0:
+                        rt0 = (b - rand()*A) / i_v0 + t
+                    else:
+                        rt0 = np.inf
+
+                    if i_v1 > 0:
+                        rt1 = (b - rand()*A) / i_v1 + t
+                    else:
+                        rt1 = np.inf
+
+                    if rt0 < rt1:
+                        sampled_rts[i_sample] = rt0
+                    else:
+                        sampled_rts[i_sample] = -rt1
+
+        return sampled_rts
+
+    def random(self, t, A, b, s, v, size):
+        self._size = size
+        return self._rvs(t, A, b, s, v)
+
+lba_like = scipy_stochastic(lba_gen, name='lba', longname="", extradoc="")
+
+
+class HLBA(hddm.model.AccumulatorModel):
+    def create_lba_knode(self, knodes):
+        lba_parents = OrderedDict()
+        lba_parents['t'] = knodes['t_bottom']
+        lba_parents['A'] = knodes['A_bottom']
+        lba_parents['b'] = knodes['b_bottom']
+        lba_parents['s'] = knodes['s_bottom']
+        lba_parents['v'] = knodes['v_bottom']
+
+        return Knode(lba_like, 'lba', observed=True, col_name='rt', **lba_parents)
+
+    def create_knodes(self):
+        """Returns list of model parameters.
         """
-        if param.name == 'V' and self.fix_sv is not None: # drift rate variability
-            return pm.Lambda(param.full_name, lambda x=self.fix_sv: x)
-        else:
-            return super(self.__class__, self).get_root_param(self, param)
 
-    def get_child_node(self, param, plot=False):
-        if param.name.startswith('V') and self.fix_sv is not None:
-            return pm.Lambda(param.full_name, lambda x=param.root: x,
-                             plot=plot, trace=self.trace_subjs)
-        else:
-            return super(self.__class__, self).get_child_node(param, plot=plot)
+        knodes = OrderedDict()
+        knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
+        knodes.update(self.create_family_trunc_normal('A', lower=1e-3, upper=1e3, value=.2))
+        knodes.update(self.create_family_trunc_normal('b', lower=1e-3, upper=1e3, value=1.5))
+        knodes.update(self.create_family_trunc_normal('s', lower=0, upper=1e3, value=1.))
+        knodes.update(self.create_family_trunc_normal('v', lower=0, upper=1, value=.5))
+
+        knodes['wfpt'] = self.create_lba_knode(knodes)
+
+        return knodes.values()
+
+    def plot_posterior_predictive(self, *args, **kwargs):
+        if 'value_range' not in kwargs:
+            kwargs['value_range'] = np.linspace(-1.5, 1.5, 100)
+        kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
