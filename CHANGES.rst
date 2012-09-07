@@ -1,4 +1,3 @@
-
 .. _CHANGES:
 
 =============
@@ -32,8 +31,14 @@ Bugfixes
 
 * model.load_db() is working again.
 
+
+HDDM 0.3.1
+==========
+
+* Fixed annoying bug that broke plotting of posterior predictive.
+
 HDDM 0.3 (6 Sep 2012)
-========
+======================
 
 * Complete rewrite of the underlying model creation engine (kabuki) to
   allow for more flexible model creation including transforms. This

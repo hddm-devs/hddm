@@ -1,8 +1,6 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from glob import glob
-#import cython_gsl
-
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
@@ -21,7 +19,7 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.4RC1',
+    version='0.4',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
@@ -31,7 +29,7 @@ setup(
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
     install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
     setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
-    include_dirs = [np.get_include()],#, cython_gsl.get_include()],
+    include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 4 - Beta',
                 'Environment :: Console',
