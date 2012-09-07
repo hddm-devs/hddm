@@ -4,6 +4,11 @@
 Release Notes
 =============
 
+HDDM 0.3.1
+==========
+
+* Fixed annoying bug that broke plotting of posterior predictive.
+
 HDDM 0.3
 ========
 
