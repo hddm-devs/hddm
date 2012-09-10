@@ -1,10 +1,17 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from glob import glob
+import cython_gsl
+
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'] + glob('src/fast-dm/*.c')),
-                   Extension('lba', ['src/lba.pyx'])])
+                             Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
+                                       libraries=cython_gsl.get_libraries(),
+                                       library_dirs=[cython_gsl.get_library_dir()],
+                                       include_dirs=[cython_gsl.get_cython_include_dir()]),
+                             Extension('lba', ['src/lba.pyx'])
+    ])
 
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c'] + glob('src/fast-dm/*.c')),
@@ -24,7 +31,7 @@ setup(
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
     install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.3', 'PyMC >= 2.2'],
     setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.3', 'PyMC >= 2.2'],
-    include_dirs = [np.get_include(), 'src/fast-dm'],
+    include_dirs = [np.get_include(), 'src/fast-dm', cython_gsl.get_include()],
     classifiers=[
                 'Development Status :: 4 - Beta',
                 'Environment :: Console',

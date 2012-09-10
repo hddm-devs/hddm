@@ -10,12 +10,10 @@ from copy import copy
 import numpy as np
 cimport numpy as np
 
-cimport cython
-from cython.parallel import *
-
 from cython_gsl cimport *
 
-include "pdf.pxi"
+include 'integrate.pxi'
+include 'cdf.pxi'
 
 ctypedef double * double_ptr
 ctypedef void * void_ptr
@@ -132,11 +130,10 @@ def wiener_like_antisaccade(np.ndarray[double, ndim=1] rt, double v, double v_sw
     if np.any(np.abs(rt) < t-st/2) or t < st/2 or t_switch < st/2 or t<0 or t_switch<0 or st<0 or a<=0 or z<=0 or z>=1 or st>.5:
         return -np.inf
 
-    for i in prange(size, nogil=True):
+    for i in range(size):
         p = pdf_switch(rt[i], v, v_switch, V_switch, a, z, t, t_switch, st, err)
         if p == 0:
-            with gil:
-                return -np.inf
+            return -np.inf
         #if p < 0:
         #    print rt[i], instruct[i], v, v_switch, V_switch, a, z, t, t_switch, st
         sum_logp += log(p)
