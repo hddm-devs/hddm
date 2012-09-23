@@ -170,6 +170,14 @@ The Superpack requires you to install XCode which apparently does not bundle wit
 
 https://github.com/kennethreitz/osx-gcc-installer/downloads
 
+How to cite
+===========
+
+If HDDM was used in your research, please cite the following:
+
+Wiecki, T. V., Sofer, I. and Frank, M. J. at the 44th annual meeting of the Society for Mathematical
+Psychology, 65, 2011
+
 Getting started
 ===============
 
