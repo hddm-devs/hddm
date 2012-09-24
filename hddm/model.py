@@ -383,6 +383,23 @@ class HDDM(HDDMBase):
 
         return knodes.values()
 
+    def _create_an_average_model(self):
+        """
+        create an average model for group model quantiles optimization.
+        """
+
+        #this code only check that the arguments are as expected, i.e. the constructor was not change
+        #since we wrote this function
+        super_init_function = super(self.__class__, self).__init__
+        init_args = set(inspect.getargspec(super_init_function).args)
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        assert known_args == init_args, "Arguments of the constructor are not as expected"
+
+        #create the avg model
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        return avg_model
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
