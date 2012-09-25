@@ -106,6 +106,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     #turn pymc node into the final wfpt_node
     def compute_quantiles_stats(self, quantiles):
         """
+        compute quantiles statistics
+        Input:
+            quantiles : sequence
+                the sequence of quantiles,  e.g. (0.1, 0.3, 0.5, 0.7, 0.9)
         """
         data = self.value
 
@@ -128,16 +132,23 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._freq_obs = freq_obs
 
     def set_quantiles_stats(self, n_samples, emp_rt, freq_obs):
+        """
+        set quantiles statistics (used when one do not to compute the statistics from the stochastic's value)
+        """
         self._n_samples = n_samples
         self._emp_rt = emp_rt
         self._freq_obs = freq_obs
 
     def get_quantiles_stats(self):
+        """
+        get quantiles statistics (after they were computed using compute_quantiles_stats_
+        """
         stats = {'n_samples': self._n_samples, 'emp_rt': self._emp_rt, 'freq_obs': self._freq_obs}
         return stats
 
     def chisquare(self):
         """
+        compute the chi-square statistics over the stocastic's value
         """
         # generate CDF
         try:
@@ -148,10 +159,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         # extract theoretical RT indices
         theo_idx = np.searchsorted(x_cdf, self._emp_rt)
 
-        #get probablities associated with theoretical RT indices
+        #get probabilities associated with theoretical RT indices
         theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
-        #chisquare
+        #chi-square
         theo_proportion = np.diff(theo_cdf)
         freq_exp = theo_proportion * self._n_samples
         score,_ = stats.chisquare(self._freq_obs, freq_exp)
