@@ -51,7 +51,14 @@ cdef double* cdf(double v, double sv, double a, double z, double sz, double t, d
 
 
     #make sure that order of the output is not affected by random errors
+    # and fix floating point errors
     for i from 1 <= i <= (2*N):
+        if output[i] < 0:
+            output[i] = 0
+
+        if output[i] > 1:
+            output[i] = 1
+
         if output[i] < output[i-1]:
             output[i] = output[i-1]
 
