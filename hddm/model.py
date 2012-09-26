@@ -40,7 +40,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
 
 
-    def quantiles_chisquare_optimization(self, quantiles=(.1, .3, .5, .7, .9 )):
+    def _quantiles_optimization(self, method, quantiles=(.1, .3, .5, .7, .9 )):
         """
         quantile optimization using chi^2.
         Input:
@@ -85,33 +85,58 @@ class AccumulatorModel(kabuki.Hierarchical):
                 average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
 
             #optimize
-            results = average_model._quantiles_chisquare_optimization_single(quantiles=quantiles, compute_stats=False)
+            results = average_model._chisquare_optimization_single(method=method, quantiles=quantiles,
+                                                                   compute_stats=False)
 
 
         #run optimization for single subject model
         else:
-            results = self._quantiles_chisquare_optimization_single(quantiles=quantiles, compute_stats=True)
+            results = self._optimization_single(method=method, quantiles=quantiles, compute_stats=True)
 
         return results
 
 
-    def _quantiles_chisquare_optimization_single(self, quantiles, compute_stats):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 )):
         """
-        function used by quantiles_chisquare_optimization to fit the a single subject model
+        optimization using ML, chi^2 or G^2
+
         Input:
-         quantiles <sequance> - same as in quantiles_chisquare_optimization
+            method <string> - name of method ('ML', 'chisquare' or 'gsquare')
+            quantiles <sequance> - a sequance of quantiles used for chi^2 and G^2
+                the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+        Output:
+            results <dict> - a results dictionary of the parameters values.
+            The values of the nodes in single subject model is update according to the results.
+            The nodes of group models are not updated
+        """
+
+
+        if method == 'ML':
+            if self.is_group_model:
+                raise TypeError, "optimization method is not defined for group models"
+            else:
+                return self._optimization_single(method, quantiles)
+
+        else:
+            return self._quantiles_optimization(method, quantiles)
+
+    def _optimization_single(self, method, quantiles, compute_stats=True):
+        """
+        function used by chisquare_optimization to fit the a single subject model
+        Input:
+         quantiles <sequance> - same as in chisquare_optimization
          cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
 
         Output:
-            results <dict> - same as in quantiles_chisquare_optimization
+            results <dict> - same as in chisquare_optimization
         """
 
         #get obs_nodes
         obs_nodes = self.get_observeds()['node']
 
         #set quantiles for each observed_node (if needed)
-        if compute_stats:
+        if (method != 'ML') and compute_stats:
             [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
 
         #get all stochastic parents of observed nodes
@@ -120,52 +145,39 @@ class AccumulatorModel(kabuki.Hierarchical):
         values = [x.value for x in parents]
 
         #define objective
-        def objective(values):
-            for (i, value) in enumerate(values):
-                parents[i].value = value
-            return sum([obs.chisquare() for obs in obs_nodes])
+        #ML method
+        if method == 'ML':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                try:
+                    return -sum([obs.logp for obs in obs_nodes])
+                except pm.ZeroProbability:
+                    return np.inf
+
+        #chi^2 method
+        elif method == 'chisquare':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                return sum([obs.chisquare() for obs in obs_nodes])
+
+        #G^2 method
+        elif method == 'gsquare':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                return -sum([obs.gsquare() for obs in obs_nodes])
+
+        else:
+            raise ValueError('unknown optimzation method')
+
 
         #optimze
         fmin_powell(objective, values)
         results = self.values
 
         return results
-
-    def ML_optimization(self):
-        """
-        optimization of model using Maximum likelihood
-
-        Output:
-            results <dict> - same as in quantiles_chisquare_optimization
-        """
-
-        if self.is_group_model:
-            raise TypeError, "ML optimization is not defined for group models"
-
-        #get obs_nodes
-        obs_nodes = self.get_observeds()['node']
-
-
-        #get all stochastic parents of observed nodes
-        db = self.nodes_db
-        parents = db[(db.stochastic == True) & (db.observed == False)]['node']
-        values = [x.value for x in parents]
-
-        #define objective
-        def objective(values):
-            for (i, value) in enumerate(values):
-                parents[i].value = value
-            try:
-                return -sum([obs.logp for obs in obs_nodes])
-            except pm.ZeroProbability:
-                return np.inf
-
-        #optimze
-        fmin_powell(objective, values)
-        results = self.values
-
-        return results
-
 
 
 

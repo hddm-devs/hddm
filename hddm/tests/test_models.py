@@ -172,9 +172,11 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
                 #optimize
                 if optimization_method == 'ML':
-                    recovered_params = h.ML_optimization()
+                    recovered_params = h.optimize(method='ML')
                 elif optimization_method == 'chisquare':
-                    recovered_params = h.quantiles_chisquare_optimization(quantiles=np.linspace(0.05,0.95,10))
+                    recovered_params = h.optimize(method='chisquare', quantiles=np.linspace(0.05,0.95,10))
+                elif optimization_method == 'gsquare':
+                    recovered_params = h.optimize(method='gsquare', quantiles=np.linspace(0.05,0.95,10))
                 else:
                     raise ValueError('unknown optimization method')
 
@@ -228,6 +230,9 @@ def test_ML_recovery_single_subject_from_true_starting_point():
 
 def test_chisquare_recovery_single_subject_from_true_starting_point():
     optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='chisquare')
+
+def test_gsquare_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='gsquare')
 
 
 if __name__=='__main__':
