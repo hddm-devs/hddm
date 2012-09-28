@@ -106,6 +106,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     #turn pymc node into the final wfpt_node
     def compute_quantiles_stats(self, quantiles):
         """
+        compute quantiles statistics
+        Input:
+            quantiles : sequence
+                the sequence of quantiles,  e.g. (0.1, 0.3, 0.5, 0.7, 0.9)
         """
         data = self.value
 
@@ -128,17 +132,21 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._freq_obs = freq_obs
 
     def set_quantiles_stats(self, n_samples, emp_rt, freq_obs):
+        """
+        set quantiles statistics (used when one do not to compute the statistics from the stochastic's value)
+        """
         self._n_samples = n_samples
         self._emp_rt = emp_rt
         self._freq_obs = freq_obs
 
     def get_quantiles_stats(self):
+        """
+        get quantiles statistics (after they were computed using compute_quantiles_stats_
+        """
         stats = {'n_samples': self._n_samples, 'emp_rt': self._emp_rt, 'freq_obs': self._freq_obs}
         return stats
 
-    def chisquare(self):
-        """
-        """
+    def _get_theoretical_proportion(self):
         # generate CDF
         try:
             x_cdf, cdf = self.cdf_vec()
@@ -148,20 +156,38 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         # extract theoretical RT indices
         theo_idx = np.searchsorted(x_cdf, self._emp_rt)
 
-        #get probablities associated with theoretical RT indices
+        #get probabilities associated with theoretical RT indices
         theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
-        #chisquare
-        theo_proportion = np.diff(theo_cdf)
+        #theoretical porportion
+        return np.diff(theo_cdf)
+
+    def chisquare(self):
+        """
+        compute the chi-square statistic over the stocastic's value
+        """
+        theo_proportion = self._get_theoretical_proportion()
         freq_exp = theo_proportion * self._n_samples
         score,_ = stats.chisquare(self._freq_obs, freq_exp)
 
         return score
 
+    def gsquare(self):
+        """
+        compute G^2 (likelihood chi-square) statistic over the stocastic's value
+        Note:
+         this does return the actual G^2, but G^2 up to a constant which depend on the data
+        """
+        theo_proportion = self._get_theoretical_proportion()
+        return 2 * sum(self._freq_obs * np.log(theo_proportion))
+
     pymc_class.compute_quantiles_stats = compute_quantiles_stats
     pymc_class.set_quantiles_stats = set_quantiles_stats
     pymc_class.get_quantiles_stats = get_quantiles_stats
     pymc_class.chisquare = chisquare
+    pymc_class.gsquare = gsquare
+    pymc_class._get_theoretical_proportion = _get_theoretical_proportion
+
 
 
 #create default Wfpt class

@@ -425,8 +425,13 @@ def gen_rand_data(params=None, method='cdf', **kwargs):
               'sz': (0, 1)
     }
 
+    if 'share_noise' not in kwargs:
+        kwargs['share_noise'] = bounds.keys()
+
     # Create RT data
-    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params, check_valid_func=hddm.utils.check_params_valid, bounds=bounds, **kwargs)
+    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params,
+                                                      check_valid_func=hddm.utils.check_params_valid,
+                                                      bounds=bounds, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
     return data, subj_params
