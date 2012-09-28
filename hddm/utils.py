@@ -995,8 +995,8 @@ def quantiles_chisquare_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwarg
 
 
 def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
-                                   samples=10, alpha=.75, hexbin=False,
-                                   xlim=None, ylim=None,
+                                   samples=100, alpha=.75, hexbin=True,
+                                   value_range=(0, 5),
                                    data_plot_kwargs=None, predictive_plot_kwargs=None):
     """Plot posterior quantiles for a single node.
 
@@ -1033,10 +1033,8 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
 
     quantiles = np.asarray(quantiles)
 
-    if xlim is not None:
-        axis.set_xlim(xlim)
-    if ylim is not None:
-        axis.set_ylim(ylim)
+    axis.set_xlim(value_range)
+    axis.set_ylim((0, 1))
 
     theo = np.empty((2, 2, len(quantiles), samples))
     for sample in range(samples):
@@ -1045,7 +1043,7 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
 
     if hexbin:
         if predictive_plot_kwargs is None:
-            predictive_plot_kwargs = {'gridsize': 75, 'bins': 'log'}
+            predictive_plot_kwargs = {'gridsize': 75, 'bins': 'log', 'extent': (value_range[0], value_range[1], 0, 1)}
         axis.hexbin(theo[:,0,:,:].flatten(), theo[:,1,:,:].flatten(), label='post pred lb', **predictive_plot_kwargs)
     else:
         if predictive_plot_kwargs is None:
@@ -1110,6 +1108,11 @@ def plot_posterior_quantiles(model, **kwargs):
             Save figure into directory prefix
 
     """
+
+    if 'value_range' not in kwargs:
+        rt = np.abs(model.data['rt'])
+        kwargs['value_range'] = (rt.min()-.2, rt.max())
+
     kabuki.analyze.plot_posterior_predictive(model,
                                              plot_func=_plot_posterior_quantiles_node,
                                              required_method='quantiles',

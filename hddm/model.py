@@ -323,6 +323,45 @@ class HDDMBase(AccumulatorModel):
             kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)
 
+    def plot_posterior_quantiles(self, *args, **kwargs):
+        """Plot posterior predictive quantiles.
+
+        :Arguments:
+
+            model : HDDM model
+
+        :Optional:
+
+            value_range : numpy.ndarray
+                Range over which to evaluate the CDF.
+
+            samples : int (default=10)
+                Number of posterior samples to use.
+
+            alpha : float (default=.75)
+               Alpha (transparency) of posterior quantiles.
+
+            hexbin : bool (default=False)
+               Whether to plot posterior quantile density
+               using hexbin.
+
+            data_plot_kwargs : dict (default=None)
+               Forwarded to data plotting function call.
+
+            predictive_plot_kwargs : dict (default=None)
+               Forwareded to predictive plotting function call.
+
+            columns : int (default=3)
+                How many columns to use for plotting the subjects.
+
+            savefig : bool (default=False)
+                Whether to save the figure to a file.
+
+            path : str (default=None)
+                Save figure into directory prefix
+
+        """
+        hddm.utils.plot_posterior_quantiles(self, *args, **kwargs)
 
     def _create_an_average_model(self):
         """
