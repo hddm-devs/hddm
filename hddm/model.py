@@ -85,16 +85,16 @@ class AccumulatorModel(kabuki.Hierarchical):
                 average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
 
             #optimize
-            results, bic_dict = average_model._optimization_single(method=method, quantiles=quantiles,
+            results, bic_info = average_model._optimization_single(method=method, quantiles=quantiles,
                                                                    compute_stats=False)
 
 
         #run optimization for single subject model
         else:
-            results, bic_dict = self._optimization_single(method=method, quantiles=quantiles, compute_stats=True)
+            results, bic_info = self._optimization_single(method=method, quantiles=quantiles, compute_stats=True)
 
-        if bic_dict is not None:
-            self.bic = bic_dict
+        if bic_info is not None:
+            self.bic_info = bic_info
 
         return results
 
@@ -183,10 +183,10 @@ class AccumulatorModel(kabuki.Hierarchical):
         #calc BIC for G^2
         if method == 'gsquare':
             values = [x.value for x in parents]
-            print objective(values)
+            score = objective(values)
             penalty = len(results) * np.log(len(self.data))
-            bic_dict = {'likelihood': -score, 'penalty': penalty, 'bic': score + penalty}
-            return results, bic_dict
+            bic_info = {'likelihood': -score, 'penalty': penalty, 'bic': score + penalty}
+            return results, bic_info
 
         else:
             return results, None
