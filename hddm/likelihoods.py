@@ -125,7 +125,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         lb_emp_rt = -mquantiles(-data[data<0], prob=quantiles)
         self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
 
-        #get frequancy of observed values
+        #get frequency of observed values
         freq_obs = np.zeros(len(proportion))
         freq_obs[:len(quantiles)+1] = sum(data<0) * neg_proportion
         freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
@@ -181,12 +181,31 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         theo_proportion = self._get_theoretical_proportion()
         return 2 * sum(self._freq_obs * np.log(theo_proportion))
 
+    def quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
+        quantiles = np.asarray(quantiles)
+
+        # generate CDF
+        x_lower, cdf_lower, x_upper, cdf_upper = hddm.wfpt.split_cdf(*self.cdf_vec())
+
+        # extract theoretical RT indices
+        lower_idx = np.searchsorted(cdf_lower, quantiles*cdf_lower[-1])
+        upper_idx = np.searchsorted(cdf_upper, quantiles*cdf_upper[-1])
+
+        q_vals_lower = x_lower[lower_idx]
+        q_vals_upper = x_upper[upper_idx]
+
+        q_lower = np.vstack((q_vals_lower, quantiles*cdf_lower[-1]))
+        q_upper = np.vstack((q_vals_upper, quantiles*cdf_upper[-1]))
+
+        return (q_lower, q_upper)
+
     pymc_class.compute_quantiles_stats = compute_quantiles_stats
     pymc_class.set_quantiles_stats = set_quantiles_stats
     pymc_class.get_quantiles_stats = get_quantiles_stats
     pymc_class.chisquare = chisquare
     pymc_class.gsquare = gsquare
     pymc_class._get_theoretical_proportion = _get_theoretical_proportion
+    pymc_class.quantiles = quantiles
 
 
 
