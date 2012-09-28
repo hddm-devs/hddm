@@ -1111,7 +1111,7 @@ def plot_posterior_quantiles(model, **kwargs):
 
     if 'value_range' not in kwargs:
         rt = np.abs(model.data['rt'])
-        kwargs['value_range'] = (rt.min()-.2, rt.max())
+        kwargs['value_range'] = (np.min(rt.min()-.2, 0), rt.max()-.2)
 
     kabuki.analyze.plot_posterior_predictive(model,
                                              plot_func=_plot_posterior_quantiles_node,
