@@ -88,7 +88,6 @@ class AccumulatorModel(kabuki.Hierarchical):
             results, bic_info = average_model._optimization_single(method=method, quantiles=quantiles,
                                                                    compute_stats=False)
 
-
         #run optimization for single subject model
         else:
             results, bic_info = self._optimization_single(method=method, quantiles=quantiles, compute_stats=True)
