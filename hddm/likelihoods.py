@@ -148,10 +148,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
 
     def _get_theoretical_proportion(self):
         # generate CDF
-        try:
-            x_cdf, cdf = self.cdf_vec()
-        except ValueError:
-            return np.inf
+        x_cdf, cdf = self.cdf_vec()
 
         # extract theoretical RT indices
         theo_idx = np.searchsorted(x_cdf, self._emp_rt)
@@ -160,13 +157,20 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
         #theoretical porportion
-        return np.diff(theo_cdf)
+        proportion = np.diff(theo_cdf)
+
+        #make sure there is no zeros since it causes bugs later on
+        proportion[proportion == 0] = 1e-5
+        return proportion
 
     def chisquare(self):
         """
         compute the chi-square statistic over the stocastic's value
         """
-        theo_proportion = self._get_theoretical_proportion()
+        try:
+            theo_proportion = self._get_theoretical_proportion()
+        except ValueError:
+            return np.inf
         freq_exp = theo_proportion * self._n_samples
         score,_ = stats.chisquare(self._freq_obs, freq_exp)
 
@@ -178,7 +182,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         Note:
          this does return the actual G^2, but G^2 up to a constant which depend on the data
         """
-        theo_proportion = self._get_theoretical_proportion()
+        try:
+            theo_proportion = self._get_theoretical_proportion()
+        except ValueError:
+            return -np.inf
         return 2 * sum(self._freq_obs * np.log(theo_proportion))
 
     def quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
