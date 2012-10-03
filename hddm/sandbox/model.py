@@ -18,7 +18,7 @@ class wfpt_switch_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _logp(self, x, v, vcc, a, z, t, tcc, st):
+    def _logp(self, x, v, vcc, a, z, t, tcc):
         """Log-likelihood for the simple DDM switch model"""
         logp = wfpt_switch.wiener_like_antisaccade_precomp(x, float(v), float(vcc), 0., float(a), .5, float(t), float(tcc), 0., float(self.err))
         return logp

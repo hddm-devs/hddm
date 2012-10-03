@@ -56,7 +56,7 @@ def gen_single_params_set(include=()):
     return params
 
 
-def gen_rand_params(include = (), cond_dict=None, seed=None):
+def gen_rand_params(include=(), cond_dict=None, seed=None):
     """Returns a dict of DDM parameters with random values.
 
         :Optional:
@@ -394,7 +394,7 @@ def _gen_rts_from_cdf(params, samples=1000):
     T = params['st']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
 
-def gen_rand_data(params, method='cdf', **kwargs):
+def gen_rand_data(params=None, method='cdf', **kwargs):
     """Generate simulated RTs with random parameters.
 
        :Optional:
@@ -410,6 +410,10 @@ def gen_rand_data(params, method='cdf', **kwargs):
             parameter values
 
     """
+
+    if params is None:
+        params = gen_rand_params()
+
     from numpy import inf
 
     # set valid param ranges

@@ -993,6 +993,139 @@ def quantiles_chisquare_optimization(data, gen_cdf_func, opt_kwargs, fixed_kwarg
 
     return opt_res
 
+
+def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
+                                   samples=100, alpha=.75, hexbin=True,
+                                   value_range=(0, 5),
+                                   data_plot_kwargs=None, predictive_plot_kwargs=None):
+    """Plot posterior quantiles for a single node.
+
+    :Arguments:
+
+        node : pymc.Node
+            Must be observable.
+
+        axis : matplotlib.axis handle
+            Axis to plot into.
+
+    :Optional:
+
+        value_range : numpy.ndarray
+            Range over which to evaluate the CDF.
+
+        samples : int (default=10)
+            Number of posterior samples to use.
+
+        alpha : float (default=.75)
+           Alpha (transparency) of posterior quantiles.
+
+        hexbin : bool (default=False)
+           Whether to plot posterior quantile density
+           using hexbin.
+
+        data_plot_kwargs : dict (default=None)
+           Forwarded to data plotting function call.
+
+        predictive_plot_kwargs : dict (default=None)
+           Forwareded to predictive plotting function call.
+
+    """
+
+    quantiles = np.asarray(quantiles)
+
+    axis.set_xlim(value_range)
+    axis.set_ylim((0, 1))
+
+    theo = np.empty((2, 2, len(quantiles), samples))
+    for sample in range(samples):
+        kabuki.analyze._parents_to_random_posterior_sample(node)
+        theo[:, :, :, sample] = node.quantiles(quantiles)
+
+    if hexbin:
+        if predictive_plot_kwargs is None:
+            predictive_plot_kwargs = {'gridsize': 75, 'bins': 'log', 'extent': (value_range[0], value_range[1], 0, 1)}
+        axis.hexbin(theo[:,0,:,:].flatten(), theo[:,1,:,:].flatten(), label='post pred lb', **predictive_plot_kwargs)
+    else:
+        if predictive_plot_kwargs is None:
+            predictive_plot_kwargs = {'alpha': .75}
+        axis.plot(theo[0,0,:,:], theo[0,1,:,:], label='post pred lb', color='b', **predictive_plot_kwargs)
+        axis.plot(theo[1,0,:,:], theo[1,1,:,:], label='post pred ub', color='r', **predictive_plot_kwargs)
+
+
+    # Plot data
+    data = node.value
+    color = 'w' if hexbin else 'k'
+    if data_plot_kwargs is None:
+        data_plot_kwargs = {'color': color, 'lw': 2., 'marker': 'o', 'markersize': 7}
+
+    if len(data) != 0:
+        p_upper = np.mean(data>0)
+        q_lower = mquantiles(-data[data<0], quantiles)
+        q_upper = mquantiles(data[data>0], quantiles)
+
+        axis.plot(q_lower, quantiles*(1-p_upper), **data_plot_kwargs)
+        axis.plot(q_upper, quantiles*p_upper, **data_plot_kwargs)
+
+    axis.set_xlabel('RT')
+    axis.set_ylabel('Prob respond')
+    axis.set_ylim(bottom=0) # Likelihood and histogram can only be positive
+
+def plot_posterior_quantiles(model, **kwargs):
+    """Plot posterior predictive quantiles.
+
+    :Arguments:
+
+        model : HDDM model
+
+    :Optional:
+
+        value_range : numpy.ndarray
+            Range over which to evaluate the CDF.
+
+        samples : int (default=10)
+            Number of posterior samples to use.
+
+        alpha : float (default=.75)
+           Alpha (transparency) of posterior quantiles.
+
+        hexbin : bool (default=False)
+           Whether to plot posterior quantile density
+           using hexbin.
+
+        data_plot_kwargs : dict (default=None)
+           Forwarded to data plotting function call.
+
+        predictive_plot_kwargs : dict (default=None)
+           Forwareded to predictive plotting function call.
+
+        columns : int (default=3)
+            How many columns to use for plotting the subjects.
+
+        savefig : bool (default=False)
+            Whether to save the figure to a file.
+
+        path : str (default=None)
+            Save figure into directory prefix
+
+    """
+
+    if 'value_range' not in kwargs:
+        rt = np.abs(model.data['rt'])
+        kwargs['value_range'] = (rt.min()-.2, rt.max())
+
+    kabuki.analyze.plot_posterior_predictive(model,
+                                             plot_func=_plot_posterior_quantiles_node,
+                                             required_method='quantiles',
+                                             **kwargs)
+
+
+def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
+    data, params = hddm.generate.gen_rand_data(subjs=subjs, size=size)
+    m = hddm.HDDM(data)
+    m.sample(samples, burn=burn)
+
+    return m
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
