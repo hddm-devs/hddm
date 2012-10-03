@@ -160,7 +160,11 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
         #theoretical porportion
-        return np.diff(theo_cdf)
+        proportion = np.diff(theo_cdf)
+
+        #make sure there is no zeros since it causes bugs later on
+        proportion[proportion == 0] = 1e-5
+        return proportion
 
     def chisquare(self):
         """
