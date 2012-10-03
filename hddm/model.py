@@ -117,7 +117,8 @@ class AccumulatorModel(kabuki.Hierarchical):
             if self.is_group_model:
                 raise TypeError, "optimization method is not defined for group models"
             else:
-                return self._optimization_single(method, quantiles)
+                results, _ = self._optimization_single(method, quantiles)
+                return results
 
         else:
             return self._quantiles_optimization(method, quantiles)
