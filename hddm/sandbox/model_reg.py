@@ -54,67 +54,8 @@ wfpt_reg_like = scipy_stochastic(wfpt_regress_gen, name='wfpt_reg',
 
 ################################################################################################
 
-
-
-class HDDMRegressor(hddm.model.HDDM):
-
-    def __init__(self, data, regressor=None, **kwargs):
-        """Hierarchical Drift Diffusion Model with regressors
-        """
-
-        #create self.regressor and self.reg_outcome
-        regressor = deepcopy(regressor)
-        if type(regressor) == dict:
-            regressor = [regressor]
-
-        self.reg_outcomes = [] # holds all the parameters that are going to modeled as outcome
-        for reg in regressor:
-            if type(reg['args']) == str:
-                reg['args'] = [reg['args']]
-            if type(reg['covariates']) == str:
-                reg['covariates'] = [reg['covariates']]
-            self.reg_outcomes.append(reg['outcome'])
-
-        self.regressor = regressor
-
-        #call HDDDM constractor
-        super(self.__class__, self).__init__(data, **kwargs)
-
-        #set wfpt_reg
-        del self.wfpt
-        self.wfpt_reg = deepcopy(wfpt_reg_like)
-        self.wfpt_reg.rv.wiener_params = self.wiener_params
-
-
-    def create_params(self):
-
-        #get params from HDDM
-        params = super(self.__class__, self).create_params()
-
-        #remove wfpt and the outcome params
-        remove_params = ['wfpt'] + self.reg_outcomes
-        params = [x for x in params if x.name not in remove_params]
-
-        #create regressor params
-        for i_reg, reg in enumerate(self.regressor):
-            for arg in reg['args']:
-                reg_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
-                reg_g = Knode(pm.Normal, mu=0, tau=10**-2, value=0, step_method=kabuki.steps.kNormalNormal)
-                reg_subj = Knode(pm.Normal, value=0.5)
-                reg_param = Parameter(arg, group_knode=reg_g, var_knode=reg_var, subj_knode=reg_subj,
-                          group_label = 'mu', var_label = 'tau', var_type='std',
-                          transform=lambda mu,var:(mu, var**-2))
-                params.append(reg_param)
-
-        #wfpt
-        wfpt_knode = Knode('')
-        wfpt = Parameter('wfpt', is_bottom_node=True, subj_knode=wfpt_knode)
-        params.append(wfpt)
-
-        return params
-
-    def get_bottom_node(self, param, params):
-
+class KnodeWfptRegress(kabuki.hierarchical.Knode):
+    def create_node(self, name, kwargs, data):
         #create regressors
         for reg in self.regressor:
             outcome = reg['outcome']
@@ -138,14 +79,70 @@ class HDDMRegressor(hddm.model.HDDM):
                 raise TypeError(errmsg)
 
         model = self.wfpt_reg(param.full_name,
-                            value=param.data['rt'],
-                            v=params['v'],
-                            V=self.get_node('V', params),
-                            a=params['a'],
-                            z=self.get_node('z', params),
-                            Z=self.get_node('Z', params),
-                            t=params['t'],
-                            T=self.get_node('T', params),
-                            reg_outcomes=self.reg_outcomes,
-                            observed=True)
+                              value=param.data['rt'],
+                              v=params['v'],
+                              V=self.get_node('V', params),
+                              a=params['a'],
+                              z=self.get_node('z', params),
+                              Z=self.get_node('Z', params),
+                              t=params['t'],
+                              T=self.get_node('T', params),
+                              reg_outcomes=self.reg_outcomes,
+                              observed=True)
         return model
+
+
+
+class HDDMRegressor(hddm.model.HDDM):
+    def __init__(self, data, regressor=None, **kwargs):
+        """Hierarchical Drift Diffusion Model with regressors
+        """
+        #create self.regressor and self.reg_outcome
+        regressor = deepcopy(regressor)
+        if isinstance(regressor, dict):
+            regressor = [regressor]
+
+        self.reg_outcomes = [] # holds all the parameters that are going to modeled as outcome
+        for reg in regressor:
+            if isinstance(reg['args'], str):
+                reg['args'] = [reg['args']]
+            if isinstance(reg['covariates'], str):
+                reg['covariates'] = [reg['covariates']]
+            self.reg_outcomes.append(reg['outcome'])
+
+        self.regressor = regressor
+
+        super(HDDMRegressor, self).__init__(data, **kwargs)
+
+        #set wfpt_reg
+        del self.wfpt
+        self.wfpt_reg = deepcopy(wfpt_reg_like)
+        self.wfpt_reg.rv.wiener_params = self.wiener_params
+
+    def create_knodes(self):
+        #get knodes from HDDM
+        params = super(HDDMRegressor, self).create_knodes()
+
+        #remove wfpt and the outcome params
+        remove_params = ['wfpt'] + self.reg_outcomes
+        params = [x for x in params if x.name not in remove_params]
+
+        #create regressor params
+        for i_reg, reg in enumerate(self.regressor):
+            for arg in reg['args']:
+                reg_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
+                reg_g = Knode(pm.Normal, mu=0, tau=10**-2, value=0)
+
+                reg_subj = Knode(pm.Normal, value=0.5, mu=reg_g, tau=1)
+                reg_param = Knode(arg, group_knode=reg_g, var_knode=reg_var, subj_knode=reg_subj,
+                          group_label = 'mu', var_label = 'tau', var_type='std',
+                          transform=lambda mu,var:(mu, var**-2))
+                params.append(reg_param)
+
+        #wfpt
+        wfpt_knode = Knode('')
+        wfpt = Knode('wfpt', is_bottom_node=True, subj_knode=wfpt_knode)
+        params.append(wfpt)
+
+        return params
+

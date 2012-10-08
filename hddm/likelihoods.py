@@ -153,6 +153,8 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         # extract theoretical RT indices
         theo_idx = np.searchsorted(x_cdf, self._emp_rt)
 
+        theo_idx[theo_idx == len(x_cdf)] = len(x_cdf)-1
+
         #get probabilities associated with theoretical RT indices
         theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
 
