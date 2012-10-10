@@ -23,7 +23,7 @@ import inspect
 
 from kabuki.hierarchical import Knode
 from copy import deepcopy
-from scipy.optimize import fmin_powell
+from scipy.optimize import fmin_powell, fmin
 from scipy import stats
 
 class AccumulatorModel(kabuki.Hierarchical):
@@ -177,7 +177,10 @@ class AccumulatorModel(kabuki.Hierarchical):
 
 
         #optimze
-        fmin_powell(objective, values)
+        try:
+            fmin_powell(objective, values)
+        except Exception:
+            fmin(objective, values)
         results = self.values
 
         #calc BIC for G^2
