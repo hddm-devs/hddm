@@ -359,19 +359,35 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
-def test_cmp_cdf_pdf(repeats=10):
+def test_cmp_cdf_pdf(repeats=100):
     """Comparing wfpt PDF to CDF."""
     x = np.linspace(-5, 5, 1001)
+    np.random.seed(10)
     for i in range(repeats):
         params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
-        pdf = hddm.wfpt.pdf_array(x, params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'], 1e-4)
-        cum_pdf = np.cumsum(pdf)
+        pdf = hddm.wfpt.pdf_array(x, err=1e-4, **params)
+        cum_pdf = np.zeros(len(pdf))
+        cum_pdf[1:] = cumtrapz(pdf)
         cum_pdf /= cum_pdf[-1]
 
-        x_cdf, cdf = hddm.wfpt.gen_cdf(params['v'], params['sv'], params['a'], params['z'], params['sz'], params['t'], params['st'])
+        x_cdf, cdf = hddm.wfpt.gen_cdf(**params)
 
         np.testing.assert_array_equal(x, x_cdf)
-        np.testing.assert_array_almost_equal(cdf, cum_pdf, 1)
+        np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
+
+def test_cmp_cdf_from_pdf_to_cdf_from_fastdm(repeats=10):
+    """Comparing numerical integration of wfpt PDF to fastdm CDF."""
+    N = 500
+    np.random.seed(10)
+    for i in range(repeats):
+        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
+        x, cum_pdf = hddm.wfpt.gen_cdf_from_pdf(err=1e-4, N=N, **params)
+        x_cdf, cdf = hddm.wfpt.gen_cdf(N=N, **params)
+
+        np.testing.assert_array_equal(x, x_cdf)
+        np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
+
+
 
 
 if __name__=='__main__':
