@@ -375,7 +375,7 @@ def test_cmp_cdf_pdf(repeats=100):
         np.testing.assert_array_equal(x, x_cdf)
         np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
 
-def test_cmp_cdf_from_pdf_to_cdf_from_fastdm(repeats=10):
+def test_cmp_cdf_from_pdf_to_cdf_from_fastdm(repeats=100):
     """Comparing numerical integration of wfpt PDF to fastdm CDF."""
     N = 500
     np.random.seed(10)
