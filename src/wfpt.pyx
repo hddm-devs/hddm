@@ -170,7 +170,7 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     return sum_logp
 
-def gen_cdf_from_pdf(double v, double sv, double a, double z, double sz, double t, double st, double err,
+def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double t, double st, double err,
             int N=500, double time=5., int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
     """
     generate cdf vector using the pdf
@@ -194,7 +194,7 @@ def gen_cdf_from_pdf(double v, double sv, double a, double z, double sz, double 
 
     return x, cdf_array
 
-def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3.,
+def gen_cdf_using_fastdm(double v, double sv, double a, double z, double sz, double t, double st, double precision=3.,
             int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
     """
     generate cdf vector using fast-dm

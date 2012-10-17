@@ -370,19 +370,19 @@ def test_cmp_cdf_pdf(repeats=100):
         cum_pdf[1:] = cumtrapz(pdf)
         cum_pdf /= cum_pdf[-1]
 
-        x_cdf, cdf = hddm.wfpt.gen_cdf(**params)
+        x_cdf, cdf = hddm.wfpt.gen_cdf_using_fastdm(**params)
 
         np.testing.assert_array_equal(x, x_cdf)
         np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
 
-def test_cmp_cdf_from_pdf_to_cdf_from_fastdm(repeats=100):
+def test_cmp_cdf_using_pdf_to_cdf_using_fastdm(repeats=100):
     """Comparing numerical integration of wfpt PDF to fastdm CDF."""
     N = 500
     np.random.seed(10)
     for i in range(repeats):
         params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
-        x, cum_pdf = hddm.wfpt.gen_cdf_from_pdf(err=1e-4, N=N, **params)
-        x_cdf, cdf = hddm.wfpt.gen_cdf(N=N, **params)
+        x, cum_pdf = hddm.wfpt.gen_cdf_using_pdf(err=1e-4, N=N, **params)
+        x_cdf, cdf = hddm.wfpt.gen_cdf_using_fastdm(N=N, **params)
 
         np.testing.assert_array_equal(x, x_cdf)
         np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
