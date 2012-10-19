@@ -89,7 +89,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #add pdf and cdf_vec to the class
     wfpt.pdf = pdf
-    wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf_from_pdf(time=cdf_range[1], **dict(self.parents.items() + wp.items()))
+    wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf_using_pdf(time=cdf_range[1], **dict(self.parents.items() + wp.items()))
 
     #add quantiles functions
     add_quantiles_functions_to_pymc_class(wfpt)
