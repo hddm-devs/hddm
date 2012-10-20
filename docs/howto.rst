@@ -7,7 +7,7 @@ Code subject responses
 There are two ways you can code subject responses (these are the values
 you put in the 'response' column in your data file). You can either use
 accuracy-coding where 1 means correct and 0 means error, or you can
-use direction-coding where 1 means left and 0 means right (this could
+use stimulus-coding where 1 means left and 0 means right (this could
 also code for stimulus A and B instead of left and right). HDDM
 interprets 0 and 1 responses as lower and upper boundary responses,
 respectively, so it has no preference one way or another.
@@ -17,13 +17,21 @@ drift-rate will be directly associated with performance. However, if a
 certain response direction or stimulus type has a higher probability
 of being correct and you want to estimate bias, you can *not* use
 accuracy coding (see the next paragraph for how to include a bias
-parameter). Instead, you should use direction (or stimulus) coding and
-estimate separate drift-rates for each condition (e.g. left response
-correct vs. right response correct). A sanity check of whether you
-coded the responses correctly is that drift-rate for left-response
-correct trials (i.e. upper boundary; 1) is positive and drift-rate for
-right-response correct trials (i.e. lower boundary; 0) is negative
-(assuming subjects are above chance).
+parameter). Instead, you should use stimulus coding. If there is good
+reason to believe that both stimuli have the same information you
+should use the HDDMStimCoding model. For this, add a column to your
+data that codes which stimulus was correct and instantiate the model
+like this:
+
+::
+
+    model = hddm.HDDMStimCoding(data, include='z', stim_col='stim', split_param='v')
+
+This model expects data to have a column named stim with two distinct
+identifiers. For identifier 1, drift-rate v will be used while for
+identifier 2, -v will be used. So ultimately you only estimate one
+drift-rate. Alternatively you can use bias z and 1-z if you set
+split_param='z'. See the HDDMStimCoding help doc for more information.
 
 Include bias and inter-trial variability
 ----------------------------------------
