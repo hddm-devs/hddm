@@ -14,10 +14,11 @@
 
 import hddm
 
+import scipy.integrate as integrate
 from copy import copy
 import numpy as np
-cimport numpy as np
 
+cimport numpy as np
 cimport cython
 
 from cython.parallel import *
@@ -27,7 +28,8 @@ from cython.parallel import *
 include 'integrate.pxi'
 include 'cdf.pxi'
 
-def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t, double st, double err, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
+def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz,
+              double t, double st, double err, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef np.ndarray[double, ndim=1] y = np.empty(size, dtype=np.double)
@@ -168,8 +170,35 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     return sum_logp
 
-def gen_cdf(double v, double sv, double a, double z, double sz, double t, double st, double precision=3.,
+def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double t, double st, double err,
+            int N=500, double time=5., int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
+    """
+    generate cdf vector using the pdf
+    """
+    if (sv < 0) or (a <=0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2.>1) or \
+    (z-sz/2.<0) or (t-st/2.<0) or (t<0) or (st < 0):
+        raise ValueError("at least one of the parameters is out of the support")
+
+    cdef np.ndarray[double, ndim=1] x = np.linspace(-time, time, 2*N+1)
+    cdef np.ndarray[double, ndim=1] cdf_array = np.empty(x.shape[0], dtype=np.double)
+    cdef int idx
+
+    #compute pdf on the real line
+    cdf_array = pdf_array(x, v, sv, a, z, sz, t, st, err, 0, n_st, n_sz, use_adaptive, simps_err)
+
+    #integrate
+    cdf_array[1:] = integrate.cumtrapz(cdf_array)
+
+    #normalize
+    cdf_array /= cdf_array[x.shape[0]-1]
+
+    return x, cdf_array
+
+def gen_cdf_using_fastdm(double v, double sv, double a, double z, double sz, double t, double st, double precision=3.,
             int N=500, double time=5., np.ndarray[double, ndim=1] cdf_array=None):
+    """
+    generate cdf vector using fast-dm
+    """
 
     if (sv < 0) or (a <=0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2.>1) or \
     (z-sz/2.<0) or (t-st/2.<0) or (t<0) or (st < 0):
