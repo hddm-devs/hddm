@@ -128,6 +128,22 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return hm
 
+    def test_HDDMStimCoding(self):
+        params_full, params = hddm.generate.gen_rand_params(cond_dict={'v': [-1, 1], 'z': [.8, .4]})
+        data, params_subj = hddm.generate.gen_rand_data(params=params_full)
+        m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v')
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['self'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.Normal)
+
+        m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='z')
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['a'], int)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
+
 
 def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
                                          optimization_method='ML', max_retries=10):

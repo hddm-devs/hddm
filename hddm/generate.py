@@ -95,8 +95,6 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
                 merged_params:
                      a dictionary of parameters that can be used to validate the optimization
                      and learning algorithms.
-
-
     """
 
 
@@ -104,7 +102,7 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-   #if ther is only a single condition then we can use gen_single_params_set
+    #if there is only a single condition then we can use gen_single_params_set
     if cond_dict is None:
        return gen_single_params_set(include=include)
 

@@ -11,6 +11,7 @@
 
 from __future__ import division
 from collections import OrderedDict
+from copy import deepcopy
 
 import numpy as np
 import pymc as pm
@@ -22,7 +23,7 @@ import scipy as sp
 import inspect
 
 from kabuki.hierarchical import Knode
-from copy import deepcopy
+from copy import copy
 from scipy.optimize import fmin_powell, fmin
 from scipy import stats
 
@@ -414,7 +415,7 @@ class HDDM(HDDMBase):
         self.use_gibbs = kwargs.pop('use_gibbs_for_mean', True)
         self.use_slice = kwargs.pop('use_slice_for_std', True)
 
-        super(self.__class__, self).__init__(*args, **kwargs)
+        super(HDDM, self).__init__(*args, **kwargs)
 
     def pre_sample(self):
         if not self.is_group_model:
@@ -465,6 +466,93 @@ class HDDM(HDDMBase):
         avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
         return avg_model
 
+
+class HDDMStimCoding(HDDM):
+    """HDDM model that can be used when stimulus coding and estimation
+    of bias (i.e. displacement of starting point z) is required.
+
+    In that case, the 'resp' column in your data should contain 0 and
+    1 for the chosen stimulus (or direction), not whether the response
+    was correct or not as you would use in accuracy coding. You then
+    have to provide another column (referred to as stim_col) which
+    contains information about which the correct response was.
+
+    :Arguments:
+        split_param : str ('v' or 'z')
+            There are two ways to model stimulus coding in the case where both stimuli
+            have equal information (so that there can be no difference in drift):
+            * 'z': Use z for stimulus A and 1-z for stimulus B
+            * 'v': Use drift v for stimulus A and -v for stimulus B
+
+        stim_col : str
+            Column name for extracting the stimuli to use for splitting.
+
+    """
+    def __init__(self, *args, **kwargs):
+        self.stim_col = kwargs.pop('stim_col', 'stim')
+        self.split_param = kwargs.pop('split_param', 'z')
+        if self.split_param == 'z' and 'include' in kwargs:
+            if 'z' not in kwargs['include']:
+                kwargs['include'].append('z')
+                print "Adding z to includes."
+        else:
+            kwargs['include'] = ['z']
+            print "Adding z to includes."
+        #assert self.stim_col in self.data.columns, "Can not find column named %s" % self.stim_col
+        self.stims = np.unique(args[0][self.stim_col])
+        assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
+
+        super(HDDMStimCoding, self).__init__(*args, **kwargs)
+
+
+    def create_wfpt_knode(self, knodes):
+        wfpt_parents = OrderedDict()
+        wfpt_parents['a'] = knodes['a_bottom']
+        wfpt_parents['v'] = knodes['v_bottom']
+        wfpt_parents['t'] = knodes['t_bottom']
+
+        wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else 0
+        wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else 0
+        wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
+        wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
+
+        # Here we use a special Knode (see below) that either inverts v or z
+        # depending on what the correct stimulus was for that trial type.
+        return KnodeWfptStimCoding(self.wfpt_class, 'wfpt',
+                                   observed=True, col_name='rt',
+                                   depends=[self.stim_col],
+                                   split_param=self.split_param,
+                                   stims=self.stims,
+                                   stim_col=self.stim_col,
+                                   **wfpt_parents)
+
+class KnodeWfptStimCoding(Knode):
+    def __init__(self, *args, **kwargs):
+        self.split_param = kwargs.pop('split_param')
+        self.stims = kwargs.pop('stims')
+        self.stim_col = kwargs.pop('stim_col')
+        super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
+
+    def create_node(self, name, kwargs, data):
+        # the addition of "depends=['stim']" in the call of
+        # KnodeWfptInvZ in HDDMStimCoding makes that data are
+        # submitted splitted by the values of the variable stim the
+        # following lines check if the variable stim is equal to the
+        # value of stim for which z' = 1-z and transforms z if this is
+        # the case (similar to v)
+        if all(data[self.stim_col] == self.stims[0]):
+            if self.split_param == 'z':
+                z = copy(kwargs['z'])
+                kwargs['z'] = 1-z
+            elif self.split_param == 'v':
+                v = copy(kwargs['v'])
+                kwargs['v'] = -v
+            else:
+                raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
+
+            return self.pymc_node(name, **kwargs)
+        else:
+            return self.pymc_node(name, **kwargs)
 
 if __name__ == "__main__":
     import doctest
