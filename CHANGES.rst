@@ -4,7 +4,13 @@
 Release Notes
 =============
 
-HDDM 0.3
+HDDM 0.4
+========
+
+* New model HDDMStimulusCoding.
+* Posterior predictive quantile plot.
+
+HDDM 0.3 (6 Sep 2012)
 ========
 
 * Complete rewrite of the underlying model creation engine (kabuki) to
