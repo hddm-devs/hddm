@@ -29,7 +29,9 @@ include 'integrate.pxi'
 include 'cdf.pxi'
 
 def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz,
-              double t, double st, double err, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
+              double t, double st, double err, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1,
+              double simps_err=1e-3, double p_outlier=0, double w_outlier=0):
+
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef np.ndarray[double, ndim=1] y = np.empty(size, dtype=np.double)
@@ -37,24 +39,26 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, doubl
     for i in prange(size, nogil=True):
         y[i] = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
 
+    y = y * (1 - p_outlier) + (w_outlier * p_outlier)
     if logp==1:
         return np.log(y)
     else:
         return y
 
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
-                double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8):
+                double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
     cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
 
-    #if num_threads != 0:
-    #    openmp.omp_set_num_threads(num_threads)
 
     for i in prange(size, nogil=True, schedule='dynamic'):
         p = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
+        p = p * (1 - p_outlier) + wp_outlier
         if p == 0:
             with gil:
                 return -np.inf
@@ -63,28 +67,6 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
 
     return sum_logp
 
-def wiener_like_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
-                double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8):
-    cdef Py_ssize_t size = x.shape[0]
-    cdef Py_ssize_t i
-    cdef double sum_logp = 0
-
-    cdef np.ndarray[double, ndim=1] p_array = np.empty(size, dtype=np.float)
-
-    #if num_threads != 0:
-    #    openmp.omp_set_num_threads(num_threads)
-
-    for i in prange(size, nogil=True, schedule='dynamic'):
-        p_array[i] = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-        # If one probability = 0, the log sum will be -Inf
-        if p_array[i] == 0:
-            with gil:
-                return -np.inf
-
-    for i in prange(size, nogil=True, schedule='dynamic'):
-        sum_logp += log(p_array[i])
-
-    return sum_logp
 
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None):
     cdef Py_ssize_t size = x.shape[0]
@@ -171,7 +153,8 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
     return sum_logp
 
 def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double t, double st, double err,
-            int N=500, double time=5., int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3):
+            int N=500, double time=5., int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3,
+            double p_outlier=0, double w_outlier=0):
     """
     generate cdf vector using the pdf
     """
@@ -184,7 +167,7 @@ def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double
     cdef int idx
 
     #compute pdf on the real line
-    cdf_array = pdf_array(x, v, sv, a, z, sz, t, st, err, 0, n_st, n_sz, use_adaptive, simps_err)
+    cdf_array = pdf_array(x, v, sv, a, z, sz, t, st, err, 0, n_st, n_sz, use_adaptive, simps_err, p_outlier, w_outlier)
 
     #integrate
     cdf_array[1:] = integrate.cumtrapz(cdf_array)
