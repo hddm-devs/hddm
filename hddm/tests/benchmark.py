@@ -106,5 +106,6 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     print "Chisquare method"
     print df
 
+    return data
 
-check_outlier_model(seed=1, p_outlier=0.05)
+data = check_outlier_model(seed=1, p_outlier=0)
