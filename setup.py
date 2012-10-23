@@ -1,27 +1,27 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from glob import glob
-import cython_gsl
+#import cython_gsl
 
 try:
     from Cython.Build import cythonize
-    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'] + glob('src/fast-dm/*.c')),
-                             Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
-                                       libraries=cython_gsl.get_libraries(),
-                                       library_dirs=[cython_gsl.get_library_dir()],
-                                       include_dirs=[cython_gsl.get_cython_include_dir()]),
+    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'],
+                             #Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
+                             #          libraries=cython_gsl.get_libraries(),
+                             #          library_dirs=[cython_gsl.get_library_dir()],
+                             #          include_dirs=[cython_gsl.get_cython_include_dir()]),
                              Extension('lba', ['src/lba.pyx'])
     ])
 
 except ImportError:
-    ext_modules = [Extension('wfpt', ['src/wfpt.c'] + glob('src/fast-dm/*.c')),
+    ext_modules = [Extension('wfpt', ['src/wfpt.c']),
                    Extension('lba', ['src/lba.c'])]
 
 import numpy as np
 
 setup(
     name='HDDM',
-    version='0.3',
+    version='0.4dev',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
@@ -31,7 +31,7 @@ setup(
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
     install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.3', 'PyMC >= 2.2'],
     setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.3', 'PyMC >= 2.2'],
-    include_dirs = [np.get_include(), 'src/fast-dm', cython_gsl.get_include()],
+    include_dirs = [np.get_include()],#, cython_gsl.get_include()],
     classifiers=[
                 'Development Status :: 4 - Beta',
                 'Environment :: Console',
