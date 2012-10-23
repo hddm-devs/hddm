@@ -5,7 +5,7 @@ from glob import glob
 
 try:
     from Cython.Build import cythonize
-    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'],
+    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
                              #Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
                              #          libraries=cython_gsl.get_libraries(),
                              #          library_dirs=[cython_gsl.get_library_dir()],
