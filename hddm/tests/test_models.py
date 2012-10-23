@@ -155,8 +155,7 @@ def add_outliers(data, p_outlier):
     return data
 
 def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
-                                         optimization_method='ML', max_retries=10, call_add_outliers=True,
-                                         random_p_outlier=False, fixed_p_outlier=False):
+                                         optimization_method='ML', max_retries=10):
     """
     recover parameters for single subjects model.
     The test does include recover of inter-variance variables since many times they have only small effect
@@ -181,19 +180,8 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
             #generate samples
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
-            if call_add_outliers:
-                samples = add_outliers(samples, p_outlier=0.05)
 
-            #init model
-            if fixed_p_outlier:
-                p_outlier = 0.05
-            else:
-                p_outlier = 0.
-
-            if random_p_outlier:
-                h = hddm.model.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
-            else:
-                h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+            h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
 
             #run optimization max_tries times
             recovery_ok = False
