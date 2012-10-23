@@ -68,10 +68,14 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
     return sum_logp
 
 
-def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None):
+def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
+                      int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
+                      double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
 
     if multi is None:
         return full_pdf(x, v, sv, a, z, sz, t, st, err)
@@ -82,11 +86,14 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
             for param in multi:
                 params_iter[param] = params[param][i]
 
-            p += log(full_pdf(x[i], params_iter['v'],
+            p = full_pdf(x[i], params_iter['v'],
                               params_iter['sv'], params_iter['a'], params_iter['z'],
                               params_iter['sz'], params_iter['t'], params_iter['st'],
-                              err))
-        return p
+                              err, n_st, n_sz, use_adaptive, simps_err)
+            p = p * (1 - p_outlier) + wp_outlier
+            sum_logp += log(p)
+        
+        return sum_logp
 
 def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double t, \
                      double st, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
