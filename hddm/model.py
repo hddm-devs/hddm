@@ -276,14 +276,14 @@ class HDDMBase(AccumulatorModel):
     """
 
     def __init__(self, data, bias=False, include=(),
-                 wiener_params=None, **kwargs):
+                 wiener_params=None, p_outlier=0., **kwargs):
 
         self._kwargs = kwargs
 
         self.include = set()
         if include is not None:
             if include == 'all':
-                [self.include.add(param) for param in ('st','sv','sz')]
+                [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier')]
             elif isinstance(include, str):
                 self.include.add(include)
             else:
@@ -295,10 +295,12 @@ class HDDMBase(AccumulatorModel):
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                                   'use_adaptive':1,
-                                  'simps_err':1e-3}
+                                  'simps_err':1e-3,
+                                  'w_outlier': 0.1}
         else:
             self.wiener_params = wiener_params
         wp = self.wiener_params
+        self.p_outlier = p_outlier
 
         #set cdf_range
         cdf_bound = max(np.abs(data['rt'])) + 1;
@@ -319,6 +321,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else 0
         wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
+        wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
 
         return Knode(self.wfpt_class, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
 
@@ -404,6 +407,8 @@ class HDDMTruncated(HDDMBase):
             knodes.update(self.create_family_trunc_normal('st', lower=0, upper=1e3, value=.01))
         if 'z' in self.include:
             knodes.update(self.create_family_trunc_normal('z', lower=0, upper=1, value=.5))
+        if 'p_outlier' in self.include:
+            knodes.update(self.create_family_trunc_normal('p_outlier', lower=0, upper=1, value=0.05))
 
         knodes['wfpt'] = self.create_wfpt_knode(knodes)
 
@@ -445,6 +450,9 @@ class HDDM(HDDMBase):
             knodes.update(self.create_family_exp('st', value=.01))
         if 'z' in self.include:
             knodes.update(self.create_family_invlogit('z', value=.5))
+        if 'p_outlier' in self.include:
+            knodes.update(self.create_family_invlogit('p_outlier', value=0.05))
+
 
         knodes['wfpt'] = self.create_wfpt_knode(knodes)
 

@@ -6,6 +6,7 @@ import unittest
 import pymc as pm
 import numpy as np
 import pandas as pd
+import nose
 pd.set_printoptions(precision=4)
 from nose import SkipTest
 import kabuki
@@ -145,18 +146,41 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
 
 
+
+def add_outliers(data, p_outlier):
+    """add outliers to data. half of the outliers will be fast, and the rest will be slow
+    Input:
+        data - data
+        p_outliers - probability of outliers
+    """
+    data = pd.DataFrame(data)
+
+    #generating outliers
+    n_outliers = int(len(data) * p_outlier)
+    outliers = data[:n_outliers].copy()
+
+    #fast outliers
+    outliers.rt[:n_outliers//2] = np.random.rand(n_outliers//2) * (min(abs(data['rt'])) - 0.11)  + 0.11
+
+    #slow outliers
+    outliers.rt[n_outliers//2:] = np.random.rand(n_outliers - n_outliers//2) * 2 + max(abs(data['rt']))
+    outliers.response = np.random.randint(0,2,n_outliers)
+
+    #combine data with outliers
+    data = pd.concat((data, outliers), ignore_index=True)
+    return data
+
 def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
                                          optimization_method='ML', max_retries=10):
     """
-    recover parameters for single subjects model using ML
+    recover parameters for single subjects model.
+    The test does include recover of inter-variance variables since many times they have only small effect
+    on logpable, which makes their recovery impossible.
     """
 
     #init
     include_sets = [set(['a','v','t']),
-                  set(['a','v','t','z']),
-                  set(['a','v','t','st']),
-                  set(['a','v','t','sz']),
-                  set(['a','v','t','sv'])]
+                  set(['a','v','t','z'])]
 
     #for each include set create a set of parametersm generate random data
     #and test the optimization function max_retries times.
@@ -173,7 +197,6 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
             #generate samples
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
 
-            #init model
             h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
 
             #run optimization max_tries times
@@ -214,6 +237,57 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
             assert recovery_ok, 'could not recover the true parameters'
 
+def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
+    """
+    recover parameters with outliers for single subjects model.
+    The test does include recover of inter-variance variables since many times they have only small effect
+    on logpable, which makes their recovery impossible.
+    """
+
+    #init
+    include_sets = [set(['a','v','t']),
+                  set(['a','v','t','z'])]
+    p_outlier = 0.05
+
+    #for each include set create a set of parametersm generate random data
+    #and test the optimization function max_retries times.
+    v = [0, 0.5, 0.75, 1.]
+    np.random.seed(seed)
+    for include in include_sets:
+        for i in range(repeats):
+
+            #generate params for experiment with n_conds conditions
+            cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
+            print "*** the true parameters ***"
+            print merged_params
+
+            #generate samples
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
+
+            #get best recovered_params
+            h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+            best_params = h.optimize(method='ML')
+
+            #add outliers
+            samples = add_outliers(samples, p_outlier=p_outlier)
+
+            #init model
+            if random_p_outlier:
+                h = hddm.model.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
+            else:
+                h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+
+            #optimize
+            recovered_params = h.optimize(method='ML')
+
+            #compare results to true values
+            index = ['best_estimate', 'current_estimate']
+            df = pd.DataFrame([best_params, recovered_params], index=index, dtype=np.float).dropna(1)
+            print df
+
+            #assert
+            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
+
 
 def set_hddm_nodes_values(model, params_dict):
     """
@@ -232,13 +306,14 @@ def set_hddm_nodes_values(model, params_dict):
         else:
             org_name = param_name
             transform = lambda x:x
-
-        model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
+        try:
+            model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
+        except KeyError:
+            pass
 
 
 def test_ML_recovery_single_subject_from_random_starting_point():
-    raise SkipTest("""Disabled. sometimes changes in sz and sv have little effect on logp,
-     which makes their recovery impossible""")
+
     optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=False, optimization_method='ML')
 
 def test_ML_recovery_single_subject_from_true_starting_point():
@@ -249,6 +324,17 @@ def test_chisquare_recovery_single_subject_from_true_starting_point():
 
 def test_gsquare_recovery_single_subject_from_true_starting_point():
     optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='gsquare')
+
+@nose.tools.raises(AssertionError)
+def test_recovery_with_outliers():
+    optimization_recovery_single_subject(repeats=1, seed=1, optimization_method='ML', true_starting_point=False,
+                                         call_add_outliers=True, max_retries=0)
+
+def test_recovery_with_random_p_outlier():
+    recovery_with_outliers(repeats=5, seed=1, random_p_outlier=True)
+
+def test_recovery_with_fixed_p_outlier():
+    recovery_with_outliers(repeats=5, seed=1, random_p_outlier=False)
 
 
 if __name__=='__main__':

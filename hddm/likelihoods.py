@@ -59,28 +59,29 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     if wiener_params is None:
         wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                       'use_adaptive':1,
-                      'simps_err':1e-3}
+                      'simps_err':1e-3,
+                      'w_outlier': 0.1}
     wp = wiener_params
 
     #create likelihood function
-    def wfpt_like(x, v, sv, a, z, sz, t, st):
-        return hddm.wfpt.wiener_like(x, v, sv, a, z, sz, t, st, wp['err'], wp['n_st'],
-                                      wp['n_sz'], wp['use_adaptive'], wp['simps_err'])
+    def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
+        return hddm.wfpt.wiener_like(x, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 
 
     #create random function
-    def random(v, sv, a, z, sz, t, st, size=None):
+    def random(v, sv, a, z, sz, t, st, p_outlier, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
         return hddm.generate.gen_rts(param_dict, method=sampling_method,
                                     samples=size, dt=sampling_dt, range_=cdf_range)
 
 
     #create pdf function
-    def pdf(self, x, v, sv, a, z, sz, t, st):
+    def pdf(self, x, v, sv, a, z, sz, t, st, p_outlier):
+
         if np.isscalar(x):
-            out = hddm.wfpt.full_pdf(x, v, sv, a, z, sz, t, st)
+            out = hddm.wfpt.full_pdf(x, v, sv, a, z, sz, t, st) * (1-p_outlier) + (wp['w_outlier'] * p_outlier)
         else:
-            out = hddm.wfpt.pdf_array(x, v, sv, a, z, sz, t, st, logp=False)
+            out = hddm.wfpt.pdf_array(x, v, sv, a, z, sz, t, st, p_outlier=p_outlier, logp=False, **wp)
 
         return out
 
