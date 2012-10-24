@@ -38,7 +38,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
 
 
-    def _quantiles_optimization(self, method, quantiles=(.1, .3, .5, .7, .9 )):
+    def _quantiles_optimization(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
         """
         quantile optimization using chi^2.
         Input:
@@ -84,11 +84,12 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #optimize
             results, bic_info = average_model._optimization_single(method=method, quantiles=quantiles,
-                                                                   compute_stats=False)
+                                                                   n_runs=n_runs, compute_stats=False)
 
         #run optimization for single subject model
         else:
-            results, bic_info = self._optimization_single(method=method, quantiles=quantiles, compute_stats=True)
+            results, bic_info = self._optimization_single(method=method, quantiles=quantiles, 
+                                                          n_runs=n_runs, compute_stats=True)
 
         if bic_info is not None:
             self.bic_info = bic_info
@@ -96,7 +97,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 )):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
         """
         optimization using ML, chi^2 or G^2
 
@@ -115,13 +116,13 @@ class AccumulatorModel(kabuki.Hierarchical):
             if self.is_group_model:
                 raise TypeError, "optimization method is not defined for group models"
             else:
-                results, _ = self._optimization_single(method, quantiles)
+                results, _ = self._optimization_single(method, quantiles, n_runs=n_runs)
                 return results
 
         else:
-            return self._quantiles_optimization(method, quantiles)
+            return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
 
-    def _optimization_single(self, method, quantiles, compute_stats=True):
+    def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
         """
         function used by chisquare_optimization to fit the a single subject model
         Input:
@@ -143,7 +144,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         #get all stochastic parents of observed nodes
         db = self.nodes_db
         parents = db[(db.stochastic == True) & (db.observed == False)]['node']
-        values = [x.value for x in parents]
+        original_values = np.array([x.value for x in parents])
+        names = [x.__name__ for x in parents]
 
         #define objective
         #ML method
@@ -161,7 +163,10 @@ class AccumulatorModel(kabuki.Hierarchical):
             def objective(values):
                 for (i, value) in enumerate(values):
                     parents[i].value = value
-                return sum([obs.chisquare() for obs in obs_nodes])
+                score = sum([obs.chisquare() for obs in obs_nodes])
+                if score < 0:
+                    kabuki.debug_here()
+                return score
 
         #G^2 method
         elif method == 'gsquare':
@@ -173,12 +178,33 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             raise ValueError('unknown optimzation method')
 
-
         #optimze
-        try:
-            fmin_powell(objective, values)
-        except Exception:
-            fmin(objective, values)
+        best_score = np.inf
+        all_results = []
+        values = original_values.copy()
+        inf_objective = False
+        for i_run in xrange(n_runs):
+            #initalize values to a random point
+            while inf_objective:
+                values = original_values + np.random.randn(len(values))*0.1
+                values = np.maximum(values, 0.1*np.random.rand())
+                self.set_values(dict(zip(names, values)))
+                inf_objective = np.isinf(objective(values))
+
+            #optimze
+            try:
+                res_tuple = fmin_powell(objective, values, full_output=True)
+            except Exception:
+                res_tuple = fmin(objective, values, full_output=True)
+            all_results.append(res_tuple)
+
+            #reset inf_objective so values be resampled
+            inf_objective = True
+
+        #get best results
+        best_idx = np.argmin([x[1] for x in all_results])
+        best_values = all_results[best_idx][0]
+        self.set_values(dict(zip(names, best_values)))
         results = self.values
 
         #calc BIC for G^2
