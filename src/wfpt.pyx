@@ -44,6 +44,8 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, doubl
     else:
         return y
 
+cdef inline bint p_outlier_in_range(double p_outlier): return (p_outlier >= 0) & (p_outlier <= 1)
+
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
                 double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                 double p_outlier=0, double w_outlier=0):
@@ -53,6 +55,8 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
 
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
 
     for i in prange(size, nogil=True, schedule='dynamic'):
         p = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
@@ -165,7 +169,7 @@ def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double
     generate cdf vector using the pdf
     """
     if (sv < 0) or (a <=0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2.>1) or \
-    (z-sz/2.<0) or (t-st/2.<0) or (t<0) or (st < 0):
+    (z-sz/2.<0) or (t-st/2.<0) or (t<0) or (st < 0) or not p_outlier_in_range(p_outlier):
         raise ValueError("at least one of the parameters is out of the support")
 
     cdef np.ndarray[double, ndim=1] x = np.linspace(-time, time, 2*N+1)
