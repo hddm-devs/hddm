@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from copy import copy, deepcopy
+from copy import deepcopy
 import numpy as np
 from scipy import stats
 import pymc as pm
@@ -22,14 +21,14 @@ class wfpt_regress_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes)
+        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
 
-    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         raise NotImplementedError
 
-    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
         sampled_rts = np.empty(self._size)
 
@@ -70,7 +69,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
-class HDDMRegressor(hddm.model.HDDM):
+class HDDMRegressor(HDDM):
     def __init__(self, data, regressor=None, **kwargs):
         """Hierarchical Drift Diffusion Model with regressors
         """

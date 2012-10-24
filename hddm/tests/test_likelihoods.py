@@ -266,11 +266,11 @@ class TestWfptSwitch(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestWfptSwitch, self).__init__(*args, **kwargs)
         self.tests = 2
-        self.skip = False
-        try:
-            import wfpt_switch
-        except ImportError:
-            self.skip = True
+        self.skip = True
+        # try:
+        #     import wfpt_switch
+        # except ImportError:
+        #     self.skip = True
 
     def gen_rand_params(self):
         vpp = (rand()-.5)*4
@@ -357,38 +357,6 @@ class TestWfptSwitch(unittest.TestCase):
 
             print 'p_value: %f' % p_value
             self.assertTrue(p_value > 0.05)
-
-
-def test_cmp_cdf_pdf(repeats=100):
-    """Comparing wfpt PDF to CDF."""
-    x = np.linspace(-5, 5, 1001)
-    np.random.seed(10)
-    for i in range(repeats):
-        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
-        pdf = hddm.wfpt.pdf_array(x, err=1e-4, **params)
-        cum_pdf = np.zeros(len(pdf))
-        cum_pdf[1:] = cumtrapz(pdf)
-        cum_pdf /= cum_pdf[-1]
-
-        x_cdf, cdf = hddm.wfpt.gen_cdf_using_fastdm(**params)
-
-        np.testing.assert_array_equal(x, x_cdf)
-        np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
-
-def test_cmp_cdf_using_pdf_to_cdf_using_fastdm(repeats=100):
-    """Comparing numerical integration of wfpt PDF to fastdm CDF."""
-    N = 500
-    np.random.seed(10)
-    for i in range(repeats):
-        params = hddm.generate.gen_rand_params(include=('sv', 'st', 'sz', 'z'))
-        x, cum_pdf = hddm.wfpt.gen_cdf_using_pdf(err=1e-4, N=N, **params)
-        x_cdf, cdf = hddm.wfpt.gen_cdf_using_fastdm(N=N, **params)
-
-        np.testing.assert_array_equal(x, x_cdf)
-        np.testing.assert_array_almost_equal(cdf, cum_pdf, 2)
-
-
-
 
 if __name__=='__main__':
     print "Run nosetest."
