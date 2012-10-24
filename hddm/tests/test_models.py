@@ -145,7 +145,47 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
 
+    def test_HDDMRegressor(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols
 
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        import pandas as pd
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        from hddm.sandbox.model_reg import HDDMRegressor
+        m = HDDMRegressor(data, regressor=reg)
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+
+    def test_HDDMRegressorGroupOnly(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols
+
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        import pandas as pd
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        from hddm.sandbox.model_reg import HDDMRegressor
+        m = HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
 def add_outliers(data, p_outlier):
     """add outliers to data. half of the outliers will be fast, and the rest will be slow
@@ -236,57 +276,6 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
                         print
 
             assert recovery_ok, 'could not recover the true parameters'
-
-def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
-    """
-    recover parameters with outliers for single subjects model.
-    The test does include recover of inter-variance variables since many times they have only small effect
-    on logpable, which makes their recovery impossible.
-    """
-
-    #init
-    include_sets = [set(['a','v','t']),
-                  set(['a','v','t','z'])]
-    p_outlier = 0.05
-
-    #for each include set create a set of parametersm generate random data
-    #and test the optimization function max_retries times.
-    v = [0, 0.5, 0.75, 1.]
-    np.random.seed(seed)
-    for include in include_sets:
-        for i in range(repeats):
-
-            #generate params for experiment with n_conds conditions
-            cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
-            print "*** the true parameters ***"
-            print merged_params
-
-            #generate samples
-            samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
-
-            #get best recovered_params
-            h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
-            best_params = h.optimize(method='ML')
-
-            #add outliers
-            samples = add_outliers(samples, p_outlier=p_outlier)
-
-            #init model
-            if random_p_outlier:
-                h = hddm.model.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
-            else:
-                h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
-
-            #optimize
-            recovered_params = h.optimize(method='ML')
-
-            #compare results to true values
-            index = ['best_estimate', 'current_estimate']
-            df = pd.DataFrame([best_params, recovered_params], index=index, dtype=np.float).dropna(1)
-            print df
-
-            #assert
-            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
 
 
 def set_hddm_nodes_values(model, params_dict):
