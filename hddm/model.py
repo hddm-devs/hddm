@@ -88,7 +88,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         #run optimization for single subject model
         else:
-            results, bic_info = self._optimization_single(method=method, quantiles=quantiles, 
+            results, bic_info = self._optimization_single(method=method, quantiles=quantiles,
                                                           n_runs=n_runs, compute_stats=True)
 
         if bic_info is not None:
@@ -344,7 +344,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else 0
         wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
-		wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+        wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
@@ -442,7 +442,7 @@ class HDDMTruncated(HDDMBase):
             knodes.update(self.create_family_exp('st', value=.01))
         if 'z' in include:
             knodes.update(self.create_family_invlogit('z', value=.5))
-		if 'p_outlier' in include:
+        if 'p_outlier' in include:
             knodes.update(self.create_family_trunc_normal('p_outlier', lower=0, upper=1, value=0.05))
         knodes['wfpt'] = self.create_wfpt_knode(knodes)
 

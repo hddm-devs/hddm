@@ -319,6 +319,55 @@ def test_recovery_with_outliers():
     optimization_recovery_single_subject(repeats=1, seed=1, optimization_method='ML', true_starting_point=False,
                                          call_add_outliers=True, max_retries=0)
 
+def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
+    """
+    recover parameters with outliers for single subjects model.
+    The test does include recover of inter-variance variables since many times they have only small effect
+    on logpable, which makes their recovery impossible.
+    """
+    #init
+    include_sets = [set(['a','v','t']),
+                  set(['a','v','t','z'])]
+    p_outlier = 0.05
+
+    #for each include set create a set of parametersm generate random data
+    #and test the optimization function max_retries times.
+    v = [0, 0.5, 0.75, 1.]
+    np.random.seed(seed)
+    for include in include_sets:
+        for i in range(repeats):
+            #generate params for experiment with n_conds conditions
+            cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
+            print "*** the true parameters ***"
+            print merged_params
+
+            #generate samples
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
+
+            #get best recovered_params
+            h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+            best_params = h.optimize(method='ML')
+
+            #add outliers
+            samples = add_outliers(samples, p_outlier=p_outlier)
+
+            #init model
+            if random_p_outlier:
+                h = hddm.model.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
+            else:
+                h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+
+            #optimize
+            recovered_params = h.optimize(method='ML')
+
+            #compare results to true values
+            index = ['best_estimate', 'current_estimate']
+            df = pd.DataFrame([best_params, recovered_params], index=index, dtype=np.float).dropna(1)
+            print df
+
+            #assert
+            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
+
 def test_recovery_with_random_p_outlier():
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=True)
 
