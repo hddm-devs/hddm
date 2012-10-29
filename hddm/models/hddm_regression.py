@@ -1,12 +1,11 @@
-from collections import OrderedDict
-from copy import copy, deepcopy
+from copy import deepcopy
 import numpy as np
 from scipy import stats
 import pymc as pm
 
 import hddm
+from hddm_transformed import HDDM
 import kabuki
-from hddm.model import HDDM
 from kabuki import Knode
 from kabuki.distributions import scipy_stochastic
 
@@ -69,7 +68,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
-class HDDMRegressor(hddm.model.HDDM):
+class HDDMRegressor(HDDM):
     """HDDMRegressor allows estimation of trial-by-trial influences of
     a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
 
@@ -161,4 +160,3 @@ class HDDMRegressor(hddm.model.HDDM):
             knodes['%s_bottom' % reg['outcome']] = reg_knode
 
         return knodes
-
