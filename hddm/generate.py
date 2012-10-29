@@ -392,7 +392,7 @@ def _gen_rts_from_cdf(params, samples=1000):
     T = params['st']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
 
-def gen_rand_data(params=None, method='cdf', **kwargs):
+def gen_rand_data(params=None, **kwargs):
     """Generate simulated RTs with random parameters.
 
        :Optional:
