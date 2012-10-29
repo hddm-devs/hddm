@@ -313,6 +313,12 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier')
+        assert self.include.issubset(possible_parameters), """Received and invalid parameter using the 'include' keyword.
+        parameters received: %s
+        parameters allowed: %s """ % (tuple(self.include), possible_parameters)
+
+        #set wiener params
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                                   'use_adaptive':1,
