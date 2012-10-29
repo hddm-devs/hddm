@@ -1,7 +1,7 @@
 """
 .. module:: HDDM
    :platform: Agnostic
-   :synopsis: Defvalueion of HDDM models.
+   :synopsis: Definition of HDDM models.
 
 .. moduleauthor:: Thomas Wiecki <thomas.wiecki@gmail.com>
                   Imri Sofer <imrisofer@gmail.com>
@@ -444,7 +444,6 @@ class HDDMTruncated(HDDMBase):
             knodes.update(self.create_family_invlogit('z', value=.5))
         if 'p_outlier' in include:
             knodes.update(self.create_family_trunc_normal('p_outlier', lower=0, upper=1, value=0.05))
-        knodes['wfpt'] = self.create_wfpt_knode(knodes)
 
         return knodes
 
