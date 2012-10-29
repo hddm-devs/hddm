@@ -185,7 +185,7 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
 
     def test_HDDMRegressor(self):
-        reg_func = lambda args, cols: args[0] + args[1]*cols[0,:]
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
 
         reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
 
@@ -196,7 +196,7 @@ class TestSingleBreakdown(unittest.TestCase):
         m = HDDMRegressor(data, regressor=reg)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][0,:] == 1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
@@ -204,7 +204,7 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_HDDMRegressor_two_covariates(self):
-        reg_func = lambda args, cols: args[0] + args[1]*cols[0,:] + cols[1,:]
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0] + cols[:,1]
 
         reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': ['cov1', 'cov2'], 'outcome':'v'}
 
@@ -216,8 +216,8 @@ class TestSingleBreakdown(unittest.TestCase):
         m = HDDMRegressor(data, regressor=reg)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][0,:] == 1))
-        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][1,:] == -1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,1] == -1))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
@@ -225,7 +225,7 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_HDDMRegressorGroupOnly(self):
-        reg_func = lambda args, cols: args[0] + args[1]*cols[0,:]
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
 
         reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
 
@@ -236,7 +236,7 @@ class TestSingleBreakdown(unittest.TestCase):
         m = HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][0,:] == 1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))

@@ -65,7 +65,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                 if parent_name.startswith(arg):
                     args.append(parent)
 
-        parents = {'args': args, 'cols': data[reg['covariates']].values.T}
+        parents = {'args': args, 'cols': data[reg['covariates']].values}
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
