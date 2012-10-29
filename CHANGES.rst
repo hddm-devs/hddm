@@ -8,10 +8,16 @@ Release Notes
 HDDM 0.4
 ========
 
+License
+-------
+
+HDDM 0.4 is now distributed under the simplified BSD license (see the
+LICENSE file) instead of GPLv3.
+
 New features
 ------------
 
-* Handling of outliers via mixture likelihood.
+* Handling of outliers via mixture model.
 * New model HDDMRegression to allow estimation of trial-by-trial
   regressions with a covariate.
 * New model HDDMStimulusCoding.
