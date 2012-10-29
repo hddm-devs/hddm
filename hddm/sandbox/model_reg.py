@@ -1,16 +1,18 @@
+from collections import OrderedDict
+from copy import copy, deepcopy
+import numpy as np
+from scipy import stats
+import pymc as pm
+
 import hddm
 import kabuki
 from hddm.model import HDDM
-import pymc as pm
 from kabuki import Knode
 from kabuki.distributions import scipy_stochastic
-import numpy as np
-from scipy import stats
-from copy import copy, deepcopy
 
 class wfpt_regress_gen(stats.distributions.rv_continuous):
 
-    wiener_params = {'err': 1e-4, 'nT':2, 'nZ':2,
+    wiener_params = {'err': 1e-4, 'nT':2, 'nsz':2,
                                   'use_adaptive':1,
                                   'simps_err':1e-3}
     wp = wiener_params
@@ -20,15 +22,15 @@ class wfpt_regress_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _logp(self, x, v, V, a, z, Z, t, T, reg_outcomes):
+    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like_multi(x, v, V, a, z, Z, t, T, .001, reg_outcomes)
+        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
 
-    def _pdf(self, x, v, V, a, z, Z, t, T, reg_outcomes):
+    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
         raise NotImplementedError
 
-    def _rvs(self, v, V, a, z, Z, t, T, reg_outcomes):
-        param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'Z':Z, 'V':V, 'T':T}
+    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
+        param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
         sampled_rts = np.empty(self._size)
 
         for i_sample in xrange(self._size):
@@ -40,10 +42,9 @@ class wfpt_regress_gen(stats.distributions.rv_continuous):
                                                    samples=1, dt=self.dt)
         return sampled_rts
 
-    def random(self, v=1., V=0., a=2, z=.5, Z=.1, t=.3, T=.1, reg_outcomes=None, size=None):
-        print "in random"
+    def random(self, v=1., sv=0., a=2, z=.5, sz=.1, t=.3, st=.1, reg_outcomes=None, size=None, p_outlier=0):
         self._size = len(locals()[reg_outcomes[0]])
-        return self._rvs(v, V, a, z, Z, t, T, reg_outcomes)
+        return self._rvs(v, sv, a, z, sz, t, st, reg_outcomes)
 
 
 wfpt_reg_like = scipy_stochastic(wfpt_regress_gen, name='wfpt_reg',
@@ -54,43 +55,18 @@ wfpt_reg_like = scipy_stochastic(wfpt_regress_gen, name='wfpt_reg',
 
 ################################################################################################
 
-class KnodeWfptRegress(kabuki.hierarchical.Knode):
+class KnodeRegress(kabuki.hierarchical.Knode):
     def create_node(self, name, kwargs, data):
-        #create regressors
-        for reg in self.regressor:
-            outcome = reg['outcome']
-            func = reg['func']
-            cov = reg['covariates']
+        reg = kwargs['regressor']
+        # order parents according to user-supplied args
+        args = []
+        for arg in reg['args']:
+            for parent_name, parent in kwargs['parents'].iteritems():
+                if parent_name.startswith(arg):
+                    args.append(parent)
 
-            #get predictors
-            predictors = np.empty((len(param.data), len(cov)))
-            for i_c, c in enumerate(cov):
-                predictors[:,i_c] = param.data[c]
-
-            #apply function to predictors
-            try:
-                nodes_args = []
-                for arg in reg['args']:
-                    nodes_args.append(params[arg])
-                params[outcome] = func(nodes_args, predictors)
-            except TypeError:
-                errmsg = """the function of %s raised an error. make sure that the first argument is a list of
-                of arguments, and the second is a numpy array or matrix""" % param.full_name
-                raise TypeError(errmsg)
-
-        model = self.wfpt_reg(param.full_name,
-                              value=param.data['rt'],
-                              v=params['v'],
-                              V=self.get_node('V', params),
-                              a=params['a'],
-                              z=self.get_node('z', params),
-                              Z=self.get_node('Z', params),
-                              t=params['t'],
-                              T=self.get_node('T', params),
-                              reg_outcomes=self.reg_outcomes,
-                              observed=True)
-        return model
-
+        parents = {'args': args, 'cols': data[reg['covariates']].values.T}
+        return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
 class HDDMRegressor(hddm.model.HDDM):
@@ -102,47 +78,52 @@ class HDDMRegressor(hddm.model.HDDM):
         if isinstance(regressor, dict):
             regressor = [regressor]
 
-        self.reg_outcomes = [] # holds all the parameters that are going to modeled as outcome
+        self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
         for reg in regressor:
             if isinstance(reg['args'], str):
                 reg['args'] = [reg['args']]
             if isinstance(reg['covariates'], str):
                 reg['covariates'] = [reg['covariates']]
-            self.reg_outcomes.append(reg['outcome'])
+            self.reg_outcomes.add(reg['outcome'])
 
         self.regressor = regressor
 
+        #set wfpt_reg
+        self.wfpt_reg_class = deepcopy(wfpt_reg_like)
+        self.wfpt_reg_class.rv.wiener_params
+
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
-        #set wfpt_reg
-        del self.wfpt
-        self.wfpt_reg = deepcopy(wfpt_reg_like)
-        self.wfpt_reg.rv.wiener_params = self.wiener_params
+    def _create_wfpt_knode(self, knodes):
+        wfpt_parents = self._create_wfpt_parents_dict(knodes)
+        return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
+                     col_name='rt', reg_outcomes=self.reg_outcomes, **wfpt_parents)
 
-    def create_knodes(self):
-        #get knodes from HDDM
-        params = super(HDDMRegressor, self).create_knodes()
-
-        #remove wfpt and the outcome params
-        remove_params = ['wfpt'] + self.reg_outcomes
-        params = [x for x in params if x.name not in remove_params]
+    def _create_stochastic_knodes(self, include):
+        # Create all stochastic knodes except for the ones that we want to replace
+        # with regressors.
+        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
         #create regressor params
         for i_reg, reg in enumerate(self.regressor):
+            reg_parents = {}
             for arg in reg['args']:
-                reg_var = Knode(pm.Uniform, lower=1e-10, upper=100, value=1)
-                reg_g = Knode(pm.Normal, mu=0, tau=10**-2, value=0)
+                reg_family = self.create_family_normal(arg, value=0)
+                reg_parents[arg] = reg_family['%s_bottom' % arg]
+                if reg not in self.group_only_nodes:
+                    reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
+                knodes.update(reg_family)
 
-                reg_subj = Knode(pm.Normal, value=0.5, mu=reg_g, tau=1)
-                reg_param = Knode(arg, group_knode=reg_g, var_knode=reg_var, subj_knode=reg_subj,
-                          group_label = 'mu', var_label = 'tau', var_type='std',
-                          transform=lambda mu,var:(mu, var**-2))
-                params.append(reg_param)
+            reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
+                                     regressor=reg,
+                                     col_name=reg['covariates'],
+                                     depends=('subj_idx',),
+                                     subj=True,
+                                     plot=False,
+                                     trace=False,
+                                     hidden=True,
+                                     **reg_parents)
+            knodes['%s_bottom' % reg['outcome']] = reg_knode
 
-        #wfpt
-        wfpt_knode = Knode('')
-        wfpt = Knode('wfpt', is_bottom_node=True, subj_knode=wfpt_knode)
-        params.append(wfpt)
-
-        return params
+        return knodes
 

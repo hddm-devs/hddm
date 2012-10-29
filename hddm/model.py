@@ -1,7 +1,7 @@
 """
 .. module:: HDDM
    :platform: Agnostic
-   :synopsis: Defvalueion of HDDM models.
+   :synopsis: Definition of HDDM models.
 
 .. moduleauthor:: Thomas Wiecki <thomas.wiecki@gmail.com>
                   Imri Sofer <imrisofer@gmail.com>
@@ -11,7 +11,6 @@
 
 from __future__ import division
 from collections import OrderedDict
-from copy import deepcopy
 
 import numpy as np
 import pymc as pm
@@ -19,13 +18,11 @@ import pymc as pm
 import hddm
 import kabuki
 import kabuki.step_methods as steps
-import scipy as sp
 import inspect
 
 from kabuki.hierarchical import Knode
 from copy import copy
 from scipy.optimize import fmin_powell, fmin
-from scipy import stats
 
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
@@ -91,7 +88,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         #run optimization for single subject model
         else:
-            results, bic_info = self._optimization_single(method=method, quantiles=quantiles, 
+            results, bic_info = self._optimization_single(method=method, quantiles=quantiles,
                                                           n_runs=n_runs, compute_stats=True)
 
         if bic_info is not None:
@@ -306,7 +303,7 @@ class HDDMBase(AccumulatorModel):
 
         self._kwargs = kwargs
 
-        self.include = set()
+        self.include = set(['v', 'a', 't'])
         if include is not None:
             if include == 'all':
                 [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier')]
@@ -337,7 +334,7 @@ class HDDMBase(AccumulatorModel):
 
         super(HDDMBase, self).__init__(data, **kwargs)
 
-    def create_wfpt_knode(self, knodes):
+    def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = OrderedDict()
         wfpt_parents['a'] = knodes['a_bottom']
         wfpt_parents['v'] = knodes['v_bottom']
@@ -348,8 +345,18 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
         wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+        return wfpt_parents
+
+    def _create_wfpt_knode(self, knodes):
+        wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
         return Knode(self.wfpt_class, 'wfpt', observed=True, col_name='rt', **wfpt_parents)
+
+    def create_knodes(self):
+        knodes = self._create_stochastic_knodes(self.include)
+        knodes['wfpt'] = self._create_wfpt_knode(knodes)
+
+        return knodes.values()
 
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:
@@ -417,29 +424,28 @@ class HDDMBase(AccumulatorModel):
 
 
 class HDDMTruncated(HDDMBase):
-   def create_knodes(self):
-        """Returns list of model parameters.
-        """
-
+    def _create_stochastic_knodes(self, include):
         knodes = OrderedDict()
-        knodes.update(self.create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
-        knodes.update(self.create_family_normal('v', value=0))
-        knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
-        if 'sv' in self.include:
+        if 'a' in include:
+            knodes.update(self.create_family_exp('a', value=1))
+        if 'v' in include:
+            knodes.update(self.create_family_normal('v', value=0))
+        if 't' in include:
+            knodes.update(self.create_family_exp('t', value=.01))
+        if 'sv' in include:
+            # TW: Use kabuki.utils.HalfCauchy, S=10, value=1 instead?
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
-        if 'sz' in self.include:
-            knodes.update(self.create_family_trunc_normal('sz', lower=0, upper=1, value=.1))
-        if 'st' in self.include:
-            knodes.update(self.create_family_trunc_normal('st', lower=0, upper=1e3, value=.01))
-        if 'z' in self.include:
-            knodes.update(self.create_family_trunc_normal('z', lower=0, upper=1, value=.5))
-        if 'p_outlier' in self.include:
+            #knodes.update(self.create_family_exp('sv', value=1))
+        if 'sz' in include:
+            knodes.update(self.create_family_invlogit('sz', value=.1))
+        if 'st' in include:
+            knodes.update(self.create_family_exp('st', value=.01))
+        if 'z' in include:
+            knodes.update(self.create_family_invlogit('z', value=.5))
+        if 'p_outlier' in include:
             knodes.update(self.create_family_trunc_normal('p_outlier', lower=0, upper=1, value=0.05))
 
-        knodes['wfpt'] = self.create_wfpt_knode(knodes)
-
-        return knodes.values()
-
+        return knodes
 
 class HDDM(HDDMBase):
     def __init__(self, *args, **kwargs):
@@ -461,28 +467,28 @@ class HDDM(HDDMBase):
             if self.use_slice and isinstance(node, pm.Uniform) and knode_name not in self.group_only_nodes:
                 self.mc.use_step_method(steps.UniformPriorNormalstd, node)
 
-    def create_knodes(self):
+    def _create_stochastic_knodes(self, include):
         knodes = OrderedDict()
-        knodes.update(self.create_family_exp('a', value=1))
-        knodes.update(self.create_family_normal('v', value=0))
-        knodes.update(self.create_family_exp('t', value=.01))
-        if 'sv' in self.include:
+        if 'a' in include:
+            knodes.update(self.create_family_exp('a', value=1))
+        if 'v' in include:
+            knodes.update(self.create_family_normal('v', value=0))
+        if 't' in include:
+            knodes.update(self.create_family_exp('t', value=.01))
+        if 'sv' in include:
             # TW: Use kabuki.utils.HalfCauchy, S=10, value=1 instead?
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
             #knodes.update(self.create_family_exp('sv', value=1))
-        if 'sz' in self.include:
+        if 'sz' in include:
             knodes.update(self.create_family_invlogit('sz', value=.1))
-        if 'st' in self.include:
+        if 'st' in include:
             knodes.update(self.create_family_exp('st', value=.01))
         if 'z' in self.include:
             knodes.update(self.create_family_invlogit('z', value=.5))
-        if 'p_outlier' in self.include:
+        if 'p_outlier' in include:
             knodes.update(self.create_family_invlogit('p_outlier', value=0.05))
 
-
-        knodes['wfpt'] = self.create_wfpt_knode(knodes)
-
-        return knodes.values()
+        return knodes
 
     def _create_an_average_model(self):
         """
@@ -539,17 +545,8 @@ class HDDMStimCoding(HDDM):
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
 
 
-    def create_wfpt_knode(self, knodes):
-        wfpt_parents = OrderedDict()
-        wfpt_parents['a'] = knodes['a_bottom']
-        wfpt_parents['v'] = knodes['v_bottom']
-        wfpt_parents['t'] = knodes['t_bottom']
-
-        wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else 0
-        wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else 0
-        wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
-        wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
-
+    def _create_wfpt_knode(self, knodes):
+        wfpt_parents = self._create_wfpt_parents_dict(knodes)
         # Here we use a special Knode (see below) that either inverts v or z
         # depending on what the correct stimulus was for that trial type.
         return KnodeWfptStimCoding(self.wfpt_class, 'wfpt',
