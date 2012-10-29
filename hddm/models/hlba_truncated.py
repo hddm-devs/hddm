@@ -1,22 +1,18 @@
 from __future__ import division
-import numpy as np
-import pymc as pm
-import matplotlib.pyplot as plt
-import hddm
-import kabuki
-import kabuki.step_methods as steps
-import scipy as sp
 from collections import OrderedDict
 
+import numpy as np
 from scipy import stats
+from numpy.random import rand, randn
+
+import hddm
+import kabuki
+from base import AccumulatorModel
 from kabuki.hierarchical import Knode
 from kabuki.distributions import scipy_stochastic
-from copy import deepcopy
-from numpy.random import rand, randn
 
 
 class lba_gen(stats.distributions.rv_continuous):
-
     def _argcheck(self, *args):
         return True
 
@@ -61,7 +57,7 @@ class lba_gen(stats.distributions.rv_continuous):
 lba_like = scipy_stochastic(lba_gen, name='lba', longname="", extradoc="")
 
 
-class HLBA(hddm.model.AccumulatorModel):
+class HLBA(AccumulatorModel):
     def create_lba_knode(self, knodes):
         lba_parents = OrderedDict()
         lba_parents['t'] = knodes['t_bottom']
