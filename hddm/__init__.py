@@ -2,15 +2,16 @@
 
 __docformat__ = 'restructuredtext'
 
-__version__ = '0.3'
+__version__ = '0.4dev'
 
-import model
+import models
+import models as model # remain backwards compatibility
 import likelihoods
 import generate
 import utils
 import sandbox
 
-from model import *
+from models import *
 
 import wfpt
 try:
