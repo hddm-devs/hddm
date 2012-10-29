@@ -70,6 +70,41 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
 
 class HDDMRegressor(hddm.model.HDDM):
+    """HDDMRegressor allows estimation of trial-by-trial influences of
+    a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
+
+    For example, if your prediction is that activity of a particular
+    brain area has a linear correlation with drift-rate, you could
+    specify the following regression model (make sure you have a column
+    with the brain activity in your data, in our example we name this
+    column 'BOLD'):
+
+    ::
+
+        # Define regression function (linear in this case)
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+        # Define regression descriptor
+        # regression function to use (func, defined above)
+        # args: parameter names (passed to reg_func; v_slope->args[0],
+        #                                            v_inter->args[1])
+        # covariates: data column to use as the covariate
+        #             (in this example, expects a column named
+        #             BOLD in the data)
+        # outcome: DDM parameter that will be replaced by trial-by-trial
+        #          regressor values (drift-rate v in this case)
+        reg = {'func': reg_func,
+               'args': ['v_inter','v_slope'],
+               'covariates': 'BOLD',
+               'outcome': 'v'}
+
+        # construct regression model. Second argument must be the
+        # regression descriptor. This model will have new parameters defined
+        # in args above, these can be used in depends_on like any other
+        # parameter.
+        m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
+
+    """
     def __init__(self, data, regressor=None, **kwargs):
         """Hierarchical Drift Diffusion Model with regressors
         """
