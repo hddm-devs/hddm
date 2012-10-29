@@ -130,6 +130,44 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return hm
 
+    def test_HDDMTruncated_distributions(self):
+        params = hddm.generate.gen_rand_params()
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        m = hddm.HDDMTruncated(data)
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.TruncatedNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['mu'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.TruncatedNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'].parents['x'], pm.Uniform)
+
+    def test_HDDM_distributions(self):
+        params = hddm.generate.gen_rand_params()
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        m = hddm.HDDM(data)
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
+
+
     def test_HDDMStimCoding(self):
         params_full, params = hddm.generate.gen_rand_params(cond_dict={'v': [-1, 1], 'z': [.8, .4]})
         data, params_subj = hddm.generate.gen_rand_data(params=params_full)
