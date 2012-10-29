@@ -9,10 +9,11 @@ import pandas as pd
 import nose
 pd.set_printoptions(precision=4)
 from nose import SkipTest
-import kabuki
+
 
 import hddm
 from hddm.diag import check_model
+from hddm.sandbox.model_reg import HDDMRegressor
 
 def diff_model(param, subj=True, num_subjs=10, change=.5, size=500):
     params_cond_a = {'v':.5, 'a':2., 'z':.5, 't': .3, 'st':0., 'sv':0., 'sz':0.}
@@ -129,6 +130,44 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return hm
 
+    def test_HDDMTruncated_distributions(self):
+        params = hddm.generate.gen_rand_params()
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        m = hddm.HDDMTruncated(data)
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.TruncatedNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['mu'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.TruncatedNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'].parents['x'], pm.Uniform)
+
+    def test_HDDM_distributions(self):
+        params = hddm.generate.gen_rand_params()
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        m = hddm.HDDM(data)
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['mu'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
+
+
     def test_HDDMStimCoding(self):
         params_full, params = hddm.generate.gen_rand_params(cond_dict={'v': [-1, 1], 'z': [.8, .4]})
         data, params_subj = hddm.generate.gen_rand_data(params=params_full)
@@ -145,7 +184,64 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
 
+    def test_HDDMRegressor(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
 
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        m = HDDMRegressor(data, regressor=reg)
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+
+    def test_HDDMRegressor_two_covariates(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0] + cols[:,1]
+
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': ['cov1', 'cov2'], 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data = pd.DataFrame(data)
+        data['cov1'] = 1.
+        data['cov2'] = -1
+        m = HDDMRegressor(data, regressor=reg)
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,1] == -1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+
+    def test_HDDMRegressorGroupOnly(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        m = HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
 def add_outliers(data, p_outlier):
     """add outliers to data. half of the outliers will be fast, and the rest will be slow
@@ -237,13 +333,53 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
             assert recovery_ok, 'could not recover the true parameters'
 
+
+def set_hddm_nodes_values(model, params_dict):
+    """
+    set hddm nodes values according to the params_dict
+    """
+    for (param_name, row) in model.iter_stochastics():
+        if param_name in ('sv_trans', 'st_trans','t_trans','a_trans'):
+            transform = np.log
+            org_name = '%s' %  list(row['node'].children)[0].__name__
+        elif param_name in ('sz_trans', 'z_trans'):
+            transform = pm.logit
+            if param_name == 'z_trans':
+                org_name = 'z'
+            else:
+                org_name = 'sz'
+        else:
+            org_name = param_name
+            transform = lambda x:x
+        try:
+            model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
+        except KeyError:
+            pass
+
+
+def test_ML_recovery_single_subject_from_random_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=False, optimization_method='ML')
+
+def test_ML_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='ML')
+
+def test_chisquare_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='chisquare')
+
+def test_gsquare_recovery_single_subject_from_true_starting_point():
+    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='gsquare')
+
+@nose.tools.raises(AssertionError)
+def test_recovery_with_outliers():
+    optimization_recovery_single_subject(repeats=1, seed=1, optimization_method='ML', true_starting_point=False,
+                                         call_add_outliers=True, max_retries=0)
+
 def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
     """
     recover parameters with outliers for single subjects model.
     The test does include recover of inter-variance variables since many times they have only small effect
     on logpable, which makes their recovery impossible.
     """
-
     #init
     include_sets = [set(['a','v','t']),
                   set(['a','v','t','z'])]
@@ -255,7 +391,6 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
     np.random.seed(seed)
     for include in include_sets:
         for i in range(repeats):
-
             #generate params for experiment with n_conds conditions
             cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
             print "*** the true parameters ***"
@@ -287,48 +422,6 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
 
             #assert
             np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
-
-
-def set_hddm_nodes_values(model, params_dict):
-    """
-    set hddm nodes values according to the params_dict
-    """
-    for (param_name, row) in model.iter_stochastics():
-        if param_name in ('sv_trans', 'st_trans','t_trans','a_trans'):
-            transform = np.log
-            org_name = '%s' %  list(row['node'].children)[0].__name__
-        elif param_name in ('sz_trans', 'z_trans'):
-            transform = pm.logit
-            if param_name == 'z_trans':
-                org_name = 'z'
-            else:
-                org_name = 'sz'
-        else:
-            org_name = param_name
-            transform = lambda x:x
-        try:
-            model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
-        except KeyError:
-            pass
-
-
-def test_ML_recovery_single_subject_from_random_starting_point():
-
-    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=False, optimization_method='ML')
-
-def test_ML_recovery_single_subject_from_true_starting_point():
-    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='ML')
-
-def test_chisquare_recovery_single_subject_from_true_starting_point():
-    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='chisquare')
-
-def test_gsquare_recovery_single_subject_from_true_starting_point():
-    optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='gsquare')
-
-@nose.tools.raises(AssertionError)
-def test_recovery_with_outliers():
-    optimization_recovery_single_subject(repeats=1, seed=1, optimization_method='ML', true_starting_point=False,
-                                         call_add_outliers=True, max_retries=0)
 
 def test_recovery_with_random_p_outlier():
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=True)

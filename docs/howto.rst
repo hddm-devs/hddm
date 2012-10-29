@@ -53,6 +53,12 @@ Where *sv* is inter-trial variability in drift-rate, *st* is inter-trial
 variability in non-decision time and *sz* is inter-trial variability in
 starting-point.
 
+There is also a convenience argument that is identical to the above.
+
+::
+
+   model = hddm.HDDM(data, bias=True, include='all')
+
 Note that you can also include a subset of parameters. This is
 relevant because these parameter slow down sampling significantly. In
 our experience, sv and st often play a bigger role but it really
@@ -60,17 +66,12 @@ depends on your dataset. I often run models without inter-trial
 variabilities for exploratory analysis and then later play around with
 different configurations. If a certain parameter is estimated very
 close to zero or fails to converge you might want to exclude it (or
-only include a group-node, see below).
-
-There is also a convenience argument that is identical to the above.
-
-::
-
-   model = hddm.HDDM(data, bias=True, include='all')
-
+only include a group-node, see below). Finally, parameter recovery
+studies show that it requires a lot of trials to get meaningful
+estimates of these parameters.
 
 Have separate parameters for different conditions using depends_on
---------------------------------------------------------------------
+------------------------------------------------------------------
 
 Most psychological experiments test how different conditions
 (e.g. drug manipulations) affect certain parameters. You can build
@@ -90,6 +91,93 @@ for what it is often useful to use string identifiers (e.g. drug:
 off/on rather than drug: 0/1).
 
 As you can see, single or multiple columns can supplied as values.
+
+Deal with outliers
+------------------
+
+HDDM 0.4 (and upwards) enables estimation of a mixture model that
+enables stable parameter estimation even with outliers present. You
+can either specify a fixed probability for obtaining an outlier
+(e.g. 0.05 will assume 5% of the RTs are outliers) or estimate this
+from the data. In our experience, it does not seem to make a big
+difference. To instantiate a model with a fixed probability of getting
+an outlier run:
+
+::
+
+    m = hddm.HDDM(data, p_outlier=0.05)
+
+To estimate p_outlier from the data, run:
+
+::
+
+    m = hddm.HDDM(data, include=('p_outlier',))
+
+Under the hood we assume that outliers come from uniform distribution
+with a fixed density w_outlier. The resulting likelihood function
+looks as follows:
+
+.. math::
+
+   p(RT; v, a, t) = wfpt(RT; v, a, t) * (1-p_{outlier}) + w_{outlier} * p_{outlier}
+
+The resulting likelihood is positive everywhere.
+
+Estimate a regression model
+---------------------------
+
+HDDM 0.4 (and upwards) includes a regression model that allows
+estimation of trial-by-trial influences of a covariate (e.g. a brain
+measure like fMRI) onto DDM parameters. For example, if your
+prediction is that activity of a particular brain area has a linear
+correlation with drift-rate, you could specify the following
+regression model (make sure to have a column with the brain activity
+in your data, in our example name this column 'BOLD'):
+
+::
+
+   # Define regression function (linear in this case)
+   reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+   # Define regression descriptor
+   # regression function to use (func, defined above)
+   # args: parameter names (passed to reg_func; v_slope->args[0],
+   #                                            v_inter->args[1])
+   # covariates: data column to use as the covariate
+   #             (in this example, expects a column named
+   #             BOLD in the data)
+   # outcome: DDM parameter that will be replaced by trial-by-trial
+   #          regressor values (drift-rate v in this case)
+   reg = {'func': reg_func,
+          'args': ['v_inter','v_slope'],
+          'covariates': 'BOLD',
+          'outcome': 'v'}
+
+   # construct regression model. Second argument must be the
+   # regression descriptor. This model will have new parameters defined
+   # in args above, these can be used in depends_on like any other
+   # parameter.
+   m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
+
+
+You can also pass a list to covariates if you want to include multiple
+covariates. E.g.:
+
+::
+
+   # Define regression function with interaction with exponential
+   # transform
+
+   reg_func = lambda args, cols: np.exp(args[0] + args[1]*cols[:,0] + args[2]*cols[:,1] + args[3]*cols[:,0]*cols[:,1])
+
+   reg = {'func': reg_func,
+          'args': ['a_intercept','a_slope_cov1', 'a_slope_cov2', 'a_interaction'],
+          'covariates': 'BOLD',
+          'outcome': 'a'}
+
+Note that these regression coefficients are often hard to estimate and
+require a lot of data. If you have problems with chain convergance,
+consider turning the coefficients into group_only_nodes (see above).
 
 Assess model convergence
 ------------------------

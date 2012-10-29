@@ -1,3 +1,4 @@
+
 .. _CHANGES:
 
 =============
@@ -7,8 +8,26 @@ Release Notes
 HDDM 0.4
 ========
 
+License
+-------
+
+HDDM 0.4 is now distributed under the simplified BSD license (see the
+LICENSE file) instead of GPLv3.
+
+New features
+------------
+
+* Handling of outliers via mixture model.
+* New model HDDMRegression to allow estimation of trial-by-trial
+  regressions with a covariate.
 * New model HDDMStimulusCoding.
-* Posterior predictive quantile plot.
+* New model HLBA -- a hierarchical Linear Ballistic Accumulator.
+* Posterior predictive quantile plots (see model.plot_posterior_quantiles()).
+
+Bugfixes
+--------
+
+* model.load_db() is working again.
 
 HDDM 0.3 (6 Sep 2012)
 ========

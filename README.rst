@@ -2,15 +2,15 @@
 Introduction
 ************
 
-:Date: August 15, 2012
+:Date: October 29, 2012
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
 :Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://ski.clps.brown.edu/hddm_docs
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
-:License: HDDM is released under the GPLv3.
-:Version: 0.3
+:License: HDDM is released under the BSD 2 license.
+:Version: 0.4RC1
 
 Purpose
 =======
