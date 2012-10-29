@@ -22,14 +22,14 @@ class wfpt_regress_gen(stats.distributions.rv_continuous):
     def _argcheck(self, *args):
         return True
 
-    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes)
+        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
 
-    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
         raise NotImplementedError
 
-    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes):
+    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
         sampled_rts = np.empty(self._size)
 
@@ -42,8 +42,7 @@ class wfpt_regress_gen(stats.distributions.rv_continuous):
                                                    samples=1, dt=self.dt)
         return sampled_rts
 
-    def random(self, v=1., sv=0., a=2, z=.5, sz=.1, t=.3, st=.1, reg_outcomes=None, size=None):
-        print "in random"
+    def random(self, v=1., sv=0., a=2, z=.5, sz=.1, t=.3, st=.1, reg_outcomes=None, size=None, p_outlier=0):
         self._size = len(locals()[reg_outcomes[0]])
         return self._rvs(v, sv, a, z, sz, t, st, reg_outcomes)
 
@@ -66,7 +65,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                 if parent_name.startswith(arg):
                     args.append(parent)
 
-        parents = {'args': args, 'cols': data[reg['covariates']].values.T[0]}
+        parents = {'args': args, 'cols': data[reg['covariates']].values.T}
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
