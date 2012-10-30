@@ -1,23 +1,10 @@
 from __future__ import division
 import pymc as pm
 import numpy as np
-import scipy as sp
 from scipy import stats
 from scipy.stats.mstats import mquantiles
 
-from kabuki.distributions import scipy_stochastic
-
 np.seterr(divide='ignore')
-
-try:
-    import pycuda.driver as cuda
-    import pycuda.autoinit
-    import pycuda.gpuarray as gpuarray
-    import pycuda.cumath as cumath
-    import wfpt_gpu
-    gpu_imported = True
-except:
-    gpu_imported = False
 
 import hddm
 
@@ -217,24 +204,6 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     pymc_class._get_theoretical_proportion = _get_theoretical_proportion
     pymc_class.quantiles = quantiles
 
-
-
 #create default Wfpt class
 Wfpt = generate_wfpt_stochastic_class()
-
-def wiener_like_gpu(value, v, sv, a, z, t, out, err=1e-4):
-    """Log-likelihood for the simple DDM including contaminants"""
-    # Check if parameters are in allowed range
-    if z<0 or z>1 or t<0 or a <= 0 or sv<=0:
-        return -np.inf
-
-    wfpt_gpu.pdf_gpu(value, float(v), float(sv), float(a), float(z), float(t), err, out)
-    logp = gpuarray.sum(out).get() #cumath.log(out)).get()
-
-    return np.asscalar(logp)
-
-WienerGPU = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                    logp=wiener_like_gpu,
-                                    dtype=np.float32,
-                                    mv=False)
 
