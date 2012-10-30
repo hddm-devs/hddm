@@ -40,7 +40,7 @@ def add_outliers(data, p_outlier):
     return data
 
 def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point=True,
-                                         optimization_method='ML', max_retries=10):
+                                         optimization_method='ML'):
     """
     recover parameters for single subjects model.
     The test does include recover of inter-variance variables since many times they have only small effect
@@ -66,45 +66,30 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
             #generate samples
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
 
-            h = hddm.model.HDDM(samples, include=include, depends_on={'v':'condition'})
+            h = hddm.models.HDDMTruncated(samples, include=include, depends_on={'v':'condition'})
 
-            #run optimization max_tries times
-            recovery_ok = False
-            for i_tries in range(max_retries):
-                print "recovery attempt %d" % (i_tries + 1)
+            #set the starting point of the optimization to the true value
+            #of the parameters
+            if true_starting_point:
+                set_hddm_nodes_values(h, merged_params)
 
-                #set the starting point of the optimization to the true value
-                #of the parameters
-                if true_starting_point:
-                    set_hddm_nodes_values(h, merged_params)
+            #optimize
+            if optimization_method == 'ML':
+                recovered_params = h.optimize(method='ML')
+            elif optimization_method == 'chisquare':
+                recovered_params = h.optimize(method='chisquare', quantiles=np.linspace(0.05,0.95,10))
+            elif optimization_method == 'gsquare':
+                recovered_params = h.optimize(method='gsquare', quantiles=np.linspace(0.05,0.95,10))
+            else:
+                raise ValueError('unknown optimization method')
 
-                #optimize
-                if optimization_method == 'ML':
-                    recovered_params = h.optimize(method='ML')
-                elif optimization_method == 'chisquare':
-                    recovered_params = h.optimize(method='chisquare', quantiles=np.linspace(0.05,0.95,10))
-                elif optimization_method == 'gsquare':
-                    recovered_params = h.optimize(method='gsquare', quantiles=np.linspace(0.05,0.95,10))
-                else:
-                    raise ValueError('unknown optimization method')
+            #compare results to true values
+            index = ['true', 'estimated']
+            df = pd.DataFrame([merged_params, recovered_params], index=index, dtype=np.float).dropna(1)
+            print df
 
-                #compare results to true values
-                index = ['true', 'estimated']
-                df = pd.DataFrame([merged_params, recovered_params], index=index, dtype=np.float).dropna(1)
-                print df
-                try:
-                    #assert
-                    np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
-                    recovery_ok = True
-                    break
-                except AssertionError:
-                    #if assertion fails try to advance the model using mcmc to get
-                    #out of local maximum
-                    if i_tries < (max_retries - 1):
-                        h.sample(500)
-                        print
-
-            assert recovery_ok, 'could not recover the true parameters'
+            #assert
+            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
 
 
 def set_hddm_nodes_values(model, params_dict):
@@ -142,11 +127,6 @@ def test_chisquare_recovery_single_subject_from_true_starting_point():
 def test_gsquare_recovery_single_subject_from_true_starting_point():
     optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=True, optimization_method='gsquare')
 
-@nose.tools.raises(AssertionError)
-def test_recovery_with_outliers():
-    optimization_recovery_single_subject(repeats=1, seed=1, optimization_method='ML', true_starting_point=False,
-                                         call_add_outliers=True, max_retries=0)
-
 def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
     """
     recover parameters with outliers for single subjects model.
@@ -173,17 +153,19 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
 
             #get best recovered_params
-            h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+            h = hddm.models.HDDMTruncated(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
             best_params = h.optimize(method='ML')
 
             #add outliers
             samples = add_outliers(samples, p_outlier=p_outlier)
 
             #init model
-            if random_p_outlier:
-                h = hddm.model.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
+            if random_p_outlier is None:
+                h = hddm.models.HDDM(samples, include=include, depends_on={'v':'condition'})
+            elif random_p_outlier:
+                h = hddm.models.HDDM(samples, include=include.union(['p_outlier']), depends_on={'v':'condition'})
             else:
-                h = hddm.model.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
+                h = hddm.models.HDDM(samples, include=include, p_outlier=p_outlier, depends_on={'v':'condition'})
 
             #optimize
             recovered_params = h.optimize(method='ML')
@@ -194,10 +176,17 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
             print df
 
             #assert
-            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
+            np.testing.assert_allclose(df.values[0], df.values[1], atol=0.15)
+
+@nose.tools.raises(AssertionError)
+def test_recovery_with_outliers():
+    """test recovery of data with outliers without modeling them (should fail)"""
+    recovery_with_outliers(repeats=5, seed=1, random_p_outlier=None)
 
 def test_recovery_with_random_p_outlier():
+    """test for recovery with o_outliers as random variable"""
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=True)
 
 def test_recovery_with_fixed_p_outlier():
+    """test for recovery with o_outliers as a fixed value"""
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=False)

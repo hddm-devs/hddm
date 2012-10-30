@@ -24,7 +24,7 @@ def diff_model(param, subj=True, num_subjs=10, change=.5, size=500):
 
     data, subj_params = hddm.generate.gen_rand_data(params, subjs=num_subjs, size=size)
 
-    model = hddm.model.HDDMTruncated(data, depends_on={param:['condition']}, is_group_model=subj)
+    model = hddm.models.HDDMTruncated(data, depends_on={param:['condition']}, is_group_model=subj)
 
     return model
 
@@ -57,7 +57,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM(self, assert_=False):
         includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
         for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
@@ -70,7 +70,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM_group(self, assert_=False):
         includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
         for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
@@ -83,7 +83,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM_group_only_group_nodes(self, assert_=False):
         group_only_nodes = [[], ['z'], ['z', 'st'], ['v', 'a']]
-        model_classes = [hddm.model.HDDMTruncated, hddm.model.HDDM]
+        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
 
         for nodes, model_class in itertools.product(group_only_nodes, model_classes):
             params = hddm.generate.gen_rand_params(include=nodes)
@@ -119,7 +119,7 @@ class TestSingleBreakdown(unittest.TestCase):
         for i in range(num_subjs):
             data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
             data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8
-        hm = hddm.model.HDDMContUnif(data, bias=True, is_group_model=True)
+        hm = hddm.models.HDDMContUnif(data, bias=True, is_group_model=True)
         hm.sample(self.iter, burn=self.burn)
         check_model(hm.mc, params_true, assert_=assert_)
         cont_res = hm.cont_report(plot=False)
