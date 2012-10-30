@@ -1,6 +1,8 @@
 from __future__ import division
 from copy import copy
 import itertools
+import glob
+import os
 
 import unittest
 import pymc as pm
@@ -243,6 +245,18 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
+def test_posterior_plots_breakdown():
+    params = hddm.generate.gen_rand_params()
+    data, params_subj = hddm.generate.gen_rand_data(params=params, subjs=5)
+    m = hddm.HDDM(data)
+    m.sample(200, burn=10)
+    m.plot_posterior_predictive()
+    m.plot_posterior_quantiles()
+    m.plot_posteriors()
+    # clean up
+    for fname in ['a.png', 'a_var.png', 't.png', 't_var.png', 'v.png', 'v_var.png']:
+        os.remove(fname)
+
 def add_outliers(data, p_outlier):
     """add outliers to data. half of the outliers will be fast, and the rest will be slow
     Input:
@@ -276,7 +290,7 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
     #init
     include_sets = [set(['a','v','t']),
-                  set(['a','v','t','z'])]
+                    set(['a','v','t','z'])]
 
     #for each include set create a set of parametersm generate random data
     #and test the optimization function max_retries times.
@@ -355,7 +369,6 @@ def set_hddm_nodes_values(model, params_dict):
             model.nodes_db.ix[param_name]['node'].value = transform(params_dict[org_name])
         except KeyError:
             pass
-
 
 def test_ML_recovery_single_subject_from_random_starting_point():
     optimization_recovery_single_subject(repeats=5, seed=1, true_starting_point=False, optimization_method='ML')

@@ -59,17 +59,12 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     def random(v, sv, a, z, sz, t, st, p_outlier, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
         return hddm.generate.gen_rts(param_dict, method=sampling_method,
-                                    samples=size, dt=sampling_dt, range_=cdf_range)
+                                     samples=size, dt=sampling_dt, range_=cdf_range)
 
 
     #create pdf function
-    def pdf(self, x, v, sv, a, z, sz, t, st, p_outlier):
-
-        if np.isscalar(x):
-            out = hddm.wfpt.full_pdf(x, v, sv, a, z, sz, t, st) * (1-p_outlier) + (wp['w_outlier'] * p_outlier)
-        else:
-            out = hddm.wfpt.pdf_array(x, v, sv, a, z, sz, t, st, p_outlier=p_outlier, logp=False, **wp)
-
+    def pdf(self, x):
+        out = hddm.wfpt.pdf_array(x, **self.parents)
         return out
 
     #create wfpt class
