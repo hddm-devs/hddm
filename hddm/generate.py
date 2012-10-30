@@ -1,14 +1,14 @@
 from __future__ import division
 
-import numpy as np
-from numpy.random import rand
-
-from scipy.stats import uniform, norm
-from copy import copy, deepcopy
 import random
 import kabuki
-
 import hddm
+import numpy as np
+import pandas as pd
+
+from numpy.random import rand
+from scipy.stats import uniform, norm
+from copy import copy, deepcopy
 
 def gen_single_params_set(include=()):
     """Returns a dict of DDM parameters with random values for a singel conditin
@@ -391,7 +391,7 @@ def _gen_rts_from_cdf(params, samples=1000):
     T = params['st']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
 
-def gen_rand_data(params=None, method='cdf', **kwargs):
+def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
     """Generate simulated RTs with random parameters.
 
        :Optional:
@@ -431,5 +431,37 @@ def gen_rand_data(params=None, method='cdf', **kwargs):
                                                       bounds=bounds, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
+    #add outliers
+    seed = kwargs.get('seed', None)
+    data = add_outliers(data, n_fast=n_fast_outliers, n_slow=n_slow_outliers, seed=seed)
+
     return data, subj_params
 
+def add_outliers(data, n_fast, n_slow, seed=None):
+    """add outliers to data. outliers are distrbuted randomly across condition.
+    Input:
+        data - data
+        n_fast/n_slow - numberprobability of fast/slow outliers
+    """
+    data = pd.DataFrame(data)
+    n_outliers = n_fast + n_slow
+    if n_outliers == 0:
+        return data
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    #init outliers DataFrame
+    idx = np.random.permutation(len(data))[:n_outliers]
+    outliers = data.ix[idx].copy()
+
+    #fast outliers
+    outliers.rt[:n_fast] = np.random.rand(n_fast) * (min(abs(data['rt'])) - 0.1001)  + 0.1001
+
+    #slow outliers
+    outliers.rt[n_fast:] = np.random.rand(n_slow) * 2 + max(abs(data['rt']))
+    outliers.response = np.random.randint(0,2,n_outliers)
+
+    #combine data with outliers
+    data = pd.concat((data, outliers), ignore_index=True)
+    return data

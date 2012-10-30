@@ -183,9 +183,10 @@ class AccumulatorModel(kabuki.Hierarchical):
         inf_objective = False
         for i_run in xrange(n_runs):
             #initalize values to a random point
+            values_iter = 0
             while inf_objective:
-                values = original_values + np.random.randn(len(values))*0.1
-                values = np.maximum(values, 0.1*np.random.rand())
+                values_iter += 1
+                values = original_values + np.random.randn(len(values))*(2**-values_iter)
                 self.set_values(dict(zip(names, values)))
                 inf_objective = np.isinf(objective(values))
 
@@ -200,7 +201,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             inf_objective = True
 
         #get best results
-        best_idx = np.argmin([x[1] for x in all_results])
+        best_idx = np.nanargmin([x[1] for x in all_results])
         best_values = all_results[best_idx][0]
         self.set_values(dict(zip(names, best_values)))
         results = self.values
@@ -313,6 +314,12 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier')
+        assert self.include.issubset(possible_parameters), """Received and invalid parameter using the 'include' keyword.
+        parameters received: %s
+        parameters allowed: %s """ % (tuple(self.include), possible_parameters)
+
+        #set wiener params
         if wiener_params is None:
             self.wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                                   'use_adaptive':1,
