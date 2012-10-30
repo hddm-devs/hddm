@@ -183,9 +183,10 @@ class AccumulatorModel(kabuki.Hierarchical):
         inf_objective = False
         for i_run in xrange(n_runs):
             #initalize values to a random point
+            values_iter = 0
             while inf_objective:
-                values = original_values + np.random.randn(len(values))*0.1
-                values = np.maximum(values, 0.1*np.random.rand())
+                values_iter += 1
+                values = original_values + np.random.randn(len(values))*(2**-values_iter)
                 self.set_values(dict(zip(names, values)))
                 inf_objective = np.isinf(objective(values))
 
