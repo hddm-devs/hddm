@@ -1,5 +1,6 @@
 include README.rst INSTALL.rst LICENSE setupegg.py
-recursive-include hddm *.py
+include hddm *.py
+include hddm/models *.py
 recursive-include hddm/examples *.py *.csv *.conf *.png
 include scripts/*.py
 include src/*.c
