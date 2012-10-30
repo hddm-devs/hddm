@@ -201,7 +201,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             inf_objective = True
 
         #get best results
-        best_idx = np.argmin([x[1] for x in all_results])
+        best_idx = np.nanargmin([x[1] for x in all_results])
         best_values = all_results[best_idx][0]
         self.set_values(dict(zip(names, best_values)))
         results = self.values
