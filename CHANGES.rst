@@ -21,7 +21,7 @@ New features
 * New model HDDMRegression to allow estimation of trial-by-trial
   regressions with a covariate.
 * New model HDDMStimulusCoding.
-* New model HLBA -- a hierarchical Linear Ballistic Accumulator.
+* New model HLBA -- a hierarchical Linear Ballistic Accumulator model.
 * Posterior predictive quantile plots (see model.plot_posterior_quantiles()).
 
 Bugfixes
