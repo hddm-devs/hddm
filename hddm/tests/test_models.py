@@ -213,7 +213,7 @@ class TestSingleBreakdown(unittest.TestCase):
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
-        m = HDDMRegressor(data, regressor=reg)
+        m = hddm.HDDMRegressor(data, regressor=reg)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
@@ -233,7 +233,7 @@ class TestSingleBreakdown(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
+        m = hddm.HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))

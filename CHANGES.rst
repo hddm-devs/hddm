@@ -18,10 +18,13 @@ New features
 ------------
 
 * Handling of outliers via mixture model.
+  http://ski.clps.brown.edu/hddm_docs/howto.html#deal-with-outliers
 * New model HDDMRegression to allow estimation of trial-by-trial
   regressions with a covariate.
+  http://ski.clps.brown.edu/hddm_docs/howto.html#estimate-a-regression-model
 * New model HDDMStimulusCoding.
-* New model HLBA -- a hierarchical Linear Ballistic Accumulator model.
+  http://ski.clps.brown.edu/hddm_docs/howto.html#code-subject-responses
+* New model HLBA -- a hierarchical Linear Ballistic Accumulator model (hddm.HLBA).
 * Posterior predictive quantile plots (see model.plot_posterior_quantiles()).
 
 Bugfixes
