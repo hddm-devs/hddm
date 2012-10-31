@@ -240,60 +240,67 @@ class HDDMBase(AccumulatorModel):
         >>> mcmc.sample() # Sample from posterior
     :Optional:
         include : iterable
-            Optional inter-trial variability parameters to include.
-             Can be any combination of 'sv', 'sz' and 'st'. Passing the string
-            'all' will include all three.
+            Optional parameters to include. These include all inter-trial
+            variability parameters ('sv', 'sz', 'st'), as well as the bias parameter ('z'), and
+            the probability for outliers ('p_outlier').
+            Can be any combination of 'sv', 'sz', 'st', 'z', and 'p_outlier'.
+            Passing the string 'all' will include all five.
 
             Note: Including 'sz' and/or 'st' will increase run time significantly!
 
-            is_group_model : bool
-                If True, this results in a hierarchical
-                model with separate parameter distributions for each
-                subject. The subject parameter distributions are
-                themselves distributed according to a group parameter
-                distribution.
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
 
-                If not provided, this parameter is set to True if data
-                provides a column 'subj_idx' and False otherwise.
+            If not provided, this parameter is set to True if data
+            provides a column 'subj_idx' and False otherwise.
 
-            depends_on : dict
-                Specifies which parameter depends on data
-                of a column in data. For each unique element in that
-                column, a separate set of parameter distributions will be
-                created and applied. Multiple columns can be specified in
-                a sequential container (e.g. list)
+        depends_on : dict
+            Specifies which parameter depends on data
+            of a column in data. For each unique element in that
+            column, a separate set of parameter distributions will be
+            created and applied. Multiple columns can be specified in
+            a sequential container (e.g. list)
 
-                :Example:
+            :Example:
 
-                    >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
+                >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
 
-                    Separate drift-rate parameters will be estimated
-                    for each difficulty. Requires 'data' to have a
-                    column difficulty.
+                Separate drift-rate parameters will be estimated
+                for each difficulty. Requires 'data' to have a
+                column difficulty.
 
 
-            bias : bool
-                Whether to allow a bias to be estimated. This
-                is normally used when the responses represent
-                left/right and subjects could develop a bias towards
-                responding right. This is normally never done,
-                however, when the 'response' column codes
-                correct/error.
+        bias : bool
+            Whether to allow a bias to be estimated. This
+            is normally used when the responses represent
+            left/right and subjects could develop a bias towards
+            responding right. This is normally never done,
+            however, when the 'response' column codes
+            correct/error.
 
-            plot_var : bool
-                 Plot group variability parameters when calling pymc.Matplot.plot()
-                 (i.e. variance of Normal distribution.)
+        plot_var : bool
+             Plot group variability parameters when calling pymc.Matplot.plot()
+             (i.e. variance of Normal distribution.)
 
-            wiener_params : dict
-                 Parameters for wfpt evaluation and
-                 numerical integration.
+        wiener_params : dict
+             Parameters for wfpt evaluation and
+             numerical integration.
 
-                 :Parameters:
-                     * err: Error bound for wfpt (default 1e-4)
-                     * n_st: Maximum depth for numerical integration for st (default 2)
-                     * n_sz: Maximum depth for numerical integration for Z (default 2)
-                     * use_adaptive: Whether to use adaptive numerical integration (default True)
-                     * simps_err: Error bound for Simpson integration (default 1e-3)
+             :Parameters:
+                 * err: Error bound for wfpt (default 1e-4)
+                 * n_st: Maximum depth for numerical integration for st (default 2)
+                 * n_sz: Maximum depth for numerical integration for Z (default 2)
+                 * use_adaptive: Whether to use adaptive numerical integration (default True)
+                 * simps_err: Error bound for Simpson integration (default 1e-3)
+
+        p_outlier : double (default=0)
+            The probability of outliers in the data. if p_outlier is passed in the
+            'include' argument, then it is estimated from the data and the value passed
+            using the p_outlier argument is ignored.
 
     """
 
