@@ -99,8 +99,11 @@ HDDM 0.4 (and upwards) enables estimation of a mixture model that
 enables stable parameter estimation even with outliers present. You
 can either specify a fixed probability for obtaining an outlier
 (e.g. 0.05 will assume 5% of the RTs are outliers) or estimate this
-from the data. In our experience, it does not seem to make a big
-difference. To instantiate a model with a fixed probability of getting
+from the data. In practice, the precise value of p_outlier does not matter.
+Any value between 0.001 and 0.1, is enough to capture the outliers, and the effect
+on the recovered paramters is small.
+
+To instantiate a model with a fixed probability of getting
 an outlier run:
 
 ::
@@ -114,14 +117,16 @@ To estimate p_outlier from the data, run:
     m = hddm.HDDM(data, include=('p_outlier',))
 
 Under the hood we assume that outliers come from uniform distribution
-with a fixed density w_outlier. The resulting likelihood function
-looks as follows:
+with a fixed density w_outlier (as suggested by Ratcliff and Tuerlinckx, 2002). 
+The resulting likelihood function looks as follows:
 
 .. math::
 
    p(RT; v, a, t) = wfpt(RT; v, a, t) * (1-p_{outlier}) + w_{outlier} * p_{outlier}
 
-The resulting likelihood is positive everywhere.
+The default value of :math:'w_{outlier}' is 0.1, which is equivalent to uniform distribution
+from 0 to 5 seconds. However, in practice, the outliers model is applied to all RTs, even
+the ones which are larger than 5.
 
 Estimate a regression model
 ---------------------------
