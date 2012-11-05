@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pymc as pm
+import pandas as pd
 
 import hddm
 import kabuki
@@ -95,7 +96,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0):
         """
         optimization using ML, chi^2 or G^2
 
@@ -109,6 +110,40 @@ class AccumulatorModel(kabuki.Hierarchical):
             The nodes of group models are not updated
         """
 
+        self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+        #bootstrap if requested
+        if n_bootstraps == 0:
+            return
+
+        #init DataFrame to save results
+        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
+
+        for i_strap in xrange(n_bootstraps):
+
+            #resample data
+            data = self.data
+            new_data = data.ix[np.random.randint(0, len(data), len(data))]
+            new_data = new_data.set_index(pd.Index(range(len(data))))
+            h = self.__class__(new_data, **self._kwargs)
+
+            #run optimization
+            h._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+            #save results
+            res.ix[i_strap] = pd.Series(h.values)
+
+
+        #get statistics
+        stats = res.describe()
+        for q in [2.5, 97.5]:
+            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
+
+        self.bootstrap_stats = stats.sort_index()
+
+    def _run_optimization(self, method, quantiles, n_runs):
+        """function used by optimize.
+        """
 
         if method == 'ML':
             if self.is_group_model:
@@ -119,6 +154,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         else:
             return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
+
 
     def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
         """
@@ -216,7 +252,6 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         else:
             return results, None
-
 
 
 class HDDMBase(AccumulatorModel):
