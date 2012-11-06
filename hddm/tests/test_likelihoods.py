@@ -360,6 +360,20 @@ class TestWfptSwitch(unittest.TestCase):
             self.assertTrue(p_value > 0.05)
 
 
+class TestCdfdif(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(TestCdfdif, self).__init__(*args, **kwargs)
+        #try:
+        import hddm.cdfdif_wrapper as cdfdif
+        #except ImportError:
+        #    self.import_error = True
+
+    def test_cdf_breakdown(self):
+        if self.import_error:
+            raise SkipTest
+        data, params = hddm.generate.gen_rts()
+        y, p_boundary = cdfdif.cdfdif_array(data, **params)
+
 
 if __name__=='__main__':
     print "Run nosetest."
