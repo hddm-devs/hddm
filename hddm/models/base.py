@@ -109,9 +109,22 @@ class AccumulatorModel(kabuki.Hierarchical):
         optimization using ML, chi^2 or G^2
 
         Input:
-            method <string> - name of method ('ML', 'chisquare' or 'gsquare')
-            quantiles <sequance> - a sequance of quantiles used for chi^2 and G^2
+            method <string>:
+                name of method ('ML', 'chisquare' or 'gsquare').
+
+            quantiles <sequance>:
+                a sequance of quantiles used for chi^2 and G^2.
                 the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+
+            n_runs <int>:
+                number of attempt to optimize
+
+            n_bootstraps <int>:
+                number of bootstraps iterations
+
+            parrall_profile <string>:
+                IPython profile for parallelization
+
         Output:
             results <dict> - a results dictionary of the parameters values.
             The values of the nodes in single subject model is update according to the results.
@@ -137,7 +150,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         #define single iteration bootstrap function
         def single_bootstrap(data,
-                             accumulator_class=self.__class__, class_kwargs=self._kwargs, 
+                             accumulator_class=self.__class__, class_kwargs=self._kwargs,
                              method=method, quantiles=quantiles, n_runs=n_runs):
 
             #resample data
@@ -191,7 +204,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         function used by chisquare_optimization to fit the a single subject model
         Input:
          quantiles <sequance> - same as in chisquare_optimization
-         cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
+
+         compute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
 
         Output:
