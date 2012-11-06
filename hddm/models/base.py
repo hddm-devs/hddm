@@ -23,6 +23,14 @@ import inspect
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
 
+try:
+    from IPython import parallel
+    from IPython.parallel.client.asyncresult import AsyncResult
+except ImportError:
+    pass
+
+
+
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
@@ -96,7 +104,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
         """
         optimization using ML, chi^2 or G^2
 
@@ -119,20 +127,42 @@ class AccumulatorModel(kabuki.Hierarchical):
         #init DataFrame to save results
         res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
 
-        for i_strap in xrange(n_bootstraps):
+        #prepare view for parallelization
+        if parallel_profile is not None: #create view
+            client = parallel.Client(profile=parallel_profile)
+            view = client.load_balanced_view()
+            runs_list = [None] * n_bootstraps
+        else:
+            view = None
+
+        #define single iteration bootstrap function
+        def single_bootstrap(data,
+                             accumulator_class=self.__class__, class_kwargs=self._kwargs, 
+                             method=method, quantiles=quantiles, n_runs=n_runs):
 
             #resample data
-            data = self.data
             new_data = data.ix[np.random.randint(0, len(data), len(data))]
             new_data = new_data.set_index(pd.Index(range(len(data))))
-            h = self.__class__(new_data, **self._kwargs)
+            h = accumulator_class(new_data, **class_kwargs)
 
             #run optimization
             h._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
 
-            #save results
-            res.ix[i_strap] = pd.Series(h.values)
+            return pd.Series(h.values, dtype=np.float)
 
+        #bootstrap iterations
+        for i_strap in xrange(n_bootstraps):
+            if view is None:
+                res.ix[i_strap] = single_bootstrap(self.data)
+            else:
+                # append to job queue
+                runs_list[i_strap] = view.apply_async(single_bootstrap, self.data)
+
+        #get parallel results
+        if view is not None:
+            view.wait(runs_list)
+            for i_strap in xrange(n_bootstraps):
+                res.ix[i_strap] = runs_list[i_strap].get()
 
         #get statistics
         stats = res.describe()
