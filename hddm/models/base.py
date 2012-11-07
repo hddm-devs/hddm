@@ -131,11 +131,11 @@ class AccumulatorModel(kabuki.Hierarchical):
             The nodes of group models are not updated
         """
 
-        self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+        results = self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
 
         #bootstrap if requested
         if n_bootstraps == 0:
-            return
+            return results
 
         #init DataFrame to save results
         res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
@@ -183,6 +183,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
 
         self.bootstrap_stats = stats.sort_index()
+        return results
 
     def _run_optimization(self, method, quantiles, n_runs):
         """function used by optimize.
