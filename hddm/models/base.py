@@ -507,11 +507,11 @@ class HDDMBase(AccumulatorModel):
         #this code only check that the arguments are as expected, i.e. the constructor was not change
         #since we wrote this function
         init_args = set(inspect.getargspec(self.__init__).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
         assert known_args == init_args, "Arguments of the constructor are not as expected"
 
         #create the avg model
-        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, p_outlier=self.p_outlier, **self._kwargs)
         return avg_model
 
 if __name__ == "__main__":
