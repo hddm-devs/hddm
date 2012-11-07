@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pymc as pm
+import pandas as pd
 
 import hddm
 import kabuki
@@ -21,6 +22,14 @@ import inspect
 
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
+
+try:
+    from IPython import parallel
+    from IPython.parallel.client.asyncresult import AsyncResult
+except ImportError:
+    pass
+
+
 
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
@@ -95,20 +104,89 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
         """
         optimization using ML, chi^2 or G^2
 
         Input:
-            method <string> - name of method ('ML', 'chisquare' or 'gsquare')
-            quantiles <sequance> - a sequance of quantiles used for chi^2 and G^2
+            method <string>:
+                name of method ('ML', 'chisquare' or 'gsquare').
+
+            quantiles <sequance>:
+                a sequance of quantiles used for chi^2 and G^2.
                 the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+
+            n_runs <int>:
+                number of attempt to optimize
+
+            n_bootstraps <int>:
+                number of bootstraps iterations
+
+            parrall_profile <string>:
+                IPython profile for parallelization
+
         Output:
             results <dict> - a results dictionary of the parameters values.
             The values of the nodes in single subject model is update according to the results.
             The nodes of group models are not updated
         """
 
+        self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+        #bootstrap if requested
+        if n_bootstraps == 0:
+            return
+
+        #init DataFrame to save results
+        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
+
+        #prepare view for parallelization
+        if parallel_profile is not None: #create view
+            client = parallel.Client(profile=parallel_profile)
+            view = client.load_balanced_view()
+            runs_list = [None] * n_bootstraps
+        else:
+            view = None
+
+        #define single iteration bootstrap function
+        def single_bootstrap(data,
+                             accumulator_class=self.__class__, class_kwargs=self._kwargs,
+                             method=method, quantiles=quantiles, n_runs=n_runs):
+
+            #resample data
+            new_data = data.ix[np.random.randint(0, len(data), len(data))]
+            new_data = new_data.set_index(pd.Index(range(len(data))))
+            h = accumulator_class(new_data, **class_kwargs)
+
+            #run optimization
+            h._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+            return pd.Series(h.values, dtype=np.float)
+
+        #bootstrap iterations
+        for i_strap in xrange(n_bootstraps):
+            if view is None:
+                res.ix[i_strap] = single_bootstrap(self.data)
+            else:
+                # append to job queue
+                runs_list[i_strap] = view.apply_async(single_bootstrap, self.data)
+
+        #get parallel results
+        if view is not None:
+            view.wait(runs_list)
+            for i_strap in xrange(n_bootstraps):
+                res.ix[i_strap] = runs_list[i_strap].get()
+
+        #get statistics
+        stats = res.describe()
+        for q in [2.5, 97.5]:
+            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
+
+        self.bootstrap_stats = stats.sort_index()
+
+    def _run_optimization(self, method, quantiles, n_runs):
+        """function used by optimize.
+        """
 
         if method == 'ML':
             if self.is_group_model:
@@ -120,12 +198,14 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
 
+
     def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
         """
         function used by chisquare_optimization to fit the a single subject model
         Input:
          quantiles <sequance> - same as in chisquare_optimization
-         cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
+
+         compute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
 
         Output:
@@ -216,7 +296,6 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         else:
             return results, None
-
 
 
 class HDDMBase(AccumulatorModel):
