@@ -7,8 +7,8 @@ from hddm.models import HDDMBase
 
 class HDDM(HDDMBase):
     def __init__(self, *args, **kwargs):
-        self.use_gibbs = kwargs.pop('use_gibbs_for_mean', True)
-        self.use_slice = kwargs.pop('use_slice_for_std', True)
+        self.use_gibbs_for_mean = kwargs.pop('use_gibbs_for_mean', True)
+        self.use_reject_for_std = kwargs.pop('use_reject_for_std', True)
 
         super(HDDM, self).__init__(*args, **kwargs)
 
@@ -20,9 +20,9 @@ class HDDM(HDDMBase):
         for name, node_descr in self.iter_group_nodes():
             node = node_descr['node']
             knode_name = node_descr['knode_name'].replace('_trans', '')
-            if self.use_gibbs and isinstance(node, pm.Normal) and knode_name not in self.group_only_nodes:
+            if self.use_gibbs_for_mean and isinstance(node, pm.Normal) and knode_name not in self.group_only_nodes:
                 self.mc.use_step_method(steps.kNormalNormal, node)
-            if self.use_slice and isinstance(node, pm.Uniform) and knode_name not in self.group_only_nodes:
+            if self.use_reject_for_std and isinstance(node, pm.Uniform) and knode_name not in self.group_only_nodes:
                 self.mc.use_step_method(steps.UniformPriorNormalstd, node)
 
     def _create_stochastic_knodes(self, include):
