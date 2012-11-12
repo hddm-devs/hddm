@@ -251,9 +251,6 @@ def test_posterior_plots_breakdown():
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()
-    # clean up
-    for fname in ['a.png', 'a_var.png', 't.png', 't_var.png', 'v.png', 'v_var.png']:
-        os.remove(fname)
 
 if __name__=='__main__':
     print "Run nosetest.py"
