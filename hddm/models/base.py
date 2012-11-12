@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pymc as pm
+import pandas as pd
 
 import hddm
 import kabuki
@@ -21,6 +22,14 @@ import inspect
 
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
+
+try:
+    from IPython import parallel
+    from IPython.parallel.client.asyncresult import AsyncResult
+except ImportError:
+    pass
+
+
 
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
@@ -95,20 +104,90 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
         """
         optimization using ML, chi^2 or G^2
 
         Input:
-            method <string> - name of method ('ML', 'chisquare' or 'gsquare')
-            quantiles <sequance> - a sequance of quantiles used for chi^2 and G^2
+            method <string>:
+                name of method ('ML', 'chisquare' or 'gsquare').
+
+            quantiles <sequance>:
+                a sequance of quantiles used for chi^2 and G^2.
                 the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+
+            n_runs <int>:
+                number of attempt to optimize
+
+            n_bootstraps <int>:
+                number of bootstraps iterations
+
+            parrall_profile <string>:
+                IPython profile for parallelization
+
         Output:
             results <dict> - a results dictionary of the parameters values.
             The values of the nodes in single subject model is update according to the results.
             The nodes of group models are not updated
         """
 
+        results = self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+        #bootstrap if requested
+        if n_bootstraps == 0:
+            return results
+
+        #init DataFrame to save results
+        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
+
+        #prepare view for parallelization
+        if parallel_profile is not None: #create view
+            client = parallel.Client(profile=parallel_profile)
+            view = client.load_balanced_view()
+            runs_list = [None] * n_bootstraps
+        else:
+            view = None
+
+        #define single iteration bootstrap function
+        def single_bootstrap(data,
+                             accumulator_class=self.__class__, class_kwargs=self._kwargs,
+                             method=method, quantiles=quantiles, n_runs=n_runs):
+
+            #resample data
+            new_data = data.ix[np.random.randint(0, len(data), len(data))]
+            new_data = new_data.set_index(pd.Index(range(len(data))))
+            h = accumulator_class(new_data, **class_kwargs)
+
+            #run optimization
+            h._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+            return pd.Series(h.values, dtype=np.float)
+
+        #bootstrap iterations
+        for i_strap in xrange(n_bootstraps):
+            if view is None:
+                res.ix[i_strap] = single_bootstrap(self.data)
+            else:
+                # append to job queue
+                runs_list[i_strap] = view.apply_async(single_bootstrap, self.data)
+
+        #get parallel results
+        if view is not None:
+            view.wait(runs_list)
+            for i_strap in xrange(n_bootstraps):
+                res.ix[i_strap] = runs_list[i_strap].get()
+
+        #get statistics
+        stats = res.describe()
+        for q in [2.5, 97.5]:
+            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
+
+        self.bootstrap_stats = stats.sort_index()
+        return results
+
+    def _run_optimization(self, method, quantiles, n_runs):
+        """function used by optimize.
+        """
 
         if method == 'ML':
             if self.is_group_model:
@@ -120,12 +199,14 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
 
+
     def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
         """
         function used by chisquare_optimization to fit the a single subject model
         Input:
          quantiles <sequance> - same as in chisquare_optimization
-         cmopute_stats <boolean> - whether to copmute the quantile stats using the node's
+
+         compute_stats <boolean> - whether to copmute the quantile stats using the node's
              compute_quantiles_stats method
 
         Output:
@@ -218,7 +299,6 @@ class AccumulatorModel(kabuki.Hierarchical):
             return results, None
 
 
-
 class HDDMBase(AccumulatorModel):
     """Implements the hierarchical Ratcliff drift-diffusion model
     using the Navarro & Fuss likelihood and numerical integration over
@@ -240,60 +320,67 @@ class HDDMBase(AccumulatorModel):
         >>> mcmc.sample() # Sample from posterior
     :Optional:
         include : iterable
-            Optional inter-trial variability parameters to include.
-             Can be any combination of 'sv', 'sz' and 'st'. Passing the string
-            'all' will include all three.
+            Optional parameters to include. These include all inter-trial
+            variability parameters ('sv', 'sz', 'st'), as well as the bias parameter ('z'), and
+            the probability for outliers ('p_outlier').
+            Can be any combination of 'sv', 'sz', 'st', 'z', and 'p_outlier'.
+            Passing the string 'all' will include all five.
 
             Note: Including 'sz' and/or 'st' will increase run time significantly!
 
-            is_group_model : bool
-                If True, this results in a hierarchical
-                model with separate parameter distributions for each
-                subject. The subject parameter distributions are
-                themselves distributed according to a group parameter
-                distribution.
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
 
-                If not provided, this parameter is set to True if data
-                provides a column 'subj_idx' and False otherwise.
+            If not provided, this parameter is set to True if data
+            provides a column 'subj_idx' and False otherwise.
 
-            depends_on : dict
-                Specifies which parameter depends on data
-                of a column in data. For each unique element in that
-                column, a separate set of parameter distributions will be
-                created and applied. Multiple columns can be specified in
-                a sequential container (e.g. list)
+        depends_on : dict
+            Specifies which parameter depends on data
+            of a column in data. For each unique element in that
+            column, a separate set of parameter distributions will be
+            created and applied. Multiple columns can be specified in
+            a sequential container (e.g. list)
 
-                :Example:
+            :Example:
 
-                    >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
+                >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
 
-                    Separate drift-rate parameters will be estimated
-                    for each difficulty. Requires 'data' to have a
-                    column difficulty.
+                Separate drift-rate parameters will be estimated
+                for each difficulty. Requires 'data' to have a
+                column difficulty.
 
 
-            bias : bool
-                Whether to allow a bias to be estimated. This
-                is normally used when the responses represent
-                left/right and subjects could develop a bias towards
-                responding right. This is normally never done,
-                however, when the 'response' column codes
-                correct/error.
+        bias : bool
+            Whether to allow a bias to be estimated. This
+            is normally used when the responses represent
+            left/right and subjects could develop a bias towards
+            responding right. This is normally never done,
+            however, when the 'response' column codes
+            correct/error.
 
-            plot_var : bool
-                 Plot group variability parameters when calling pymc.Matplot.plot()
-                 (i.e. variance of Normal distribution.)
+        plot_var : bool
+             Plot group variability parameters when calling pymc.Matplot.plot()
+             (i.e. variance of Normal distribution.)
 
-            wiener_params : dict
-                 Parameters for wfpt evaluation and
-                 numerical integration.
+        wiener_params : dict
+             Parameters for wfpt evaluation and
+             numerical integration.
 
-                 :Parameters:
-                     * err: Error bound for wfpt (default 1e-4)
-                     * n_st: Maximum depth for numerical integration for st (default 2)
-                     * n_sz: Maximum depth for numerical integration for Z (default 2)
-                     * use_adaptive: Whether to use adaptive numerical integration (default True)
-                     * simps_err: Error bound for Simpson integration (default 1e-3)
+             :Parameters:
+                 * err: Error bound for wfpt (default 1e-4)
+                 * n_st: Maximum depth for numerical integration for st (default 2)
+                 * n_sz: Maximum depth for numerical integration for Z (default 2)
+                 * use_adaptive: Whether to use adaptive numerical integration (default True)
+                 * simps_err: Error bound for Simpson integration (default 1e-3)
+
+        p_outlier : double (default=0)
+            The probability of outliers in the data. if p_outlier is passed in the
+            'include' argument, then it is estimated from the data and the value passed
+            using the p_outlier argument is ignored.
 
     """
 
@@ -420,11 +507,11 @@ class HDDMBase(AccumulatorModel):
         #this code only check that the arguments are as expected, i.e. the constructor was not change
         #since we wrote this function
         init_args = set(inspect.getargspec(self.__init__).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
         assert known_args == init_args, "Arguments of the constructor are not as expected"
 
         #create the avg model
-        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, p_outlier=self.p_outlier, **self._kwargs)
         return avg_model
 
 if __name__ == "__main__":

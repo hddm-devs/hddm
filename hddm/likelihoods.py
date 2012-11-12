@@ -145,7 +145,8 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         proportion = np.diff(theo_cdf)
 
         #make sure there is no zeros since it causes bugs later on
-        proportion[proportion == 0] = 1e-5
+        epsi = 1e-6
+        proportion[proportion <= epsi] = epsi
         return proportion
 
     def chisquare(self):
@@ -154,7 +155,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         """
         try:
             theo_proportion = self._get_theoretical_proportion()
-        except ValueError:
+        except (ValueError, FloatingPointError):
             return np.inf
         freq_exp = theo_proportion * self._n_samples
         score,_ = stats.chisquare(self._freq_obs, freq_exp)
