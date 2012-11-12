@@ -36,7 +36,7 @@ class HDDMStimCoding(HDDM):
             kwargs['include'] = ['z']
             print "Adding z to includes."
         #assert self.stim_col in self.data.columns, "Can not find column named %s" % self.stim_col
-        self.stims = np.unique(args[0][self.stim_col])
+        self.stims = np.sort(np.unique(args[0][self.stim_col]))
         assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
 
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
