@@ -173,16 +173,16 @@ class TestSingleBreakdown(unittest.TestCase):
         data, params_subj = hddm.generate.gen_rand_data(params=params_full)
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v')
         m.sample(self.iter, burn=self.burn)
-        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['self'], pm.Normal)
-        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['self'], pm.Normal)
 
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='z')
         m.sample(self.iter, burn=self.burn)
-        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'], pm.PyMCObjects.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['a'], int)
-        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
-        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'].parents['a'], int)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
 
     def test_HDDMRegressor(self):
         reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
@@ -251,9 +251,6 @@ def test_posterior_plots_breakdown():
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()
-    # clean up
-    for fname in ['a.png', 'a_var.png', 't.png', 't_var.png', 'v.png', 'v_var.png']:
-        os.remove(fname)
 
 if __name__=='__main__':
     print "Run nosetest.py"

@@ -53,9 +53,11 @@ class HDDMBase(AccumulatorModel):
         >>> mcmc.sample() # Sample from posterior
     :Optional:
         include : iterable
-            Optional inter-trial variability parameters to include.
-             Can be any combination of 'sv', 'sz' and 'st'. Passing the string
-            'all' will include all three.
+            Optional parameters to include. These include all inter-trial
+            variability parameters ('sv', 'sz', 'st'), as well as the bias parameter ('z'), and
+            the probability for outliers ('p_outlier').
+            Can be any combination of 'sv', 'sz', 'st', 'z', and 'p_outlier'.
+            Passing the string 'all' will include all five.
 
             Note: Including 'sz' and/or 'st' will increase run time significantly!
 
@@ -101,12 +103,17 @@ class HDDMBase(AccumulatorModel):
                  Parameters for wfpt evaluation and
                  numerical integration.
 
-                 :Parameters:
-                     * err: Error bound for wfpt (default 1e-4)
-                     * n_st: Maximum depth for numerical integration for st (default 2)
-                     * n_sz: Maximum depth for numerical integration for Z (default 2)
-                     * use_adaptive: Whether to use adaptive numerical integration (default True)
-                     * simps_err: Error bound for Simpson integration (default 1e-3)
+             :Parameters:
+                 * err: Error bound for wfpt (default 1e-4)
+                 * n_st: Maximum depth for numerical integration for st (default 2)
+                 * n_sz: Maximum depth for numerical integration for Z (default 2)
+                 * use_adaptive: Whether to use adaptive numerical integration (default True)
+                 * simps_err: Error bound for Simpson integration (default 1e-3)
+
+        p_outlier : double (default=0)
+            The probability of outliers in the data. if p_outlier is passed in the
+            'include' argument, then it is estimated from the data and the value passed
+            using the p_outlier argument is ignored.
 
     """
 

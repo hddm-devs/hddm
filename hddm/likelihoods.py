@@ -67,12 +67,17 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
         out = hddm.wfpt.pdf_array(x, **self.parents)
         return out
 
+    #create cdf function
+    def cdf(self, x):
+        return hddm.cdfdif.dmat_cdf_array(x, w_outlier=wp['w_outlier'], **self.parents)
+
     #create wfpt class
     wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
 
     #add pdf and cdf_vec to the class
     wfpt.pdf = pdf
     wfpt.cdf_vec = lambda self: hddm.wfpt.gen_cdf_using_pdf(time=cdf_range[1], **dict(self.parents.items() + wp.items()))
+    wfpt.cdf = cdf
 
     #add quantiles functions
     add_quantiles_functions_to_pymc_class(wfpt)
@@ -130,22 +135,19 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         return stats
 
     def _get_theoretical_proportion(self):
-        # generate CDF
-        x_cdf, cdf = self.cdf_vec()
 
-        # extract theoretical RT indices
-        theo_idx = np.searchsorted(x_cdf, self._emp_rt)
-
-        theo_idx[theo_idx == len(x_cdf)] = len(x_cdf)-1
+        #get cdf
+        cdf = self.cdf(self._emp_rt)
 
         #get probabilities associated with theoretical RT indices
-        theo_cdf = np.concatenate((np.array([0.]), cdf[theo_idx], np.array([1.])))
+        theo_cdf = np.concatenate((np.array([0.]), cdf, np.array([1.])))
 
         #theoretical porportion
         proportion = np.diff(theo_cdf)
 
         #make sure there is no zeros since it causes bugs later on
-        proportion[proportion == 0] = 1e-5
+        epsi = 1e-6
+        proportion[proportion <= epsi] = epsi
         return proportion
 
     def chisquare(self):
@@ -154,7 +156,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         """
         try:
             theo_proportion = self._get_theoretical_proportion()
-        except ValueError:
+        except (ValueError, FloatingPointError):
             return np.inf
         freq_exp = theo_proportion * self._n_samples
         score,_ = stats.chisquare(self._freq_obs, freq_exp)

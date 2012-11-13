@@ -8,12 +8,15 @@ try:
                              #          libraries=cython_gsl.get_libraries(),
                              #          library_dirs=[cython_gsl.get_library_dir()],
                              #          include_dirs=[cython_gsl.get_cython_include_dir()]),
-                             Extension('lba', ['src/lba.pyx'])
+                             Extension('lba', ['src/lba.pyx']),
+                             Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.pyx', 'src/cdfdif.c']),
     ])
 
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c']),
-                   Extension('lba', ['src/lba.c'])]
+                   Extension('lba', ['src/lba.c']),
+                   Extension('wfpt_cdf', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
+    ]
 
 import numpy as np
 
