@@ -316,9 +316,9 @@ def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn
     print "DIC: %f" % m.mc.dic
 
     if plot:
-        m.plot_posteriors()
+        m.plot_posteriors(save=True)
         print "Plotting posterior predictive..."
-        m.plot_posterior_predictive(savefig=True)
+        m.plot_posterior_predictive(save=True)
 
     return m
 
