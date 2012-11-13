@@ -372,7 +372,8 @@ class TestCdfdif(unittest.TestCase):
         if self.import_error:
             raise SkipTest
         data, params = hddm.generate.gen_rts()
-        y, p_boundary = cdfdif.cdfdif_array(data, **params)
+        params['p_outlier'] = 0.
+        y, p_boundary = cdfdif.dmat_cdf_array(data, w_outlier=0.1, **params)
 
 
 if __name__=='__main__':
