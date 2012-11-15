@@ -24,6 +24,13 @@ try:
 except ImportError:
     pass
 
+import cdfdif_wrapper
+
+try:
+    import cdfdif_wrapper as cdfdif
+except ImportError:
+    pass
+
 from kabuki.utils import load_csv, save_csv
 
 try:
