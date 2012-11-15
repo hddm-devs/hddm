@@ -391,7 +391,7 @@ def _gen_rts_from_cdf(params, samples=1000):
     T = params['st']; a = params['a']
     return hddm.likelihoods.wfpt.ppf(np.random.rand(samples), args=(v, V, a, z, Z, t, T))
 
-def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
+def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, share_noise = ('a','v','t','st','sz','sv','z'), **kwargs):
     """Generate simulated RTs with random parameters.
 
        :Optional:
@@ -422,13 +422,10 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
               'sz': (0, 1)
     }
 
-#    if 'share_noise' not in kwargs:
-#        kwargs['share_noise'] = set(['a','v','t','st','sz','sv','z'])
-
     # Create RT data
     data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params,
                                                       check_valid_func=hddm.utils.check_params_valid,
-                                                      bounds=bounds, **kwargs)
+                                                      bounds=bounds, share_noise=share_noise, **kwargs)
     data = kabuki_data_to_hddm_data(data)
 
     #add outliers
