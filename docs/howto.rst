@@ -124,7 +124,7 @@ The resulting likelihood function looks as follows:
 
    p(RT; v, a, t) = wfpt(RT; v, a, t) * (1-p_{outlier}) + w_{outlier} * p_{outlier}
 
-The default value of :math:'w_{outlier}' is 0.1, which is equivalent to uniform distribution
+The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform distribution
 from 0 to 5 seconds. However, in practice, the outliers model is applied to all RTs, even
 the ones which are larger than 5.
 
