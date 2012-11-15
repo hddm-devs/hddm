@@ -164,6 +164,8 @@ in your data, in our example name this column 'BOLD'):
    # parameter.
    m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
 
+Note that in the last line, the regression coefficients become ordinary
+model parameters you can use in depends_on.
 
 You can also pass a list to covariates if you want to include multiple
 covariates. E.g.:
@@ -183,6 +185,15 @@ covariates. E.g.:
 Note that these regression coefficients are often hard to estimate and
 require a lot of data. If you have problems with chain convergance,
 consider turning the coefficients into group_only_nodes (see above).
+
+If you want to estimate two separate regressions, you can also supply
+a list of regression descriptors to HDDMRegressor:
+
+::
+
+    m = hddm.HDDMRegressor(data, [reg_a, reg_t])
+
+Make sure to give all regression coefficients different names.
 
 Assess model convergence
 ------------------------
