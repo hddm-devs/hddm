@@ -221,7 +221,6 @@ class TestWfptFull(unittest.TestCase):
 
 
     def test_failure_mode(self):
-
         rt = 0.6
         for i in range(2):
             rt = rt * -1
@@ -260,121 +259,6 @@ class TestWfptFull(unittest.TestCase):
             self.assertTrue(hddm.wfpt.full_pdf(rt,v=v,sv=sv,a=a,z=z,sz=sz,t=t, st=st,err=1e-10, n_st=10, n_sz=10)==0)
             t = 0.2
             st = 0.1
-
-
-
-class TestWfptSwitch(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super(TestWfptSwitch, self).__init__(*args, **kwargs)
-        self.tests = 2
-        self.skip = True
-        # try:
-        #     import wfpt_switch
-        # except ImportError:
-        #     self.skip = True
-
-    def gen_rand_params(self):
-        vpp = (rand()-.5)*4
-        vcc = (rand()-.5)*4
-        tcc = rand()*0.3
-        t = rand()*.5
-        a = 1.+rand()
-
-        return vpp, vcc, tcc, t, a
-
-    def testDriftDensIntegrateToOne(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        # Test for small tcc where no drifts should have crossed the threshold
-        integ, error = sp.integrate.quad(hddm.wfpt_switch.calc_drift_dens, args=(.05, 0, 2, 1, False), a=0, b=2)
-        # Not sure why this returns 2, but the resulting likelihood seems to work
-        np.testing.assert_almost_equal(integ, 2, 2)
-
-    def test_pdf_integrate_to_one_precomp(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-4))
-            integ, error = sp.integrate.quad(func, a=-5, b=5)
-
-            np.testing.assert_almost_equal(integ, 1, 2)
-
-    def test_pdf_integrate_to_one(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade(np.array([x]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-6))
-            integ, error = sp.integrate.quad(func, a=-5, b=5)
-
-            np.testing.assert_almost_equal(integ, 1, 2)
-
-
-    def test_pdf_precomp_integrate_to_one(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-            func = lambda x: np.exp(hddm.wfpt_switch.wiener_like_antisaccade_precomp(np.array([x]), vpp, vcc, 0, a, .5, t, tcc, 0, 1e-6))
-            integ, error = sp.integrate.quad(func, a=-5, b=5)
-
-            np.testing.assert_almost_equal(integ, 1, 2)
-
-    def test_ks(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-            tcc += .1 # Test for bigger tcc
-            sampler = hddm.sandbox.model.wfpt_switch_like.rv
-
-            [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=100)
-
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
-    @unittest.expectedFailure
-    def test_ks_small_tcc(self):
-        if self.skip:
-            raise SkipTest("Could not import wfpt_switch.")
-
-        for tests in range(self.tests):
-            vpp, vcc, tcc, t, a = self.gen_rand_params()
-            tcc = 0.02
-
-            sampler = hddm.sandbox.model.wfpt_switch_like.rv
-
-            [D, p_value] = kstest(sampler.rvs, sampler.cdf,
-                                  args=(vpp, vcc, 0, a, .5, t, tcc, 0), N=100)
-
-            print 'p_value: %f' % p_value
-            self.assertTrue(p_value > 0.05)
-
-
-class TestCdfdif(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super(TestCdfdif, self).__init__(*args, **kwargs)
-        #try:
-        import hddm.cdfdif_wrapper as cdfdif
-        #except ImportError:
-        #    self.import_error = True
-
-    def test_cdf_breakdown(self):
-        if self.import_error:
-            raise SkipTest
-        data, params = hddm.generate.gen_rts()
-        params['p_outlier'] = 0.
-        y, p_boundary = cdfdif.dmat_cdf_array(data, w_outlier=0.1, **params)
-
 
 if __name__=='__main__':
     print "Run nosetest."
