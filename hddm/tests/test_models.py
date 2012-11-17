@@ -240,7 +240,7 @@ class TestSingleBreakdown(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
-        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['cols'][:,1] == -1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['cols'][:,0] == -1))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
