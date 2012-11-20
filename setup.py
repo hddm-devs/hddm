@@ -4,10 +4,6 @@ from glob import glob
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
-                             #Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
-                             #          libraries=cython_gsl.get_libraries(),
-                             #          library_dirs=[cython_gsl.get_library_dir()],
-                             #          include_dirs=[cython_gsl.get_cython_include_dir()]),
                              Extension('lba', ['src/lba.pyx'])
     ])
 
@@ -20,7 +16,7 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.4RC2',
+    version='0.4RC3',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
