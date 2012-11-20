@@ -85,8 +85,8 @@ Of course, you can also use HDDM directly from within Python:
    model.print_stats()
 
    # Plot posterior distributions and theoretical RT distributions
-   model.plot_posteriors()
-   model.plot_posterior_predictive(savefig=True)
+   model.plot_posteriors(save=True)
+   model.plot_posterior_predictive(save=True)
 
 
 Installing
