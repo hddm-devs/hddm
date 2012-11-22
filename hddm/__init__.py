@@ -2,7 +2,7 @@
 
 __docformat__ = 'restructuredtext'
 
-__version__ = '0.4RC4'
+__version__ = '0.4RC5'
 
 import models
 import models as model # remain backwards compatibility
