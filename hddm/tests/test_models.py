@@ -212,7 +212,8 @@ class TestSingleBreakdown(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, regressor=reg, is_group_model=False)
+        del data['subj_idx']
+        m = hddm.HDDMRegressor(data, regressor=reg, is_group_model=False, depends_on={})
         m.sample(self.iter, burn=self.burn)
         print m.nodes_db.index
 
