@@ -203,6 +203,26 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
+    def test_HDDMRegressor_no_group(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        m = hddm.HDDMRegressor(data, regressor=reg, is_group_model=False)
+        m.sample(self.iter, burn=self.burn)
+        print m.nodes_db.index
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v_slope')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
+
     def test_HDDMRegressor_two_covariates(self):
         reg_func = lambda args, cols: args[0] + args[1]*cols[:,0] + cols[:,1]
 
