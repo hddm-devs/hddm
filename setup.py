@@ -16,7 +16,7 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.4RC5',
+    version='0.4R',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
@@ -24,8 +24,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf']},
     scripts=['scripts/hddm_fit.py', 'scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
-    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
+    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4', 'PyMC >= 2.2'],
+    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4', 'PyMC >= 2.2'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 4 - Beta',
