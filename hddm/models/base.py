@@ -152,12 +152,22 @@ class HDDMBase(AccumulatorModel):
 
         #set cdf_range
         cdf_bound = max(np.abs(data['rt'])) + 1;
-        cdf_range = (-cdf_bound, cdf_bound)
+        self.cdf_range = (-cdf_bound, cdf_bound)
 
         #set wfpt class
-        self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(wp, cdf_range=cdf_range)
+        self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(wp, cdf_range=self.cdf_range)
 
         super(HDDMBase, self).__init__(data, **kwargs)
+
+    def __getstate__(self):
+        d = super(HDDMBase, self).__getstate__()
+        del d['wfpt_class']
+
+        return d
+
+    def __setstate__(self, d):
+        self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(d['wiener_params'], cdf_range=d['cdf_range'])
+        super(HDDMBase, self).__setstate__(d)
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = OrderedDict()
