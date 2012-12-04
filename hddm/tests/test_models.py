@@ -203,6 +203,27 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
+    def test_HDDMRegressor_no_group(self):
+        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        del data['subj_idx']
+        m = hddm.HDDMRegressor(data, regressor=reg, is_group_model=False, depends_on={})
+        m.sample(self.iter, burn=self.burn)
+        print m.nodes_db.index
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v_slope')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
+
     def test_HDDMRegressor_two_covariates(self):
         reg_func = lambda args, cols: args[0] + args[1]*cols[:,0] + cols[:,1]
 
@@ -223,6 +244,32 @@ class TestSingleBreakdown(unittest.TestCase):
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+
+    def test_HDDMRegressor_two_regressors(self):
+        reg_func1 = lambda args, cols: args[0] + args[1]*cols[:,0]
+        reg1 = {'func': reg_func1, 'args':['v_slope','v_inter'], 'covariates': 'cov1', 'outcome':'v'}
+
+        reg_func2 = lambda args, cols: args[0] + args[1]*cols[:,0]
+        reg2 = {'func': reg_func2, 'args':['a_slope','a_inter'], 'covariates': 'cov2', 'outcome':'a'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data = pd.DataFrame(data)
+        data['cov1'] = 1.
+        data['cov2'] = -1
+        m = hddm.HDDMRegressor(data, regressor=[reg1, reg2])
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['cols'][:,0] == 1))
+        self.assertTrue(all(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['cols'][:,0] == -1))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0].__name__, 'a_slope_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1].__name__, 'a_inter_subj.0')
 
     def test_HDDMRegressorGroupOnly(self):
         reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]

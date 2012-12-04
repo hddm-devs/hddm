@@ -141,18 +141,21 @@ class HDDMRegressor(HDDM):
         #create regressor params
         for i_reg, reg in enumerate(self.regressor):
             reg_parents = {}
+
             for arg in reg['args']:
+                # Create family for each regressor
                 reg_family = self.create_family_normal(arg, value=0)
+                # Store parents to pass to reg node below
                 reg_parents[arg] = reg_family['%s_bottom' % arg]
-                if reg not in self.group_only_nodes:
+                if reg not in self.group_only_nodes and self.is_group_model:
+                    # Rename bottom nodes to subj nodes (reg nodes will be bottom)
                     reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
                 knodes.update(reg_family)
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,
                                      col_name=reg['covariates'],
-                                     depends=('subj_idx',),
-                                     subj=True,
+                                     subj=self.is_group_model,
                                      plot=False,
                                      trace=False,
                                      hidden=True,

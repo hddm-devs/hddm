@@ -219,7 +219,7 @@ class HDDMBase(AccumulatorModel):
             columns : int (default=3)
                 How many columns to use for plotting the subjects.
 
-            savefig : bool (default=False)
+            save : bool (default=False)
                 Whether to save the figure to a file.
 
             path : str (default=None)

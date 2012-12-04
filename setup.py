@@ -4,18 +4,12 @@ from glob import glob
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
-                             #Extension('wfpt_switch', ['src/wfpt_switch.pyx'],
-                             #          libraries=cython_gsl.get_libraries(),
-                             #          library_dirs=[cython_gsl.get_library_dir()],
-                             #          include_dirs=[cython_gsl.get_cython_include_dir()]),
-                             Extension('lba', ['src/lba.pyx']),
-                             Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.pyx', 'src/cdfdif.c']),
+                             Extension('lba', ['src/lba.pyx'])
     ])
 
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c']),
-                   Extension('lba', ['src/lba.c']),
-                   Extension('wfpt_cdf', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
+                   Extension('lba', ['src/lba.c'])
     ]
 
 import numpy as np
@@ -30,8 +24,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf']},
     scripts=['scripts/hddm_fit.py', 'scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
-    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4RC1', 'PyMC >= 2.2'],
+    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4', 'PyMC >= 2.2'],
+    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4', 'PyMC >= 2.2'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 4 - Beta',

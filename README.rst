@@ -10,7 +10,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.4RC1
+:Version: 0.4
 
 Purpose
 =======
@@ -85,8 +85,8 @@ Of course, you can also use HDDM directly from within Python:
    model.print_stats()
 
    # Plot posterior distributions and theoretical RT distributions
-   model.plot_posteriors()
-   model.plot_posterior_predictive(savefig=True)
+   model.plot_posteriors(save=True)
+   model.plot_posterior_predictive(save=True)
 
 
 Installing

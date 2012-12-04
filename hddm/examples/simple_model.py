@@ -13,5 +13,5 @@ model.sample(10000, burn=5000)
 model.print_stats()
 
 # Plot posterior distributions and theoretical RT distributions
-model.plot_posteriors()
-model.plot_posterior_predictive(savefig=True)
+model.plot_posteriors(save=True)
+model.plot_posterior_predictive(save=True)
