@@ -276,11 +276,11 @@ you do you have to set up your environment appropiately for this, see the `IPyth
        m.sample(20000, burn=15000, dbname='db%i'%id, db='pickle')
        return m
 
-    from IPython.parallel import Client
-    v = Client(profile='hddm')[:]
-    jobs = v.map(run_model, range(4))
-    models = jobs.get()
-    gelman_rubin(models)
+   from IPython.parallel import Client
+   v = Client(profile='hddm')[:]
+   jobs = v.map(run_model, range(4))
+   models = jobs.get()
+   gelman_rubin(models)
 
 
 What to do about lack of convergence
