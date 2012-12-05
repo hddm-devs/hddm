@@ -32,7 +32,7 @@ setup(
                 'Environment :: Console',
                 'Operating System :: OS Independent',
                 'Intended Audience :: Science/Research',
-                'License :: OSI Approved :: BSD',
+                'License :: OSI Approved :: BSD License',
                 'Programming Language :: Python',
                 'Topic :: Scientific/Engineering',
                  ],
