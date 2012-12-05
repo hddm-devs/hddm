@@ -93,42 +93,19 @@ class TestSingleBreakdown(unittest.TestCase):
                 self.assertNotIn(node+'_subj', model.nodes_db.index)
                 self.assertIn(node, model.nodes_db.index)
 
-
-    def test_cont(self, assert_=False):
-        raise SkipTest("Disabled.")
-        params_true = hddm.generate.gen_rand_params(include=())
-        data, temp = hddm.generate.gen_rand_data(size=300, params=params_true)
-        data[0]['rt'] = min(abs(data['rt']))/2.
-        data[1]['rt'] = max(abs(data['rt'])) + 0.8
-        hm = hddm.HDDMContUnif(data, bias=True, is_group_model=False)
-        hm.sample(self.iter, burn=self.burn)
-        check_model(hm.mc, params_true, assert_=assert_)
-        cont_res = hm.cont_report(plot=False)
-        cont_idx = cont_res['cont_idx']
-        self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not find the right outliers")
-        self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
-
-        return hm
-
-    def test_cont_subj(self, assert_=False):
-        raise SkipTest("Disabled.")
-        data_samples = 200
-        num_subjs = 2
-        data, params_true = hddm.generate.gen_rand_subj_data(num_subjs=num_subjs, params=None,
-                                                        size=data_samples, noise=0.0001,include=())
-        for i in range(num_subjs):
-            data[data_samples*i]['rt'] = min(abs(data['rt']))/2.
-            data[data_samples*i + 1]['rt'] = max(abs(data['rt'])) + 0.8
-        hm = hddm.models.HDDMContUnif(data, bias=True, is_group_model=True)
-        hm.sample(self.iter, burn=self.burn)
-        check_model(hm.mc, params_true, assert_=assert_)
-        cont_res = hm.cont_report(plot=False)
-        for i in range(num_subjs):
-            cont_idx = cont_res[i]['cont_idx']
-            self.assertTrue((0 in cont_idx) and (1 in cont_idx), "did not found the right outliers")
-            self.assertTrue(len(cont_idx)<15, "found too many outliers (%d)" % len(cont_idx))
-
-        return hm
+    def test_HDDM_load_save(self, assert_=False):
+        dbs = ['pickle', 'sqlite']
+        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
+        for db, model_class in itertools.product(dbs, model_classes):
+            include = ['z', 'sz','st','sv']
+            params = hddm.generate.gen_rand_params(include=include)
+            data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=2)
+            model = model_class(data, include=include, is_group_model=True)
+            model.sample(20, dbname='test.db', db=db)
+            model.save('test.model')
+            m_load = hddm.load('test.model')
+            os.remove('test.db')
+            os.remove('test.model')
 
     def test_HDDMTruncated_distributions(self):
         params = hddm.generate.gen_rand_params()
