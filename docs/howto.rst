@@ -117,7 +117,7 @@ To estimate p_outlier from the data, run:
     m = hddm.HDDM(data, include=('p_outlier',))
 
 Under the hood we assume that outliers come from uniform distribution
-with a fixed density w_outlier (as suggested by Ratcliff and Tuerlinckx, 2002). 
+with a fixed density w_outlier (as suggested by Ratcliff and Tuerlinckx, 2002).
 The resulting likelihood function looks as follows:
 
 .. math::
@@ -127,73 +127,6 @@ The resulting likelihood function looks as follows:
 The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform distribution
 from 0 to 5 seconds. However, in practice, the outliers model is applied to all RTs, even
 the ones which are larger than 5.
-
-Estimate a regression model
----------------------------
-
-HDDM 0.4 (and upwards) includes a regression model that allows
-estimation of trial-by-trial influences of a covariate (e.g. a brain
-measure like fMRI) onto DDM parameters. For example, if your
-prediction is that activity of a particular brain area has a linear
-correlation with drift-rate, you could specify the following
-regression model (make sure to have a column with the brain activity
-in your data, in our example name this column 'BOLD'):
-
-::
-
-   # Define regression function (linear in this case)
-   reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
-
-   # Define regression descriptor
-   # regression function to use (func, defined above)
-   # args: parameter names (passed to reg_func; v_slope->args[0],
-   #                                            v_inter->args[1])
-   # covariates: data column to use as the covariate
-   #             (in this example, expects a column named
-   #             BOLD in the data)
-   # outcome: DDM parameter that will be replaced by trial-by-trial
-   #          regressor values (drift-rate v in this case)
-   reg = {'func': reg_func,
-          'args': ['v_inter','v_slope'],
-          'covariates': 'BOLD',
-          'outcome': 'v'}
-
-   # construct regression model. Second argument must be the
-   # regression descriptor. This model will have new parameters defined
-   # in args above, these can be used in depends_on like any other
-   # parameter.
-   m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
-
-Note that in the last line, the regression coefficients become ordinary
-model parameters you can use in depends_on.
-
-You can also pass a list to covariates if you want to include multiple
-covariates. E.g.:
-
-::
-
-   # Define regression function with interaction with exponential
-   # transform
-
-   reg_func = lambda args, cols: np.exp(args[0] + args[1]*cols[:,0] + args[2]*cols[:,1] + args[3]*cols[:,0]*cols[:,1])
-
-   reg = {'func': reg_func,
-          'args': ['a_intercept','a_slope_cov1', 'a_slope_cov2', 'a_interaction'],
-          'covariates': 'BOLD',
-          'outcome': 'a'}
-
-Note that these regression coefficients are often hard to estimate and
-require a lot of data. If you have problems with chain convergance,
-consider turning the coefficients into group_only_nodes (see above).
-
-If you want to estimate two separate regressions, you can also supply
-a list of regression descriptors to HDDMRegressor:
-
-::
-
-    m = hddm.HDDMRegressor(data, [reg_a, reg_t])
-
-Make sure to give all regression coefficients different names.
 
 Assess model convergence
 ------------------------
@@ -329,6 +262,27 @@ The output is a dictionary that provides the R-hat for each parameter:
    'v': 1.0232548747719443}
 
 
+As of HDDM 0.4.1 you can also run multiple chains in parallel. One
+convenient way to do this is the IPython parallel module. Note that
+you do you have to set up your environment appropiately for this, see the `IPython parallel docs`.
+
+::
+
+   def run_model(id):
+       import hddm
+       data = hddm.load_csv('mydata.csv')
+       m = hddm.HDDM(data)
+       m.find_starting_values()
+       m.sample(20000, burn=15000, dbname='db%i'%id, db='pickle')
+       return m
+
+    from IPython.parallel import Client
+    v = Client(profile='hddm')[:]
+    jobs = v.map(run_model, range(4))
+    models = jobs.get()
+    gelman_rubin(models)
+
+
 What to do about lack of convergence
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -369,6 +323,73 @@ the group_only_nodes keyword argument:
 
 The resulting model will still have subject nodes for all parameters
 but sv and st.
+
+Estimate a regression model
+---------------------------
+
+HDDM 0.4 (and upwards) includes a regression model that allows
+estimation of trial-by-trial influences of a covariate (e.g. a brain
+measure like fMRI) onto DDM parameters. For example, if your
+prediction is that activity of a particular brain area has a linear
+correlation with drift-rate, you could specify the following
+regression model (make sure to have a column with the brain activity
+in your data, in our example name this column 'BOLD'):
+
+::
+
+   # Define regression function (linear in this case)
+   reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+
+   # Define regression descriptor
+   # regression function to use (func, defined above)
+   # args: parameter names (passed to reg_func; v_slope->args[0],
+   #                                            v_inter->args[1])
+   # covariates: data column to use as the covariate
+   #             (in this example, expects a column named
+   #             BOLD in the data)
+   # outcome: DDM parameter that will be replaced by trial-by-trial
+   #          regressor values (drift-rate v in this case)
+   reg = {'func': reg_func,
+          'args': ['v_inter','v_slope'],
+          'covariates': 'BOLD',
+          'outcome': 'v'}
+
+   # construct regression model. Second argument must be the
+   # regression descriptor. This model will have new parameters defined
+   # in args above, these can be used in depends_on like any other
+   # parameter.
+   m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
+
+Note that in the last line, the regression coefficients become ordinary
+model parameters you can use in depends_on.
+
+You can also pass a list to covariates if you want to include multiple
+covariates. E.g.:
+
+::
+
+   # Define regression function with interaction with exponential
+   # transform
+
+   reg_func = lambda args, cols: np.exp(args[0] + args[1]*cols[:,0] + args[2]*cols[:,1] + args[3]*cols[:,0]*cols[:,1])
+
+   reg = {'func': reg_func,
+          'args': ['a_intercept','a_slope_cov1', 'a_slope_cov2', 'a_interaction'],
+          'covariates': 'BOLD',
+          'outcome': 'a'}
+
+Note that these regression coefficients are often hard to estimate and
+require a lot of data. If you have problems with chain convergance,
+consider turning the coefficients into group_only_nodes (see above).
+
+If you want to estimate two separate regressions, you can also supply
+a list of regression descriptors to HDDMRegressor:
+
+::
+
+    m = hddm.HDDMRegressor(data, [reg_a, reg_t])
+
+Make sure to give all regression coefficients different names.
 
 
 Perform model comparison
@@ -431,41 +452,25 @@ Save and load models
 --------------------
 
 HDDM models can be saved and reloaded in a separate python
-session. This is useful if your models need a lot of RAM or you are
-running models on a cluster. Note that only the traces
-(i.e. samples) get saved, you do have to recreate the model.
+session. Note that you have to save the traces to file by using
+the db backend.
 
 ::
 
-    # 1 load data and create a model
-    data = hddm.load_csv('path_to_my_data')
     model = hddm.HDDM(data, bias=True)  # a very simple model...
-    # 2 add commands for saving traces in a file
-    model.mcmc(dbname='traces.db', db='pickle')
-    # 3 run model. the traces will be saved in the file traces.db in the current working directory (alternatively specify path)
-    model.sample(5000, burn=1000)
-
+    model.sample(5000, burn=1000, dbname='traces.db', db='pickle')
+    model.save('mymodel')
 
 Now assume that you start a new python session, after the chain
 started above is completed.
 
 ::
 
-    #4 reconstruct your model
-    data = hddm.load_csv('path_to_my_data')
-    model = hddm.HDDM(data, bias=True)
-    #5 add traces from database
-    model.load_db('traces.db')  # not that for this to work you have to be in the same working directory you were in when you started the chain above. otherwise submit full path
+   model = hddm.load('mymodel')
 
-    # now you can access the traces as you can when a chain has just completed
-    # for example, you can access the contents of the chain for parameter v with
-    # len(model.mc.trace("v")[:])
-
-Under the hood, HDDM uses the database backend provided by PyMC. More
-information on the types of backends and their properties can be found
-in the `PyMC docs`_.
-
+Under the hood, HDDM uses the pickle module to save and load models.
 
 .. _PyMC docs: http://pymc-devs.github.com/pymc/database.html#saving-data-to-disk
 .. _DIC: http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml
 .. _PyMC documentation: http://pymc-devs.github.com/pymc/modelchecking.html#formal-methods
+.. _IPython Parallel Docs: http://ipython.org/ipython-doc/stable/parallel/index.html
