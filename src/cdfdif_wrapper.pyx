@@ -16,7 +16,8 @@ def dmat_cdf_array(np.ndarray[double, ndim=1] x, double v, double sv,
                  double a, double z, double sz, double t, double st, double p_outlier, double w_outlier):
 
     #check arguments
-    assert np.max(np.abs(x)) < (1./(2*w_outlier)), ValueError('1. / (2*w_outlier) must be smaller than RT')
+    if p_outlier > 0:
+        assert np.max(np.abs(x)) < (1./(2*w_outlier)), ValueError('1. / (2*w_outlier) must be smaller than RT')
 
     if (sv < 0) or (a <=0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z+sz/2.>1) or \
     (z-sz/2.<0) or (t-st/2.<0) or (t<0) or (st < 0) or not p_outlier_in_range(p_outlier):
