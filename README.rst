@@ -118,7 +118,7 @@ HDDM relies on the following packages:
 
 * NumPy
 
-* PyMC_ (installation instructions: http://pymc.googlecode.com/svn/doc/installation.html)
+* PyMC_ (installation instructions: http://pymc-devs.github.com/pymc/INSTALL.html)
 
 * kabuki_
 
@@ -187,7 +187,7 @@ Join our low-traffic `mailing list`_.
 
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
-.. _PyMC: http://code.google.com/p/pymc/
+.. _PyMC: http://pymc-devs.github.com/pymc/
 .. _Cython: http://www.cython.org/
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm

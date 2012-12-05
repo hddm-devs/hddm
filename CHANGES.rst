@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+HDDM 0.4.1
+==========
+
+* Models are now pickable.
+  (This means they can be loaded and saved.
+  Critically, it is now also trivial to run multiple
+  models in parallel that way.)
+
 HDDM 0.4
 ========
 
