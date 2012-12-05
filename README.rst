@@ -92,43 +92,6 @@ Of course, you can also use HDDM directly from within Python:
 Installing
 ==========
 
-See further below on how to install most of the necessary
-dependencies for the most common platforms.
-
-Assuming you have the dependencies, the easiest way to install HDDM is
-via pip ::
-
-    pip install kabuki
-    pip install hddm
-
-If you already installed a previous version of HDDM, you should
-upgrade instead ::
-
-   pip install --upgrade --no-deps kabuki
-   pip install --upgrade --no-deps hddm
-
-
-
-Dependencies
-============
-
-HDDM relies on the following packages:
-
-* Python
-
-* NumPy
-
-* PyMC_ (installation instructions: http://pymc-devs.github.com/pymc/INSTALL.html)
-
-* kabuki_
-
-* SciPy (optional)
-
-* Matplotlib (optional)
-
-* Cython_ (optional)
-
-
 Windows
 -------
 
@@ -142,6 +105,13 @@ to install pip is via easy_install. Start the windows command shell
 (cmd.exe) and type ::
 
     easy_install pip
+
+Then install kabuki and HDDM:
+
+::
+
+    pip install kabuki
+    pip install hddm
 
 
 Linux (Debian based, such as Ubuntu)
@@ -161,6 +131,13 @@ Optional dependencies for hddm_demo.py can be installed via
 
     apt-get install python-wxgtk2.8 python-traitsui
 
+Then install kabuki and HDDM:
+
+::
+
+    sudo pip install kabuki
+    sudo pip install hddm
+
 OSX
 ---
 
@@ -169,6 +146,12 @@ We recommend installing the `SciPy Superpack`_ maintained by Chris Fonnesbeck.
 The Superpack requires you to install XCode which apparently does not bundle with gcc anymore (which is required by HDDM). This repository provides some appropriate installers:
 
 https://github.com/kennethreitz/osx-gcc-installer/downloads
+
+Then install kabuki and HDDM:
+
+::
+    sudo pip install kabuki
+    sudo pip install hddm
 
 How to cite
 ===========
