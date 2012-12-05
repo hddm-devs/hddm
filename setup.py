@@ -28,7 +28,7 @@ setup(
     setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2'],
     include_dirs = [np.get_include()],
     classifiers=[
-                'Development Status :: 5 - Stable',
+                'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
                 'Operating System :: OS Independent',
                 'Intended Audience :: Science/Research',
