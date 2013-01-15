@@ -148,7 +148,7 @@ adequately capture the likely similarity structure of our
 data. Specifically, we assume that individual subject parameters are
 normal distributed around a group mean. Hierarchical Bayesian
 inference allows us to then estimate the individual subject parameters
-along with the group mean and group variance simulatenously.
+along with the group mean and group variance simultaneously.
 
 ----------------------------------------------
 Hierarchical Bayesian Drift Diffusion Modeling

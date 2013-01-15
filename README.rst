@@ -158,8 +158,7 @@ How to cite
 
 If HDDM was used in your research, please cite the following:
 
-Wiecki, T. V., Sofer, I. and Frank, M. J. at the 44th annual meeting of the Society for Mathematical
-Psychology, 65, 2011
+Wiecki, T. V., Sofer, I. and Frank, M. J. Hierarchical Bayesian estimation of the drift diffusion model: quantitative comparison with maximum likelihood. Program No. 494.13/CCC30. 2012 Neuroscience Meeting Planner. New Orleans, LA: Society for Neuroscience, 2012.
 
 Getting started
 ===============
