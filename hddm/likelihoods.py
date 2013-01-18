@@ -45,9 +45,9 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     #set wiener_params
     if wiener_params is None:
         wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
-                      'use_adaptive':1,
-                      'simps_err':1e-3,
-                      'w_outlier': 0.1}
+                         'use_adaptive':1,
+                         'simps_err':1e-3,
+                         'w_outlier': 0.1}
     wp = wiener_params
 
     #create likelihood function
@@ -58,8 +58,11 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     #create random function
     def random(v, sv, a, z, sz, t, st, p_outlier, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
-        return hddm.generate.gen_rts(param_dict, method=sampling_method,
-                                     samples=size, dt=sampling_dt, range_=cdf_range)
+        return hddm.generate.gen_rts(method=sampling_method,
+                                     samples=size, dt=sampling_dt,
+                                     range_=cdf_range,
+                                     structured=False,
+                                     **param_dict)
 
 
     #create pdf function
