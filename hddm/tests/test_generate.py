@@ -30,3 +30,9 @@ class TestGenerate(unittest.TestCase):
             [D, p_value] = ks_2samp(stoch_cdf.random(), stoch_drift.random())
             print 'p_value: %f' % p_value
             self.assertTrue(p_value > 0.05)
+
+    def test_generate_breakdown(self):
+        hddm.generate.gen_rand_data(subjs=10)
+        hddm.generate.gen_rand_data(subjs=1)
+        hddm.generate.gen_rand_data(n_fast_outliers=5, n_slow_outliers=5)
+        hddm.generate.gen_rand_data(size=100)
