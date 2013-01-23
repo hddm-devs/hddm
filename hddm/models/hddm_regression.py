@@ -5,51 +5,45 @@ import pymc as pm
 
 import hddm
 from hddm_transformed import HDDM
+from hddm_truncated import HDDMTruncated
+from hddm_gamma import HDDMGamma
 import kabuki
 from kabuki import Knode
 from kabuki.distributions import scipy_stochastic
 
-class wfpt_regress_gen(stats.distributions.rv_continuous):
+def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
-    wiener_params = {'err': 1e-4, 'nT':2, 'nsz':2,
-                                  'use_adaptive':1,
-                                  'simps_err':1e-3}
+    #set wiener_params
+    if wiener_params is None:
+        wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
+                      'use_adaptive':1,
+                      'simps_err':1e-3,
+                      'w_outlier': 0.1}
     wp = wiener_params
-    sampling_method = 'drift'
-    dt=1e-4
 
-    def _argcheck(self, *args):
-        return True
 
-    def _logp(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
+    def wiener_multi_like(value, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like_multi(x, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
+        return hddm.wfpt.wiener_like_multi(value, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
 
-    def _pdf(self, x, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
-        raise NotImplementedError
 
-    def _rvs(self, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier):
+    def random(v, sv, a, z, sz, t, st, reg_outcomes, p_outlier, size=None):
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
-        sampled_rts = np.empty(self._size)
+        sampled_rts = np.empty(size)
 
-        for i_sample in xrange(self._size):
+        for i_sample in xrange(len(sampled_rts)):
             #get current params
             for p in reg_outcomes:
                 param_dict[p] = locals()[p][i_sample]
             #sample
-            sampled_rts[i_sample] = hddm.generate.gen_rts(param_dict, method=self.sampling_method,
-                                                   samples=1, dt=self.dt)
+            sampled_rts[i_sample] = hddm.generate.gen_rts(param_dict, method=sampling_method,
+                                                   samples=1, dt=sampling_dt)
         return sampled_rts
 
-    def random(self, v=1., sv=0., a=2, z=.5, sz=.1, t=.3, st=.1, reg_outcomes=None, size=None, p_outlier=0):
-        self._size = len(locals()[reg_outcomes[0]])
-        return self._rvs(v, sv, a, z, sz, t, st, reg_outcomes)
+    return  pm.stochastic_from_dist('wfpt_reg', wiener_multi_like, random=random)
 
 
-wfpt_reg_like = scipy_stochastic(wfpt_regress_gen, name='wfpt_reg',
-                                 longname="""Wiener first passage time with regressors likelihood function""",
-                                 extradoc="")
-
+wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
 
 
 ################################################################################################
@@ -68,7 +62,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
-class HDDMRegressor(HDDM):
+class HDDMRegressor(HDDMGamma):
     """HDDMRegressor allows estimation of trial-by-trial influences of
     a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
 
@@ -124,7 +118,6 @@ class HDDMRegressor(HDDM):
 
         #set wfpt_reg
         self.wfpt_reg_class = deepcopy(wfpt_reg_like)
-        self.wfpt_reg_class.rv.wiener_params
 
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
