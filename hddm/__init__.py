@@ -4,11 +4,11 @@ __docformat__ = 'restructuredtext'
 
 __version__ = '0.4dev'
 
-import models
-import models as model # remain backwards compatibility
 import likelihoods
 import generate
 import utils
+import models
+import models as model # remain backwards compatibility
 
 from models import *
 
