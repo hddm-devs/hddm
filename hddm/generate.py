@@ -409,7 +409,8 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, share_noise
     """
 
     if params is None:
-        params = gen_rand_params()
+        seed = kwargs.get('seed', None)
+        params = gen_rand_params(seed=seed)
 
     from numpy import inf
 
