@@ -41,7 +41,7 @@ class HDDMGamma(HDDMBase):
         if 'v' in include:
             knodes.update(self.create_family_normal('v', value=0))
         if 't' in include:
-            knodes.update(self.create_family_gamma('t', value=.03, var_value=0.2))
+            knodes.update(self.create_family_gamma('t', mean_value=.3, value=0.01, var_value=0.2))
         if 'sv' in include:
             # TW: Use kabuki.utils.HalfCauchy, S=10, value=1 instead?
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))
