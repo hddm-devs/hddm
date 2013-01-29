@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pymc as pm
+import pandas as pd
 
 import hddm
 import kabuki
@@ -21,6 +22,14 @@ import inspect
 
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
+
+try:
+    from IPython import parallel
+    from IPython.parallel.client.asyncresult import AsyncResult
+except ImportError:
+    pass
+
+
 
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
@@ -30,6 +39,264 @@ class AccumulatorModel(kabuki.Hierarchical):
         self.group_only_nodes = kwargs.pop('group_only_nodes', ())
 
         super(AccumulatorModel, self).__init__(data, **kwargs)
+
+
+    def _create_an_average_model(self):
+        raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
+
+
+    def _quantiles_optimization(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
+        """
+        quantile optimization using chi^2.
+        Input:
+            quantiles <sequance> - a sequance of quantiles.
+                the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+        Output:
+            results <dict> - a results dictionary of the parameters values.
+            The values of the nodes in single subject model is update according to the results.
+            The nodes of group models are not updated
+        """
+
+        #run optimization for group model
+        if self.is_group_model:
+
+            #get all obs nodes
+            obs_db = self.get_observeds()
+
+            #create an average model (avergae of all subjects)
+            try:
+                average_model = self._create_an_average_model()
+            except AttributeError:
+                raise AttributeError("User must define _create_an_average_model in order to use the quantiles optimization method")
+
+            #group obs nodes according to their tag and (condittion)
+            #and for each group average the quantiles
+            for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
+
+                #set quantiles for each observed_node
+                obs_nodes = tag_obs_db.node;
+                [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
+
+                #get n_samples, freq_obs, and emp_rt
+                stats = [obs.get_quantiles_stats() for obs in obs_nodes]
+                n_samples = sum([x['n_samples'] for x in stats])
+                freq_obs = sum(np.array([x['freq_obs'] for x in stats]),0)
+                emp_rt = np.mean(np.array([x['emp_rt'] for x in stats]),0)
+
+                #set average quantiles  to have the same statitics
+                obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
+                node_name = obs_knode.create_node_name(tag) #get node name
+                average_node = average_model.nodes_db.ix[node_name]['node'] #get the average node
+                average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
+
+            #optimize
+            results, bic_info = average_model._optimization_single(method=method, quantiles=quantiles,
+                                                                   n_runs=n_runs, compute_stats=False)
+
+        #run optimization for single subject model
+        else:
+            results, bic_info = self._optimization_single(method=method, quantiles=quantiles,
+                                                          n_runs=n_runs, compute_stats=True)
+
+        if bic_info is not None:
+            self.bic_info = bic_info
+
+        return results
+
+
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
+        """
+        optimization using ML, chi^2 or G^2
+
+        Input:
+            method <string>:
+                name of method ('ML', 'chisquare' or 'gsquare').
+
+            quantiles <sequance>:
+                a sequance of quantiles used for chi^2 and G^2.
+                the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+
+            n_runs <int>:
+                number of attempt to optimize
+
+            n_bootstraps <int>:
+                number of bootstraps iterations
+
+            parrall_profile <string>:
+                IPython profile for parallelization
+
+        Output:
+            results <dict> - a results dictionary of the parameters values.
+            The values of the nodes in single subject model is update according to the results.
+            The nodes of group models are not updated
+        """
+
+        results = self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+        #bootstrap if requested
+        if n_bootstraps == 0:
+            return results
+
+        #init DataFrame to save results
+        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
+
+        #prepare view for parallelization
+        if parallel_profile is not None: #create view
+            client = parallel.Client(profile=parallel_profile)
+            view = client.load_balanced_view()
+            runs_list = [None] * n_bootstraps
+        else:
+            view = None
+
+        #define single iteration bootstrap function
+        def single_bootstrap(data,
+                             accumulator_class=self.__class__, class_kwargs=self._kwargs,
+                             method=method, quantiles=quantiles, n_runs=n_runs):
+
+            #resample data
+            new_data = data.ix[np.random.randint(0, len(data), len(data))]
+            new_data = new_data.set_index(pd.Index(range(len(data))))
+            h = accumulator_class(new_data, **class_kwargs)
+
+            #run optimization
+            h._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+
+            return pd.Series(h.values, dtype=np.float)
+
+        #bootstrap iterations
+        for i_strap in xrange(n_bootstraps):
+            if view is None:
+                res.ix[i_strap] = single_bootstrap(self.data)
+            else:
+                # append to job queue
+                runs_list[i_strap] = view.apply_async(single_bootstrap, self.data)
+
+        #get parallel results
+        if view is not None:
+            view.wait(runs_list)
+            for i_strap in xrange(n_bootstraps):
+                res.ix[i_strap] = runs_list[i_strap].get()
+
+        #get statistics
+        stats = res.describe()
+        for q in [2.5, 97.5]:
+            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
+
+        self.bootstrap_stats = stats.sort_index()
+        return results
+
+    def _run_optimization(self, method, quantiles, n_runs):
+        """function used by optimize.
+        """
+
+        if method == 'ML':
+            if self.is_group_model:
+                raise TypeError, "optimization method is not defined for group models"
+            else:
+                results, _ = self._optimization_single(method, quantiles, n_runs=n_runs)
+                return results
+
+        else:
+            return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
+
+
+    def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
+        """
+        function used by chisquare_optimization to fit the a single subject model
+        Input:
+         quantiles <sequance> - same as in chisquare_optimization
+
+         compute_stats <boolean> - whether to copmute the quantile stats using the node's
+             compute_quantiles_stats method
+
+        Output:
+            results <dict> - same as in chisquare_optimization
+        """
+
+        #get obs_nodes
+        obs_nodes = self.get_observeds()['node']
+
+        #set quantiles for each observed_node (if needed)
+        if (method != 'ML') and compute_stats:
+            [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
+
+        #get all stochastic parents of observed nodes
+        db = self.nodes_db
+        parents = db[(db.stochastic == True) & (db.observed == False)]['node']
+        original_values = np.array([x.value for x in parents])
+        names = [x.__name__ for x in parents]
+
+        #define objective
+        #ML method
+        if method == 'ML':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                try:
+                    return -sum([obs.logp for obs in obs_nodes])
+                except pm.ZeroProbability:
+                    return np.inf
+
+        #chi^2 method
+        elif method == 'chisquare':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                score = sum([obs.chisquare() for obs in obs_nodes])
+                if score < 0:
+                    kabuki.debug_here()
+                return score
+
+        #G^2 method
+        elif method == 'gsquare':
+            def objective(values):
+                for (i, value) in enumerate(values):
+                    parents[i].value = value
+                return -sum([obs.gsquare() for obs in obs_nodes])
+
+        else:
+            raise ValueError('unknown optimzation method')
+
+        #optimze
+        best_score = np.inf
+        all_results = []
+        values = original_values.copy()
+        inf_objective = False
+        for i_run in xrange(n_runs):
+            #initalize values to a random point
+            values_iter = 0
+            while inf_objective:
+                values_iter += 1
+                values = original_values + np.random.randn(len(values))*(2**-values_iter)
+                self.set_values(dict(zip(names, values)))
+                inf_objective = np.isinf(objective(values))
+
+            #optimze
+            try:
+                res_tuple = fmin_powell(objective, values, full_output=True)
+            except Exception:
+                res_tuple = fmin(objective, values, full_output=True)
+            all_results.append(res_tuple)
+
+            #reset inf_objective so values be resampled
+            inf_objective = True
+
+        #get best results
+        best_idx = np.nanargmin([x[1] for x in all_results])
+        best_values = all_results[best_idx][0]
+        self.set_values(dict(zip(names, best_values)))
+        results = self.values
+
+        #calc BIC for G^2
+        if method == 'gsquare':
+            values = [x.value for x in parents]
+            score = objective(values)
+            penalty = len(results) * np.log(len(self.data))
+            bic_info = {'likelihood': -score, 'penalty': penalty, 'bic': score + penalty}
+            return results, bic_info
+
+        else:
+            return results, None
 
 
 class HDDMBase(AccumulatorModel):
@@ -237,6 +504,25 @@ class HDDMBase(AccumulatorModel):
 
         """
         hddm.utils.plot_posterior_quantiles(self, *args, **kwargs)
+
+    def _create_an_average_model(self):
+        """
+        create an average model for group model quantiles optimization.
+
+        The function return an instance of the model that was initialize with the same parameters as the
+        original model but with the is_group_model argument set to False.
+        since it depends on the specifics of the class it should be implemented by the user for each new class.
+        """
+
+        #this code only check that the arguments are as expected, i.e. the constructor was not change
+        #since we wrote this function
+        init_args = set(inspect.getargspec(self.__init__).args)
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
+        assert known_args == init_args, "Arguments of the constructor are not as expected"
+
+        #create the avg model
+        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, p_outlier=self.p_outlier, **self._kwargs)
+        return avg_model
 
 if __name__ == "__main__":
     import doctest

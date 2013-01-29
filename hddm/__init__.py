@@ -4,11 +4,12 @@ __docformat__ = 'restructuredtext'
 
 __version__ = '0.4.1'
 
-import models
-import models as model # remain backwards compatibility
 import likelihoods
 import generate
 import utils
+import models
+import cdfdif_wrapper
+import models as model # remain backwards compatibility
 
 from models import *
 
@@ -20,3 +21,8 @@ except ImportError:
     pass
 
 from kabuki.utils import load_csv, save_csv, load
+
+try:
+    from IPython.core.debugger import Tracer; debug_here = Tracer()
+except:
+    def debug_here(): pass

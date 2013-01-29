@@ -5,34 +5,43 @@ import pymc as pm
 import kabuki.step_methods as steps
 from hddm.models import HDDMBase
 
-class HDDM(HDDMBase):
+class HDDMGamma(HDDMBase):
     def __init__(self, *args, **kwargs):
-        self.use_gibbs_for_mean = kwargs.pop('use_gibbs_for_mean', True)
-        self.use_reject_for_std = kwargs.pop('use_reject_for_std', True)
-
-        super(HDDM, self).__init__(*args, **kwargs)
+        super(HDDMGamma, self).__init__(*args, **kwargs)
 
     def pre_sample(self):
         if not self.is_group_model:
             return
 
+        slice_widths = {'a':2, 't':0.5, 'a_var': 0.2, 't_var': 0.15}
+
         # apply gibbs sampler to normal group nodes
         for name, node_descr in self.iter_group_nodes():
             node = node_descr['node']
             knode_name = node_descr['knode_name'].replace('_trans', '')
-            if self.use_gibbs_for_mean and isinstance(node, pm.Normal) and knode_name not in self.group_only_nodes:
+            if knode_name in self.group_only_nodes:
+                continue
+            if knode_name == 'v':
                 self.mc.use_step_method(steps.kNormalNormal, node)
-            if self.use_reject_for_std and isinstance(node, pm.Uniform) and knode_name not in self.group_only_nodes:
+            elif knode_name == 'v_var':
                 self.mc.use_step_method(steps.UniformPriorNormalstd, node)
+            else:
+                try:
+                    self.mc.use_step_method(steps.SliceStep, node, width=slice_widths[knode_name],
+                                        left=0, maxiter=1000)
+                except KeyError:
+                    pass
+
+
 
     def _create_stochastic_knodes(self, include):
         knodes = OrderedDict()
         if 'a' in include:
-            knodes.update(self.create_family_exp('a', value=1))
+            knodes.update(self.create_family_gamma('a', value=1.5, var_value=0.75))
         if 'v' in include:
             knodes.update(self.create_family_normal('v', value=0))
         if 't' in include:
-            knodes.update(self.create_family_exp('t', value=.01))
+            knodes.update(self.create_family_gamma('t', mean_value=.3, value=0.01, var_value=0.2))
         if 'sv' in include:
             # TW: Use kabuki.utils.HalfCauchy, S=10, value=1 instead?
             knodes.update(self.create_family_trunc_normal('sv', lower=0, upper=1e3, value=1))

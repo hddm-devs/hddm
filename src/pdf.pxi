@@ -102,7 +102,8 @@ cpdef double full_pdf(double x, double v, double sv, double a, double
     """full pdf"""
 
     # Check if parpameters are valid
-    if z<0 or z>1 or a<0 or ((fabs(x)-(t-st/2.))<0) or (z+sz/2.>1) or (z-sz/2.<0) or (t-st/2.<0) or (t<0):
+    if (z<0) or (z>1) or (a<0) or (t<0) or (st<0) or (sv<0) or (sz<0) or (sz>1) or \
+       ((fabs(x)-(t-st/2.))<0) or (z+sz/2.>1) or (z-sz/2.<0) or (t-st/2.<0):
         return 0
 
     # transform x,v,z if x is upper bound response
