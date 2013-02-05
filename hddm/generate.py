@@ -1,6 +1,5 @@
 from __future__ import division
 
-import random
 import kabuki
 import hddm
 import numpy as np
@@ -8,7 +7,7 @@ import pandas as pd
 
 from numpy.random import rand
 from scipy.stats import uniform, norm
-from copy import copy, deepcopy
+from copy import copy
 
 def gen_single_params_set(include=()):
     """Returns a dict of DDM parameters with random values for a singel conditin
@@ -163,9 +162,11 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
 
-def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structured=False, subj_idx=None, method='cdf'):
+def gen_rts(samples=1000, range_=(-6, 6), dt=1e-3,
+            intra_sv=1., structured=True, subj_idx=None,
+            method='cdf', **params):
     """
-    Returns a numpy.array of randomly simulated RTs from the DDM.
+    Returns a DataFrame of randomly simulated RTs from the DDM.
 
     :Arguments:
         params : dict
@@ -225,32 +226,12 @@ def gen_rts(params, samples=1000, range_=(-6, 6), dt=1e-3, intra_sv=1., structur
     if not structured:
         return rts
     else:
-        if subj_idx is None:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float)]))
-        else:
-            data = np.empty(rts.shape, dtype = ([('response', np.float), ('rt', np.float), ('subj_idx', np.float)]))
-            data['subj_idx'] = subj_idx
-        data['response'][rts>0] = 1.
-        data['response'][rts<0] = 0.
-        data['rt'] = np.abs(rts)
+        data = pd.DataFrame(rts, columns=['rt'])
+        data['response'] = 1.
+        data['response'][data['rt']<0] = 0.
+        data['rt'] = np.abs(data['rt'])
 
         return data
-
-def kabuki_data_to_hddm_data(kabuki_data):
-    "transform data generate by kabuki.generate.gen_rand_data to hddm data"
-
-    kd = kabuki_data
-    dtype = ([('response', np.int), ('rt', np.float), ('subj_idx', np.int32), ('condition', 'S20')])
-    data = np.empty(kd.shape, dtype = dtype)
-
-    rts = kd['data']
-    data['response'][rts>0] = 1.
-    data['response'][rts<0] = 0.
-    data['rt'] = np.abs(rts)
-    data['condition'] = kd['condition']
-    data['subj_idx'] = kd['subj_idx']
-    return data
-
 
 def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
     """Returns simulated RTs from simulating the whole drift-process.
@@ -448,11 +429,9 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 #        kwargs['share_noise'] = set(['a','v','t','st','sz','sv','z'])
 
     # Create RT data
-    data, subj_params = kabuki.generate.gen_rand_data(hddm.likelihoods.Wfpt, params,
+    data, subj_params = kabuki.generate.gen_rand_data(gen_rts, params,
                                                       check_valid_func=hddm.utils.check_params_valid,
                                                       bounds=bounds, **kwargs)
-    data = kabuki_data_to_hddm_data(data)
-
     #add outliers
     seed = kwargs.get('seed', None)
     data = add_outliers(data, n_fast=n_fast_outliers, n_slow=n_slow_outliers, seed=seed)
