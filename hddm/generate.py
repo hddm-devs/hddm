@@ -395,16 +395,38 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
     """Generate simulated RTs with random parameters.
 
        :Optional:
-            params : dict
-                Parameter names and values. If not
-                supplied, takes random values.
-            method : string
-                method to generate samples
-            the rest of the arguments are forwarded to kabuki.generate.gen_rand_data
+            params : dict <default=generate randomly>
+                Either dictionary mapping param names to values.
+
+                Or dictionary mapping condition name to parameter
+                dictionary (see example below).
+
+                If not supplied, takes random values.
+
+            n_fast_outliers : int <default=0>
+                How many fast outliers to add (outlier_RT < ter)
+
+            n_slow_outliers : int <default=0>
+                How many late outliers to add.
+
+            The rest of the arguments are forwarded to kabuki.generate.gen_rand_data
 
        :Returns:
             data array with RTs
             parameter values
+
+       :Example:
+            # Generate random data set
+            >>> data, params = hddm.generate.gen_rand_data({'v':0, 'a':2, 't':.3},
+                                                           size=100, subjs=5)
+
+            # Generate 2 conditions
+            >>> data, params = hddm.generate.gen_rand_data({'cond1': {'v':0, 'a':2, 't':.3},
+                                                            'cond2': {'v':1, 'a':2, 't':.3}})
+
+       :Notes:
+            Wrapper function for kabuki.generate.gen_rand_data. See
+            the help doc of that function for more options.
 
     """
 
