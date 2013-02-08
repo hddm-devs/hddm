@@ -13,15 +13,19 @@ specification directly from Python. For this, you first import hddm:
    :lines: 1
 
 Next, we have to load the data into Python. HDDM expects a NumPy
-structured array which you can either create yourself or load it from
-a csv file. Information on how to create a proper structured NumPy
-array can be found here. If you want to load a csv file make sure it
-is in the proper format outlined above. You can then load the data as follows:
+structured array or a pandas DataFrame. You can load the data from a
+csv files as follows:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 4
 
-After you loaded the data you can create the model object which is called Multi because it allows you to dynamically create multiple HDDM models depending on your data. In the simplest case, you'll want to create a simple DDM (default):
+HDDM requires the data frame to be in a specific format. It has
+to have an RT column called 'rt' of dtype float and a
+
+ After you loaded the data you can create the
+model object which is called Multi because it allows you to
+dynamically create multiple HDDM models depending on your data. In the
+simplest case, you'll want to create a simple DDM (default):
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 7
