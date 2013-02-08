@@ -8,21 +8,20 @@ Creating a hierarchical group model
 
 Up until now, we have been looking at data that was generated from the
 same set of parameters. However, in most experiments, we test multiple
-subjects and may only gather relatively few trials per
-subject. Traditionally, we would either fit a separate model to each
-individual subject or fit one model to all subjects. Neither of these
-approaches are ideal as we will see below. We can expect that subjects
-will be similar in many ways yet have non-negligable individual
-differences. If we fit separate models we ignore their similarities
-and need much more data per subject to make useful inference. If we
-fit one model to all subjects we ignore their differences and may get
-a model fit that does not well characterize any individual. It would
-be best if the model fitting could determine to what extent all
-subjects are similar to the others in some respects, and use this
-information as a prior to draw inferences about the paramters of any
-given subject. The hierarchical approach optimally allocates the
-information from the group vs the individual depending on the
-statistics of the data.
+subjects but only gather relatively few trials per subject; this is
+often the case in cognitive neuroscience experiments where we may also
+image subjects using fMRI during the task. Traditionally, we would
+either fit a separate model to each individual subject or fit one
+model to all subjects. Neither of these approaches are ideal as we
+will see below. We can expect that subjects will be similar in many
+ways. If we fit separate models we ignore their similarities and need
+much more data per subject to make useful inference. If we fit one
+model to all subjects we ignore their differences and may get a model
+fit that does not well characterize any individual. Ideally, our model
+estimation would allow to capture individual differences and
+similarities. The hierarchical Bayesian approach used by HDDM
+optimally allocates the information from the group vs the individual
+depending on the statistics of the data.
 
 To illustrate this point, consider the following example: we tested 40
 subjects on the above task with the easy and hard condition. For
@@ -51,7 +50,7 @@ As you can see, the estimates are far worse (especially in the hard
 condition) and the posterior distributions are much wider indicating a
 lack of confidence in the estimates. Looking at the posterior
 predictive and ill-shaped RT distribution makes obvious why fitting a
-DDM to 10 trials is a fruitless attempt.
+DDM to 20 trials is a fruitless attempt.
 
 However, what about the data from the 39 other subjects? We certainly
 wouldn't expect everyone to have the exact same parameters, but they
@@ -59,14 +58,14 @@ should be fairly similar. Couldn't we combine the data? This is where
 the hierarchical approach becomes useful -- we can estimate individual
 parameters, but at the same time have the parameters feed into a group
 distribution so that the tiny bit we learn from each subject can be
-pooled together and constrain the subject fits. Unfortunately, such a
-model is a little bit more difficult to create in
-general. Fortunately, HDDM does all of this automatically. Simply
-running hddm_fit.py on a data file that has a column named 'subj_idx'
-will make HDDM create a hierarchical model where each subject gets
-assigned its own subject distribution which is assumed to be
-distributed around a normal group distribution. Running this example
-produces the following output:
+pooled together and constrain the subject fits. Unfortunately,
+hierarchical models are more complex in many ways. Fortunately, HDDM
+automates this process and reduces this complexity. Simply running
+hddm_fit.py on a data file that has a column named 'subj_idx' will
+make HDDM create a hierarchical model where each subject gets assigned
+its own subject distribution which is assumed to be distributed around
+a normal group distribution. Running this example produces the
+following output:
 
 ::
 
@@ -261,9 +260,15 @@ each subject we can make useful inference about the group parameters.
 
 The second thing you can see is that individual subject parameters
 (ending with the index of the subject) are very close to the group
-mean (this is also indicated by the fact that the var posteriors, the
-variance of the group distribution -- representing the spread of the
-individual subject parameters). This property is called
-*shrinkage*. Intuitively, if we can not make meaningful inference
-about individual subjects we will assume that they are distributed as
-the rest of the group.
+mean (this is also indicated by small group variance -- representing
+the spread of the individual subject parameters). This property is
+called *shrinkage*. Intuitively, if we can not make meaningful
+inference about individual subjects we will assume that they are
+distributed as the rest of the group. The more data we have the less
+individual subject estimates will be shrinked to the group mean.
+
+While creating a configuration file and calling hddm_fit.py is quite
+easy, this approach is also quite limited. Thus, if you want to build
+more sophisticated models or do more advanced analysis, you will have
+to use HDDM from Python. Building your own model in Python will be
+explored in :ref:`part three of the tutorial <chap_tutorial_python>`.

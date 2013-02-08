@@ -13,39 +13,47 @@ specification directly from Python. For this, you first import hddm:
    :lines: 1
 
 Next, we have to load the data into Python. HDDM expects a NumPy
-structured array or a pandas DataFrame. You can load the data from a
+structured array or a pandas_ DataFrame. You can load the data from a
 csv files as follows:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 4
 
-HDDM requires the data frame to be in a specific format. It has
-to have an RT column called 'rt' of dtype float and a
+HDDM requires the data frame to be in a specific format. It has to
+have an RT column called 'rt', a column for which response was made
+called 'response' and, if you have multiple subjects, a column
+containing subject ids (these have to be integers) called 'subj_idx'.
 
- After you loaded the data you can create the
-model object which is called Multi because it allows you to
-dynamically create multiple HDDM models depending on your data. In the
-simplest case, you'll want to create a simple DDM (default):
+After you loaded the data you can create the model object:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 7
 
-You may then sample from the posterior distribution by calling:
+This model object contains your data, the corresponding model
+specification and a number of methods to perform inference, do model
+analysis etc. You may then sample from the posterior distribution by
+calling:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 10
 
-Depending on the model and amount of data this can take some time. After enough samples were generated, you may want to print some statistics on the screen:
+Depending on the model and amount of data this can take some
+time. After enough samples were generated, you may want to print some
+statistics on the screen:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 13
 
-You can currently generate two plots to examine model fit. If you want to see if your chains converged and what the posteriors for each parameter look like you can call:
+You can currently generate two plots to examine model fit. If you want
+to see if your chains converged and what the posteriors for each
+parameter looks like you can call:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 16
 
-To see how well the RT distributions are fit by the mean of the posterior distribution we can plot the theoretical RT distribution on top of our empirical RT distribution by calling:
+To see how well the RT distributions are fit by the mean of the
+posterior distribution we can plot the theoretical RT distribution on
+top of our empirical RT distribution by calling:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 17
@@ -75,3 +83,5 @@ data as above):
 
 >>> model = hddm.HDDM(data, include=('V','Z','T'), bias=True, depends_on={'v':'difficulty'})
 >>> model.sample(10000, burn=5000)
+
+.. _pandas: http://pandas.pydata.org/
