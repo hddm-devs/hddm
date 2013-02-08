@@ -20,23 +20,29 @@ collection is not a major constrain for traditional psychological
 experiments, cognitive neuroscience experiments often record brain
 activity (e.g. fMRI) which makes collection of large amounts of data a
 much more costly enterprise. Consequently, trial numbers in cognitive
-neuroscience experiments are often low.
+neuroscience experiments are often low. In addition, many researchers
+are starting to relate these trial-by-trial measurements of
+brain-activity to decision making parameters (see e.g. :cite:`ForstmannDutilhBrownEtAl08`,
+:cite:`CavanaghWieckiCohenEtAl11`)).
 
 Meanwhile, Bayesian methods are quickly gaining popularity in the
 cognitive sciences because of their many desirable properties
-(:cite:`LeeWagenmakersIP`, :cite:`Kruschke11`). In particular,
+(:cite:`LeeWagenmakers`, :cite:`Kruschke11`). In particular,
 hierarchical modeling is quite easily formulated in a Bayesian
 framework. Traditionally, psychological models were either fit
 separately to individual subjects (thus not taking similarities of
 subjects into account) or to the whole group (thus not taking
-differences of subjects into account). It is important to realize that
-this limitation is imposed by the estimation method (see
+differences of subjects into account). This type of estimation is used
+by current DDM software packages like DMAT_ :cite:`VandekerckhoveTuerlinckx08` and
+fast-dm_ :cite:`VossVoss07`. It is important to realize that this
+limitation is imposed by the estimation method (see
 below). Hierarchical Bayesian methods provide a remedy for this
 problem by allowing group and subject parameters to be estimated
 simultaniously at different hierarchies. In essence, subject
 parameters are assumed to come from a group distribution. In addition,
 because these methods are Bayesian they deal naturally with
-uncertainty and variability in the parameter estimations.
+uncertainty and variability in the parameter estimations. Current
+software packages to fit the DDM like only support .
 
 HDDM_ is an open-source software package written in Python_ which
 allows (i) the flexible construction of hierarchical Bayesian drift
@@ -51,7 +57,10 @@ speed which allows estimation of complex models in minutes. HDDM
 includes many commonly used statistics and plotting functionality
 generally used to assess model fit. The code is released under the
 permissive BSD 3-clause license, test-covered to assure correct
-behavior and well documented.
+behavior and well documented. Finally, HDDM allows estimation of
+trial-by-trial regressions where an external measurement (e.g. brain
+activity as measured by fMRI) is correlated with one or more decision
+making parameters.
 
 With HDDM we aim to place a userfriendly but powerful tool into the
 hands of experimental scientists to construct and fit complex,
@@ -379,3 +388,5 @@ will create a hierarchical model with group parameters
 .. _Python: http://www.python.org/
 .. _PyMC: http://code.google.com/p/pymc/
 .. _Cython: http://www.cython.org/
+.. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
+.. _fast-dm: http://seehuhn.de/pages/fast-dm

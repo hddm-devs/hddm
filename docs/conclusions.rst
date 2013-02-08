@@ -4,7 +4,7 @@ Conclusions
 
 We developed an open-source Python toolbox that allows hierarchical
 Bayesian parameter estimation of the DDM and LBA that is successfully
-been used by various psychological research groups. The benefit of
+being used in various cognitive research laboratories. The benefit of
 this approach is two-fold: (i) improved accuracy of individual subject
 parameter recover by modeling subject similarity in a hierarchical
 fashion; and (ii) full Bayesian posterior inference that obsoletes
