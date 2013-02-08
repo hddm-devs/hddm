@@ -178,45 +178,6 @@ manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
     are called race-models. Reproduced from
     :cite:`DonkinBrownHeathcoteEtAl11`.
 
-
-Relationship to cognitive neuroscience
-======================================
-
-SSMs were originally developed from a pure information processing
-point of view and primarily used in psychology as a high-level
-approximation of the decision process. More recent efforts in
-cognitive neuroscience have simultaneously (i) validated core
-assumptions of the model by showing that neurons indeed integrate
-evidence probabilistically during decision making
-(:cite:`SmithRatcliff04`,:cite:`GoldShadlen07`) and (ii) applied this
-model to understand and describe neural correlates of cognitive
-processes (:cite:`ForstmannDutilhBrownEtAl08`,
-:cite:`CavanaghWieckiCohenEtAl11`).
-
-Multiple routes to decision threshold modulation have been
-identified. Decision threshold in the speed-accuracy trade-off is
-modulated by changes in the functional connectivity between pre-SMA
-and striatum (:cite:`ForstmannDutilhBrownEtAl08`). Neural network
-modeling (:cite:`Frank06`, :cite:`RatcliffFrank12`) validated by studies of PD
-patients with a deep-brain-stimulator (DBS) in their subthalamic
-nucleus (STN) (:cite:`FrankSamantaMoustafaEtAl07`) suggest that this
-node is implicated in raising the decision threshold when there is
-conflict between two options associated with similar rewards. This
-result was further corroborated by (:cite:`CavanaghWieckiCohenEtAl11`)
-who found that frontal theta power (as measured by
-electroencelophagraphy and thought to correspond to conflict
-(:cite:`CavanaghZambrano-VazquezAllen12`)) is correlated with decision
-threshold increase on a trial-by-trial basis. As predicted, this
-relationship was broken in PD patients with DBS turned on (but,
-critically, not when DBS was turned off thus showing the effect is not
-a result of the disease). In other words, by interfering with STN
-function through stimulation we were able to show that this brain area
-is casually involved in decision threshold modulation despite intact
-experience of conflict (as measured by theta power). Interestingly,
-these results provide a computational cognitive explanation for the
-clinical symptom of impulsivity observed in PD patients receiving DBS
-(:cite:`FrankSamantaMoustafaEtAl07`).
-
 ------------------------------
 Hierarchical Bayesian Estimation
 ------------------------------
