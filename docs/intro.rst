@@ -2,93 +2,106 @@
 Introduction
 ============
 
-*NOTE*: This document is still under development.  Sequential sampling
-models (SSMs) (:cite:`TownsendAshby83`) have established themselves as
-the de-facto standard for modeling data from simple decision making
-tasks (:cite:`SmithRatcliff04`). Each decision is modeled as a
-sequential extraction and accumulation of information from the
-environment and/or internal representations. Once the accumulated
-evidence crosses a threshold, a corresponding response is
-executed. This simple assumption about the underlying psychological
-process has the intriguing property of reproducing reaction time
-distributions and choice probability in simple two-choice decision
-making tasks.
+*NOTE*: This document is still under development.
 
-Hierarchical Bayesian methods are quickly gaining popularity in
-cognitive sciences (:cite:`LeeWagenmakersIP`). Traditionally,
-psychological models where either fit separately to individual
-subjects (thus not taking similarities of subjects into account) or to
-the whole group (thus not taking differences of subjects into
-account). Hierarchical Bayesian methods provide a remedy for this
+Sequential sampling models (SSMs) (:cite:`TownsendAshby83`) have
+established themselves as the de-facto standard for modeling
+reaction-time data from simple decision making tasks
+(:cite:`SmithRatcliff04`). Each decision is modeled as a continuous
+accumulation of information from the environment and/or internal
+representations. Once the accumulated evidence crosses a threshold, a
+corresponding response is executed. This simple assumption about the
+underlying psychological process has the intriguing property of
+reproducing reaction time distributions and choice probability in
+simple two-choice decision making tasks. Models of this class have
+been used successfully in mathematical psychology since the 60s and
+more recently found their way into cognitive neuroscience. While data
+collection is not a major constrain for traditional psychological
+experiments, cognitive neuroscience experiments often record brain
+activity (e.g. fMRI) which makes collection of large amounts of data a
+much more costly enterprise. Consequently, trial numbers in cognitive
+neuroscience experiments are often low.
+
+Meanwhile, Bayesian methods are quickly gaining popularity in the
+cognitive sciences because of their many desirable properties
+(:cite:`LeeWagenmakersIP`, :cite:`Kruschke11`). In particular,
+hierarchical modeling is quite easily formulated in a Bayesian
+framework. Traditionally, psychological models were either fit
+separately to individual subjects (thus not taking similarities of
+subjects into account) or to the whole group (thus not taking
+differences of subjects into account). It is important to realize that
+this limitation is imposed by the estimation method (see
+below). Hierarchical Bayesian methods provide a remedy for this
 problem by allowing group and subject parameters to be estimated
 simultaniously at different hierarchies. In essence, subject
 parameters are assumed to come from a group distribution. In addition,
 because these methods are Bayesian they deal naturally with
 uncertainty and variability in the parameter estimations.
 
-HDDM_ (Hierarchical Drift Diffusion Modeling) is an open-source
-software package written in Python_ which allows (i) the construction
-of hierarchical Bayesian drift models and (ii) the estimation of its
-posterior parameter distributions via PyMC_
-(:cite:`PatilHuardFonnesbeck10`). For efficiency, all runtime critical
-functions are coded in Cython_ (:cite:`BehnelBredshawCitroEtAl11`),
-heavily optimized and compiled natively. User-defined models can be
-constructed via a simple configuration files or directly via HDDM
-library calls. To assess model fit, HDDM generates different
-statistics and comes with various plotting capabilities. For
-illustrative purposes, HDDM includes a graphical demo applet which
-simulates individual drift processes under user-specified parameter
-combinations. The code is test-covered to assure correct function and
-is properly documented. Online documentation and tutorials are
-provided.
+HDDM_ is an open-source software package written in Python_ which
+allows (i) the flexible construction of hierarchical Bayesian drift
+diffusion models and (ii) the estimation of its posterior parameter
+distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
+models can be specified via a configuration file thus requiring no
+Python knowledge. Alternatively, more sophisticated usage of the
+toolbox is available interactively via, for example, IPython_ or by
+writing Python scripts. All runtime critical functions are coded in
+Cython_ (:cite:`BehnelBredshawCitroEtAl11`) and compiled natively for
+speed which allows estimation of complex models in minutes. HDDM
+includes many commonly used statistics and plotting functionality
+generally used to assess model fit. The code is released under the
+permissive BSD 3-clause license, test-covered to assure correct
+behavior and well documented.
 
-In sum, the presented software allows researches to construct and fit
-complex, user-specified models using state-of-the-art estimation
-methods without requiring a strong computer science or math
-background.
+With HDDM we aim to place a userfriendly but powerful tool into the
+hands of experimental scientists to construct and fit complex,
+user-specified models using state-of-the-art estimation methods to
+test their hypotheses.
+
 
 **************************
+Methods
+**************************
+
+--------------------------
 Sequential Sampling Models
-**************************
+--------------------------
 
 SSMs generally fall into one of two classes: (i) diffusion models
-which assume that {\it relative`) evidence is accumulated over time
+which assume that *relative* evidence is accumulated over time
 and (ii) race models which assume independent evidence accumulation
 and response commitment once the first accumulator crossed a boundary
-(:cite:`LaBerge62,Vickers70`). While there are many variants of these
-models they are often closely related on a computational level and
-sometimes mathematically equivalent under certain assumptions
-(:cite:`BogaczBrownMoehlisEtAl06`). As such, I will restrict
-discussion to two exemplar models from each class widely used in the
-literature: the drift diffusion model (DDM)
-(:cite:`RatcliffRouder98,RatcliffMcKoon08`) belonging to the class of
-diffusion models and the linear ballistic accumulator (LBA)
+(:cite:`LaBerge62`, :cite:`Vickers70`). HDDM includes two of the most
+commonly used SSMs: the drift diffusion model (DDM)
+(:cite:`RatcliffRouder98`, :cite:`RatcliffMcKoon08`) belonging to the
+class of diffusion models and the linear ballistic accumulator (LBA)
 (:cite:`BrownHeathcote08`) belonging to the class of race models.
 
 Drift Diffusion Model
 =====================
 
 The DDM models decision making in two-choice tasks. Each choice is
-represented as and upper and lower boundary. A drift-process
+represented as an upper and lower boundary. A drift-process
 accumulates evidence over time until it crosses one of the two
 boundaries and initiates the corresponding response
-(:cite:`RatcliffRouder98,SmithRatcliff04`). The speed with which the
-accumulation process approaches one of the two boundaries is called
-the drift rate and represents the relative evidence for or against a
-particular response. Because there is noise in the drift process, the
-time of the boundary crossing and the selected response will vary
-between trials. The distance between the two boundaries
-(i.e. threshold) influences how much evidence must be accumulated
+(:cite:`RatcliffRouder98`, :cite:`SmithRatcliff04`). The speed with
+which the accumulation process approaches one of the two boundaries is
+called drift-rate *v* and represents the relative evidence for or
+against a particular response. Because there is noise in the drift
+process, the time of the boundary crossing and the selected response
+will vary between trials. The distance between the two boundaries
+(i.e. threshold *a*) influences how much evidence must be accumulated
 until a response is executed. A lower threshold makes responding
 faster in general but increases the influence of noise on decision
 making while a higher threshold leads to more cautious
 responding. Reaction time, however, is not solely comprised of the
 decision making process -- perception, movement initiation and
 execution all take time and are summarized into one variable called
-non-decision time. The starting point of the drift process relative to
-the two boundaries can influence if one response has a prepotent
-bias. This pattern gives rise to the reaction time distributions of
-both choices (see figure :ref:`ddm`).
+non-decision time *t*. The starting point of the drift process
+relative to the two boundaries can influence if one response has a
+prepotent bias *z*. The termination times of this generative process
+gives rise to the reaction time distributions of both choices (see
+figure :ref:`ddm`).
 
 .. _ddm:
 
@@ -103,11 +116,25 @@ both choices (see figure :ref:`ddm`).
     shapes match closely to that observed in reaction time
     measurements of research participants.
 
+An analytical solution to the resulting probability distribution of
+the termination times was provided by :cite:`Feller68`:
+
+.. math::
+
+    f(t|v, a, z) = \frac{\pi}{a^2} \, \text{exp} \left( -vaz-\frac{v^2\,t}{2} \right) \times \sum_{k=1}^{\infty} k\, \text{exp} \left( -\frac{k^2\pi^2 t}{2a^2} \right) \text{sin}\left(k\pi z\right)
+
+Note that the infinite sum requiers some form of approximation. HDDM
+uses the likelihood formulation provided by :cite:`NavarroFuss09`.
+
 Later on, the DDM was extended to include inter-trial variability in
 the drift-rate, the non-decision time and the starting point in order
 to account for two phenomena observed in decision making tasks --
 early and late errors. Models that take this into account are referred
-to as the full DDM (:cite:`RatcliffRouder98`).
+to as the full DDM (:cite:`RatcliffRouder98`). HDDM uses analytical
+integration of the likelihood function for variability in drift-rate
+and numerical integration for variability in non-decision time and
+bias. More information on the model specifics can be found in
+Sofer, Wiecki, & Frank (in preparation).
 
 
 Linear Ballistic Accumulator
@@ -140,7 +167,7 @@ manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
     reaches criterion first and gets executed. Because of this race
     between two accumulators towards a common threshold these model
     are called race-models. Reproduced from
-    \citet{DonkinBrownHeathcoteEtAl11`).
+    :cite:`DonkinBrownHeathcoteEtAl11`.
 
 
 Relationship to cognitive neuroscience
@@ -152,15 +179,16 @@ approximation of the decision process. More recent efforts in
 cognitive neuroscience have simultaneously (i) validated core
 assumptions of the model by showing that neurons indeed integrate
 evidence probabilistically during decision making
-(:cite:`SmithRatcliff04,GoldShadlen07`) and (ii) applied this model to
-understand and describe neural correlates of cognitive processes
-(:cite:`ForstmannAnwanderSchaferEtAl10,CavanaghWieckiCohenEtAl11`).\\
+(:cite:`SmithRatcliff04`,:cite:`GoldShadlen07`) and (ii) applied this
+model to understand and describe neural correlates of cognitive
+processes (:cite:`ForstmannDutilhBrownEtAl08`,
+:cite:`CavanaghWieckiCohenEtAl11`).
 
 Multiple routes to decision threshold modulation have been
 identified. Decision threshold in the speed-accuracy trade-off is
 modulated by changes in the functional connectivity between pre-SMA
-and striatum (:cite:`ForstmannAnwanderSchaferEtAl10`). Neural network
-modeling (:cite:`Frank06,RatcliffFrank12`) validated by studies of PD
+and striatum (:cite:`ForstmannDutilhBrownEtAl08`). Neural network
+modeling (:cite:`Frank06`, :cite:`RatcliffFrank12`) validated by studies of PD
 patients with a deep-brain-stimulator (DBS) in their subthalamic
 nucleus (STN) (:cite:`FrankSamantaMoustafaEtAl07`) suggest that this
 node is implicated in raising the decision threshold when there is
@@ -196,7 +224,7 @@ individual subjects outlined above. Under the assumption that
 participants within each group are similar to each other, but not
 identical, a hierarchical model can be constructed where individual
 parameter estimates are constrained by group-level distributions
-:cite:`NilssonRieskampWagenmakers11 ShiffrinLeeKim08`.
+(:cite:`NilssonRieskampWagenmakers11`,:cite:`ShiffrinLeeKim08`).
 
 Bayesian methods require specification of a generative process in form
 of a likelihood function that produced the observed data :math:`x` given
@@ -282,21 +310,56 @@ formulation also makes apparent that the posterior contains estimation
 of the individual subject parameters :math:`\theta_j` and group
 parameters :math:`\lambda`.
 
-Finally, note that in our computational psychiatry application the
-homogeneity assumption that all subjects come from the same normal
-distribution is almost certainly violated (see above). To deal with
-the heterogeneous data often encountered in psychiatry I will discuss
-mixture models further down below. Next, I will describe algorithms to
-estimate this posterior distribution.
-
-----------------------------------------------
-Hierarchical Bayesian Drift Diffusion Modeling
+-----------------------------------
+ Bayesian Drift Diffusion Modeling
 ----------------------------------------------
 
-The graphical model of our hierarchical DDM can be appreciated in
-figure 2.
+HDDM includes several hierarchical Bayesian model formulations for the
+DDM and LBA. For illustrative purposes we present the graphical model
+depiction of the default DDM hierarchical model in :ref:`graphical_hddm`.
 
-..  figure:: hier_model.svg
+.. _graphical_hddm:
+
+..  figure:: graphical_hddm.svg
+
+    Basic graphical hierarchical model implemented by HDDM for
+    estimation of the drift-diffusion model.
+
+Individual graphical nodes are distributed as follows:
+
+.. math::
+
+    \mu_{a} &\sim \mathcal{N}(0, 1) \\
+    \mu_{z} &\sim \mathcal{N}(0, 1) \\
+    \mu_{v} &\sim \mathcal{N}(0, 1) \\
+    \mu_{ter} &\sim \mathcal{N}(0, 1) \\
+    \mu_{sv} &\sim \mathcal{N}(0, 1) \\
+    \mu_{sz} &\sim \mathcal{N}(0, 1) \\
+    \mu_{ster} &\sim \mathcal{N}(0, 1) \\
+    \\
+    \sigma_{a} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{z} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{v} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{ter} &\sim \mathcal{U}(1e^{-10}, 100) \\
+        \sigma_{sv} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{sz} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{ster} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \\
+    a_{i} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
+    z_{i} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
+    v_{i} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
+    ter_{i} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
+    sv_{i} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}^2) \\
+    sz_{i} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}^2) \\
+    ster_{i} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}^2) \\
+    \\
+    x_{i, j} &\sim \text{F}(a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})
+
+where F represents the DDM likelihood function as formulated by
+:cite:`NavarroFuss09`. As can be seen, individual subject parameters
+are expected to be normal distributed around a group mean :math:`\mu`
+with variance `\sigma^2`. HDDM then uses MCMC to estimate the joint
+posterior distribution of all model parameters.
 
 .. bibliography:: hddm.bib
 

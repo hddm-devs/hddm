@@ -54,5 +54,5 @@ pgm.add_plate(daft.Plate([3.75, .9, 1.5, 1.1], label=r"$i = 1, \dots, S_j$",
 #pgm.add_plate(daft.Plate([1.35, .2, 1.35, 2.3], label=r"$j = 1, \dots, N$",
 #    shift=-0.1))
 pgm.render()
-pgm.figure.savefig("graphical_hddm.pdf")
+pgm.figure.savefig("graphical_hddm.svg")
 pgm.figure.savefig("graphical_hddm.png", dpi=300)

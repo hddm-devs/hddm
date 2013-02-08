@@ -18,14 +18,14 @@
 \sigma_{sz} &\sim \mathcal{U}(1e^{-10}, 100) \\
 \sigma_{ster} &\sim \mathcal{U}(1e^{-10}, 100) \\
 \\
-a_{i} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}) \\
-z_{i} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}) \\
-v_{i} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}) \\
-ter_{i} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}) \\
-sv_{i} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}) \\
-sz_{i} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}) \\
-ster_{i} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}) \\
+a_{i} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
+z_{i} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
+v_{i} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
+ter_{i} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
+sv_{i} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}^2) \\
+sz_{i} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}^2) \\
+ster_{i} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}^2) \\
  \\
-wfpt_{i, j} &\sim wfpt(x_{i, j} | a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})\\
+x_{i, j} &\sim \text{wfpt}(a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})\\
 \end{align*}
 \end{document}
