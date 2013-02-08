@@ -57,10 +57,10 @@ speed which allows estimation of complex models in minutes. HDDM
 includes many commonly used statistics and plotting functionality
 generally used to assess model fit. The code is released under the
 permissive BSD 3-clause license, test-covered to assure correct
-behavior and well documented. Finally, HDDM allows estimation of
-trial-by-trial regressions where an external measurement (e.g. brain
-activity as measured by fMRI) is correlated with one or more decision
-making parameters.
+behavior and well documented. Finally, HDDM allows flexible estimation
+of trial-by-trial regressions where an external measurement
+(e.g. brain activity as measured by fMRI) is correlated with one or
+more decision making parameters.
 
 With HDDM we aim to place a userfriendly but powerful tool into the
 hands of experimental scientists to construct and fit complex,
