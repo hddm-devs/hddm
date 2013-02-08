@@ -15,7 +15,7 @@ distributions and choice probability in simple two-choice decision
 making tasks.
 
 Hierarchical Bayesian methods are quickly gaining popularity in
-cognitive sciences (:cite:`LeeWagenmakersIP`?). Traditionally,
+cognitive sciences (:cite:`LeeWagenmakersIP`). Traditionally,
 psychological models where either fit separately to individual
 subjects (thus not taking similarities of subjects into account) or to
 the whole group (thus not taking differences of subjects into
@@ -92,7 +92,7 @@ both choices (see figure :ref:`ddm`).
 
 .. _ddm:
 
-.. figure:: DDM_drifts_w_labels.pdf
+.. figure:: DDM_drifts_w_labels.svg
 
     Trajectories of multiple drift-processs (blue and red lines,
     middle panel). Evidence is accumulated over time (x-axis) with
@@ -186,9 +186,9 @@ Model Fitting
 
 Statistics and machine learning have developed efficient and versatile
 Bayesian methods to solve various inference problems
-\citep{Poirier06}. More recently, they have seen wider adoption in
-applied fields such as genetics \citep{StephensBalding09} and
-psychology \citep[e.g.][]{ClemensDeSelenEtAl11}. One reason for this
+:cite:`Poirier06`. More recently, they have seen wider adoption in
+applied fields such as genetics :cite:`StephensBalding09` and
+psychology :cite:`ClemensDeSelenEtAl11`. One reason for this
 Bayesian revolution is the ability to quantify the certainty one has
 in a particular estimation. Moreover, hierarchical Bayesian models
 provide an elegant solution to the problem of estimating parameters of
@@ -196,20 +196,25 @@ individual subjects outlined above. Under the assumption that
 participants within each group are similar to each other, but not
 identical, a hierarchical model can be constructed where individual
 parameter estimates are constrained by group-level distributions
-\citep{NilssonRieskampWagenmakers11,ShiffrinLeeKim08}.
+:cite:`NilssonRieskampWagenmakers11 ShiffrinLeeKim08`.
 
 Bayesian methods require specification of a generative process in form
-of a likelihood function that produced the observed data $x$ given
-some parameters $\theta$. By specifying our prior belief we can use
+of a likelihood function that produced the observed data :math:`x` given
+some parameters :math:`\theta`. By specifying our prior belief we can use
 Bayes formula to invert the generative model and make inference on the
-probability of parameters $\theta$:
+probability of parameters :math:`\theta`:
+
+.. _bayes:
 
 .. math::
 
     P(\theta|x) = \frac{P(x|\theta) * P(\theta)}{P(x)}
 
 
-Where $P(x|\theta)$ is the likelihood and $P(\theta)$ is the prior probability. Computation of the marginal likelihood $P(x)$ requires integration (or summation in the discrete case) over the complete parameter space $\Theta$:
+Where :math:`P(x|\theta)` is the likelihood and :math:`P(\theta)` is
+the prior probability. Computation of the marginal likelihood :math:`P(x)`
+requires integration (or summation in the discrete case) over the
+complete parameter space :math:`\Theta`:
 
 .. math::
 
@@ -218,10 +223,10 @@ Where $P(x|\theta)$ is the likelihood and $P(\theta)$ is the prior probability. 
 
 Note that in most scenarios this integral is analytically
 intractable. Sampling methods like Markov-Chain Monte Carlo (MCMC)
-\citep{GamermanLopes06} circumvent this problem by providing a way to
+:cite:`GamermanLopes06` circumvent this problem by providing a way to
 produce samples from the posterior distribution. These methods have
 been used with great success in many different scenarios
-\citep{GelmanCarlinSternEtAl03} and will be discussed in more detail
+:cite:`GelmanCarlinSternEtAl03` and will be discussed in more detail
 below.
 
 Another nice property of the Bayesian method is that it lends itself
@@ -244,29 +249,45 @@ resulting in the following generative description:
 
 .. math::
 
-  \mu, \sigma &\sim G_0()
-  \theta_j &\sim \mathcal{N}(\mu, \sigma^2)
-  x_{i, j} &\sim f(\theta_j)
+  \mu, \sigma \sim G_0() \\
+  \theta_j \sim \mathcal{N}(\mu, \sigma^2) \\
+  x_{i, j} \sim f(\theta_j)
+
+See figure :ref:`graphical_hierarchical` for the corresponding graphical model description.
+
+Another way to look at this hierarchical model is to consider that our
+fixed prior on :math:`\theta` from formula (:ref:`bayes`) is actually
+a random variable (in our case a normal distribution) parameterized by
+:math:`\lambda` which leads to the following posterior formulation:
+
+.. math::
+
+    P(\theta, \lambda | x) = \frac{P(x|\theta) * P(\theta|\lambda) * P(\lambda)}{P(x)}
 
 
-See figure \ref{graphical_hierarchical} for the corresponding graphical model description.
+.. _graphical_hierarchical:
 
-Another way to look at this hierarchical model is to consider that our fixed prior on $\theta$ from formula (\ref{bayes}) is actually a random variable (in our case a normal distribution) parameterized by $\lambda$ which leads to the following posterior formulation:
+.. figure:: graphical_hierarchical.svg
 
-\begin{equation}\label{hierarchical_posterior}
-P(\theta, \lambda | x) = \frac{P(x|\theta) * P(\theta|\lambda) * P(\lambda)}{P(x)}
-\end{equation}
+    Graphical notation of a hierarchical model. Circles represent
+    continuous random variables. Arrows connecting circles specify
+    conditional dependence between random variables. Shaded circles
+    represent observed data. Finally, plates around graphical nodes
+    mean that multiple identical, independent distributed random
+    variables exist.
 
-\begin{figure}
-\center
-  \includegraphics{graphical_hierarchical.pdf}
-\caption{Graphical notation of a hierarchical model. Circles represent continuous random variables. Arrows connecting circles specify conditional dependence between random variables. Shaded circles represent observed data. Finally, plates around graphical nodes mean that multiple identical, independent distributed random variables exist.}
-\label{graphical_hierarchical}
-  \end{figure}
+Note that we can factorize :math:`P(x|\theta)` and
+:math:`P(\theta|\lambda)` due to their conditional independence. This
+formulation also makes apparent that the posterior contains estimation
+of the individual subject parameters :math:`\theta_j` and group
+parameters :math:`\lambda`.
 
-Note that we can factorize $P(x|\theta)$ and $P(\theta|\lambda)$ due to their conditional independence. This formulation also makes apparent that the posterior contains estimation of the individual subject parameters $\theta_j$ and group parameters $\lambda$.\\
-
-Finally, note that in our computational psychiatry application the homogeneity assumption that all subjects come from the same normal distribution is almost certainly violated (see above). To deal with the heterogeneous data often encountered in psychiatry I will discuss mixture models further down below. Next, I will describe algorithms to estimate this posterior distribution.
+Finally, note that in our computational psychiatry application the
+homogeneity assumption that all subjects come from the same normal
+distribution is almost certainly violated (see above). To deal with
+the heterogeneous data often encountered in psychiatry I will discuss
+mixture models further down below. Next, I will describe algorithms to
+estimate this posterior distribution.
 
 ----------------------------------------------
 Hierarchical Bayesian Drift Diffusion Modeling
@@ -277,7 +298,7 @@ figure 2.
 
 ..  figure:: hier_model.svg
 
-
+.. bibliography:: hddm.bib
 
 .. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/
