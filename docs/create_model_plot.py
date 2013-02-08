@@ -23,7 +23,7 @@ pgm.add_node(daft.Node("s_z", r"$z_j$", 5.5, 3))
 pgm.add_node(daft.Node("s_t", r"$t_j$", 7.5, 3))
 #pgm.add_node(daft.Node("s_s", r"$s_i$", 9.5, 3))
 
-pgm.add_node(daft.Node("x", r"$x_{i,j}$", 4.5, 1.5))
+pgm.add_node(daft.Node("x", r"$x_{i,j}$", 4.5, 1.5, observed=True))
 
 pgm.add_edge("g_v", "s_v")
 pgm.add_edge("v_v", "s_v")

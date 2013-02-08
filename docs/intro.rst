@@ -209,7 +209,7 @@ clinical symptom of impulsivity observed in PD patients receiving DBS
 (:cite:`FrankSamantaMoustafaEtAl07`).
 
 ------------------------------
-Model Fitting
+Hierarchical Bayesian Estimation
 ------------------------------
 
 Statistics and machine learning have developed efficient and versatile
@@ -224,7 +224,7 @@ individual subjects outlined above. Under the assumption that
 participants within each group are similar to each other, but not
 identical, a hierarchical model can be constructed where individual
 parameter estimates are constrained by group-level distributions
-(:cite:`NilssonRieskampWagenmakers11`,:cite:`ShiffrinLeeKim08`).
+(:cite:`NilssonRieskampWagenmakers11`, :cite:`ShiffrinLeeKim08`).
 
 Bayesian methods require specification of a generative process in form
 of a likelihood function that produced the observed data :math:`x` given
@@ -236,7 +236,7 @@ probability of parameters :math:`\theta`:
 
 .. math::
 
-    P(\theta|x) = \frac{P(x|\theta) * P(\theta)}{P(x)}
+    P(\theta|x) = \frac{P(x|\theta) \times P(\theta)}{P(x)}
 
 
 Where :math:`P(x|\theta)` is the likelihood and :math:`P(\theta)` is
@@ -290,7 +290,7 @@ a random variable (in our case a normal distribution) parameterized by
 
 .. math::
 
-    P(\theta, \lambda | x) = \frac{P(x|\theta) * P(\theta|\lambda) * P(\lambda)}{P(x)}
+    P(\theta, \lambda | x) = \frac{P(x|\theta) \times P(\theta|\lambda) \times P(\lambda)}{P(x)}
 
 
 .. _graphical_hierarchical:
@@ -311,12 +311,13 @@ of the individual subject parameters :math:`\theta_j` and group
 parameters :math:`\lambda`.
 
 -----------------------------------
- Bayesian Drift Diffusion Modeling
-----------------------------------------------
+Hierarcical Drift-Diffusion Models used in HDDM
+-----------------------------------
 
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
-depiction of the default DDM hierarchical model in :ref:`graphical_hddm`.
+depiction of the default DDM hierarchical model in
+:ref:`graphical_hddm`.
 
 .. _graphical_hddm:
 
@@ -325,7 +326,7 @@ depiction of the default DDM hierarchical model in :ref:`graphical_hddm`.
     Basic graphical hierarchical model implemented by HDDM for
     estimation of the drift-diffusion model.
 
-Individual graphical nodes are distributed as follows:
+Individual graphical nodes are distributed as follows.
 
 .. math::
 
@@ -345,21 +346,32 @@ Individual graphical nodes are distributed as follows:
     \sigma_{sz} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \sigma_{ster} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \\
-    a_{i} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
-    z_{i} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
-    v_{i} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
-    ter_{i} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
-    sv_{i} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}^2) \\
-    sz_{i} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}^2) \\
-    ster_{i} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}^2) \\
+    a_{j} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
+    z_{j} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
+    v_{j} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
+    ter_{j} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
+    sv_{j} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}^2) \\
+    sz_{j} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}^2) \\
+    ster_{j} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}^2) \\
     \\
-    x_{i, j} &\sim \text{F}(a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})
+    x_{i, j} &\sim F(a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})
 
-where F represents the DDM likelihood function as formulated by
-:cite:`NavarroFuss09`. As can be seen, individual subject parameters
-are expected to be normal distributed around a group mean :math:`\mu`
-with variance `\sigma^2`. HDDM then uses MCMC to estimate the joint
-posterior distribution of all model parameters.
+where :math:`x_{i, j}` represents the observed data consisting of
+reaction time and choice and :math:`F` represents the DDM likelihood
+function as formulated by :cite:`NavarroFuss09`. As can be seen,
+individual subject parameters are expected to be normal distributed
+around a group mean :math:`\mu` with variance :math:`\sigma^2`. HDDM
+then uses MCMC to estimate the joint posterior distribution of all
+model parameters.
+
+Note that the exact form of the model will be user-dependent; consider
+as an example a model where separate drift-rates *v* are estimated for
+two conditions in an experiment: easy and hard. In this case, HDDM
+will create a hierarchical model with group parameters
+:math:`\mu_{v_{\text{easy}}}`, :math:`\sigma_{v_{\text{easy}}}`,
+:math:`\mu_{v_{\text{hard}}}`, :math:`\sigma_{v_{\text{hard}}}`,and individual subject parameters :math:`v_{j_{\text{easy}}}`, and :math:`v_{j_{\text{hard}}}`.
+
+
 
 .. bibliography:: hddm.bib
 
