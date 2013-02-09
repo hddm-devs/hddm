@@ -51,7 +51,7 @@ distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
 models can be specified via a configuration file thus requiring no
 Python knowledge. Alternatively, more sophisticated usage of the
 toolbox is available interactively via, for example, IPython_ or by
-writing Python scripts. All runtime critical functions are coded in
+writing succinct Python scripts. All runtime critical functions are coded in
 Cython_ (:cite:`BehnelBredshawCitroEtAl11`) and compiled natively for
 speed which allows estimation of complex models in minutes. HDDM
 includes many commonly used statistics and plotting functionality
@@ -68,13 +68,14 @@ user-specified models using state-of-the-art estimation methods to
 test their hypotheses.
 
 
-**************************
+==========================
 Methods
+==========================
+
+**************************
+Sequential Sampling Models
 **************************
 
---------------------------
-Sequential Sampling Models
---------------------------
 
 SSMs generally fall into one of two classes: (i) diffusion models
 which assume that *relative* evidence is accumulated over time
@@ -87,7 +88,7 @@ class of diffusion models and the linear ballistic accumulator (LBA)
 (:cite:`BrownHeathcote08`) belonging to the class of race models.
 
 Drift Diffusion Model
-=====================
+---------------------
 
 The DDM models decision making in two-choice tasks. Each choice is
 represented as an upper and lower boundary. A drift-process
@@ -341,13 +342,10 @@ will create a hierarchical model with group parameters
 :math:`\mu_{v_{\text{easy}}}`, :math:`\sigma_{v_{\text{easy}}}`,
 :math:`\mu_{v_{\text{hard}}}`, :math:`\sigma_{v_{\text{hard}}}`,and individual subject parameters :math:`v_{j_{\text{easy}}}`, and :math:`v_{j_{\text{hard}}}`.
 
-
-
-.. bibliography:: hddm.bib
-
 .. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/
 .. _PyMC: http://code.google.com/p/pymc/
 .. _Cython: http://www.cython.org/
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
+.. _IPython: http://ipython.org

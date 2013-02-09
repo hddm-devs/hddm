@@ -1,8 +1,10 @@
+======
 How-to
 ======
 
+**********************
 Code subject responses
-----------------------
+**********************
 
 There are two ways you can code subject responses (these are the values
 you put in the 'response' column in your data file). You can either use
@@ -33,8 +35,9 @@ identifier 2, -v will be used. So ultimately you only estimate one
 drift-rate. Alternatively you can use bias z and 1-z if you set
 split_param='z'. See the HDDMStimCoding help doc for more information.
 
+**********************
 Include bias and inter-trial variability
-----------------------------------------
+**********************
 
 Bias and inter-trial variability parameters are optional and can be
 included as follows:
@@ -70,8 +73,9 @@ only include a group-node, see below). Finally, parameter recovery
 studies show that it requires a lot of trials to get meaningful
 estimates of these parameters.
 
+**********************
 Have separate parameters for different conditions using depends_on
-------------------------------------------------------------------
+**********************
 
 Most psychological experiments test how different conditions
 (e.g. drug manipulations) affect certain parameters. You can build
@@ -92,8 +96,9 @@ off/on rather than drug: 0/1).
 
 As you can see, single or multiple columns can supplied as values.
 
+**********************
 Deal with outliers
-------------------
+**********************
 
 HDDM 0.4 (and upwards) enables estimation of a mixture model that
 enables stable parameter estimation even with outliers present. You
@@ -128,8 +133,9 @@ The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform 
 from 0 to 5 seconds. However, in practice, the outliers model is applied to all RTs, even
 the ones which are larger than 5.
 
+**********************
 Assess model convergence
-------------------------
+**********************
 
 When using MCMC sampling it is critical to make sure that our chains
 have converged. This basically means that we are sampling from the
@@ -324,8 +330,9 @@ the group_only_nodes keyword argument:
 The resulting model will still have subject nodes for all parameters
 but sv and st.
 
+**********************
 Estimate a regression model
----------------------------
+**********************
 
 HDDM 0.4 (and upwards) includes a regression model that allows
 estimation of trial-by-trial influences of a covariate (e.g. a brain
@@ -392,8 +399,9 @@ a list of regression descriptors to HDDMRegressor:
 Make sure to give all regression coefficients different names.
 
 
+**********************
 Perform model comparison
-------------------------
+**********************
 
 We can often come up with different viable hypotheses about which
 parameters might be influenced by our experimental conditions. Above
@@ -448,8 +456,9 @@ data sets. If our model did a great job at recovering we wanted it to
 produce RTs that have the same mean as our actual data. So the closer
 this is to the 50th quantile the better.
 
+**********************
 Save and load models
---------------------
+**********************
 
 HDDM models can be saved and reloaded in a separate python
 session. Note that you have to save the traces to file by using
