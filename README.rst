@@ -150,6 +150,7 @@ https://github.com/kennethreitz/osx-gcc-installer/downloads
 Then install kabuki and HDDM:
 
 ::
+
     sudo pip install kabuki
     sudo pip install hddm
 
