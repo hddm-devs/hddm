@@ -7,5 +7,5 @@ pymc==2.2
 python-dateutil==1.5
 pytz==2012d
 wsgiref==0.1.2
-matplotlib=1.1.0
+matplotlib==1.1.0
 git+https://github.com/hddm-devs/kabuki.git@master
