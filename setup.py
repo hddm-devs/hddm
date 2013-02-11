@@ -4,12 +4,14 @@ from glob import glob
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
-                             Extension('lba', ['src/lba.pyx'])
+                             Extension('lba', ['src/lba.pyx']),
+                             Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.pyx', 'src/cdfdif.c']),
     ])
 
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c']),
-                   Extension('lba', ['src/lba.c'])
+                   Extension('lba', ['src/lba.c']),
+                   Extension('wfpt_cdf', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
     ]
 
 import numpy as np

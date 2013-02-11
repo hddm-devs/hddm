@@ -162,7 +162,7 @@ def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4,
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
 
-def gen_rts(samples=1000, range_=(-6, 6), dt=1e-3,
+def gen_rts(size=1000, range_=(-6, 6), dt=1e-3,
             intra_sv=1., structured=True, subj_idx=None,
             method='cdf', **params):
     """
@@ -173,7 +173,7 @@ def gen_rts(samples=1000, range_=(-6, 6), dt=1e-3,
             Parameter names and values to use for simulation.
 
     :Optional:
-        samples : int
+        size : int
             Number of RTs to simulate.
         range_ : tuple
             Minimum (negative) and maximum (positve) RTs.
@@ -207,20 +207,20 @@ def gen_rts(samples=1000, range_=(-6, 6), dt=1e-3,
         params['sz'] = 0
 
     #check sample
-    if isinstance(samples, tuple): #this line is because pymc stochastic use tuple for sample size
-        if samples == ():
-            samples = 1
+    if isinstance(size, tuple): #this line is because pymc stochastic use tuple for sample size
+        if size == ():
+            size = 1
         else:
-            samples = samples[0]
+            size = size[0]
 
     if method=='cdf_py':
-        rts = _gen_rts_from_cdf(params, samples, range_, dt)
+        rts = _gen_rts_from_cdf(params, size, range_, dt)
     elif method=='drift':
-        rts = _gen_rts_from_simulated_drift(params, samples, dt, intra_sv)[0]
+        rts = _gen_rts_from_simulated_drift(params, size, dt, intra_sv)[0]
     elif method=='cdf':
         rts = hddm.wfpt.gen_rts_from_cdf(params['v'],params['sv'],params['a'],params['z'],
                                          params['sz'],params['t'],params['st'],
-                                         samples, range_[0], range_[1], dt)
+                                         size, range_[0], range_[1], dt)
     else:
         raise TypeError, "Sampling method %s not found." % method
     if not structured:
@@ -425,8 +425,8 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
               'sz': (0, 1)
     }
 
-#    if 'share_noise' not in kwargs:
-#        kwargs['share_noise'] = set(['a','v','t','st','sz','sv','z'])
+    if 'share_noise' not in kwargs:
+        kwargs['share_noise'] = set(['a','v','t','st','sz','sv','z'])
 
     # Create RT data
     data, subj_params = kabuki.generate.gen_rand_data(gen_rts, params,
