@@ -53,7 +53,7 @@ apply to current DDM software packages such as DMAT_
 :cite:`VossVoss07`. Hierarchical Bayesian methods provide a remedy for
 this problem by allowing group and subject parameters to be estimated
 simultaneously at different hierarchical levels
-(:cite:`LeeWagenmakers`, :cite:`Kruschke11`). Subject parameters are
+(:cite:`LeeWagenmakers`, :cite:`Kruschke11`, :cite:`Vandekerckhove10`). Subject parameters are
 assumed to be drawn from a group distribution, and to the degree that
 subject are similar to each other, the variance in the group
 distribution will be estimated to be small, which reciprocally has a

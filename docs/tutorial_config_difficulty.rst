@@ -5,18 +5,16 @@
 A note of caution
 *****************
 
-Although HDDM tries to make hierarchical Bayesian estimation as easy
-and automatic as possible, the statistical methods used to estimate
+Although HDDM tries to make hierarchical Bayesian estimation as
+straightforward and accessible as possible, the statistical methods used to estimate
 the posterior (i.e. Markov-Chain Monte Carlo) rely on certain
-assumptions (e.g. chain-convergence). Although we encourage everyone
-to try this software, we would like to stress that you are responsible
-for making sure that the model actually works. In order to assess
-whether the necessary conditions for interpreting your results are met
-you have to have some basic grasp on what those methods do and on what
-assumptions they rest.
-
-There are multiple books introducing you to the world of hierarchical
-Bayesian estimation. Two of which we like are:
+assumptions (e.g. chain-convergence). Although we have tested the
+ability of HDDM to recover meaningful parameters for simple DDM
+applications, it is critical for the user to assess 
+whether the necessary conditions for interpreting your results are
+met. There are multiple excellent introductory books on hierarchical
+Bayesian estimation. We recommend the following for cognitive
+scientists: 
 
 `A Practical Course in Bayesian Graphical Modeling`_ by E.J. Wagenmakers and M. Lee
 
@@ -31,11 +29,10 @@ Getting started: Creating a simple model
 
 Imagine that we collected data from one subject on the moving dots or
 coherent motion task (e.g., :cite:`RoitmanShadlen02`). In this task,
-participants indicate via keypress in which of two directions dots are
-moving on a screen. Only some of the dots are moving in a coherent
-direction; depending on the difficulty, more or less of the dots are
-moving in random directions (i.e. incoherent; see the figure). In our
-working example, consider we presented subjects with two conditions,
+participants indicate, via a keypress, in which of two directions dots are
+moving on a screen. Only some proportion of the dots move in a coherent
+direction; the remaining dots move in random directions (i.e. incoherent; see the figure). In our
+working example, consider an experiment in which subjects are presented with two conditions,
 an easy, high coherence and a hard, low coherence condition. In the
 following, we will walk through the steps on creating a model in HDDM
 to estimate the underlying psychological decision making parameters of
@@ -84,11 +81,11 @@ from the model specification.
 
 The optional [mcmc] tag specifies parameter of the Markov chain
 Monte-Carlo estimation such as how many samples to draw from the
-posterior and how many samples to discard as burn-in (as in any MCMC
+posterior and how many samples to discard as "burn-in" (as in any MCMC
 case, often it takes the MCMC chains some time to converge to the true
-posterior so that one would not want to use the initial samples to
-draw inferences about the true parameters; for details please read up
-on MCMC approaches). Note that you can also specify these parameters
+posterior;  one would not want to use the initial samples to
+draw inferences about the true parameters; for details please see MCMC
+literature referred to earlier). Note that you can also specify these parameters
 via the command line.
 
 Our model specification is now complete and we can fit the model by
@@ -99,7 +96,7 @@ calling hddmfit.py:
     hddm_fit.py simple_difficulty.conf simple_difficulty.csv
 
 The first argument tells HDDM which model specification to use, the
-second argument is the data file to apply the model to.
+second argument specifies the data file to apply the model to.
 
 Calling hddmfit.py in this way will generate the following output (note
 that the numbers will be slightly different each time you run this):
@@ -146,7 +143,7 @@ data overall. These values are not all that useful if looked at in
 isolation but they provide a tool to do model comparison. Logp is the
 summed log-likelihood of the best-fitting values (higher is
 better). DIC stands for deviance information criterion and is a
-measure that penalizes complexity :cite:`SpiegelhalterBestCarlin02`,
+model fit measure that penalizes model complexity :cite:`SpiegelhalterBestCarlin02`,
 similar to BIC or AIC (see also the WinBUGS `DIC`_ page). Generally, the model
 with the lowest DIC score is to be preferred.
 
@@ -181,11 +178,10 @@ by the reduced drift-rate estimated for this condition.
 
 Moreover, HDDM generates the trace and histogram of the posterior
 samples. As pointed out in the introduction, we can rarely compute the
-posterior analytically so we have to estimate it. One standard method
-is MCMC which allows you to draw samples from the posterior. On the
+posterior analytically so we have to estimate it. MCMC is a standard methods which allows you to draw samples from the posterior. On the
 left upper side of the plot we see the trace of this sampling. The
 main thing to look out for is if the chain drifts around such that the
-mean value is not stabl or if there are periods where it seems stuck
+mean value is not stable or if there are periods where it seems stuck
 in one place (see the :ref:`howto` for tips on what to do if your
 chains did not converge). In our case the chain of the parameter "a"
 (threshold) seems to have converged nicely to the correct value. This
