@@ -16,7 +16,7 @@ distribution. Here, we present a novel Python-based toolbox called
 HDDM (hierarchical drift diffusion model), which allows fast and
 flexible estimation of the the drift-diffusion model and the related
 linear ballistic accumulator model. HDDM requires less data per
-subject / condition than non-hierarchical methods and allows for full
-Bayesian data analysis.  Finally, HDDM supports the estimation of how
-trial-by-trial measurements of brain activity (e.g. fMRI) influence
-decision making parameters.
+subject / condition than non-hierarchical method, allows for full
+Bayesian data analysis, and can handle outliers in the data.  Finally,
+HDDM supports the estimation of how trial-by-trial measurements of
+brain activity (e.g. fMRI) influence decision making parameters.

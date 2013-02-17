@@ -6,22 +6,29 @@ How-to
 Code subject responses
 **********************
 
-There are two ways you can code subject responses (these are the values
-you put in the 'response' column in your data file). You can either use
-accuracy-coding where 1 means correct and 0 means error, or you can
-use stimulus-coding where 1 means left and 0 means right (this could
-also code for stimulus A and B instead of left and right). HDDM
+There are two ways to code subject responses placed in the 'response'
+ column in your data file.  You can either use
+{\it accuracy-coding}, where 1's and 0's correspond to correct and
+ error trials, or you can
+use {\it stimulus-coding}, where 1's and 0's correspond to the
+ choice (e.g. categorization of the stimulus).  HDDM
 interprets 0 and 1 responses as lower and upper boundary responses,
-respectively, so it has no preference one way or another.
+respectively, so in principle either of these schemes is valid. 
 
 In most cases it is more direct to use accuracy coding because
-drift-rate will be directly associated with performance. However, if a
-certain response direction or stimulus type has a higher probability
-of being correct and you want to estimate bias, you can *not* use
-accuracy coding (see the next paragraph for how to include a bias
-parameter). Instead, you should use stimulus coding. If there is good
-reason to believe that both stimuli have the same information you
-should use the HDDMStimCoding model. For this, add a column to your
+the sign and magnitude of estimated drift-rate will be directly
+associated with performance (higher drift rate indicates greater
+likelihood of terminating on the accurate boundary). However, if a certain response direction or stimulus type has a higher probability
+of selection and you
+want to estimate a response bias (which could be captured by a change
+in starting point of the drift process; see below),   you can *not* use
+accuracy coding. (For example if a subject is more likely to press the
+left button than the right button, but left and right responses are
+equally often correct, one could not capture the response bias with a
+starting point toward the incorrect boundary because it would imply
+that those trials in which the left response was correct would be
+associated with a bias toward the right response). Thus stimulus
+coding should be used in this case, using the HDDMStimCoding model. For this, add a column to your
 data that codes which stimulus was correct and instantiate the model
 like this:
 
@@ -63,12 +70,9 @@ There is also a convenience argument that is identical to the above.
    model = hddm.HDDM(data, bias=True, include='all')
 
 Note that you can also include a subset of parameters. This is
-relevant because these parameter slow down sampling significantly. In
-our experience, sv and st often play a bigger role but it really
-depends on your dataset. I often run models without inter-trial
-variabilities for exploratory analysis and then later play around with
-different configurations. If a certain parameter is estimated very
-close to zero or fails to converge you might want to exclude it (or
+relevant because these parameters slow down sampling significantly. If a certain parameter is estimated very
+close to zero or fails to converge (which can happen with the sv
+parameter) you might want to exclude it (or
 only include a group-node, see below). Finally, parameter recovery
 studies show that it requires a lot of trials to get meaningful
 estimates of these parameters.
@@ -87,26 +91,30 @@ arbitrarily complex models using the depends_on keyword.
 
 This will create model in which separate thresholds are estimated for
 each drug condition and separate drift-rates for different drug
-conditions and different levels of difficulty.
+conditions and levels of difficulty.
 
 Note that this requires the columns 'drug' and 'difficulty' to be
-present in your data array. For readability of which parameter coded
-for what it is often useful to use string identifiers (e.g. drug:
+present in your data array. For readability it is often useful to use string identifiers (e.g. drug:
 off/on rather than drug: 0/1).
 
 As you can see, single or multiple columns can supplied as values.
 
 **********************
-Deal with outliers
+Outliers
 **********************
 
-HDDM 0.4 (and upwards) enables estimation of a mixture model that
-enables stable parameter estimation even with outliers present. You
+The presence of outliers is notoriously challenging for likelihood
+models, because the likelihood of a few outliers given the generative
+model cab be quite low. In practice, even the model we have is
+reasonable for a majority of trials, it may be that data from a
+minority of trials is not well described by this model
+(e.g. due to attentional lapses).  HDDM 0.4 (and upwards) supports estimation of a mixture model that
+enables stable parameter estimation even with outliers present in the data. You
 can either specify a fixed probability for obtaining an outlier
 (e.g. 0.05 will assume 5% of the RTs are outliers) or estimate this
 from the data. In practice, the precise value of p_outlier does not matter.
-Any value between 0.001 and 0.1, is enough to capture the outliers, and the effect
-on the recovered paramters is small.
+Values greater than 0.001 and less than 0.1 are sufficient to capture the outliers, and the effect
+on the recovered parameters is small (Sofer et al, in preparation).
 
 To instantiate a model with a fixed probability of getting
 an outlier run:
@@ -121,28 +129,28 @@ To estimate p_outlier from the data, run:
 
     m = hddm.HDDM(data, include=('p_outlier',))
 
-Under the hood we assume that outliers come from uniform distribution
+HDDM assumes that outliers come from uniform distribution
 with a fixed density w_outlier (as suggested by Ratcliff and Tuerlinckx, 2002).
-The resulting likelihood function looks as follows:
+The resulting likelihood is as follows:
 
 .. math::
 
    p(RT; v, a, t) = wfpt(RT; v, a, t) * (1-p_{outlier}) + w_{outlier} * p_{outlier}
 
 The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform distribution
-from 0 to 5 seconds. However, in practice, the outliers model is applied to all RTs, even
-the ones which are larger than 5.
+from 0 to 5 seconds. However, in practice, the outlier model is applied to all RTs, even
+those  larger than 5.
 
 **********************
 Assess model convergence
 **********************
 
 When using MCMC sampling it is critical to make sure that our chains
-have converged. This basically means that we are sampling from the
-actual posterior. Unfortunately, there is no 100% fool-proof way to
-assess whether our chains really converged. In reality, however, if
-you follow a couple of steps to convince yourself you should be OK in
-most cases.
+have converged, to ensure that we are sampling from the actual
+posteriod distribution. Unfortunately, there is no 100% fool-proof way to
+assess whether chains converged. However, there are various metrics in
+the MCMC literature to evaluate convergence problems, and if
+you follow some simple steps you can be more confident. 
 
 Look at MC error statistic
 """"""""""""""""""""""""""
@@ -185,8 +193,7 @@ plot them by calling:
 
    model.plot_posteriors()
 
-This will create a figure for each parameter in your model (which could
-be a lot). Here is an example of what a not-converged chain looks
+This will create a figure for each parameter in your model. Here is an example of what a not-converged chain looks
 like:
 
 .. figure:: not_converged_trace.png
@@ -202,11 +209,9 @@ stuck (horizontal lines in the trace); this is due to the proposal
 distribution not being tuned correctly.
 
 Secondly, the autocorrelation (lower left plot) is quite high as you
-can see from the long tails of the distribution. This is further
+can see from the long tails of the distribution. This is a further
 indication that the samples are not independent draws from the
-posterior. If the chain seems fine otherwise some autocorrelation must
-not be a big deal. To leverage the problem, increase thinning (see
-below).
+posterior. 
 
 Finally, the histogram (right plot) looks rather jagged in the
 non-converged case. This is our approximation of the marginal
@@ -477,7 +482,7 @@ started above is completed.
 
    model = hddm.load('mymodel')
 
-Under the hood, HDDM uses the pickle module to save and load models.
+HDDM uses the pickle module to save and load models.
 
 .. _PyMC docs: http://pymc-devs.github.com/pymc/database.html#saving-data-to-disk
 .. _DIC: http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml
