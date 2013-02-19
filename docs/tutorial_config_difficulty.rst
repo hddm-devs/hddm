@@ -1,29 +1,28 @@
 .. index:: Tutorial
 .. _chap_tutorial_config:
 
-*****************
 A note of caution
-*****************
+#################
 
 Although HDDM tries to make hierarchical Bayesian estimation as
 straightforward and accessible as possible, the statistical methods used to estimate
 the posterior (i.e. Markov-Chain Monte Carlo) rely on certain
 assumptions (e.g. chain-convergence). Although we have tested the
 ability of HDDM to recover meaningful parameters for simple DDM
-applications, it is critical for the user to assess 
+applications, it is critical for the user to assess
 whether the necessary conditions for interpreting your results are
 met. There are multiple excellent introductory books on hierarchical
 Bayesian estimation. We recommend the following for cognitive
-scientists: 
+scientists:
 
 `A Practical Course in Bayesian Graphical Modeling`_ by E.J. Wagenmakers and M. Lee
 
 `Doing Bayesian Data Analysis\: A Tutorial with R and BUGS`_ by J. Kruschke
 
-See also :cite:`Vandekerckhove10` for some background on hierarchical
+See also :cite:`VandekerckhoveTuerlinckxLee11` for some background on hierarchical
 Bayesian estimation of the DDM.
 
-****************************************
+
 Getting started: Creating a simple model
 ****************************************
 
@@ -143,7 +142,7 @@ data overall. These values are not all that useful if looked at in
 isolation but they provide a tool to do model comparison. Logp is the
 summed log-likelihood of the best-fitting values (higher is
 better). DIC stands for deviance information criterion and is a
-model fit measure that penalizes model complexity :cite:`SpiegelhalterBestCarlin02`,
+model fit measure that penalizes model complexity :cite:`SpiegelhalterBestCarlinEtAl02`,
 similar to BIC or AIC (see also the WinBUGS `DIC`_ page). Generally, the model
 with the lowest DIC score is to be preferred.
 
@@ -156,16 +155,16 @@ with the lowest DIC score is to be preferred.
     does the drift-rate estimate of the second model make sense?
 
 Output plots
-************
+------------
 
 In addition, HDDM generates some useful plots such as the posterior
 predictive probability density on top of the normalized RT
 distribution for each condition:
 
-.. figure:: ../hddm/examples/plots/simple_difficulty_easy.png
+.. figure:: ../hddm/examples/plots/easy.png
    :scale: 40%
 
-.. figure:: ../hddm/examples/plots/simple_difficulty_hard.png
+.. figure:: ../hddm/examples/plots/hard.png
    :scale: 40%
 
 Note that error responses have been mirrored along the y-axis (to the
@@ -178,11 +177,12 @@ by the reduced drift-rate estimated for this condition.
 
 Moreover, HDDM generates the trace and histogram of the posterior
 samples. As pointed out in the introduction, we can rarely compute the
-posterior analytically so we have to estimate it. MCMC is a standard methods which allows you to draw samples from the posterior. On the
+posterior analytically so we have to estimate it. MCMC is a standard
+methods which allows you to draw samples from the posterior. On the
 left upper side of the plot we see the trace of this sampling. The
 main thing to look out for is if the chain drifts around such that the
 mean value is not stable or if there are periods where it seems stuck
-in one place (see the :ref:`howto` for tips on what to do if your
+in one place (see the :role:`How-To` for tips on what to do if your
 chains did not converge). In our case the chain of the parameter "a"
 (threshold) seems to have converged nicely to the correct value. This
 is also illustrated in the right side plot which is the histogram of
@@ -192,7 +192,7 @@ a value close to 2 -- the parameter that was used to generate the
 data. Finally, plotted in the lower left corner is the
 autocorrelation.
 
-.. figure:: ../hddm/examples/plots/simple_difficulty_trace_a.png
+.. figure:: ../hddm/examples/plots/a.png
    :scale: 40%
 
 Now we are ready for :ref:`part two of the tutorial <chap_tutorial_config_subjects>`.

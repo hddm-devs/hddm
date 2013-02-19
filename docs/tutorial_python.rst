@@ -1,10 +1,8 @@
 .. index:: Tutorial
 .. _chap_tutorial_python:
 
-
-****************************
 Specifiying Models in Python
-****************************
+============================
 
 As an alternative to the configuration file, HDDM offers model
 specification directly from Python. For this, you first import hddm:

@@ -1,6 +1,6 @@
-============
+************
 Introduction
-============
+************
 
 Sequential sampling models (SSMs) (:cite:`TownsendAshby83`) have
 established themselves as the de-facto standard for modeling
@@ -19,7 +19,7 @@ studies are typically interested in neural mechanisms associated with
 the accumulation process or for regulating the decision threshold (see
 e.g. :cite:`ForstmannDutilhBrownEtAl08`,
 :cite:`CavanaghWieckiCohenEtAl11`,
-:cite:`RatcliffPhiliastidesSadja09`). One issue in such model-based
+:cite:`RatcliffPhiliastidesSajda09`). One issue in such model-based
 cognitive neuroscience apoproaches is that the trial numbers in each
 condition are often low, making it difficult it difficult to estimate
 model parameters. For example, studies with patient populations,
@@ -34,7 +34,7 @@ critical to the success of these endeavours.
 
 Bayesian data analytic methods are quickly gaining popularity in the
 cognitive sciences because of their many desirable properties
-(:cite:`LeeWagenmakers`, :cite:`Kruschke11`). First, Bayesian methods
+(:cite:`LeeWagenmakers13`, :cite:`Kruschke10`). First, Bayesian methods
 allow inference of the full posterior distribution on each parameter
 estimate, thus quantifying uncertainty about each parameter, rather
 than simply the most likely value. Moreover, hierarchical modeling is
@@ -53,7 +53,7 @@ apply to current DDM software packages such as DMAT_
 :cite:`VossVoss07`. Hierarchical Bayesian methods provide a remedy for
 this problem by allowing group and subject parameters to be estimated
 simultaneously at different hierarchical levels
-(:cite:`LeeWagenmakers`, :cite:`Kruschke11`, :cite:`Vandekerckhove10`). Subject parameters are
+(:cite:`LeeWagenmakers13`, :cite:`Kruschke10`, :cite:`VandekerckhoveTuerlinckxLee11`). Subject parameters are
 assumed to be drawn from a group distribution, and to the degree that
 subject are similar to each other, the variance in the group
 distribution will be estimated to be small, which reciprocally has a
@@ -85,7 +85,7 @@ models can be specified via a configuration file thus requiring no
 Python knowledge. Alternatively, more sophisticated usage of the
 toolbox is available interactively via, for example, IPython_ or by
 writing succinct Python scripts. All runtime critical functions are coded in
-Cython_ (:cite:`BehnelBredshawCitroEtAl11`) and compiled natively for
+Cython_ (:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for
 speed which allows estimation of complex models in minutes. HDDM
 includes many commonly used statistics and plotting functionality
 generally used to assess model fit. The code is released under the
@@ -103,16 +103,16 @@ toolbox and provide a tutorial for how to employ it; subsequent
 reports will quantitatively characterize its success in recovering
 model parameters and advantages relative to non-hierarchical or
 non-Bayesian methods as a function of the number of subjects and
-trials \cite{SoferWieckiFrankIP}.
+trials (Sofer, Wiecki & Frank; in preparation).
 
 
-==========================
+*******
 Methods
-==========================
+*******
 
-**************************
+
 Sequential Sampling Models
-**************************
+##########################
 
 
 SSMs generally fall into one of two classes: (i) diffusion models
@@ -126,7 +126,7 @@ class of diffusion models and the linear ballistic accumulator (LBA)
 (:cite:`BrownHeathcote08`) belonging to the class of race models.
 
 Drift Diffusion Model
----------------------
+*********************
 
 The DDM models decision making in two-choice tasks. Each choice is
 represented as an upper and lower boundary. A drift-process
@@ -150,9 +150,7 @@ DDM by a single non-decision time parameter *t*. The model also allows
 for a prepotent bias *z* affecting the starting point of the drift
 process relative to the two boundaries. The termination times of this
 generative process gives rise to the reaction time distributions of
-both choices (see figure :ref:`ddm`).
-
-.. _ddm:
+both choices.
 
 .. figure:: DDM_drifts_w_labels.svg
 
@@ -173,8 +171,7 @@ the termination times was provided by :cite:`Feller68`:
     f(t|v, a, z) = \frac{\pi}{a^2} \, \text{exp} \left( -vaz-\frac{v^2\,t}{2} \right) \times \sum_{k=1}^{\infty} k\, \text{exp} \left( -\frac{k^2\pi^2 t}{2a^2} \right) \text{sin}\left(k\pi z\right)
 
 Note that the infinite sum requires some form of approximation. HDDM
-uses the likelihood formulation provided by :cite:`NavarroFuss09`. 
-%which takes on the general form....?
+uses the likelihood formulation provided by :cite:`NavarroFuss09`.
 
 Later on, the DDM was extended to include additional noise parameters
 capturing inter-trial variability in the drift-rate, the non-decision
@@ -190,7 +187,7 @@ Frank (in preparation).
 
 
 Linear Ballistic Accumulator
-============================
+****************************
 
 The Linear Ballistic Accumulator (LBA) model belongs to the class of
 race models (:cite:`BrownHeathcote08`). Instead of one drift process
@@ -199,16 +196,14 @@ possible response with a single boundary each. Thus, the LBA can model
 decision making when more than two responses are possible. Moreover,
 unlike the DDM, the LBA drift process has no intra-trial variance. RT
 variability is obtained by including inter-trial variability in the
-drift-rate and the starting point distribution (see figure
-:ref:`lba`). Note that the simplifying assumption of a noiseless
-drift-process simplifies the math significantly leading to a
-computationally more efficient  likelihood function for this model.
+drift-rate and the starting point distribution. Note that the
+simplifying assumption of a noiseless drift-process simplifies the
+math significantly leading to a computationally more efficient
+likelihood function for this model.
 
 In a simulation study it was shown that the LBA and DDM lead to
 similar results as to which parameters are affected by certain
 manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
-
-.. _lba:
 
 .. figure:: lba.png
 
@@ -221,9 +216,9 @@ manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
     are called race-models. Reproduced from
     :cite:`DonkinBrownHeathcoteEtAl11`.
 
-------------------------------
+
 Hierarchical Bayesian Estimation
-------------------------------
+################################
 
 Statistics and machine learning have developed efficient and versatile
 Bayesian methods to solve various inference problems
@@ -285,28 +280,14 @@ distributed according to some likelihood function :math:`f | \theta`.
 We now assume that individual subject parameters :math:`\theta_j` are
 normally distributed around a group mean with a specific group variance
 (:math:`\lambda = (\mu, \sigma)`, where these group parameters are
-estimated from the data given hyperpriors :math:`G_0`), 
+estimated from the data given hyperpriors :math:`G_0`),
 resulting in the following generative description:
 
 .. math::
 
-  \mu, \sigma \sim G_0() \\
-  \theta_j \sim \mathcal{N}(\mu, \sigma^2) \\
-  x_{i, j} \sim f(\theta_j)
-
-See figure :ref:`graphical_hierarchical` for the corresponding graphical model description.
-
-Another way to look at this hierarchical model is to consider that our
-fixed prior on :math:`\theta` from formula (:ref:`bayes`) is actually
-a random variable (in our case a normal distribution) parameterized by
-:math:`\lambda` which leads to the following posterior formulation:
-
-.. math::
-
-    P(\theta, \lambda | x) = \frac{P(x|\theta) \times P(\theta|\lambda) \times P(\lambda)}{P(x)}
-
-
-.. _graphical_hierarchical:
+  \mu, \sigma &\sim G_0() \\
+  \theta_j &\sim \mathcal{N}(\mu, \sigma^2) \\
+  x_{i, j} &\sim f(\theta_j)
 
 .. figure:: graphical_hierarchical.svg
 
@@ -317,22 +298,28 @@ a random variable (in our case a normal distribution) parameterized by
     mean that multiple identical, independent distributed random
     variables exist.
 
+Another way to look at this hierarchical model is to consider that our
+fixed prior on :math:`\theta` from above is actually
+a random variable (in our case a normal distribution) parameterized by
+:math:`\lambda` which leads to the following posterior formulation:
+
+.. math::
+
+    P(\theta, \lambda | x) = \frac{P(x|\theta) \times P(\theta|\lambda) \times P(\lambda)}{P(x)}
+
 Note that we can factorize :math:`P(x|\theta)` and
 :math:`P(\theta|\lambda)` due to their conditional independence. This
 formulation also makes apparent that the posterior contains estimation
 of the individual subject parameters :math:`\theta_j` and group
 parameters :math:`\lambda`.
 
------------------------------------
+
 Hierarcical Drift-Diffusion Models used in HDDM
------------------------------------
+###############################################
 
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
-depiction of the default DDM hierarchical model in
-:ref:`graphical_hddm`.
-
-.. _graphical_hddm:
+depiction of the default DDM hierarchical model.
 
 ..  figure:: graphical_hddm.svg
 

@@ -1,9 +1,9 @@
 .. index:: Tutorial
 .. _chap_tutorial:
 
-########
+********
 Tutorial
-########
+********
 
 .. toctree::
    :maxdepth: 2

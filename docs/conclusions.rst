@@ -1,6 +1,6 @@
-===========
+***********
 Conclusions
-===========
+***********
 
 We developed an open-source Python toolbox that allows hierarchical
 Bayesian parameter estimation of the DDM and LBA and is successfully

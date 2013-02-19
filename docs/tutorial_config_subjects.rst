@@ -2,9 +2,8 @@
 .. _chap_tutorial_config_subjects:
 
 
-***********************************
 Creating a hierarchical group model
-***********************************
+###################################
 
 Up until now, we have been looking at data that was generated from the
 same set of parameters. However, in most experiments, we test multiple

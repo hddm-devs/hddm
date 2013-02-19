@@ -1,36 +1,34 @@
-======
+******
 How-to
-======
+******
 
-**********************
 Code subject responses
-**********************
+######################
 
 There are two ways to code subject responses placed in the 'response'
- column in your data file.  You can either use
-*accuracy-coding*, where 1's and 0's correspond to correct and
- error trials, or you can
-use *stimulus-coding*, where 1's and 0's correspond to the
- choice (e.g. categorization of the stimulus).  HDDM
-interprets 0 and 1 responses as lower and upper boundary responses,
-respectively, so in principle either of these schemes is valid.
+column in your data file.  You can either use *accuracy-coding*, where
+1's and 0's correspond to correct and error trials, or you can use
+*stimulus-coding*, where 1's and 0's correspond to the choice
+(e.g. categorization of the stimulus). HDDM interprets 0 and 1
+responses as lower and upper boundary responses, respectively, so in
+principle either of these schemes is valid.
 
-In most cases it is more direct to use accuracy coding because
-the sign and magnitude of estimated drift-rate will be directly
-associated with performance (higher drift rate indicates greater
-likelihood of terminating on the accurate boundary). However, if a certain response direction or stimulus type has a higher probability
-of selection and you
-want to estimate a response bias (which could be captured by a change
-in starting point of the drift process; see below),   you can *not* use
-accuracy coding. (For example if a subject is more likely to press the
-left button than the right button, but left and right responses are
-equally often correct, one could not capture the response bias with a
-starting point toward the incorrect boundary because it would imply
-that those trials in which the left response was correct would be
-associated with a bias toward the right response). Thus stimulus
-coding should be used in this case, using the HDDMStimCoding model. For this, add a column to your
-data that codes which stimulus was correct and instantiate the model
-like this:
+In most cases it is more direct to use accuracy coding because the
+sign and magnitude of estimated drift-rate will be directly associated
+with performance (higher drift rate indicates greater likelihood of
+terminating on the accurate boundary). However, if a certain response
+direction or stimulus type has a higher probability of selection and
+you want to estimate a response bias (which could be captured by a
+change in starting point of the drift process; see below), you can
+*not* use accuracy coding. (For example if a subject is more likely to
+press the left button than the right button, but left and right
+responses are equally often correct, one could not capture the
+response bias with a starting point toward the incorrect boundary
+because it would imply that those trials in which the left response
+was correct would be associated with a bias toward the right
+response). Thus stimulus coding should be used in this case, using the
+HDDMStimCoding model. For this, add a column to your data that codes
+which stimulus was correct and instantiate the model like this:
 
 ::
 
@@ -42,9 +40,9 @@ identifier 2, -v will be used. So ultimately you only estimate one
 drift-rate. Alternatively you can use bias z and 1-z if you set
 split_param='z'. See the HDDMStimCoding help doc for more information.
 
-**********************
+
 Include bias and inter-trial variability
-**********************
+########################################
 
 Bias and inter-trial variability parameters are optional and can be
 included as follows:
@@ -70,16 +68,16 @@ There is also a convenience argument that is identical to the above.
    model = hddm.HDDM(data, bias=True, include='all')
 
 Note that you can also include a subset of parameters. This is
-relevant because these parameters slow down sampling significantly. If a certain parameter is estimated very
-close to zero or fails to converge (which can happen with the sv
-parameter) you might want to exclude it (or
-only include a group-node, see below). Finally, parameter recovery
-studies show that it requires a lot of trials to get meaningful
-estimates of these parameters.
+relevant because these parameters slow down sampling significantly. If
+a certain parameter is estimated very close to zero or fails to
+converge (which can happen with the sv parameter) you might want to
+exclude it (or only include a group-node, see below). Finally,
+parameter recovery studies show that it requires a lot of trials to
+get meaningful estimates of these parameters.
 
-**********************
-Have separate parameters for different conditions using depends_on
-**********************
+
+Estimate parameters for different conditions
+############################################
 
 Most psychological experiments test how different conditions
 (e.g. drug manipulations) affect certain parameters. You can build
@@ -94,27 +92,29 @@ each drug condition and separate drift-rates for different drug
 conditions and levels of difficulty.
 
 Note that this requires the columns 'drug' and 'difficulty' to be
-present in your data array. For readability it is often useful to use string identifiers (e.g. drug:
-off/on rather than drug: 0/1).
+present in your data array. For readability it is often useful to use
+string identifiers (e.g. drug: off/on rather than drug: 0/1).
 
-As you can see, single or multiple columns can supplied as values.
+As you can see, single or multiple columns can be supplied as values.
 
-**********************
+
 Outliers
-**********************
+########
 
 The presence of outliers is notoriously challenging for likelihood
 models, because the likelihood of a few outliers given the generative
 model cab be quite low. In practice, even the model we have is
 reasonable for a majority of trials, it may be that data from a
-minority of trials is not well described by this model
-(e.g. due to attentional lapses).  HDDM 0.4 (and upwards) supports estimation of a mixture model that
-enables stable parameter estimation even with outliers present in the data. You
-can either specify a fixed probability for obtaining an outlier
-(e.g. 0.05 will assume 5% of the RTs are outliers) or estimate this
-from the data. In practice, the precise value of p_outlier does not matter.
-Values greater than 0.001 and less than 0.1 are sufficient to capture the outliers, and the effect
-on the recovered parameters is small (Sofer et al, in preparation).
+minority of trials is not well described by this model (e.g. due to
+attentional lapses).  HDDM 0.4 (and upwards) supports estimation of a
+mixture model that enables stable parameter estimation even with
+outliers present in the data. You can either specify a fixed
+probability for obtaining an outlier (e.g. 0.05 will assume 5% of the
+RTs are outliers) or estimate this from the data. In practice, the
+precise value of p_outlier does not matter.  Values greater than 0.001
+and less than 0.1 are sufficient to capture the outliers, and the
+effect on the recovered parameters is small (Sofer et al, in
+preparation).
 
 To instantiate a model with a fixed probability of getting
 an outlier run:
@@ -141,9 +141,9 @@ The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform 
 from 0 to 5 seconds. However, in practice, the outlier model is applied to all RTs, even
 those  larger than 5.
 
-**********************
+
 Assess model convergence
-**********************
+########################
 
 When using MCMC sampling it is critical to make sure that our chains
 have converged, to ensure that we are sampling from the actual
@@ -153,7 +153,7 @@ the MCMC literature to evaluate convergence problems, and if
 you follow some simple steps you can be more confident.
 
 Look at MC error statistic
-""""""""""""""""""""""""""
+**************************
 
 When calling:
 
@@ -167,7 +167,7 @@ means sufficient to assess convergence.
 
 
 Geweke statistic
-""""""""""""""""
+****************
 
 The Geweke statistic is a time-series approach that compares the mean
 and variance of segments from the beginning and end of a single
@@ -184,7 +184,7 @@ information on this test.
 
 
 Visually inspect chains
-"""""""""""""""""""""""
+***********************
 
 The next thing to look at are the traces of the posteriors. You can
 plot them by calling:
@@ -220,7 +220,7 @@ group mean posteriors are normal distributed (see the converged case)
 while group variability posteriors are Gamma distributed.
 
 Posterior predictive analysis
-"""""""""""""""""""""""""""""
+*****************************
 
 Another way to assess how good your model fits the data is to perform
 posterior predictive analysis:
@@ -240,7 +240,7 @@ predictive in light blue corresponds to the standard deviation.
 
 
 R-hat convergence statistic
-"""""""""""""""""""""""""""
+***************************
 
 Another option to assess chain convergence is to compute the R-hat
 (Gelman-Rubin) statistic. This requires multiple chains to be run. If
@@ -295,7 +295,7 @@ you do you have to set up your environment appropiately for this, see the `IPyth
 
 
 What to do about lack of convergence
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+************************************
 
 In the simplest case you just need to run a longer chain with more
 burn-in and more thinning. E.g.:
@@ -335,9 +335,8 @@ the group_only_nodes keyword argument:
 The resulting model will still have subject nodes for all parameters
 but sv and st.
 
-**********************
 Estimate a regression model
-**********************
+###########################
 
 HDDM 0.4 (and upwards) includes a regression model that allows
 estimation of trial-by-trial influences of a covariate (e.g. a brain
@@ -404,9 +403,9 @@ a list of regression descriptors to HDDMRegressor:
 Make sure to give all regression coefficients different names.
 
 
-**********************
+
 Perform model comparison
-**********************
+########################
 
 We can often come up with different viable hypotheses about which
 parameters might be influenced by our experimental conditions. Above
@@ -414,7 +413,7 @@ you can see how you can create these different models using the
 depends_on keyword.
 
 DIC
-"""
+***
 
 To compare which model does a better job at explaining the data you
 can compare the DIC_ scores (lower is better) emitted when calling:
@@ -427,7 +426,7 @@ DIC, however, is far from being a perfect measure. So it shouldn't be your
 only weapon in deciding which model is best.
 
 Posterior predictive check
-""""""""""""""""""""""""""
+**************************
 
 A very elegant method to compare models is to sample new data sets
 from the estimated model and see how well these simulated data sets
@@ -461,9 +460,9 @@ data sets. If our model did a great job at recovering we wanted it to
 produce RTs that have the same mean as our actual data. So the closer
 this is to the 50th quantile the better.
 
-**********************
+
 Save and load models
-**********************
+####################
 
 HDDM models can be saved and reloaded in a separate python
 session. Note that you have to save the traces to file by using
