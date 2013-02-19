@@ -18,5 +18,5 @@ flexible estimation of the the drift-diffusion model and the related
 linear ballistic accumulator model. HDDM requires less data per
 subject / condition than non-hierarchical method, allows for full
 Bayesian data analysis, and can handle outliers in the data.  Finally,
-HDDM supports the estimation of how trial-by-trial measurements of
-brain activity (e.g. fMRI) influence decision making parameters.
+HDDM supports the estimation of how trial-by-trial measurements
+(e.g. fMRI) influence decision making parameters.

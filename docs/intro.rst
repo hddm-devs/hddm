@@ -20,7 +20,7 @@ the accumulation process or for regulating the decision threshold (see
 e.g. :cite:`ForstmannDutilhBrownEtAl08`,
 :cite:`CavanaghWieckiCohenEtAl11`,
 :cite:`RatcliffPhiliastidesSajda09`). One issue in such model-based
-cognitive neuroscience apoproaches is that the trial numbers in each
+cognitive neuroscience approaches is that the trial numbers in each
 condition are often low, making it difficult it difficult to estimate
 model parameters. For example, studies with patient populations,
 especially if combined with intraoperative recordings, typically have
@@ -30,24 +30,24 @@ model parameters, but how these dynamically vary with trial-by-trial
 variations in recorded brain activity. Efficient and reliable
 estimation methods that take advantage of the full statistical
 structure available in the data across subjects and conditions are
-critical to the success of these endeavours.
+critical to the success of these endeavors.
 
 Bayesian data analytic methods are quickly gaining popularity in the
 cognitive sciences because of their many desirable properties
 (:cite:`LeeWagenmakers13`, :cite:`Kruschke10`). First, Bayesian methods
-allow inference of the full posterior distribution on each parameter
-estimate, thus quantifying uncertainty about each parameter, rather
-than simply the most likely value. Moreover, hierarchical modeling is
+allow inference of the full posterior distribution of each parameter,
+thus quantifying uncertainty in their estimation, rather
+than simply provide their most likely value. Second, hierarchical modeling is
 naturally formulated in a Bayesian framework. Traditionally,
 psychological models either assume subjects are completely independent
 of each other, fitting models separately to each individual, or that
 all subjects are the same, fitting models to the group as if they
-comprised a single "uber-subject". Both approaches are sub-optimal in
+are all copies of some "average subject". Both approaches are sub-optimal in
 that the former fails to capitalize on statistic strength offered by
-the degree to which subjects are similar in one more more model
+the degree to which subjects are similar in one or more model
 parameters, whereas the latter approach fails to account for the
 differences among subjects, and hence could lead to a situation where
-the model cannot fit any individual subject. The same limitations
+the estimated model cannot fit any individual subject. The same limitations
 apply to current DDM software packages such as DMAT_
 :cite:`VandekerckhoveTuerlinckx08` and fast-dm_
 :cite:`VossVoss07`. Hierarchical Bayesian methods provide a remedy for
@@ -163,6 +163,11 @@ both choices.
     shapes match closely to that observed in reaction time
     measurements of research participants.
 
+..
+    I'm not a fan of this figure. The extreme bias does not look realistic,
+    especially for accuracy coding.
+
+
 An analytical solution to the resulting probability distribution of
 the termination times was provided by :cite:`Feller68`:
 
@@ -170,8 +175,8 @@ the termination times was provided by :cite:`Feller68`:
 
     f(t|v, a, z) = \frac{\pi}{a^2} \, \text{exp} \left( -vaz-\frac{v^2\,t}{2} \right) \times \sum_{k=1}^{\infty} k\, \text{exp} \left( -\frac{k^2\pi^2 t}{2a^2} \right) \text{sin}\left(k\pi z\right)
 
-Note that the infinite sum requires some form of approximation. HDDM
-uses the likelihood formulation provided by :cite:`NavarroFuss09`.
+Since the formula contains an infinite sum, HDDM uses an approximation
+provided by :cite:`NavarroFuss09`.
 
 Later on, the DDM was extended to include additional noise parameters
 capturing inter-trial variability in the drift-rate, the non-decision
@@ -209,9 +214,10 @@ manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
 
     Two linear ballistic accumulators (left and right) with different
     noiseless drifts (arrows) sampled from a normal distribution
-    initiated at different starting points sampled from uniform
-    distribution. In this case, accumulator for response alternative 1
-    reaches criterion first and gets executed. Because of this race
+    initiated at different starting points sampled from a uniform
+    distribution. In this case, the accumulator for response alternative 1
+    is more likely to reach the criterion first,
+    and therefore it gets executed more times. Because of this race
     between two accumulators towards a common threshold these model
     are called race-models. Reproduced from
     :cite:`DonkinBrownHeathcoteEtAl11`.
@@ -234,10 +240,13 @@ identical, a hierarchical model can be constructed where individual
 parameter estimates are constrained by group-level distributions
 (:cite:`NilssonRieskampWagenmakers11`, :cite:`ShiffrinLeeKim08`).
 
+..
+    The first sentence in the paragraph above, does not sound right to me.
+
 Bayesian methods require specification of a generative process in form
 of a likelihood function that produced the observed data :math:`x` given
 some parameters :math:`\theta`. By specifying our prior beliefs (which
-can be informed or unbiased) we can use
+can be informed or non-informed) we can use
 Bayes formula to invert the generative model and make inference on the
 probability of parameters :math:`\theta`:
 
@@ -250,24 +259,19 @@ probability of parameters :math:`\theta`:
 
 Where :math:`P(x|\theta)` is the likelihood of observing the data (in
 this case choices and RTs) given each parameter value and :math:`P(\theta)` is
-the prior probability of the parameters. Computation of the marginal likelihood :math:`P(x)`
-requires integration (or summation in the discrete case) over the
-complete parameter space :math:`\Theta`:
-
-.. math::
-
-    P(x) = \int_\Theta P(x|\theta) \, \mathrm{d}\theta
-
-
-Note that in most scenarios this integral is analytically
-intractable. Sampling methods like Markov-Chain Monte Carlo (MCMC)
+the prior probability of the parameters. In most cases the computation
+of the numerator is quite complicated and requires to compute an analytically
+intractable integral. Sampling methods like Markov-Chain Monte Carlo (MCMC)
 :cite:`GamermanLopes06` circumvent this problem by providing a way to
 produce samples from the posterior distribution. These methods have
 been used with great success in many different scenarios
 :cite:`GelmanCarlinSternEtAl03` and will be discussed in more detail
 below.
 
-As noted above, the Bayesian method  lends itself
+..
+    we do not care most of the times about P(x).
+
+As noted above, the Bayesian method lends itself
 naturally to a hierarchical design. In such a design, parameters for
 one distribution can themselves be drawn from a higher level
 distribution. This hierarchical property has a particular benefit to cognitive
@@ -314,12 +318,12 @@ of the individual subject parameters :math:`\theta_j` and group
 parameters :math:`\lambda`.
 
 
-Hierarcical Drift-Diffusion Models used in HDDM
+Hierarchical Drift-Diffusion Models used in HDDM
 ###############################################
 
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
-depiction of the default DDM hierarchical model.
+depiction of the simple DDM hierarchical model (without any inter-variance.
 
 ..  figure:: graphical_hddm.svg
 
@@ -363,6 +367,9 @@ individual subject parameters are expected to be normal distributed
 around a group mean :math:`\mu` with variance :math:`\sigma^2`. HDDM
 then uses MCMC to estimate the joint posterior distribution of all
 model parameters.
+
+..
+    The graph is for the simple ddm, and the distributions for the full ddm??
 
 Note that the exact form of the model will be user-dependent; consider
 as an example a model where separate drift-rates *v* are estimated for
