@@ -50,21 +50,19 @@ parameter looks like you can call:
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 16
 
-To see how well the RT distributions are fit by the mean of the
-posterior distribution we can plot the theoretical RT distribution on
-top of our empirical RT distribution by calling:
+To see how well the model fits the RT distributions we analyze the
+posterior predictive pdf:
 
 .. literalinclude :: ../hddm/examples/simple_model.py
    :lines: 17
 
-## MJF: do you really use just the mean of the posterior rather than
-   plotting the predicted RT for each sampled param set? (ie the full
-   posterior should go into the predictive).
-
-
-The closer the two distributions look like, the better the fit. Note
-that the RT distribution for the second response is mirrored on the
-y-axis.
+This function evaluates the DDM likelihood function from samples of
+the posterior and plots it on top of the observed RTs. The solid blue
+line thus represents the mean expected RT distribution and its width
+(in transparent light blue) the model uncertainty in that region of
+the RT distribution. The closer the two distributions look like, the
+better the fit. Note that the RT distribution for the second response
+is mirrored on the y-axis.
 
 The final program then looks as follows:
 

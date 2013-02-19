@@ -8,12 +8,12 @@ Code subject responses
 
 There are two ways to code subject responses placed in the 'response'
  column in your data file.  You can either use
-{\it accuracy-coding}, where 1's and 0's correspond to correct and
+*accuracy-coding*, where 1's and 0's correspond to correct and
  error trials, or you can
-use {\it stimulus-coding}, where 1's and 0's correspond to the
+use *stimulus-coding*, where 1's and 0's correspond to the
  choice (e.g. categorization of the stimulus).  HDDM
 interprets 0 and 1 responses as lower and upper boundary responses,
-respectively, so in principle either of these schemes is valid. 
+respectively, so in principle either of these schemes is valid.
 
 In most cases it is more direct to use accuracy coding because
 the sign and magnitude of estimated drift-rate will be directly
@@ -129,8 +129,8 @@ To estimate p_outlier from the data, run:
 
     m = hddm.HDDM(data, include=('p_outlier',))
 
-HDDM assumes that outliers come from uniform distribution
-with a fixed density w_outlier (as suggested by Ratcliff and Tuerlinckx, 2002).
+HDDM assumes that outliers come from a uniform distribution
+with a fixed density :math:`w_{outlier}` (as suggested by Ratcliff and Tuerlinckx, 2002).
 The resulting likelihood is as follows:
 
 .. math::
@@ -150,7 +150,7 @@ have converged, to ensure that we are sampling from the actual
 posteriod distribution. Unfortunately, there is no 100% fool-proof way to
 assess whether chains converged. However, there are various metrics in
 the MCMC literature to evaluate convergence problems, and if
-you follow some simple steps you can be more confident. 
+you follow some simple steps you can be more confident.
 
 Look at MC error statistic
 """"""""""""""""""""""""""
@@ -211,7 +211,7 @@ distribution not being tuned correctly.
 Secondly, the autocorrelation (lower left plot) is quite high as you
 can see from the long tails of the distribution. This is a further
 indication that the samples are not independent draws from the
-posterior. 
+posterior.
 
 Finally, the histogram (right plot) looks rather jagged in the
 non-converged case. This is our approximation of the marginal
