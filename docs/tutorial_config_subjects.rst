@@ -112,7 +112,7 @@ called *shrinkage*. Intuitively, if we can not make meaningful
 inference about individual subjects we will assume that they are
 distributed as the rest of the group, particularly if the overall data
 set is well captured by little variance in subject parameters. The more data we have the less
-individual subject estimates will be shrinked to the group mean.
+individual subject estimates will be shrunk to the group mean.
 
 While creating a configuration file and calling hddm_fit.py is quite
 easy, this approach is also quite limited. Thus, if you want to build

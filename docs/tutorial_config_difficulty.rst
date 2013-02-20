@@ -42,7 +42,7 @@ this task.
 
 The easiest way to use HDDM if you do not know any Python is to create
 a configuration file. First, you have to prepare your data to be in a
-specific format (e.g. comma sepearated value; csv). The data that we
+specific format (e.g. comma separated value; csv). The data that we
 use here were generated from a simulated DDM processes (i.e. they are
 not real data), so that we know the true underlying generative
 parameters. The data file can be found in the examples directory and
@@ -146,13 +146,16 @@ model fit measure that penalizes model complexity :cite:`SpiegelhalterBestCarlin
 similar to BIC or AIC (see also the WinBUGS `DIC`_ page). Generally, the model
 with the lowest DIC score is to be preferred.
 
-:Exercise:
 
-    Create a new model that ignores the different difficulties (i.e. only
-    estimate a single drift-rate). Compare the resulting DIC score with that of
-    the previous model -- does the increased complexity of the first model
-    result in a sufficient increase in model fit to justify using it? Why
-    does the drift-rate estimate of the second model make sense?
+..
+
+    :Exercise:
+
+	Create a new model that ignores the different difficulties (i.e. only
+	estimate a single drift-rate). Compare the resulting DIC score with that of
+	the previous model -- does the increased complexity of the first model
+	result in a sufficient increase in model fit to justify using it? Why
+	does the drift-rate estimate of the second model make sense?
 
 Output plots
 ------------
@@ -190,7 +193,7 @@ the trace and gives a feel for how to the posterior distribution looks
 like. In our case, it looks like a normal distribution centered around
 a value close to 2 -- the parameter that was used to generate the
 data. Finally, plotted in the lower left corner is the
-autocorrelation.
+auto-correlation.
 
 .. figure:: ../hddm/examples/plots/a.png
    :scale: 40%

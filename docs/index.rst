@@ -5,8 +5,8 @@
 
 .. include :: ../README.rst
 
-Table of Contents:
-##################
+Documentation
+=============
 
 .. toctree::
     :maxdepth: 2
@@ -18,8 +18,10 @@ Table of Contents:
     manual
 
 
+
+
 Indices and tables
-##################
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`

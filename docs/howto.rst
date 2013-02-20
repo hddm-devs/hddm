@@ -147,7 +147,7 @@ Assess model convergence
 
 When using MCMC sampling it is critical to make sure that our chains
 have converged, to ensure that we are sampling from the actual
-posteriod distribution. Unfortunately, there is no 100% fool-proof way to
+posterior distribution. Unfortunately, there is no 100% fool-proof way to
 assess whether chains converged. However, there are various metrics in
 the MCMC literature to evaluate convergence problems, and if
 you follow some simple steps you can be more confident.
@@ -208,7 +208,7 @@ are also certain periods where no jumps are performed and the chain is
 stuck (horizontal lines in the trace); this is due to the proposal
 distribution not being tuned correctly.
 
-Secondly, the autocorrelation (lower left plot) is quite high as you
+Secondly, the auto-correlation (lower left plot) is quite high as you
 can see from the long tails of the distribution. This is a further
 indication that the samples are not independent draws from the
 posterior.
@@ -275,7 +275,7 @@ The output is a dictionary that provides the R-hat for each parameter:
 
 As of HDDM 0.4.1 you can also run multiple chains in parallel. One
 convenient way to do this is the IPython parallel module. Note that
-you do you have to set up your environment appropiately for this, see the `IPython parallel docs`.
+you do you have to set up your environment appropriately for this, see the `IPython parallel docs`.
 
 ::
 
@@ -390,7 +390,7 @@ covariates. E.g.:
           'outcome': 'a'}
 
 Note that these regression coefficients are often hard to estimate and
-require a lot of data. If you have problems with chain convergance,
+require a lot of data. If you have problems with chain convergence,
 consider turning the coefficients into group_only_nodes (see above).
 
 If you want to estimate two separate regressions, you can also supply
