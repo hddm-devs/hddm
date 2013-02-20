@@ -152,7 +152,7 @@ process relative to the two boundaries. The termination times of this
 generative process gives rise to the reaction time distributions of
 both choices.
 
-.. figure:: DDM_drifts_w_labels.svg
+.. figure:: DDM.svg
 
     Trajectories of multiple drift-processs (blue and red lines,
     middle panel). Evidence is accumulated over time (x-axis) with
@@ -162,11 +162,6 @@ both choices.
     boundary-crossing-times for two possible responses. The histogram
     shapes match closely to that observed in reaction time
     measurements of research participants.
-
-..
-    I'm not a fan of this figure. The extreme bias does not look realistic,
-    especially for accuracy coding.
-
 
 An analytical solution to the resulting probability distribution of
 the termination times was provided by :cite:`Feller68`:
@@ -215,12 +210,11 @@ manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
     Two linear ballistic accumulators (left and right) with different
     noiseless drifts (arrows) sampled from a normal distribution
     initiated at different starting points sampled from a uniform
-    distribution. In this case, the accumulator for response alternative 1
-    is more likely to reach the criterion first,
-    and therefore it gets executed more times. Because of this race
-    between two accumulators towards a common threshold these model
-    are called race-models. Reproduced from
-    :cite:`DonkinBrownHeathcoteEtAl11`.
+    distribution. In this case, the accumulator for response
+    alternative 1 is more likely to reach the criterion first, and
+    therefore gets selected more often. Because of this race between
+    two accumulators towards a common threshold these model are called
+    race-models. Reproduced from :cite:`DonkinBrownHeathcoteEtAl11`.
 
 
 Hierarchical Bayesian Estimation
@@ -240,15 +234,12 @@ identical, a hierarchical model can be constructed where individual
 parameter estimates are constrained by group-level distributions
 (:cite:`NilssonRieskampWagenmakers11`, :cite:`ShiffrinLeeKim08`).
 
-..
-    The first sentence in the paragraph above, does not sound right to me.
-
 Bayesian methods require specification of a generative process in form
-of a likelihood function that produced the observed data :math:`x` given
-some parameters :math:`\theta`. By specifying our prior beliefs (which
-can be informed or non-informed) we can use
-Bayes formula to invert the generative model and make inference on the
-probability of parameters :math:`\theta`:
+of a likelihood function that produced the observed data :math:`x`
+given some parameters :math:`\theta`. By specifying our prior beliefs
+(which can be informed or non-informed) we can use Bayes formula to
+invert the generative model and make inference on the probability of
+parameters :math:`\theta`:
 
 .. _bayes:
 
@@ -258,34 +249,31 @@ probability of parameters :math:`\theta`:
 
 
 Where :math:`P(x|\theta)` is the likelihood of observing the data (in
-this case choices and RTs) given each parameter value and :math:`P(\theta)` is
-the prior probability of the parameters. In most cases the computation
-of the numerator is quite complicated and requires to compute an analytically
-intractable integral. Sampling methods like Markov-Chain Monte Carlo (MCMC)
-:cite:`GamermanLopes06` circumvent this problem by providing a way to
-produce samples from the posterior distribution. These methods have
-been used with great success in many different scenarios
-:cite:`GelmanCarlinSternEtAl03` and will be discussed in more detail
-below.
+this case choices and RTs) given each parameter value and
+:math:`P(\theta)` is the prior probability of the parameters. In most
+cases the computation of the denominator is quite complicated and
+requires to compute an analytically intractable integral. Sampling
+methods like Markov-Chain Monte Carlo (MCMC) :cite:`GamermanLopes06`
+circumvent this problem by providing a way to produce samples from the
+posterior distribution. These methods have been used with great
+success in many different scenarios :cite:`GelmanCarlinSternEtAl03`
+and will be discussed in more detail below.
 
-..
-    we do not care most of the times about P(x).
-
-As noted above, the Bayesian method lends itself
-naturally to a hierarchical design. In such a design, parameters for
-one distribution can themselves be drawn from a higher level
-distribution. This hierarchical property has a particular benefit to cognitive
-modeling where data is often scarce. We can construct a hierarchical
-model to more adequately capture the likely similarity structure of
-our data. As above, observed data points of each subject
-:math:`x_{i,j}` (where :math:`i = 1, \dots, S_j` data points per
-subject and :math:`j = 1, \dots, N` for :math:`N` subjects) are
-distributed according to some likelihood function :math:`f | \theta`.
-We now assume that individual subject parameters :math:`\theta_j` are
-normally distributed around a group mean with a specific group variance
+As noted above, the Bayesian method lends itself naturally to a
+hierarchical design. In such a design, parameters for one distribution
+can themselves be drawn from a higher level distribution. This
+hierarchical property has a particular benefit to cognitive modeling
+where data is often scarce. We can construct a hierarchical model to
+more adequately capture the likely similarity structure of our
+data. As above, observed data points of each subject :math:`x_{i,j}`
+(where :math:`i = 1, \dots, S_j` data points per subject and :math:`j
+= 1, \dots, N` for :math:`N` subjects) are distributed according to
+some likelihood function :math:`f | \theta`.  We now assume that
+individual subject parameters :math:`\theta_j` are normally
+distributed around a group mean with a specific group variance
 (:math:`\lambda = (\mu, \sigma)`, where these group parameters are
-estimated from the data given hyperpriors :math:`G_0`),
-resulting in the following generative description:
+estimated from the data given hyperpriors :math:`G_0`), resulting in
+the following generative description:
 
 .. math::
 
@@ -319,11 +307,12 @@ parameters :math:`\lambda`.
 
 
 Hierarchical Drift-Diffusion Models used in HDDM
-###############################################
+################################################
 
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
-depiction of the simple DDM hierarchical model (without any inter-variance.
+depiction of the simple DDM hierarchical model (without any
+inter-trial variability).
 
 ..  figure:: graphical_hddm.svg
 
@@ -338,27 +327,18 @@ Individual graphical nodes are distributed as follows.
     \mu_{z} &\sim \mathcal{N}(0, 1) \\
     \mu_{v} &\sim \mathcal{N}(0, 1) \\
     \mu_{ter} &\sim \mathcal{N}(0, 1) \\
-    \mu_{sv} &\sim \mathcal{N}(0, 1) \\
-    \mu_{sz} &\sim \mathcal{N}(0, 1) \\
-    \mu_{ster} &\sim \mathcal{N}(0, 1) \\
     \\
     \sigma_{a} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \sigma_{z} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \sigma_{v} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \sigma_{ter} &\sim \mathcal{U}(1e^{-10}, 100) \\
-        \sigma_{sv} &\sim \mathcal{U}(1e^{-10}, 100) \\
-    \sigma_{sz} &\sim \mathcal{U}(1e^{-10}, 100) \\
-    \sigma_{ster} &\sim \mathcal{U}(1e^{-10}, 100) \\
     \\
     a_{j} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
     z_{j} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
     v_{j} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
     ter_{j} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
-    sv_{j} &\sim \mathcal{N}(\mu_{sv}, \sigma_{sv}^2) \\
-    sz_{j} &\sim \mathcal{N}(\mu_{sz}, \sigma_{sz}^2) \\
-    ster_{j} &\sim \mathcal{N}(\mu_{ster}, \sigma_{ster}^2) \\
     \\
-    x_{i, j} &\sim F(a_{i}, z_{i}, v_{i}, ter_{i}, sv_{i}, sz_{i}, ster_{i})
+    x_{i, j} &\sim F(a_{i}, z_{i}, v_{i}, ter_{i})
 
 where :math:`x_{i, j}` represents the observed data consisting of
 reaction time and choice and :math:`F` represents the DDM likelihood
@@ -367,9 +347,6 @@ individual subject parameters are expected to be normal distributed
 around a group mean :math:`\mu` with variance :math:`\sigma^2`. HDDM
 then uses MCMC to estimate the joint posterior distribution of all
 model parameters.
-
-..
-    The graph is for the simple ddm, and the distributions for the full ddm??
 
 Note that the exact form of the model will be user-dependent; consider
 as an example a model where separate drift-rates *v* are estimated for
