@@ -84,7 +84,7 @@ distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
 models can be specified via a configuration file thus requiring no
 Python knowledge. Alternatively, more sophisticated usage of the
 toolbox is available interactively via, for example, IPython_ or by
-writing succinct Python scripts. All runtime critical functions are coded in
+writing succinct Python scripts. All run-time critical functions are coded in
 Cython_ (:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for
 speed which allows estimation of complex models in minutes. HDDM
 includes many commonly used statistics and plotting functionality
@@ -154,7 +154,7 @@ both choices.
 
 .. figure:: DDM.svg
 
-    Trajectories of multiple drift-processs (blue and red lines,
+    Trajectories of multiple drift-process (blue and red lines,
     middle panel). Evidence is accumulated over time (x-axis) with
     drift-rate v until one of two boundaries (separated by
     threshold a) is crossed and a response is initiated. Upper (blue)
@@ -163,7 +163,7 @@ both choices.
     shapes match closely to that observed in reaction time
     measurements of research participants.
 
-An analytical solution to the resulting probability distribution of
+An analytic solution to the resulting probability distribution of
 the termination times was provided by :cite:`Feller68`:
 
 .. math::
@@ -179,7 +179,7 @@ time and the starting point in order to account for two phenomena
 observed in decision making tasks, most notably cases where errors are
 faster or slower than correct responses. Models that take this into
 account are referred to as the full DDM
-(:cite:`RatcliffRouder98`). HDDM uses analytical integration of the
+(:cite:`RatcliffRouder98`). HDDM uses analytic integration of the
 likelihood function for variability in drift-rate and numerical
 integration for variability in non-decision time and bias. More
 information on the model specifics can be found in Sofer, Wiecki, &
@@ -272,7 +272,7 @@ some likelihood function :math:`f | \theta`.  We now assume that
 individual subject parameters :math:`\theta_j` are normally
 distributed around a group mean with a specific group variance
 (:math:`\lambda = (\mu, \sigma)`, where these group parameters are
-estimated from the data given hyperpriors :math:`G_0`), resulting in
+estimated from the data given hyper-priors :math:`G_0`), resulting in
 the following generative description:
 
 .. math::

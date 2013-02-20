@@ -1,5 +1,13 @@
+HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python
+=============================================================================
+
+Thomas V. Wiecki, Imri Sofer, Michael J. Frank
+
+Correspondence: thomas.wiecki@gmail.com
+
+********
 Abstract
-========
+********
 
 The diffusion model is a commonly used tool to infer latent
 psychological processes underlying decision making, and to link them
