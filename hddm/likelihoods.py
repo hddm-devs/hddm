@@ -59,7 +59,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     def random(v, sv, a, z, sz, t, st, p_outlier, size=None):
         param_dict = {'v': v, 'z': z, 't': t, 'a': a, 'sz': sz, 'sv': sv, 'st': st}
         return hddm.generate.gen_rts(method=sampling_method,
-                                     samples=size, dt=sampling_dt,
+                                     size=size, dt=sampling_dt,
                                      range_=cdf_range,
                                      structured=False,
                                      **param_dict)
