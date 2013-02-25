@@ -137,7 +137,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._emp_rt = emp_rt
         self._freq_obs = freq_obs
 
-    def get_quantiles_stats(self, quantiles):
+    def get_quantiles_stats(self, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
         """
         get quantiles statistics (after they were computed using compute_quantiles_stats_
         """
