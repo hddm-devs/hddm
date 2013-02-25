@@ -708,6 +708,13 @@ def plot_posterior_quantiles(model, **kwargs):
                                              **kwargs)
 
 
+def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
+    data, params = hddm.generate.gen_rand_data(subjs=subjs, size=size)
+    m = hddm.HDDM(data)
+    m.sample(samples, burn=burn)
+
+    return m
+
 def data_quantiles(data, quantiles = (0.1, 0.3, 0.5, 0.7, 0.9)):
     if isinstance(data, pd.DataFrame):
         data = flip_errors(data).rt

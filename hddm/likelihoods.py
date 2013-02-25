@@ -202,9 +202,11 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
 
     def theoretical_quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
         """
-        return the quantiles of the Stochastic's value
+        return the theoretical quantiles based on Stochastic's parents
         Output:
-            lower_boundary_quantiles, upper_boundary_quantiles
+            q_lower - lower boundary quantiles
+            q_upper - upper_boundary_quantiles
+            p_upper - probability of hitting the upper boundary
         """
 
         quantiles = np.asarray(quantiles)
