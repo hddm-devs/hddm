@@ -12,7 +12,7 @@ hddm Package
 :mod:`model` Module
 -------------------
 
-.. automodule:: hddm.model
+.. automodule:: hddm.models
     :members:
     :undoc-members:
     :show-inheritance:

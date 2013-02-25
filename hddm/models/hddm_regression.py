@@ -121,6 +121,22 @@ class HDDMRegressor(HDDMGamma):
 
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
+    def __getstate__(self):
+        d = super(HDDMRegressor, self).__getstate__()
+        del d['wfpt_reg_class']
+        print 'WARNING: The regression function can not be saved. Still saving but the loaded model will not be functional!'
+        for reg in d['regressor']:
+            del reg['func']
+
+        return d
+
+    def __setstate__(self, d):
+        d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
+        for reg in d['regressor']:
+            reg['func'] = lambda args, cols: cols[:,0]
+        print "WARNING: Can not load regression function. Replacing with a dummy function so do not try to sample from this model."
+        super(HDDMRegressor, self).__setstate__(d)
+
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
@@ -144,8 +160,7 @@ class HDDMRegressor(HDDMGamma):
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,
                                      col_name=reg['covariates'],
-                                     depends=('subj_idx',),
-                                     subj=True,
+                                     subj=self.is_group_model,
                                      plot=False,
                                      trace=False,
                                      hidden=True,

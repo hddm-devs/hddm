@@ -73,7 +73,7 @@ class DDM(HasTraits):
     view = View('z', 'sz', 'v', 'sv', 'ter', 'ster', 'a', 'num_samples', 'iter_plot') #, 'switch', 't_switch', 'v_switch', 'intra_sv', 'T')
 
     def _get_params_dict(self):
-        d = {'v': self.v, 'V': self.sv, 'z': self.z, 'Z': self.sz, 't': self.ter, 'T': self.ster, 'a': self.a}
+        d = {'v': self.v, 'sv': self.sv, 'z': self.z, 'sz': self.sz, 't': self.ter, 'st': self.ster, 'a': self.a}
         if self.switch:
             d['v_switch'] = self.v_switch
             d['t_switch'] = self.t_switch
@@ -88,7 +88,7 @@ class DDM(HasTraits):
     def _get_rts(self):
         if not self.switch:
             # Use faster cdf method
-            return hddm.generate.gen_rts(self.params_dict, samples=self.num_samples, range_=(-self.T, self.T))
+            return hddm.generate.gen_rts(size=self.num_samples, range_=(-self.T, self.T), structured=False, **self.params_dict)
         else:
             # Simulate individual drifts
             return hddm.generate._gen_rts_from_simulated_drift(self.params_dict, samples=self.num_samples, dt=self.dt, intra_sv=self.intra_sv)[0]
@@ -311,6 +311,8 @@ class DDMPlot(HasTraits):
         self.set_figure()
 
         wx.CallAfter(self.figure.canvas.draw)
+
+        self.figure.savefig('DDM.svg')
 
     def set_figure(self):
         # Set axes limits
