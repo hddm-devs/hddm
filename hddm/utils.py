@@ -5,6 +5,7 @@ import pymc as pm
 import hddm
 import sys
 import kabuki
+import pandas as pd
 
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
@@ -618,20 +619,29 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
     axis.set_xlim(value_range)
     axis.set_ylim((0, 1))
 
-    theo = np.empty((2, 2, len(quantiles), samples))
-    for sample in range(samples):
+    sq_lower = np.empty((len(quantiles), samples))
+    sq_upper = sq_lower.copy()
+    sp_upper = np.empty(samples)
+    for i_sample in range(samples):
         kabuki.analyze._parents_to_random_posterior_sample(node)
-        theo[:, :, :, sample] = node.quantiles(quantiles)
+        sample_values = node.random()
+        sq_lower[:, i_sample], sq_upper[:, i_sample], sp_upper[i_sample] = data_quantiles(sample_values)
 
+    y_lower = np.dot(np.atleast_2d(quantiles).T, np.atleast_2d(1 - sp_upper))
+    y_upper = np.dot(np.atleast_2d(quantiles).T, np.atleast_2d(sp_upper))
     if hexbin:
         if predictive_plot_kwargs is None:
             predictive_plot_kwargs = {'gridsize': 75, 'bins': 'log', 'extent': (value_range[0], value_range[1], 0, 1)}
-        axis.hexbin(theo[:,0,:,:].flatten(), theo[:,1,:,:].flatten(), label='post pred lb', **predictive_plot_kwargs)
+        x = np.concatenate((sq_lower, sq_upper))
+
+        y = np.concatenate((y_lower, y_upper))
+
+        axis.hexbin(x.flatten(), y.flatten(), label='post pred lb', **predictive_plot_kwargs)
     else:
         if predictive_plot_kwargs is None:
             predictive_plot_kwargs = {'alpha': .75}
-        axis.plot(theo[0,0,:,:], theo[0,1,:,:], label='post pred lb', color='b', **predictive_plot_kwargs)
-        axis.plot(theo[1,0,:,:], theo[1,1,:,:], label='post pred ub', color='r', **predictive_plot_kwargs)
+        axis.plot(sq_lower, y_lower, 'o', label='post pred lb', color='b', **predictive_plot_kwargs)
+        axis.plot(sq_upper, y_upper, 'o', label='post pred ub', color='r', **predictive_plot_kwargs)
 
 
     # Plot data
@@ -641,9 +651,7 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
         data_plot_kwargs = {'color': color, 'lw': 2., 'marker': 'o', 'markersize': 7}
 
     if len(data) != 0:
-        p_upper = np.mean(data>0)
-        q_lower = mquantiles(-data[data<0], quantiles)
-        q_upper = mquantiles(data[data>0], quantiles)
+        q_lower, q_upper, p_upper = data_quantiles(data)
 
         axis.plot(q_lower, quantiles*(1-p_upper), **data_plot_kwargs)
         axis.plot(q_upper, quantiles*p_upper, **data_plot_kwargs)
@@ -693,11 +701,10 @@ def plot_posterior_quantiles(model, **kwargs):
 
     if 'value_range' not in kwargs:
         rt = np.abs(model.data['rt'])
-        kwargs['value_range'] = (np.min(rt.min()-.2, 0), rt.max()-.2)
+        kwargs['value_range'] = (np.min(rt.min()-.2, 0), rt.max())
 
     kabuki.analyze.plot_posterior_predictive(model,
                                              plot_func=_plot_posterior_quantiles_node,
-                                             required_method='quantiles',
                                              **kwargs)
 
 
@@ -707,6 +714,17 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
     m.sample(samples, burn=burn)
 
     return m
+
+def data_quantiles(data, quantiles = (0.1, 0.3, 0.5, 0.7, 0.9)):
+    if isinstance(data, pd.DataFrame):
+        data = flip_errors(data).rt
+
+    quantiles = np.asarray(quantiles)
+    p_upper = float(np.mean(data>0))
+    q_lower = mquantiles(-data[data<0], quantiles)
+    q_upper = mquantiles(data[data>0], quantiles)
+
+    return q_lower, q_upper, p_upper
 
 if __name__ == "__main__":
     import doctest

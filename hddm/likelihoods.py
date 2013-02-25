@@ -95,13 +95,20 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     """
 
     #turn pymc node into the final wfpt_node
-    def compute_quantiles_stats(self, quantiles):
+    def compute_quantiles_stats(self, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
         """
         compute quantiles statistics
         Input:
             quantiles : sequence
                 the sequence of quantiles,  e.g. (0.1, 0.3, 0.5, 0.7, 0.9)
         """
+        try:
+            if all(self._quantiles_edges == np.asarray(quantiles)):
+                return
+        except AttributeError:
+            pass
+        self._quantiles_edges = np.asarray(quantiles)
+
         data = self.value
 
         #get proportion of data fall between the quantiles
@@ -130,14 +137,18 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._emp_rt = emp_rt
         self._freq_obs = freq_obs
 
-    def get_quantiles_stats(self):
+    def get_quantiles_stats(self, quantiles):
         """
         get quantiles statistics (after they were computed using compute_quantiles_stats_
         """
+        self.compute_quantiles_stats(quantiles)
         stats = {'n_samples': self._n_samples, 'emp_rt': self._emp_rt, 'freq_obs': self._freq_obs}
         return stats
 
     def _get_theoretical_proportion(self):
+
+        if not hasattr(self, '_emp_rt'):
+            self.compute_quantiles_stats(quantiles)
 
         #get cdf
         cdf = self.cdf(self._emp_rt)
@@ -178,9 +189,27 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
             return -np.inf
         return 2 * sum(self._freq_obs * np.log(theo_proportion))
 
-    def quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
-        quantiles = np.asarray(quantiles)
+    def empirical_quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
+        """
+        return the quantiles of the Stochastic's value
+        Output:
+            q_lower - lower boundary quantiles
+            q_upper - upper_boundary_quantiles
+            p_upper - probability of hitting the upper boundary
+        """
 
+        return hddm.utils.data_quantiles(self.value, quantiles)
+
+    def theoretical_quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
+        """
+        return the theoretical quantiles based on Stochastic's parents
+        Output:
+            q_lower - lower boundary quantiles
+            q_upper - upper_boundary_quantiles
+            p_upper - probability of hitting the upper boundary
+        """
+
+        quantiles = np.asarray(quantiles)
         # generate CDF
         x_lower, cdf_lower, x_upper, cdf_upper = hddm.wfpt.split_cdf(*self.cdf_vec())
 
@@ -188,13 +217,11 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         lower_idx = np.searchsorted(cdf_lower, quantiles*cdf_lower[-1])
         upper_idx = np.searchsorted(cdf_upper, quantiles*cdf_upper[-1])
 
-        q_vals_lower = x_lower[lower_idx]
-        q_vals_upper = x_upper[upper_idx]
+        q_lower = x_lower[lower_idx]
+        q_upper = x_upper[upper_idx]
+        p_upper = cdf_upper[-1]
 
-        q_lower = np.vstack((q_vals_lower, quantiles*cdf_lower[-1]))
-        q_upper = np.vstack((q_vals_upper, quantiles*cdf_upper[-1]))
-
-        return (q_lower, q_upper)
+        return (q_lower, q_upper,p_upper)
 
     pymc_class.compute_quantiles_stats = compute_quantiles_stats
     pymc_class.set_quantiles_stats = set_quantiles_stats
@@ -202,7 +229,8 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
     pymc_class.chisquare = chisquare
     pymc_class.gsquare = gsquare
     pymc_class._get_theoretical_proportion = _get_theoretical_proportion
-    pymc_class.quantiles = quantiles
+    pymc_class.empirical_quantiles = empirical_quantiles
+    pymc_class.theoretical_quantiles = theoretical_quantiles
 
 #create default Wfpt class
 Wfpt = generate_wfpt_stochastic_class()
