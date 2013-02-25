@@ -107,6 +107,10 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
                 return
         except AttributeError:
             pass
+
+        if hasattr(self, '_is_average_node'):
+            raise AttributeError('cannot recompute stats of average model')
+
         self._quantiles_edges = np.asarray(quantiles)
 
         data = self.value
@@ -119,8 +123,9 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._n_samples = len(data)
 
         # extract empirical RT at the quantiles
-        ub_emp_rt = mquantiles(data[data>0], prob=quantiles)
-        lb_emp_rt = -mquantiles(-data[data<0], prob=quantiles)
+        self._empirical_quantiles = hddm.utils.data_quantiles(data)
+        ub_emp_rt = self._empirical_quantiles[1]
+        lb_emp_rt = -self._empirical_quantiles[0]
         self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
 
         #get frequency of observed values
@@ -129,17 +134,23 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
         self._freq_obs = freq_obs
 
-    def set_quantiles_stats(self, n_samples, emp_rt, freq_obs):
+    def set_quantiles_stats(self, quantiles, n_samples, emp_rt, freq_obs, p_upper):
         """
         set quantiles statistics (used when one do not to compute the statistics from the stochastic's value)
         """
+        self._quantiles_edges = np.asarray(quantiles)
         self._n_samples = n_samples
         self._emp_rt = emp_rt
         self._freq_obs = freq_obs
 
+        nq = len(quantiles)
+        q_lower = -emp_rt[:nq][::-1]
+        q_upper = emp_rt[nq+1:]
+        self._empirical_quantiles = (q_lower, q_upper,p_upper)
+
     def get_quantiles_stats(self, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
         """
-        get quantiles statistics (after they were computed using compute_quantiles_stats_
+        get quantiles statistics (after they were computed using compute_quantiles_stats)
         """
         self.compute_quantiles_stats(quantiles)
 
@@ -198,8 +209,9 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
             q_upper - upper_boundary_quantiles
             p_upper - probability of hitting the upper boundary
         """
+        self.compute_quantiles_stats(quantiles)
 
-        return hddm.utils.data_quantiles(self.value, quantiles)
+        return self._empirical_quantiles
 
     def theoretical_quantiles(self, quantiles=(.1, .3, .5, .7, .9)):
         """
