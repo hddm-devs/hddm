@@ -60,39 +60,12 @@ class AccumulatorModel(kabuki.Hierarchical):
         #run optimization for group model
         if self.is_group_model:
 
-            #get all obs nodes
-            obs_db = self.get_observeds()
-
-            #create an average model (avergae of all subjects)
-            try:
-                average_model = self._create_an_average_model()
-            except AttributeError:
-                raise AttributeError("User must define _create_an_average_model in order to use the quantiles optimization method")
-
-            #group obs nodes according to their tag and (condittion)
-            #and for each group average the quantiles
-            for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
-
-                #set quantiles for each observed_node
-                obs_nodes = tag_obs_db.node;
-                [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
-
-                #get n_samples, freq_obs, and emp_rt
-                stats = [obs.get_quantiles_stats() for obs in obs_nodes]
-                n_samples = sum([x['n_samples'] for x in stats])
-                freq_obs = sum(np.array([x['freq_obs'] for x in stats]),0)
-                emp_rt = np.mean(np.array([x['emp_rt'] for x in stats]),0)
-
-                #set average quantiles  to have the same statitics
-                obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
-                node_name = obs_knode.create_node_name(tag) #get node name
-                average_node = average_model.nodes_db.ix[node_name]['node'] #get the average node
-                average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
+            #create an average model
+            average_model = self.get_average_model(quantiles)
 
             #optimize
             results, bic_info = average_model._optimization_single(method=method, quantiles=quantiles,
                                                                    n_runs=n_runs, compute_stats=False)
-
         #run optimization for single subject model
         else:
             results, bic_info = self._optimization_single(method=method, quantiles=quantiles,
@@ -103,6 +76,39 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return results
 
+    def get_average_model(self, quantiles=(.1, .3, .5, .7, .9)):
+
+        #create an average model (avergae of all subjects)
+        try:
+            average_model = self._create_an_average_model()
+            average_model._is_average_model = True
+        except AttributeError:
+            raise AttributeError("User must define _create_an_average_model in order to use the quantiles optimization method")
+
+        #get all obs nodes
+        obs_db = self.get_observeds()
+
+        #group obs nodes according to their tag and (condittion)
+        #and for each group average the quantiles
+        for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
+
+            #set quantiles for each observed_node
+            obs_nodes = tag_obs_db.node;
+            [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
+
+            #get n_samples, freq_obs, and emp_rt
+            stats = [obs.get_quantiles_stats() for obs in obs_nodes]
+            n_samples = sum([x['n_samples'] for x in stats])
+            freq_obs = sum(np.array([x['freq_obs'] for x in stats]),0)
+            emp_rt = np.mean(np.array([x['emp_rt'] for x in stats]),0)
+
+            #set average quantiles  to have the same statitics
+            obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
+            node_name = obs_knode.create_node_name(tag) #get node name
+            average_node = average_model.nodes_db.ix[node_name]['node'] #get the average node
+            average_node.set_quantiles_stats(n_samples, emp_rt, freq_obs) #set the quantiles
+
+        return average_model
 
     def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
         """
