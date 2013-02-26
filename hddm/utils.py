@@ -6,6 +6,7 @@ import hddm
 import sys
 import kabuki
 import pandas as pd
+import string
 
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
@@ -633,16 +634,13 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
         if predictive_plot_kwargs is None:
             predictive_plot_kwargs = {'gridsize': 75, 'bins': 'log', 'extent': (value_range[0], value_range[1], 0, 1)}
         x = np.concatenate((sq_lower, sq_upper))
-
         y = np.concatenate((y_lower, y_upper))
-
         axis.hexbin(x.flatten(), y.flatten(), label='post pred lb', **predictive_plot_kwargs)
     else:
         if predictive_plot_kwargs is None:
             predictive_plot_kwargs = {'alpha': .75}
         axis.plot(sq_lower, y_lower, 'o', label='post pred lb', color='b', **predictive_plot_kwargs)
         axis.plot(sq_upper, y_upper, 'o', label='post pred ub', color='r', **predictive_plot_kwargs)
-
 
     # Plot data
     data = node.value
@@ -715,7 +713,35 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 
     return m
 
-def data_quantiles(data, quantiles = (0.1, 0.3, 0.5, 0.7, 0.9)):
+def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
+    """
+    """
+
+    if model.is_group_model:
+        avg_model = model.get_average_model()
+        return qp_plot(avg_model, quantiles=quantiles, ax=ax)
+
+    #create axes
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    ax.set_xlim(0,1)
+    nq = len(quantiles)
+
+    #loop over nodes
+    # qmat = np.zeros((nq, len(model.get_observeds())))
+    for name, node_row in model.iter_observeds():
+        q_lower, q_upper, p_upper = node_row['node'].empirical_quantiles(quantiles)
+        tag = node_row['tag']
+        tag = tag[0] if len(tag) == 1 else string.join(tag, ', ')
+        line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x', label=tag)[0]
+        ax.plot(np.ones(nq)*(1-p_upper), q_lower, '-x', c=line.get_color())[0]
+
+    leg = plt.legend(loc='best', fancybox=True)
+    leg.get_frame().set_alpha(0.5)
+
+def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     if isinstance(data, pd.DataFrame):
         data = flip_errors(data).rt
 
