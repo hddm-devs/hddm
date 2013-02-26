@@ -571,10 +571,29 @@ def plot_posteriors(model, **kwargs):
     pm.Matplot.plot(model.mc, **kwargs)
 
 
-def data_plot(data, nbins=50):
-    data = hddm.utils.flip_errors(data)
-    plt.figure()
-    plt.hist(data['rt'], nbins)
+def data_plot(model, bins=50, nrows=3):
+    nplots = len(model.get_observeds())
+    ncols = int(np.ceil(nplots / nrows))
+
+    bin_edges = np.linspace(0, np.abs(model.data.rt).max(), bins+1)
+
+
+    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=True)
+    axs = axs.flatten()
+    for (i_plt, (name, node_row)) in enumerate(model.iter_observeds()):
+        node = node_row['node']
+        ax = axs[i_plt]
+        for i in range(2):
+            if i == 0:
+                value = node.value[node.value > 0]
+            else:
+                value = np.abs(node.value[node.value < 0])
+
+            counts, bin_edges = np.histogram(value, bins=bin_edges)
+            dx = (bin_edges[1] - bin_edges[0]) / 2.
+            ax.plot(bin_edges[:-1] + dx, counts, lw=2.)
+        ax.set_title(pretty_tag(node_row['tag']))
+
     plt.show()
 
 
@@ -713,10 +732,15 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 
     return m
 
+def pretty_tag(tag):
+    return tag[0] if len(tag) == 1 else string.join(tag, ', ')
+
 def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
     """
+    qp plot
     """
 
+    #if model is a group model then we create an average model and plot it
     if model.is_group_model:
         avg_model = model.get_average_model()
         return qp_plot(avg_model, quantiles=quantiles, ax=ax)
@@ -725,23 +749,34 @@ def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-
     ax.set_xlim(0,1)
     nq = len(quantiles)
 
     #loop over nodes
-    # qmat = np.zeros((nq, len(model.get_observeds())))
     for name, node_row in model.iter_observeds():
+
+        #get quantiles
         q_lower, q_upper, p_upper = node_row['node'].empirical_quantiles(quantiles)
+
+        #plot two lines for each node
         tag = node_row['tag']
-        tag = tag[0] if len(tag) == 1 else string.join(tag, ', ')
+        tag = pretty_tag(tag)
         line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x', label=tag)[0]
         ax.plot(np.ones(nq)*(1-p_upper), q_lower, '-x', c=line.get_color())[0]
 
+    #add legend
     leg = plt.legend(loc='best', fancybox=True)
     leg.get_frame().set_alpha(0.5)
 
 def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
+    """
+    compute the quantiles of 2AFC data
+
+    Output:
+        q_lower - lower boundary quantiles
+        q_upper - upper_boundary_quantiles
+        p_upper - probability of hitting the upper boundary
+    """
     if isinstance(data, pd.DataFrame):
         data = flip_errors(data).rt
 
