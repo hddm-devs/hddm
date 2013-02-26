@@ -573,12 +573,16 @@ def plot_posteriors(model, **kwargs):
 
 def data_plot(model, bins=50, nrows=3):
     nplots = len(model.get_observeds())
+    if nplots < nrows:
+        nrows = nplots
     ncols = int(np.ceil(nplots / nrows))
 
     bin_edges = np.linspace(0, np.abs(model.data.rt).max(), bins+1)
 
 
     fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=True)
+    if not isinstance(axs, np.ndarray):
+        axs = np.array([axs])
     axs = axs.flatten()
     for (i_plt, (name, node_row)) in enumerate(model.iter_observeds()):
         node = node_row['node']
