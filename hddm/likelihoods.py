@@ -123,7 +123,7 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._n_samples = len(data)
 
         # extract empirical RT at the quantiles
-        self._empirical_quantiles = hddm.utils.data_quantiles(data)
+        self._empirical_quantiles = hddm.utils.data_quantiles(data, quantiles)
         ub_emp_rt = self._empirical_quantiles[1]
         lb_emp_rt = -self._empirical_quantiles[0]
         self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
@@ -158,9 +158,6 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         return stats
 
     def _get_theoretical_proportion(self):
-
-        if not hasattr(self, '_emp_rt'):
-            self.compute_quantiles_stats(quantiles)
 
         #get cdf
         cdf = self.cdf(self._emp_rt)

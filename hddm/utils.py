@@ -6,6 +6,7 @@ import hddm
 import sys
 import kabuki
 import pandas as pd
+import string
 
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
@@ -716,6 +717,10 @@ def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
     """
     """
 
+    if model.is_group_model:
+        avg_model = model.get_average_model()
+        return qp_plot(avg_model, quantiles=quantiles, ax=ax)
+
     #create axes
     if ax is None:
         fig = plt.figure()
@@ -724,15 +729,17 @@ def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
     ax.set_xlim(0,1)
     nq = len(quantiles)
 
-    if model.is_group_model:
-        model = model.get_average_model()
     #loop over nodes
     # qmat = np.zeros((nq, len(model.get_observeds())))
     for name, node_row in model.iter_observeds():
         q_lower, q_upper, p_upper = node_row['node'].empirical_quantiles(quantiles)
-        line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x')[0]
+        tag = node_row['tag']
+        tag = tag[0] if len(tag) == 1 else string.join(tag, ', ')
+        line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x', label=tag)[0]
         ax.plot(np.ones(nq)*(1-p_upper), q_lower, '-x', c=line.get_color())[0]
 
+    leg = plt.legend(loc='best', fancybox=True)
+    leg.get_frame().set_alpha(0.5)
 
 def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     if isinstance(data, pd.DataFrame):

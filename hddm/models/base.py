@@ -94,16 +94,15 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #set quantiles for each observed_node
             obs_nodes = tag_obs_db.node;
-            [obs.compute_quantiles_stats(quantiles) for obs in obs_nodes]
 
             #get n_samples, freq_obs, and emp_rt
-            stats = [obs.get_quantiles_stats() for obs in obs_nodes]
+            stats = [obs.get_quantiles_stats(quantiles) for obs in obs_nodes]
             n_samples = sum([x['n_samples'] for x in stats])
             freq_obs = sum(np.array([x['freq_obs'] for x in stats]),0)
             emp_rt = np.mean(np.array([x['emp_rt'] for x in stats]),0)
 
             #get p_upper
-            p_upper = np.mean(np.array([obs.empirical_quantiles()[2] for obs in obs_nodes]),0)
+            p_upper = np.mean(np.array([obs.empirical_quantiles(quantiles)[2] for obs in obs_nodes]),0)
 
             #set average quantiles  to have the same statitics
             obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
