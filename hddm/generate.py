@@ -11,7 +11,7 @@ from copy import copy
 
 def gen_single_params_set(include=()):
     """Returns a dict of DDM parameters with random values for a singel conditin
-    the function is uded by gen_rand_params.
+    the function is used by gen_rand_params.
 
         :Optional:
             include : tuple
@@ -34,14 +34,14 @@ def gen_single_params_set(include=()):
     elif include == 'all_inter':
         include = ['sv','sz','st']
 
-    params['sv'] = rand() if 'sv' in include else 0
-    params['sz'] = rand()* 0.3 if 'sz' in include else 0
-    params['st'] = rand()* 0.2 if 'st' in include else 0
+    params['sv'] = 2.5*rand() if 'sv' in include else 0
+    params['sz'] = rand()* 0.4 if 'sz' in include else 0
+    params['st'] = rand()* 0.35 if 'st' in include else 0
     params['z'] = .4+rand()*0.2 if 'z' in include else 0.5
 
     # Simple parameters
-    params['v'] = (rand()-.5)*4
-    params['t'] = 0.2+rand()*0.3+(params['st']/2)
+    params['v'] = (rand()-.5)*8
+    params['t'] = 0.2+rand()*0.3
     params['a'] = 0.5+rand()*1.5
 
 
@@ -166,6 +166,7 @@ def gen_rts(size=1000, range_=(-6, 6), dt=1e-3,
             intra_sv=1., structured=True, subj_idx=None,
             method='cdf', **params):
     """
+    A private function used by gen_rand_data
     Returns a DataFrame of randomly simulated RTs from the DDM.
 
     :Arguments:
