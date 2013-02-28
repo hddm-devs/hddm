@@ -2,6 +2,15 @@ language: python
 python:
   - "2.7"
 before_install:
-  - sudo apt-get install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
-install: "pip install kabuki"
+  - sudo apt-get install gfortran liblapack-dev python-scipy libblas-dev
+install: 
+  - pip install numpy
+  - pip install scipy
+  - pip install matplotlib
+  - pip install Cython
+  - pip install argparse
+  - pip install pandas
+  - pip install --no-deps pymc
+  - pip install --no-deps kabuki
+  - python setup.py build_ext --inplace
 script: nosetests
