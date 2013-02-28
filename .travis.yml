@@ -1,8 +1,8 @@
 language: python
 python:
   - "2.7"
-pre-install:
-  - apt-get install gfortran liblapack-dev python-scipy
+before_install:
+  - sudo apt-get install gfortran liblapack-dev python-scipy libblas-dev
 install: 
   - pip install numpy
   - pip install scipy
