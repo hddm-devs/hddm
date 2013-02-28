@@ -3,5 +3,8 @@ python:
   - "2.7"
 before_install:
   - sudo apt-get install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
-install: "pip install kabuki"
+install: 
+  - pip install pymc
+  - pip install --no-deps kabuki
+  - pip install --no-deps hddm
 script: nosetests
