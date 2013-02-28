@@ -4,7 +4,8 @@ python:
 before_install:
   - sudo apt-get install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
 install: 
-  - pip install pymc
+  - pip install pandas
+  - pip install --no-deps pymc
   - pip install --no-deps kabuki
   - pip install --no-deps hddm
 script: nosetests
