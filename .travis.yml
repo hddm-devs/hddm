@@ -7,5 +7,4 @@ install:
   - pip install pandas
   - pip install --no-deps pymc
   - pip install --no-deps kabuki
-  - pip install --no-deps hddm
 script: nosetests
