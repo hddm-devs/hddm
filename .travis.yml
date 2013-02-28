@@ -12,4 +12,5 @@ install:
   - pip install pandas
   - pip install --no-deps pymc
   - pip install --no-deps kabuki
+  - python setup.py build_ext --inplace
 script: nosetests
