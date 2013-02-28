@@ -1,6 +1,8 @@
 language: python
 python:
   - "2.7"
+pre-install:
+  - apt-get install gfortran liblapack-dev python-scipy
 install: 
   - pip install numpy
   - pip install scipy
