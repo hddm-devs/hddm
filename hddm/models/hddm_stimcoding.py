@@ -70,10 +70,10 @@ class KnodeWfptStimCoding(Knode):
         # the case (similar to v)
         if all(data[self.stim_col] == self.stims[0]):
             if self.split_param == 'z':
-                z = copy(kwargs['z'])
+                z = kwargs['z']
                 kwargs['z'] = 1-z
             elif self.split_param == 'v':
-                v = copy(kwargs['v'])
+                v = kwargs['v']
                 kwargs['v'] = -v
             else:
                 raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
