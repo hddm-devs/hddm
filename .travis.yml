@@ -13,4 +13,4 @@ install:
   - pip install --no-deps pymc
   - pip install --no-deps git+https://github.com/hddm-devs/kabuki
   - python setup.py build_ext --inplace
-script: nosetests
+script: nosetests -s
