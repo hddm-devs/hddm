@@ -11,6 +11,6 @@ install:
   - pip install argparse
   - pip install pandas
   - pip install --no-deps pymc
-  - pip install --no-deps kabuki
+  - pip install --no-deps git+https://github.com/hddm-devs/kabuki
   - python setup.py build_ext --inplace
 script: nosetests
