@@ -36,8 +36,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         # Flip sign for lower boundary RTs
         data = hddm.utils.flip_errors(data)
 
-        self.group_only_nodes = kwargs.pop('group_only_nodes', ())
-
         super(AccumulatorModel, self).__init__(data, **kwargs)
 
 
