@@ -72,6 +72,29 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
+class KnodeRegressPatsy(kabuki.hierarchical.Knode):
+    def create_node(self, name, kwargs, data):
+        from patsy import dmatrix
+        reg = kwargs['regressor']
+        # order parents according to user-supplied args
+        args = []
+        for arg in reg['args']:
+            for parent_name, parent in kwargs['parents'].iteritems():
+                if parent_name.startswith(arg):
+                    args.append(parent)
+
+        cols = data if reg['covariates'] is None else data[reg['covariates']]
+        parents = {'args': args}
+
+        def func(args, patsy_func=reg['func']):
+            # convert parents to matrix
+            params = np.matrix(args)
+            # Apply design matrix to input data
+            predictor = (dmatrix(patsy_func, cols) * params).sum(axis=1)
+            return pd.DataFrame(predictor, index=cols.index)
+
+        return self.pymc_node(func, kwargs['doc'], name, parents=parents)
+
 class HDDMRegressor(HDDMGamma):
     """HDDMRegressor allows estimation of trial-by-trial influences of
     a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
@@ -111,6 +134,9 @@ class HDDMRegressor(HDDMGamma):
         regressor = deepcopy(regressor)
         if isinstance(regressor, dict):
             regressor = [regressor]
+
+        use_patsy = isinstance(regressor[0]['func'], str)
+        self.knode_regress = KnodeRegressPatsy if use_patsy else KnodeRegress
 
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
         self.reg_covariates = set()
@@ -167,14 +193,15 @@ class HDDMRegressor(HDDMGamma):
                     reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
                 knodes.update(reg_family)
 
-            reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
-                                     regressor=reg,
-                                     col_name=reg['covariates'],
-                                     subj=self.is_group_model,
-                                     plot=False,
-                                     trace=False,
-                                     hidden=True,
-                                     **reg_parents)
+            reg_knode = self.knode_regress(pm.Deterministic, "%s_reg" % reg['outcome'],
+                                           regressor=reg,
+                                           col_name=reg['covariates'],
+                                           subj=self.is_group_model,
+                                           plot=False,
+                                           trace=False,
+                                           hidden=True,
+                                           **reg_parents)
+
             knodes['%s_bottom' % reg['outcome']] = reg_knode
 
         return knodes
