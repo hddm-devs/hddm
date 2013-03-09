@@ -77,6 +77,7 @@ class TestWfpt(unittest.TestCase):
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
     def test_summed_logp(self):
+        np.random.seed(123)
         params = hddm.generate.gen_rand_params(include=('sv','sz','st'))
 
         # Generate random valid RTs
@@ -144,6 +145,7 @@ class TestWfptFull(unittest.TestCase):
 
 
     def test_pdf_integrate_to_one(self):
+        np.random.seed(123)
         for tests in range(2):
             sv = rand()*0.4+0.1
             v = (rand()-.5)*4

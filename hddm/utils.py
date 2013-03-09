@@ -681,6 +681,7 @@ def _plot_posterior_quantiles_node(node, axis, quantiles=(.1, .3, .5, .7, .9),
     axis.set_ylabel('Prob respond')
     axis.set_ylim(bottom=0) # Likelihood and histogram can only be positive
 
+
 def plot_posterior_quantiles(model, **kwargs):
     """Plot posterior predictive quantiles.
 

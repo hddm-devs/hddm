@@ -49,7 +49,7 @@ class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
 
-        self.iter = 50
+        self.iter = 40
         self.burn = 10
 
     def runTest(self):
@@ -60,11 +60,10 @@ class TestSingleBreakdown(unittest.TestCase):
         model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
         for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
-            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
+            data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
             model = model_class(data, include=include, bias='z' in include, is_group_model=False)
-            model.map()
+            model.map(runs=1)
             model.sample(self.iter, burn=self.burn)
-            check_model(model.mc, params_true, assert_=assert_)
 
         return model.mc
 
@@ -73,11 +72,10 @@ class TestSingleBreakdown(unittest.TestCase):
         model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
         for include, model_class in itertools.product(includes, model_classes):
             params = hddm.generate.gen_rand_params(include=include)
-            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+            data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
             model = model_class(data, include=include, bias='z' in include, is_group_model=True)
             model.approximate_map()
             model.sample(self.iter, burn=self.burn)
-            check_model(model.mc, params_true, assert_=assert_)
 
         return model.mc
 
@@ -87,7 +85,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
         for nodes, model_class in itertools.product(group_only_nodes, model_classes):
             params = hddm.generate.gen_rand_params(include=nodes)
-            data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+            data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
             model = model_class(data, include=nodes, group_only_nodes=nodes, is_group_model=True)
             for node in nodes:
                 self.assertNotIn(node+'_subj', model.nodes_db.index)
@@ -117,7 +115,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDMTruncated_distributions(self):
         params = hddm.generate.gen_rand_params()
-        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params, size=10)
         m = hddm.HDDMTruncated(data)
         m.sample(self.iter, burn=self.burn)
         assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
@@ -134,7 +132,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDM_distributions(self):
         params = hddm.generate.gen_rand_params()
-        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params)
+        data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params, size=10)
         m = hddm.HDDM(data)
         m.sample(self.iter, burn=self.burn)
         assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
@@ -155,7 +153,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
     def test_HDDMStimCoding(self):
         params_full, params = hddm.generate.gen_rand_params(cond_dict={'v': [-1, 1], 'z': [.8, .4]})
-        data, params_subj = hddm.generate.gen_rand_data(params=params_full)
+        data, params_subj = hddm.generate.gen_rand_data(params=params_full, size=10)
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v')
         m.sample(self.iter, burn=self.burn)
         assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.Normal)
@@ -194,7 +192,7 @@ class TestSingleBreakdown(unittest.TestCase):
         reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'outcome':'v'}
 
         params = hddm.generate.gen_rand_params()
-        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=1)
+        data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
         data = pd.DataFrame(data)
         data['cov'] = 1.
         del data['subj_idx']
@@ -238,7 +236,7 @@ class TestSingleBreakdown(unittest.TestCase):
         reg2 = {'func': reg_func2, 'args':['a_slope','a_inter'], 'outcome':'a'}
 
         params = hddm.generate.gen_rand_params()
-        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
@@ -262,7 +260,7 @@ class TestSingleBreakdown(unittest.TestCase):
         reg = {'func': reg_func, 'args':['v_slope', 'v_inter'], 'outcome':'v'}
 
         params = hddm.generate.gen_rand_params()
-        data, params_true = hddm.generate.gen_rand_data(params, size=500, subjs=5)
+        data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
         m = hddm.HDDMRegressor(data, regressor=reg, group_only_nodes=['v_slope', 'v_inter'])
@@ -306,9 +304,9 @@ class TestSingleBreakdown(unittest.TestCase):
 
 def test_posterior_plots_breakdown():
     params = hddm.generate.gen_rand_params()
-    data, params_subj = hddm.generate.gen_rand_data(params=params, subjs=5)
+    data, params_subj = hddm.generate.gen_rand_data(params=params, subjs=4)
     m = hddm.HDDM(data)
-    m.sample(200, burn=10)
+    m.sample(100, burn=10)
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()

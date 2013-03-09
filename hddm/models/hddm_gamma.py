@@ -28,7 +28,7 @@ class HDDMGamma(HDDMBase):
             else:
                 try:
                     self.mc.use_step_method(steps.SliceStep, node, width=slice_widths[knode_name],
-                                        left=0, maxiter=1000)
+                                            left=0, maxiter=1000)
                 except KeyError:
                     pass
 
