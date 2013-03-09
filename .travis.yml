@@ -13,4 +13,7 @@ install:
   - pip install --no-deps pymc
   - pip install --no-deps git+https://github.com/hddm-devs/kabuki
   - python setup.py build_ext --inplace
-script: nosetests -s
+script: 
+  - nosetests -s hddm/tests/test_likelihoods.py
+  - nosetests -s hddm/tests/test_generate.py
+  - nosetests -s hddm/tests/test_models.py
