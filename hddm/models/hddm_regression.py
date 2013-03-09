@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import pymc as pm
 import pandas as pd
+from patsy import dmatrix
 
 import hddm
 from hddm_gamma import HDDMGamma
@@ -74,23 +75,22 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
 class KnodeRegressPatsy(kabuki.hierarchical.Knode):
     def create_node(self, name, kwargs, data):
-        from patsy import dmatrix
         reg = kwargs['regressor']
         # order parents according to user-supplied args
         args = []
         for arg in reg['args']:
             for parent_name, parent in kwargs['parents'].iteritems():
-                if parent_name.startswith(arg):
+                if parent_name == arg:
                     args.append(parent)
 
         cols = data if reg['covariates'] is None else data[reg['covariates']]
         parents = {'args': args}
 
-        def func(args, patsy_func=reg['func']):
+        def func(args, design_matrix=dmatrix(reg['func'], cols)):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
-            predictor = (dmatrix(patsy_func, cols) * params).sum(axis=1)
+            predictor = (design_matrix * params).sum(axis=1)
             return pd.DataFrame(predictor, index=cols.index)
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
@@ -127,7 +127,7 @@ class HDDMRegressor(HDDMGamma):
         m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
 
     """
-    def __init__(self, data, regressor=None, **kwargs):
+    def __init__(self, data, regressor=None, group_only_regressors=None, **kwargs):
         """Hierarchical Drift Diffusion Model with regressors
         """
         #create self.regressor and self.reg_outcome
@@ -136,10 +136,22 @@ class HDDMRegressor(HDDMGamma):
             regressor = [regressor]
 
         use_patsy = isinstance(regressor[0]['func'], str)
-        self.knode_regress = KnodeRegressPatsy if use_patsy else KnodeRegress
+        if use_patsy:
+            self.knode_regress = KnodeRegressPatsy if use_patsy else KnodeRegress
+            regressor[0]['args'] = dmatrix(regressor[0]['func'], data).design_info.column_names
+            print "Adding these covariates:"
+            print regressor[0]['args']
+            if group_only_regressors:
+                group_only_nodes = list(kwargs.get('group_only_nodes', ()))
+                group_only_nodes += regressor[0]['args']
+                kwargs['group_only_nodes'] = group_only_nodes
+
+            # Sanity checks
+            assert len(regressor) == 1, "Currently only one regressor is allowed when using patsy."
+            depends = set(kwargs.get('depends_on', {}).keys())
+            assert not depends.issubset(set(regressor[0]['args'])), "When using patsy, you can not use any regressor in depends_on."
 
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
-        self.reg_covariates = set()
         for reg in regressor:
             if isinstance(reg['args'], str):
                 reg['args'] = [reg['args']]

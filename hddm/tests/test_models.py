@@ -303,32 +303,22 @@ class TestSingleBreakdown(unittest.TestCase):
 
 
     def test_HDDMRegressorPatsy(self):
-        reg_func = 'cov'
-
-        reg = {'func': reg_func, 'args':['v_slope', 'v_inter'],
+        reg = {'func': 'cov * C(condition)',
                'outcome':'v'}
 
         params = hddm.generate.gen_rand_params(cond_dict={'v': [1, 2, 3]})
         data, params_true = hddm.generate.gen_rand_data(params[0], size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        # Create one merged column
-        data['condition2'] = 'merged'
-        data[data.condition == 'c1']['condition2'] = 'single'
         m = hddm.HDDMRegressor(data, regressor=reg,
-                               depends_on={'v_slope': 'condition', 'a': 'condition2'},
-                               group_only_nodes=['v_slope', 'v_inter'])
-        m.sample(self.iter, burn=self.burn)
-        m = hddm.HDDMRegressor(data, regressor=reg,
-                               depends_on={'v_slope': 'condition2', 'a': 'condition'},
-                               group_only_nodes=['v_slope', 'v_inter'])
+                               depends_on={'a': 'condition'})
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1.merged).0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1.merged).0']['node'].parents['v'].parents['args'][0].__name__, 'v_slope(merged)')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1.merged).0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1.merged).0']['node'].parents['v'].parents['args'][1].__name__, 'v_inter')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt(c1.merged).0']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1].__name__, 'C(condition)[T.c1]_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].value)), 1)
 
 
 def test_posterior_plots_breakdown():
