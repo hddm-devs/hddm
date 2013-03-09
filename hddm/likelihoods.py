@@ -2,7 +2,8 @@ from __future__ import division
 import pymc as pm
 import numpy as np
 from scipy import stats
-from scipy.stats.mstats import mquantiles
+
+from kabuki.utils import stochastic_from_dist
 
 np.seterr(divide='ignore')
 
@@ -12,12 +13,10 @@ def wiener_like_contaminant(value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max,
                             err, n_st, n_sz, use_adaptive, simps_err):
     """Log-likelihood for the simple DDM including contaminants"""
     return hddm.wfpt.wiener_like_contaminant(value, cont_x.astype(np.int32), v, sv, a, z, sz, t, st,
-                                                  t_min, t_max, err, n_st, n_sz, use_adaptive, simps_err)
+                                             t_min, t_max, err, n_st, n_sz, use_adaptive, simps_err)
 
-WienerContaminant = pm.stochastic_from_dist(name="Wiener Simple Diffusion Process",
-                                       logp=wiener_like_contaminant,
-                                       dtype=np.float,
-                                       mv=True)
+WienerContaminant = stochastic_from_dist(name="Wiener Simple Diffusion Process",
+                                         logp=wiener_like_contaminant)
 
 def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3):
     _like = lambda  value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max, err=err, n_st=n_st, n_sz=n_sz, \
@@ -25,10 +24,8 @@ def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3)
     wiener_like_contaminant(value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max,\
                             err=err, n_st=n_st, n_sz=n_sz, use_adaptive=use_adaptive, simps_err=simps_err)
     _like.__doc__ = wiener_like_contaminant.__doc__
-    return pm.stochastic_from_dist(name="Wiener Diffusion Contaminant Process",
-                                       logp=_like,
-                                       dtype=np.float,
-                                       mv=False)
+    return stochastic_from_dist(name="Wiener Diffusion Contaminant Process",
+                                logp=_like)
 
 def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
     """
@@ -52,7 +49,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #create likelihood function
     def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
-        return hddm.wfpt.wiener_like(x, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
+        return hddm.wfpt.wiener_like(x['rt'], v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 
 
     #create random function
@@ -75,7 +72,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
         return hddm.cdfdif.dmat_cdf_array(x, w_outlier=wp['w_outlier'], **self.parents)
 
     #create wfpt class
-    wfpt = pm.stochastic_from_dist('wfpt', wfpt_like, random=random)
+    wfpt = stochastic_from_dist('wfpt', wfpt_like, random=random)
 
     #add pdf and cdf_vec to the class
     wfpt.pdf = pdf

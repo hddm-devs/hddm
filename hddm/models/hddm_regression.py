@@ -1,33 +1,38 @@
 from copy import deepcopy
 import numpy as np
-from scipy import stats
 import pymc as pm
+import pandas as pd
 
 import hddm
-from hddm_transformed import HDDM
-from hddm_truncated import HDDMTruncated
 from hddm_gamma import HDDMGamma
 import kabuki
 from kabuki import Knode
-from kabuki.distributions import scipy_stochastic
+from kabuki.utils import stochastic_from_dist
 
 def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
     #set wiener_params
     if wiener_params is None:
         wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
-                      'use_adaptive':1,
-                      'simps_err':1e-3,
-                      'w_outlier': 0.1}
+                         'use_adaptive':1,
+                         'simps_err':1e-3,
+                         'w_outlier': 0.1}
     wp = wiener_params
-
 
     def wiener_multi_like(value, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
-        return hddm.wfpt.wiener_like_multi(value, v, sv, a, z, sz, t, st, .001, reg_outcomes, p_outlier=p_outlier)
+        params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st}
+        for reg_outcome in reg_outcomes:
+            params[reg_outcome] = params[reg_outcome].ix[value['rt'].index].values
+        return hddm.wfpt.wiener_like_multi(value['rt'].values,
+                                           params['v'], params['sv'], params['a'], params['z'],
+                                           params['sz'], params['t'], params['st'], 1e-4,
+                                           reg_outcomes,
+                                           p_outlier=p_outlier)
 
 
     def random(v, sv, a, z, sz, t, st, reg_outcomes, p_outlier, size=None):
+
         param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
         sampled_rts = np.empty(size)
 
@@ -36,11 +41,14 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
             for p in reg_outcomes:
                 param_dict[p] = locals()[p][i_sample]
             #sample
-            sampled_rts[i_sample] = hddm.generate.gen_rts(param_dict, method=sampling_method,
-                                                   samples=1, dt=sampling_dt)
+            sampled_rts[i_sample] = hddm.generate.gen_rts(param_dict,
+                                                          method=sampling_method,
+                                                          samples=1,
+                                                          dt=sampling_dt)
         return sampled_rts
 
-    return  pm.stochastic_from_dist('wfpt_reg', wiener_multi_like, random=random)
+    return stochastic_from_dist('wfpt_reg', wiener_multi_like,
+                                random=random)
 
 
 wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
@@ -58,7 +66,9 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                 if parent_name.startswith(arg):
                     args.append(parent)
 
-        parents = {'args': args, 'cols': data[reg['covariates']].values}
+        cols = data if reg['covariates'] is None else data[reg['covariates']]
+        parents = {'args': args, 'cols': cols}
+
         return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
 
 
@@ -75,20 +85,16 @@ class HDDMRegressor(HDDMGamma):
     ::
 
         # Define regression function (linear in this case)
-        reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+        reg_func = lambda args, cols: args[0] + args[1]*cols['BOLD']
 
         # Define regression descriptor
         # regression function to use (func, defined above)
         # args: parameter names (passed to reg_func; v_slope->args[0],
         #                                            v_inter->args[1])
-        # covariates: data column to use as the covariate
-        #             (in this example, expects a column named
-        #             BOLD in the data)
         # outcome: DDM parameter that will be replaced by trial-by-trial
         #          regressor values (drift-rate v in this case)
         reg = {'func': reg_func,
                'args': ['v_inter','v_slope'],
-               'covariates': 'BOLD',
                'outcome': 'v'}
 
         # construct regression model. Second argument must be the
@@ -107,11 +113,14 @@ class HDDMRegressor(HDDMGamma):
             regressor = [regressor]
 
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
+        self.reg_covariates = set()
         for reg in regressor:
             if isinstance(reg['args'], str):
                 reg['args'] = [reg['args']]
-            if isinstance(reg['covariates'], str):
+            if 'covariates' in reg and isinstance(reg['covariates'], str):
                 reg['covariates'] = [reg['covariates']]
+            else:
+                reg['covariates'] = None
             self.reg_outcomes.add(reg['outcome'])
 
         self.regressor = regressor
@@ -133,14 +142,15 @@ class HDDMRegressor(HDDMGamma):
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
         for reg in d['regressor']:
-            reg['func'] = lambda args, cols: cols[:,0]
+            reg['func'] = lambda args, cols: cols
         print "WARNING: Can not load regression function. Replacing with a dummy function so do not try to sample from this model."
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
-                     col_name='rt', reg_outcomes=self.reg_outcomes, **wfpt_parents)
+                     col_name=['rt'],
+                     reg_outcomes=self.reg_outcomes, **wfpt_parents)
 
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
