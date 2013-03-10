@@ -137,7 +137,7 @@ class HDDMRegressor(HDDMGamma):
 
         use_patsy = isinstance(regressor[0]['func'], str)
         if use_patsy:
-            self.knode_regress = KnodeRegressPatsy if use_patsy else KnodeRegress
+            self.knode_regress = KnodeRegressPatsy
             regressor[0]['args'] = dmatrix(regressor[0]['func'], data).design_info.column_names
             print "Adding these covariates:"
             print regressor[0]['args']
@@ -150,6 +150,8 @@ class HDDMRegressor(HDDMGamma):
             assert len(regressor) == 1, "Currently only one regressor is allowed when using patsy."
             depends = set(kwargs.get('depends_on', {}).keys())
             assert not depends.issubset(set(regressor[0]['args'])), "When using patsy, you can not use any regressor in depends_on."
+        else:
+            self.knode_regress = KnodeRegress
 
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
         for reg in regressor:
