@@ -79,37 +79,65 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
 
 class HDDMRegressor(HDDMGamma):
-    """HDDMRegressor allows estimation of trial-by-trial influences of
-    a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
-
-    For example, if your prediction is that activity of a particular
-    brain area has a linear correlation with drift-rate, you could
-    specify the following regression model (make sure you have a column
-    with the brain activity in your data, in our example we name this
-    column 'BOLD'):
-
-    ::
-
-        # Define regression descriptor
-        # regression function to use (func, defined above)
-        # args: parameter names (passed to reg_func; v_slope->args[0],
-        #                                            v_inter->args[1])
-        # outcome: DDM parameter that will be replaced by trial-by-trial
-        #          regressor values (drift-rate v in this case)
-        reg = {'func': reg_func,
-               'outcome': 'v'}
-
-        # construct regression model. Second argument must be the
-        # regression descriptor. This model will have new parameters defined
-        # in args above, these can be used in depends_on like any other
-        # parameter.
-        m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
-
+    """HDDMRegressor allows estimation of the DDM where parameter
+    values are linear models of a covariate (e.g. a brain measure like
+    fMRI or different conditions).
     """
+
     def __init__(self, data, reg_descrs, group_only_regressors=False, **kwargs):
-        """Hierarchical Drift Diffusion Model with reg_descrs
+        """Instantiate a regression model.
+
+        :Arguments:
+
+            * data : pandas.DataFrame
+                data containing 'rt' and 'response' column and any
+                covariates you might want to use.
+            * reg_descrs: dict or list of dicts
+                A regression descriptor is a `dict` containing two keys:
+                * func : str
+                    A patsy model string.
+                * outcome : str
+                    The DDM parameter replaced with the linear model.
+
+        :Optional:
+
+            * group_only_regressors : bool
+                Do not estimate individual subject parameters for all regressors.
+            * Additional keyword args are passed on to HDDMGamma.
+
+        :Note:
+
+            Internally, HDDMRegressor uses patsy which allows for
+            simple yet powerful model specification. For more information see:
+            http://patsy.readthedocs.org/en/latest/overview.html
+
+        :Example:
+
+            Consider you have a trial-by-trial brain measure
+            (e.g. fMRI) as an extra column called 'BOLD' in your data
+            frame. You want to estimate whether BOLD has an effect on
+            drift-rate. The corresponding model might look like
+            this:
+                ```python
+                reg_descr = {'func': 'BOLD', 'outcome': 'v'}
+                HDDMRegressor(data, reg_descr)
+                ```
+
+            This will estimate an v_Intercept and v_BOLD. If v_BOLD is
+            positive it means that there is a positive correlation
+            between BOLD and drift-rate on a trial-by-trial basis.
+
+            This type of mechanism also allows within-subject
+            effects. If you have two conditions, 'cond1' and 'cond2'
+            in the 'conditions' column of your data you may
+            specify:
+                ```python
+                reg_descr = {'func': 'C(condition)', 'outcome': 'v'}
+                ```
+            This will lead to estimation of 'v_Intercept' for cond1
+            and v_C(condition)[T.cond2] for cond1+cond2.
+
         """
-        #create self.reg_descr and self.reg_outcome
         reg_descrs = deepcopy(reg_descrs)
         if isinstance(reg_descrs, dict):
             reg_descrs = [reg_descrs]
