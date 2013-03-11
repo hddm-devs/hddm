@@ -64,34 +64,17 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         args = []
         for arg in reg['args']:
             for parent_name, parent in kwargs['parents'].iteritems():
-                if parent_name.startswith(arg):
-                    args.append(parent)
-
-        cols = data if reg['covariates'] is None else data[reg['covariates']]
-        parents = {'args': args, 'cols': cols}
-
-        return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
-
-
-class KnodeRegressPatsy(kabuki.hierarchical.Knode):
-    def create_node(self, name, kwargs, data):
-        reg = kwargs['regressor']
-        # order parents according to user-supplied args
-        args = []
-        for arg in reg['args']:
-            for parent_name, parent in kwargs['parents'].iteritems():
                 if parent_name == arg:
                     args.append(parent)
 
-        cols = data if reg['covariates'] is None else data[reg['covariates']]
         parents = {'args': args}
 
-        def func(args, design_matrix=dmatrix(reg['func'], cols)):
+        def func(args, design_matrix=dmatrix(reg['func'], data=data)):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
             predictor = (design_matrix * params).sum(axis=1)
-            return pd.DataFrame(predictor, index=cols.index)
+            return pd.DataFrame(predictor, index=data.index)
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
 
@@ -107,9 +90,6 @@ class HDDMRegressor(HDDMGamma):
 
     ::
 
-        # Define regression function (linear in this case)
-        reg_func = lambda args, cols: args[0] + args[1]*cols['BOLD']
-
         # Define regression descriptor
         # regression function to use (func, defined above)
         # args: parameter names (passed to reg_func; v_slope->args[0],
@@ -117,7 +97,6 @@ class HDDMRegressor(HDDMGamma):
         # outcome: DDM parameter that will be replaced by trial-by-trial
         #          regressor values (drift-rate v in this case)
         reg = {'func': reg_func,
-               'args': ['v_inter','v_slope'],
                'outcome': 'v'}
 
         # construct regression model. Second argument must be the
@@ -127,63 +106,48 @@ class HDDMRegressor(HDDMGamma):
         m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
 
     """
-    def __init__(self, data, regressor=None, group_only_regressors=None, **kwargs):
-        """Hierarchical Drift Diffusion Model with regressors
+    def __init__(self, data, reg_descrs, group_only_regressors=False, **kwargs):
+        """Hierarchical Drift Diffusion Model with reg_descrs
         """
-        #create self.regressor and self.reg_outcome
-        regressor = deepcopy(regressor)
-        if isinstance(regressor, dict):
-            regressor = [regressor]
+        #create self.reg_descr and self.reg_outcome
+        reg_descrs = deepcopy(reg_descrs)
+        if isinstance(reg_descrs, dict):
+            reg_descrs = [reg_descrs]
 
-        use_patsy = isinstance(regressor[0]['func'], str)
-        if use_patsy:
-            self.knode_regress = KnodeRegressPatsy
-            regressor[0]['args'] = dmatrix(regressor[0]['func'], data).design_info.column_names
+        group_only_nodes = list(kwargs.get('group_only_nodes', ()))
+        self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
+
+        for reg_descr in reg_descrs:
+            covariates = dmatrix(reg_descr['func'], data).design_info.column_names
+            reg_descr['args'] = ['{out}_{reg}'.format(out=reg_descr['outcome'], reg=reg) for reg in covariates]
             print "Adding these covariates:"
-            print regressor[0]['args']
+            print reg_descr['args']
             if group_only_regressors:
-                group_only_nodes = list(kwargs.get('group_only_nodes', ()))
-                group_only_nodes += regressor[0]['args']
+                group_only_nodes += reg_descr['args']
                 kwargs['group_only_nodes'] = group_only_nodes
 
-            # Sanity checks
-            assert len(regressor) == 1, "Currently only one regressor is allowed when using patsy."
-            depends = set(kwargs.get('depends_on', {}).keys())
-            assert not depends.issubset(set(regressor[0]['args'])), "When using patsy, you can not use any regressor in depends_on."
-        else:
-            self.knode_regress = KnodeRegress
 
-        self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
-        for reg in regressor:
-            if isinstance(reg['args'], str):
-                reg['args'] = [reg['args']]
-            if 'covariates' in reg and isinstance(reg['covariates'], str):
-                reg['covariates'] = [reg['covariates']]
-            else:
-                reg['covariates'] = None
-            self.reg_outcomes.add(reg['outcome'])
+            self.reg_outcomes.add(reg_descr['outcome'])
 
-        self.regressor = regressor
+        self.reg_descrs = reg_descrs
 
         #set wfpt_reg
         self.wfpt_reg_class = deepcopy(wfpt_reg_like)
 
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
+        # Sanity checks
+        for reg_descr in reg_descrs:
+            for arg in reg_descr['args']:
+                assert len(self.depends[arg]) == 0, "When using patsy, you can not use any reg_descr in depends_on."
+
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d['wfpt_reg_class']
-        print 'WARNING: The regression function can not be saved. Still saving but the loaded model will not be functional!'
-        for reg in d['regressor']:
-            del reg['func']
-
         return d
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        for reg in d['regressor']:
-            reg['func'] = lambda args, cols: cols
-        print "WARNING: Can not load regression function. Replacing with a dummy function so do not try to sample from this model."
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
@@ -198,7 +162,7 @@ class HDDMRegressor(HDDMGamma):
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
         #create regressor params
-        for i_reg, reg in enumerate(self.regressor):
+        for i_reg, reg in enumerate(self.reg_descrs):
             reg_parents = {}
             for arg in reg['args']:
                 reg_family = self.create_family_normal(arg, value=0)
@@ -207,14 +171,13 @@ class HDDMRegressor(HDDMGamma):
                     reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
                 knodes.update(reg_family)
 
-            reg_knode = self.knode_regress(pm.Deterministic, "%s_reg" % reg['outcome'],
-                                           regressor=reg,
-                                           col_name=reg['covariates'],
-                                           subj=self.is_group_model,
-                                           plot=False,
-                                           trace=False,
-                                           hidden=True,
-                                           **reg_parents)
+            reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
+                                     regressor=reg,
+                                     subj=self.is_group_model,
+                                     plot=False,
+                                     trace=False,
+                                     hidden=True,
+                                     **reg_parents)
 
             knodes['%s_bottom' % reg['outcome']] = reg_knode
 
