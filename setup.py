@@ -11,7 +11,7 @@ try:
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c']),
                    Extension('lba', ['src/lba.c']),
-                   Extension('wfpt_cdf', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
+                   Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
     ]
 
 import numpy as np
