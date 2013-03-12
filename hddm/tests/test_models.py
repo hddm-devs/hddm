@@ -178,7 +178,7 @@ class TestHDDMRegressor(unittest.TestCase):
     def runTest(self):
         return
 
-    def test_HDDMRegressor(self):
+    def test_simple(self):
         reg = {'func': 'cov', 'outcome':'v'}
 
         params = hddm.generate.gen_rand_params()
@@ -194,7 +194,25 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
-    def test_HDDMRegressor_no_group(self):
+    def test_include_z(self):
+        reg = {'func': 'cov', 'outcome':'v'}
+
+        params = hddm.generate.gen_rand_params()
+        data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        m = hddm.HDDMRegressor(data, reg, include='z')
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertIn('z', m.include)
+        self.assertIn('z', m.nodes_db.knode_name)
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+
+    def test_no_group(self):
         reg = {'func': 'cov', 'outcome':'v'}
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
@@ -210,7 +228,7 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
 
-    def test_HDDMRegressor_two_covariates(self):
+    def test_two_covariates(self):
         reg = {'func': 'cov1 + cov2', 'outcome':'v'}
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
@@ -227,7 +245,7 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][2].__name__, 'v_cov2_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
-    def test_HDDMRegressor_two_regressors(self):
+    def test_two_regressors(self):
         reg1 = {'func': 'cov1', 'outcome':'v'}
         reg2 = {'func': 'cov2', 'outcome':'a'}
 
@@ -248,7 +266,7 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1].__name__, 'a_cov2_subj.0')
 
-    def test_HDDMRegressorGroupOnly(self):
+    def test_group_only(self):
         reg = {'func': 'cov', 'outcome':'v'}
 
         params = hddm.generate.gen_rand_params()
@@ -264,7 +282,7 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
-    def test_HDDMRegressorGroupOnlyDepends(self):
+    def test_group_only_depends(self):
         reg = {'func': 'cov', 'outcome':'v'}
 
         params = hddm.generate.gen_rand_params(cond_dict={'v': [1, 2, 3]})
@@ -276,7 +294,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data[data.condition == 'c1']['condition2'] = 'single'
         self.assertRaises(AssertionError, hddm.HDDMRegressor, data, reg, depends_on={'v_Intercept': 'condition2'}, group_only_regressors=True)
 
-    def test_HDDMRegressorPatsy(self):
+    def test_contrast_coding(self):
         reg = {'func': 'cov * C(condition)',
                'outcome':'v'}
 
