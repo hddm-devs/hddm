@@ -9,6 +9,7 @@ from hddm_gamma import HDDMGamma
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
+import kabuki.step_methods as steps
 
 def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
@@ -62,14 +63,14 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         reg = kwargs['regressor']
         # order parents according to user-supplied args
         args = []
-        for arg in reg['args']:
+        for arg in reg['params']:
             for parent_name, parent in kwargs['parents'].iteritems():
                 if parent_name == arg:
                     args.append(parent)
 
         parents = {'args': args}
 
-        def func(args, design_matrix=dmatrix(reg['func'], data=data)):
+        def func(args, design_matrix=dmatrix(reg['model'], data=data)):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
@@ -84,7 +85,7 @@ class HDDMRegressor(HDDMGamma):
     fMRI or different conditions).
     """
 
-    def __init__(self, data, reg_descrs, group_only_regressors=False, **kwargs):
+    def __init__(self, data, models, group_only_regressors=False, **kwargs):
         """Instantiate a regression model.
 
         :Arguments:
@@ -92,12 +93,11 @@ class HDDMRegressor(HDDMGamma):
             * data : pandas.DataFrame
                 data containing 'rt' and 'response' column and any
                 covariates you might want to use.
-            * reg_descrs: dict or list of dicts
-                A regression descriptor is a `dict` containing two keys:
-                * func : str
-                    A patsy model string.
-                * outcome : str
-                    The DDM parameter replaced with the linear model.
+            * models : str or list of str
+                Patsy linear model specifier.
+                E.g. 'v ~ cov'
+                You can include multiple linear models that influence
+                separate DDM parameters.
 
         :Optional:
 
@@ -119,8 +119,7 @@ class HDDMRegressor(HDDMGamma):
             drift-rate. The corresponding model might look like
             this:
                 ```python
-                reg_descr = {'func': 'BOLD', 'outcome': 'v'}
-                HDDMRegressor(data, reg_descr)
+                HDDMRegressor(data, 'v ~ BOLD')
                 ```
 
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
@@ -132,32 +131,39 @@ class HDDMRegressor(HDDMGamma):
             in the 'conditions' column of your data you may
             specify:
                 ```python
-                reg_descr = {'func': 'C(condition)', 'outcome': 'v'}
+                HDDMRegressor(data, 'v ~ C(condition)')
                 ```
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1+cond2.
 
         """
-        reg_descrs = deepcopy(reg_descrs)
-        if isinstance(reg_descrs, dict):
-            reg_descrs = [reg_descrs]
+        if isinstance(models, basestring):
+            models = [models]
 
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
 
-        for reg_descr in reg_descrs:
-            covariates = dmatrix(reg_descr['func'], data).design_info.column_names
-            reg_descr['args'] = ['{out}_{reg}'.format(out=reg_descr['outcome'], reg=reg) for reg in covariates]
+        self.model_descrs = []
+
+        for model in models:
+            separator = model.find('~')
+            outcome = model[:separator].strip(' ')
+            model_stripped = model[(separator+1):]
+            covariates = dmatrix(model_stripped, data).design_info.column_names
+
+            # Build model descriptor
+            model_descr = {'outcome': outcome,
+                           'model': model_stripped,
+                           'params': ['{out}_{reg}'.format(out=outcome, reg=reg) for reg in covariates]
+            }
+            self.model_descrs.append(model_descr)
+
             print "Adding these covariates:"
-            print reg_descr['args']
+            print model_descr['params']
             if group_only_regressors:
-                group_only_nodes += reg_descr['args']
+                group_only_nodes += model_descr['params']
                 kwargs['group_only_nodes'] = group_only_nodes
-
-
-            self.reg_outcomes.add(reg_descr['outcome'])
-
-        self.reg_descrs = reg_descrs
+            self.reg_outcomes.add(outcome)
 
         #set wfpt_reg
         self.wfpt_reg_class = deepcopy(wfpt_reg_like)
@@ -165,9 +171,32 @@ class HDDMRegressor(HDDMGamma):
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
         # Sanity checks
-        for reg_descr in reg_descrs:
-            for arg in reg_descr['args']:
-                assert len(self.depends[arg]) == 0, "When using patsy, you can not use any reg_descr in depends_on."
+        for model_descr in self.model_descrs:
+            for param in model_descr['params']:
+                assert len(self.depends[param]) == 0, "When using patsy, you can not use any model parameter in depends_on."
+
+    def pre_sample(self):
+        if not self.is_group_model:
+            return
+
+        slice_widths = {'a':2, 't':0.5, 'a_var': 0.2, 't_var': 0.15}
+
+        # apply gibbs sampler to normal group nodes
+        for name, node_descr in self.iter_stochastics():
+            node = node_descr['node']
+            knode_name = node_descr['knode_name'].replace('_trans', '')
+            if knode_name in self.group_only_nodes:
+                continue
+            if knode_name == 'v':
+                self.mc.use_step_method(steps.kNormalNormal, node)
+            elif knode_name == 'v_var':
+                self.mc.use_step_method(steps.UniformPriorNormalstd, node)
+            else:
+                try:
+                    self.mc.use_step_method(steps.SliceStep, node, width=slice_widths[knode_name],
+                                            left=0, maxiter=1000)
+                except KeyError:
+                    pass
 
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
@@ -188,15 +217,15 @@ class HDDMRegressor(HDDMGamma):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
-
+        print knodes
         #create regressor params
-        for i_reg, reg in enumerate(self.reg_descrs):
+        for i_reg, reg in enumerate(self.model_descrs):
             reg_parents = {}
-            for arg in reg['args']:
-                reg_family = self.create_family_normal(arg, value=0)
-                reg_parents[arg] = reg_family['%s_bottom' % arg]
+            for param in reg['params']:
+                reg_family = self.create_family_normal(param, value=0)
+                reg_parents[param] = reg_family['%s_bottom' % param]
                 if reg not in self.group_only_nodes:
-                    reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
+                    reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param)
                 knodes.update(reg_family)
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],

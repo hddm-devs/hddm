@@ -179,13 +179,11 @@ class TestHDDMRegressor(unittest.TestCase):
         return
 
     def test_simple(self):
-        reg = {'func': 'cov', 'outcome':'v'}
-
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, reg)
+        m = hddm.HDDMRegressor(data, 'v ~ cov')
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -195,13 +193,11 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_include_z(self):
-        reg = {'func': 'cov', 'outcome':'v'}
-
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, reg, include='z')
+        m = hddm.HDDMRegressor(data, 'z ~ cov', include='z')
         m.sample(self.iter, burn=self.burn)
 
         self.assertIn('z', m.include)
@@ -213,12 +209,11 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_no_group(self):
-        reg = {'func': 'cov', 'outcome':'v'}
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
         data['cov'] = 1.
         del data['subj_idx']
-        m = hddm.HDDMRegressor(data, reg, is_group_model=False, depends_on={})
+        m = hddm.HDDMRegressor(data, 'v ~ cov', is_group_model=False, depends_on={})
         m.sample(self.iter, burn=self.burn)
         print m.nodes_db.index
 
@@ -229,13 +224,12 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
 
     def test_two_covariates(self):
-        reg = {'func': 'cov1 + cov2', 'outcome':'v'}
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
-        m = hddm.HDDMRegressor(data, reg)
+        m = hddm.HDDMRegressor(data, 'v ~ cov1 + cov2')
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -246,15 +240,12 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_two_regressors(self):
-        reg1 = {'func': 'cov1', 'outcome':'v'}
-        reg2 = {'func': 'cov2', 'outcome':'a'}
-
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
-        m = hddm.HDDMRegressor(data, [reg1, reg2])
+        m = hddm.HDDMRegressor(data, ['v ~ cov1', 'a ~ cov2'])
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -267,13 +258,11 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1].__name__, 'a_cov2_subj.0')
 
     def test_group_only(self):
-        reg = {'func': 'cov', 'outcome':'v'}
-
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, reg, group_only_regressors=True)
+        m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=True)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -283,8 +272,6 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_group_only_depends(self):
-        reg = {'func': 'cov', 'outcome':'v'}
-
         params = hddm.generate.gen_rand_params(cond_dict={'v': [1, 2, 3]})
         data, params_true = hddm.generate.gen_rand_data(params[0], size=10, subjs=4)
         data = pd.DataFrame(data)
@@ -292,17 +279,14 @@ class TestHDDMRegressor(unittest.TestCase):
         # Create one merged column
         data['condition2'] = 'merged'
         data[data.condition == 'c1']['condition2'] = 'single'
-        self.assertRaises(AssertionError, hddm.HDDMRegressor, data, reg, depends_on={'v_Intercept': 'condition2'}, group_only_regressors=True)
+        self.assertRaises(AssertionError, hddm.HDDMRegressor, data, 'v ~ cov', depends_on={'v_Intercept': 'condition2'}, group_only_regressors=True)
 
     def test_contrast_coding(self):
-        reg = {'func': 'cov * C(condition)',
-               'outcome':'v'}
-
         params = hddm.generate.gen_rand_params(cond_dict={'v': [1, 2, 3]})
         data, params_true = hddm.generate.gen_rand_data(params[0], size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, reg,
+        m = hddm.HDDMRegressor(data, 'v ~ cov * C(condition)',
                                depends_on={'a': 'condition'})
         m.sample(self.iter, burn=self.burn)
 
