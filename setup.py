@@ -11,7 +11,7 @@ try:
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.c']),
                    Extension('lba', ['src/lba.c']),
-                   Extension('wfpt_cdf', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
+                   Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
     ]
 
 import numpy as np
@@ -26,8 +26,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf']},
     scripts=['scripts/hddm_fit.py', 'scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2'],
-    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2'],
+    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2', 'patsy'],
+    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2', 'patsy'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',

@@ -2,12 +2,14 @@ from copy import deepcopy
 import numpy as np
 import pymc as pm
 import pandas as pd
+from patsy import dmatrix
 
 import hddm
 from hddm_gamma import HDDMGamma
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
+import kabuki.step_methods as steps
 
 def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
@@ -61,89 +63,148 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         reg = kwargs['regressor']
         # order parents according to user-supplied args
         args = []
-        for arg in reg['args']:
+        for arg in reg['params']:
             for parent_name, parent in kwargs['parents'].iteritems():
-                if parent_name.startswith(arg):
+                if parent_name == arg:
                     args.append(parent)
 
-        cols = data if reg['covariates'] is None else data[reg['covariates']]
-        parents = {'args': args, 'cols': cols}
+        parents = {'args': args}
 
-        return self.pymc_node(reg['func'], kwargs['doc'], name, parents=parents)
+        def func(args, design_matrix=dmatrix(reg['model'], data=data)):
+            # convert parents to matrix
+            params = np.matrix(args)
+            # Apply design matrix to input data
+            predictor = (design_matrix * params).sum(axis=1)
+            return pd.DataFrame(predictor, index=data.index)
 
+        return self.pymc_node(func, kwargs['doc'], name, parents=parents)
 
 class HDDMRegressor(HDDMGamma):
-    """HDDMRegressor allows estimation of trial-by-trial influences of
-    a covariate (e.g. a brain measure like fMRI) onto DDM parameters.
-
-    For example, if your prediction is that activity of a particular
-    brain area has a linear correlation with drift-rate, you could
-    specify the following regression model (make sure you have a column
-    with the brain activity in your data, in our example we name this
-    column 'BOLD'):
-
-    ::
-
-        # Define regression function (linear in this case)
-        reg_func = lambda args, cols: args[0] + args[1]*cols['BOLD']
-
-        # Define regression descriptor
-        # regression function to use (func, defined above)
-        # args: parameter names (passed to reg_func; v_slope->args[0],
-        #                                            v_inter->args[1])
-        # outcome: DDM parameter that will be replaced by trial-by-trial
-        #          regressor values (drift-rate v in this case)
-        reg = {'func': reg_func,
-               'args': ['v_inter','v_slope'],
-               'outcome': 'v'}
-
-        # construct regression model. Second argument must be the
-        # regression descriptor. This model will have new parameters defined
-        # in args above, these can be used in depends_on like any other
-        # parameter.
-        m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
-
+    """HDDMRegressor allows estimation of the DDM where parameter
+    values are linear models of a covariate (e.g. a brain measure like
+    fMRI or different conditions).
     """
-    def __init__(self, data, regressor=None, **kwargs):
-        """Hierarchical Drift Diffusion Model with regressors
+
+    def __init__(self, data, models, group_only_regressors=False, **kwargs):
+        """Instantiate a regression model.
+
+        :Arguments:
+
+            * data : pandas.DataFrame
+                data containing 'rt' and 'response' column and any
+                covariates you might want to use.
+            * models : str or list of str
+                Patsy linear model specifier.
+                E.g. 'v ~ cov'
+                You can include multiple linear models that influence
+                separate DDM parameters.
+
+        :Optional:
+
+            * group_only_regressors : bool
+                Do not estimate individual subject parameters for all regressors.
+            * Additional keyword args are passed on to HDDMGamma.
+
+        :Note:
+
+            Internally, HDDMRegressor uses patsy which allows for
+            simple yet powerful model specification. For more information see:
+            http://patsy.readthedocs.org/en/latest/overview.html
+
+        :Example:
+
+            Consider you have a trial-by-trial brain measure
+            (e.g. fMRI) as an extra column called 'BOLD' in your data
+            frame. You want to estimate whether BOLD has an effect on
+            drift-rate. The corresponding model might look like
+            this:
+                ```python
+                HDDMRegressor(data, 'v ~ BOLD')
+                ```
+
+            This will estimate an v_Intercept and v_BOLD. If v_BOLD is
+            positive it means that there is a positive correlation
+            between BOLD and drift-rate on a trial-by-trial basis.
+
+            This type of mechanism also allows within-subject
+            effects. If you have two conditions, 'cond1' and 'cond2'
+            in the 'conditions' column of your data you may
+            specify:
+                ```python
+                HDDMRegressor(data, 'v ~ C(condition)')
+                ```
+            This will lead to estimation of 'v_Intercept' for cond1
+            and v_C(condition)[T.cond2] for cond1+cond2.
+
         """
-        #create self.regressor and self.reg_outcome
-        regressor = deepcopy(regressor)
-        if isinstance(regressor, dict):
-            regressor = [regressor]
+        if isinstance(models, basestring):
+            models = [models]
 
+        group_only_nodes = list(kwargs.get('group_only_nodes', ()))
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
-        self.reg_covariates = set()
-        for reg in regressor:
-            if isinstance(reg['args'], str):
-                reg['args'] = [reg['args']]
-            if 'covariates' in reg and isinstance(reg['covariates'], str):
-                reg['covariates'] = [reg['covariates']]
-            else:
-                reg['covariates'] = None
-            self.reg_outcomes.add(reg['outcome'])
 
-        self.regressor = regressor
+        self.model_descrs = []
+
+        for model in models:
+            separator = model.find('~')
+            outcome = model[:separator].strip(' ')
+            model_stripped = model[(separator+1):]
+            covariates = dmatrix(model_stripped, data).design_info.column_names
+
+            # Build model descriptor
+            model_descr = {'outcome': outcome,
+                           'model': model_stripped,
+                           'params': ['{out}_{reg}'.format(out=outcome, reg=reg) for reg in covariates]
+            }
+            self.model_descrs.append(model_descr)
+
+            print "Adding these covariates:"
+            print model_descr['params']
+            if group_only_regressors:
+                group_only_nodes += model_descr['params']
+                kwargs['group_only_nodes'] = group_only_nodes
+            self.reg_outcomes.add(outcome)
 
         #set wfpt_reg
         self.wfpt_reg_class = deepcopy(wfpt_reg_like)
 
         super(HDDMRegressor, self).__init__(data, **kwargs)
 
+        # Sanity checks
+        for model_descr in self.model_descrs:
+            for param in model_descr['params']:
+                assert len(self.depends[param]) == 0, "When using patsy, you can not use any model parameter in depends_on."
+
+    def pre_sample(self):
+        if not self.is_group_model:
+            return
+
+        slice_widths = {'a':2, 't':0.5, 'a_var': 0.2, 't_var': 0.15}
+
+        # apply gibbs sampler to normal group nodes
+        for name, node_descr in self.iter_stochastics():
+            node = node_descr['node']
+            knode_name = node_descr['knode_name'].replace('_trans', '')
+            if knode_name in self.group_only_nodes:
+                continue
+            if knode_name == 'v':
+                self.mc.use_step_method(steps.kNormalNormal, node)
+            elif knode_name == 'v_var':
+                self.mc.use_step_method(steps.UniformPriorNormalstd, node)
+            else:
+                try:
+                    self.mc.use_step_method(steps.SliceStep, node, width=slice_widths[knode_name],
+                                            left=0, maxiter=1000)
+                except KeyError:
+                    pass
+
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d['wfpt_reg_class']
-        print 'WARNING: The regression function can not be saved. Still saving but the loaded model will not be functional!'
-        for reg in d['regressor']:
-            del reg['func']
-
         return d
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        for reg in d['regressor']:
-            reg['func'] = lambda args, cols: cols
-        print "WARNING: Can not load regression function. Replacing with a dummy function so do not try to sample from this model."
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
@@ -156,25 +217,25 @@ class HDDMRegressor(HDDMGamma):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
-
+        print knodes
         #create regressor params
-        for i_reg, reg in enumerate(self.regressor):
+        for i_reg, reg in enumerate(self.model_descrs):
             reg_parents = {}
-            for arg in reg['args']:
-                reg_family = self.create_family_normal(arg, value=0)
-                reg_parents[arg] = reg_family['%s_bottom' % arg]
+            for param in reg['params']:
+                reg_family = self.create_family_normal(param, value=0)
+                reg_parents[param] = reg_family['%s_bottom' % param]
                 if reg not in self.group_only_nodes:
-                    reg_family['%s_subj_reg' % arg] = reg_family.pop('%s_bottom' % arg)
+                    reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param)
                 knodes.update(reg_family)
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,
-                                     col_name=reg['covariates'],
                                      subj=self.is_group_model,
                                      plot=False,
                                      trace=False,
                                      hidden=True,
                                      **reg_parents)
+
             knodes['%s_bottom' % reg['outcome']] = reg_knode
 
         return knodes
