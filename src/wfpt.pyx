@@ -85,14 +85,14 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
     else:
         params = {'v':v, 'z':z, 't':t, 'a':a, 'sv':sv, 'sz':sz, 'st':st}
         params_iter = copy(params)
-        for i from 0 <= i < size:
+        for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
 
             p = full_pdf(x[i], params_iter['v'],
-                              params_iter['sv'], params_iter['a'], params_iter['z'],
-                              params_iter['sz'], params_iter['t'], params_iter['st'],
-                              err, n_st, n_sz, use_adaptive, simps_err)
+                         params_iter['sv'], params_iter['a'], params_iter['z'],
+                         params_iter['sz'], params_iter['t'], params_iter['st'],
+                         err, n_st, n_sz, use_adaptive, simps_err)
             p = p * (1 - p_outlier) + wp_outlier
             sum_logp += log(p)
 

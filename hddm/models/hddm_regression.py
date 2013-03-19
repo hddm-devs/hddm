@@ -185,8 +185,6 @@ class HDDMRegressor(HDDMGamma):
         for name, node_descr in self.iter_stochastics():
             node = node_descr['node']
             knode_name = node_descr['knode_name'].replace('_trans', '')
-            if knode_name in self.group_only_nodes:
-                continue
             if knode_name == 'v':
                 self.mc.use_step_method(steps.kNormalNormal, node)
             elif knode_name == 'v_var':
@@ -217,7 +215,7 @@ class HDDMRegressor(HDDMGamma):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
-        print knodes
+
         #create regressor params
         for i_reg, reg in enumerate(self.model_descrs):
             reg_parents = {}
