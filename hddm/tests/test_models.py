@@ -92,11 +92,9 @@ class TestSingleBreakdown(unittest.TestCase):
                 self.assertIn(node, model.nodes_db.index)
 
     def test_HDDM_load_save(self, assert_=False):
-        include = ['z', 'sz','st','sv']
+        include = ['z', 'sz', 'st', 'sv']
         dbs = ['pickle', 'sqlite']
         model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM, hddm.models.HDDMRegressor]
-        reg_func = lambda args, cols: args[0] + args[1]*cols['cov']
-        reg = {'func': reg_func, 'args':['v_slope','v_inter'], 'covariates': 'cov', 'outcome':'v'}
         params = hddm.generate.gen_rand_params(include=include)
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=2)
         data = pd.DataFrame(data)
@@ -104,7 +102,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
         for db, model_class in itertools.product(dbs, model_classes):
             if model_class is hddm.models.HDDMRegressor:
-                model = model_class(data, regressor=reg, include=include, is_group_model=True)
+                model = model_class(data, 'v ~ cov', include=include, is_group_model=True)
             else:
                 model = model_class(data, include=include, is_group_model=True)
             model.sample(20, dbname='test.db', db=db)

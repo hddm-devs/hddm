@@ -147,6 +147,7 @@ class HDDMRegressor(HDDMGamma):
 
         for model in models:
             separator = model.find('~')
+            assert separator != -1, 'No outcome variable specified.'
             outcome = model[:separator].strip(' ')
             model_stripped = model[(separator+1):]
             covariates = dmatrix(model_stripped, data).design_info.column_names
