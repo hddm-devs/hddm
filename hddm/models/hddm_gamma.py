@@ -50,7 +50,7 @@ class HDDMGamma(HDDMBase):
             knodes.update(self.create_family_invlogit('sz', value=.1))
         if 'st' in include:
             knodes.update(self.create_family_exp('st', value=.01))
-        if 'z' in self.include:
+        if 'z' in include:
             knodes.update(self.create_family_invlogit('z', value=.5))
         if 'p_outlier' in include:
             knodes.update(self.create_family_invlogit('p_outlier', value=0.05))
