@@ -112,28 +112,30 @@ class AccumulatorModel(kabuki.Hierarchical):
 
     def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
         """
-        optimization using ML, chi^2 or G^2
+        Optimize model using ML, chi^2 or G^2.
 
-        Input:
-            method <string>:
-                name of method ('ML', 'chisquare' or 'gsquare').
+        :Input:
+            method : str
+                Optimization method ('ML', 'chisquare' or 'gsquare').
 
-            quantiles <sequance>:
-                a sequance of quantiles used for chi^2 and G^2.
-                the default values are the one used by Ratcliff (.1, .3, .5, .7, .9).
+            quantiles : tuple
+                A sequence of quantiles to be used for chi^2 and G^2.
+                Default values are the ones used by Ratcliff (.1, .3, .5, .7, .9).
 
-            n_runs <int>:
-                number of attempt to optimize
+            n_runs : int <default=3>
+                Number of attempts to optimize.
 
-            n_bootstraps <int>:
-                number of bootstraps iterations
+            n_bootstraps : int <default=0>
+                Number of bootstrap iterations.
 
-            parrall_profile <string>:
-                IPython profile for parallelization
+            parrall_profile : str <default=None>
+                IPython profile for parallelization.
 
-        Output:
+        :Output:
             results <dict> - a results dictionary of the parameters values.
-            The values of the nodes in single subject model is update according to the results.
+
+        :Note:
+            The values of the nodes in single subject model is updated according to the results.
             The nodes of group models are not updated
         """
 
