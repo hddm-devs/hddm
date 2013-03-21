@@ -23,11 +23,8 @@ class TestGenerate(unittest.TestCase):
         includes = [[],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         for include in includes:
             params = hddm.generate.gen_rand_params(include=include)
-            Stoch_drift = hddm.likelihoods.generate_wfpt_stochastic_class(sampling_method='drift')
-            Stoch_cdf = hddm.likelihoods.generate_wfpt_stochastic_class(sampling_method='cdf')
-            stoch_drift = Stoch_drift('temp', size=1000, **params)
-            stoch_cdf = Stoch_cdf('temp', size=1000, **params)
-            [D, p_value] = ks_2samp(stoch_cdf.random(), stoch_drift.random())
+            [D, p_value] = ks_2samp(hddm.generate.gen_rts(method='cdf', **params).rt.values,
+                                    hddm.generate.gen_rts(method='drift', dt=1e-4, **params).rt.values)
             print 'p_value: %f' % p_value
             self.assertTrue(p_value > 0.05)
 
