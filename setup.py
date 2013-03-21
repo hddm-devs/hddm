@@ -22,7 +22,7 @@ setup(
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
-    packages=['hddm', 'hddm.tests', 'hddm.models'],
+    packages=['hddm', 'hddm.tests', 'hddm.models', 'hddm.examples'],
     package_data={'hddm':['examples/*.csv', 'examples/*.conf']},
     scripts=['scripts/hddm_fit.py', 'scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
