@@ -210,10 +210,16 @@ class HDDMRegressor(HDDMGamma):
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d['wfpt_reg_class']
+        print "WARNING: Will not save custom link functions."
+        for model in d['model_descrs']:
+            del model['link_func']
         return d
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
+        print "WARNING: Custom link functions will not be loaded."
+        for model in d['model_descrs']:
+            model['link_func'] = lambda x: x
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
