@@ -70,11 +70,11 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         parents = {'args': args}
 
-        def func(args, design_matrix=dmatrix(reg['model'], data=data)):
+        def func(args, design_matrix=dmatrix(reg['model'], data=data), link_func=reg['link_func']):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
-            predictor = (design_matrix * params).sum(axis=1)
+            predictor = link_func((design_matrix * params).sum(axis=1))
             return pd.DataFrame(predictor, index=data.index)
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
@@ -139,6 +139,9 @@ class HDDMRegressor(HDDMGamma):
         """
         if isinstance(models, basestring):
             models = [models]
+        if len(models) == 2 and hasattr(models[1], '__call__'):
+            # Passed in one model descr with link function, hacky.
+            models = [models]
 
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
         self.reg_outcomes = set() # holds all the parameters that are going to modeled as outcome
@@ -146,6 +149,12 @@ class HDDMRegressor(HDDMGamma):
         self.model_descrs = []
 
         for model in models:
+            if isinstance(model, (list, tuple)):
+                link_func = model[1]
+                model = model[0]
+            else:
+                link_func = lambda x: x
+
             separator = model.find('~')
             assert separator != -1, 'No outcome variable specified.'
             outcome = model[:separator].strip(' ')
@@ -155,7 +164,8 @@ class HDDMRegressor(HDDMGamma):
             # Build model descriptor
             model_descr = {'outcome': outcome,
                            'model': model_stripped,
-                           'params': ['{out}_{reg}'.format(out=outcome, reg=reg) for reg in covariates]
+                           'params': ['{out}_{reg}'.format(out=outcome, reg=reg) for reg in covariates],
+                           'link_func': link_func
             }
             self.model_descrs.append(model_descr)
 

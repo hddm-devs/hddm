@@ -195,16 +195,16 @@ class TestHDDMRegressor(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, 'z ~ cov', include='z')
+        m = hddm.HDDMRegressor(data, [('z ~ cov', lambda x: 1 / (1 + np.exp(-x)))], include='z')
         m.sample(self.iter, burn=self.burn)
 
         self.assertIn('z', m.include)
-        self.assertIn('z', m.nodes_db.knode_name)
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+        self.assertIn('z_Intercept', m.nodes_db.knode_name)
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].__name__, 'z_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1].__name__, 'z_cov_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['z'].value)), 1)
 
     def test_no_group(self):
         params = hddm.generate.gen_rand_params()
