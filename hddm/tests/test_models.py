@@ -190,12 +190,13 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
 
-    def test_include_z(self):
+    def test_link_func_on_z(self):
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, [('z ~ cov', lambda x: 1 / (1 + np.exp(-x)))], include='z')
+        link_func = lambda x: 1 / (1 + np.exp(-x))
+        m = hddm.HDDMRegressor(data, {'model': 'z ~ cov', 'link_func': link_func}, include='z')
         m.sample(self.iter, burn=self.burn)
 
         self.assertIn('z', m.include)
@@ -205,6 +206,7 @@ class TestHDDMRegressor(unittest.TestCase):
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1].__name__, 'z_cov_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['z'].value)), 1)
+        self.assertEqual(m.model_descrs[0]['link_func'](2), link_func(2))
 
     def test_no_group(self):
         params = hddm.generate.gen_rand_params()

@@ -137,10 +137,7 @@ class HDDMRegressor(HDDMGamma):
             and v_C(condition)[T.cond2] for cond1+cond2.
 
         """
-        if isinstance(models, basestring):
-            models = [models]
-        if len(models) == 2 and hasattr(models[1], '__call__'):
-            # Passed in one model descr with link function, hacky.
+        if isinstance(models, (basestring, dict)):
             models = [models]
 
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
@@ -149,16 +146,20 @@ class HDDMRegressor(HDDMGamma):
         self.model_descrs = []
 
         for model in models:
-            if isinstance(model, (list, tuple)):
-                link_func = model[1]
-                model = model[0]
+            if isinstance(model, dict):
+                try:
+                    model_str = model['model']
+                    link_func = model['link_func']
+                except KeyError:
+                    raise KeyError, "HDDMRegressor requires a model specification either like {'model': 'v ~ 1 + C(your_variable)', 'link_func' lambda x: np.exp(x)} or just a model string"
             else:
+                model_str = model
                 link_func = lambda x: x
 
-            separator = model.find('~')
+            separator = model_str.find('~')
             assert separator != -1, 'No outcome variable specified.'
-            outcome = model[:separator].strip(' ')
-            model_stripped = model[(separator+1):]
+            outcome = model_str[:separator].strip(' ')
+            model_stripped = model_str[(separator+1):]
             covariates = dmatrix(model_stripped, data).design_info.column_names
 
             # Build model descriptor
