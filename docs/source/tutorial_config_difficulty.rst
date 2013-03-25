@@ -1,8 +1,11 @@
 .. index:: Tutorial
 .. _chap_tutorial_config:
 
+Creating a simple model
+#######################
+
 A note of caution
-#################
+-----------------
 
 Although HDDM tries to make hierarchical Bayesian estimation as
 straightforward and accessible as possible, the statistical methods used to estimate
@@ -22,9 +25,8 @@ scientists:
 See also :cite:`VandekerckhoveTuerlinckxLee11` for some background on hierarchical
 Bayesian estimation of the DDM.
 
-
-Getting started: Creating a simple model
-****************************************
+Get started
+-----------
 
 Imagine that we collected data from one subject on the moving dots or
 coherent motion task (e.g., :cite:`RoitmanShadlen02`). In this task,
@@ -51,7 +53,7 @@ probably be found in
 ``C:\Python27\Lib\site-packages\hddm\examples``). Lets take a look at
 what it looks like:
 
-.. literalinclude :: ../hddm/examples/simple_difficulty.csv
+.. literalinclude :: ../../hddm/examples/simple_difficulty.csv
    :lines: 1,101-105,579-582
 
 The first line contains the header and specifies which columns contain
@@ -69,7 +71,7 @@ trial.
 The following configuration file specifies a model in which
 drift-rate depends on difficulty:
 
-.. literalinclude :: ../hddm/examples/simple_difficulty.conf
+.. literalinclude :: ../../hddm/examples/simple_difficulty.conf
 
 The (optional) tag [depends] specifies DDM parameters that depend on
 data. In our case, we want to estimate separate drift-rates (v) for
@@ -164,10 +166,10 @@ In addition, HDDM generates some useful plots such as the posterior
 predictive probability density on top of the normalized RT
 distribution for each condition:
 
-.. figure:: ../hddm/examples/plots/easy.png
+.. figure:: ../../hddm/examples/plots/easy.png
    :scale: 40%
 
-.. figure:: ../hddm/examples/plots/hard.png
+.. figure:: ../../hddm/examples/plots/hard.png
    :scale: 40%
 
 Note that error responses have been mirrored along the y-axis (to the
@@ -195,7 +197,7 @@ a value close to 2 -- the parameter that was used to generate the
 data. Finally, plotted in the lower left corner is the
 auto-correlation.
 
-.. figure:: ../hddm/examples/plots/a.png
+.. figure:: ../../hddm/examples/plots/a.png
    :scale: 40%
 
 Now we are ready for :ref:`part two of the tutorial <chap_tutorial_config_subjects>`.

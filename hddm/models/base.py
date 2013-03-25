@@ -336,64 +336,72 @@ class HDDMBase(AccumulatorModel):
 
             Note: Including 'sz' and/or 'st' will increase run time significantly!
 
-            is_group_model : bool
-                If True, this results in a hierarchical
-                model with separate parameter distributions for each
-                subject. The subject parameter distributions are
-                themselves distributed according to a group parameter
-                distribution.
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
 
-                If not provided, this parameter is set to True if data
-                provides a column 'subj_idx' and False otherwise.
+            If not provided, this parameter is set to True if data
+            provides a column 'subj_idx' and False otherwise.
 
-            depends_on : dict
-                Specifies which parameter depends on data
-                of a column in data. For each unique element in that
-                column, a separate set of parameter distributions will be
-                created and applied. Multiple columns can be specified in
-                a sequential container (e.g. list)
+        depends_on : dict
+            Specifies which parameter depends on data
+            of a column in data. For each unique element in that
+            column, a separate set of parameter distributions will be
+            created and applied. Multiple columns can be specified in
+            a sequential container (e.g. list)
 
-                :Example:
+            :Example:
 
-                    >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
+                >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
 
-                    Separate drift-rate parameters will be estimated
-                    for each difficulty. Requires 'data' to have a
-                    column difficulty.
+                Separate drift-rate parameters will be estimated
+                for each difficulty. Requires 'data' to have a
+                column difficulty.
 
 
-            bias : bool
-                Whether to allow a bias to be estimated. This
-                is normally used when the responses represent
-                left/right and subjects could develop a bias towards
-                responding right. This is normally never done,
-                however, when the 'response' column codes
-                correct/error.
+        bias : bool
+            Whether to allow a bias to be estimated. This
+            is normally used when the responses represent
+            left/right and subjects could develop a bias towards
+            responding right. This is normally never done,
+            however, when the 'response' column codes
+            correct/error.
 
-            plot_var : bool
-                 Plot group variability parameters when calling pymc.Matplot.plot()
-                 (i.e. variance of Normal distribution.)
+        plot_var : bool
+             Plot group variability parameters when calling pymc.Matplot.plot()
+             (i.e. variance of Normal distribution.)
 
-            wiener_params : dict
-                 Parameters for wfpt evaluation and
-                 numerical integration.
+        wiener_params : dict
+             Parameters for wfpt evaluation and
+             numerical integration.
 
-             :Parameters:
-                 * err: Error bound for wfpt (default 1e-4)
-                 * n_st: Maximum depth for numerical integration for st (default 2)
-                 * n_sz: Maximum depth for numerical integration for Z (default 2)
-                 * use_adaptive: Whether to use adaptive numerical integration (default True)
-                 * simps_err: Error bound for Simpson integration (default 1e-3)
+         :Parameters:
+             * err: Error bound for wfpt (default 1e-4)
+             * n_st: Maximum depth for numerical integration for st (default 2)
+             * n_sz: Maximum depth for numerical integration for Z (default 2)
+             * use_adaptive: Whether to use adaptive numerical integration (default True)
+             * simps_err: Error bound for Simpson integration (default 1e-3)
 
         p_outlier : double (default=0)
             The probability of outliers in the data. if p_outlier is passed in the
             'include' argument, then it is estimated from the data and the value passed
             using the p_outlier argument is ignored.
 
+        default_intervars : dict (default = {'sz': 0, 'st': 0, 'sv': 0})
+            Fix intertrial variabilities to a certain value. Note that this will only
+            have effect for variables not estimated from the data.
     """
 
     def __init__(self, data, bias=False, include=(),
-                 wiener_params=None, p_outlier=0., **kwargs):
+                 wiener_params=None, p_outlier=0., default_intervars=None, **kwargs):
+
+        if default_intervars is None:
+            self.default_intervars = {'sz': 0, 'st': 0, 'sv': 0}
+        else:
+            self.default_intervars = default_intervars
 
         self._kwargs = kwargs
 
@@ -450,9 +458,9 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['t'] = knodes['t_bottom']
 
-        wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else 0
-        wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else 0
-        wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else 0
+        wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
+        wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
+        wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
         wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
         return wfpt_parents

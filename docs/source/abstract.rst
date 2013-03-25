@@ -27,4 +27,7 @@ linear ballistic accumulator model. HDDM requires less data per
 subject / condition than non-hierarchical method, allows for full
 Bayesian data analysis, and can handle outliers in the data.  Finally,
 HDDM supports the estimation of how trial-by-trial measurements
-(e.g. fMRI) influence decision making parameters.
+(e.g. fMRI) influence decision making parameters. This paper will
+first describe the theoretical background of drift-diffusion model and
+Bayesian inference. We then illustrate usage of the toolbox on a
+real-world data set from our lab.

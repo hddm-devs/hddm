@@ -4,6 +4,15 @@
 Release Notes
 =============
 
+HDDM 0.5
+========
+
+* New model HDDMInformative with informative priors.
+* HDDMRegression takes patsy model specification strings.
+* Ratcliff's quantile optimization method for single subjects and groups.
+* Maximum likelihood optimization.
+* Bugfixes.
+
 HDDM 0.4.1
 ==========
 
