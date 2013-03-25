@@ -13,6 +13,7 @@ Documentation
 
     abstract
     intro
+    methods
     tutorial
     howto
     manual

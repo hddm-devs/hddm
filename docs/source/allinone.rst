@@ -1,5 +1,6 @@
 .. include :: abstract.rst
 .. include :: intro.rst
+.. include :: methods.rst
 
 *******
 Results

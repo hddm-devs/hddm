@@ -1,3 +1,6 @@
+.. index:: Abstract
+.. _chap_abstract:
+
 HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python
 =============================================================================
 
