@@ -120,15 +120,15 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._n_samples = len(data)
 
         # extract empirical RT at the quantiles
-        self._empirical_quantiles = hddm.utils.data_quantiles(data, quantiles)
+        self._empirical_quantiles = hddm.utils.data_quantiles(data.rt, quantiles)
         ub_emp_rt = self._empirical_quantiles[1]
         lb_emp_rt = -self._empirical_quantiles[0]
         self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
 
         #get frequency of observed values
         freq_obs = np.zeros(len(proportion))
-        freq_obs[:len(quantiles)+1] = sum(data<0) * neg_proportion
-        freq_obs[len(quantiles)+1:] = sum(data>0) * pos_proportion
+        freq_obs[:len(quantiles)+1] = sum(data.rt<0) * neg_proportion
+        freq_obs[len(quantiles)+1:] = sum(data.rt>0) * pos_proportion
         self._freq_obs = freq_obs
 
     def set_quantiles_stats(self, quantiles, n_samples, emp_rt, freq_obs, p_upper):

@@ -66,7 +66,7 @@ class HDDMGamma(HDDMBase):
         #since we wrote this function
         super_init_function = super(self.__class__, self).__init__
         init_args = set(inspect.getargspec(super_init_function).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data'])
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
         assert known_args == init_args, "Arguments of the constructor are not as expected"
 
         #create the avg model
