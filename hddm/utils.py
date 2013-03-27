@@ -785,7 +785,10 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
         p_upper - probability of hitting the upper boundary
     """
     if isinstance(data, pd.DataFrame):
-        data = flip_errors(data).rt.values
+        if 'response' in data.columns:
+            data = flip_errors(data).rt.values
+        else:
+            data = data.rt.values
 
     quantiles = np.asarray(quantiles)
     p_upper = float(np.mean(data>0))
