@@ -74,7 +74,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
-            predictor = link_func((design_matrix * params).sum(axis=1))
+            predictor = link_func(pd.DataFrame((design_matrix * params).sum(axis=1), index=data.index))
             return pd.DataFrame(predictor, index=data.index)
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
