@@ -43,7 +43,7 @@ Now we generate the data for stimulus A
 ::
 
     data_a, params_a = hddm.generate.gen_rand_data({'level1': level1a,'level2': level2a, 'level3': level3a},size=trials_per_level, subjs=n_subjects)
-Next come the parameters for the second stimulus. v is the same as for the first stimulus. This is different for z, in particular: z(stimulus_b) = 1 - z(stimulus_a) Altogether, responses are biased towards responding A. Because we use accuracy coded data, stimulus A is biased towards correct responses, and stimulus B towards incorrect responses. 
+Next come the parameters for the second stimulus, where v is the same as for the first stimulus. This is different for z. In particular: z(stimulus_b) = 1 - z(stimulus_a). As a result, responses are altogether biased towards responding A. Because we use accuracy coded data, stimulus A is biased towards correct responses, and stimulus B towards incorrect responses. 
 ::
 
     level1b = {'v':.3, 'a':2, 't':.3,'sv':0,'z':.5,'sz':0,'st':0}
