@@ -40,6 +40,9 @@ identifier 2, -v will be used. So ultimately you only estimate one
 drift-rate. Alternatively you can use bias z and 1-z if you set
 split_param='z'. See the HDDMStimCoding help doc for more information.
 
+Stimulus coding with HDDMRegression
+***********************************
+
 Stimulus coding can also be implemented in HDDMRegression. The advantage of doing so is that more complex designs, including within participant designs can be analysed. The disadvantage is the HRRMRegression is slower than HDDMstimcoding.
 
 To implement stimulus coding for z one has to define a link function for hddm regression:
@@ -59,15 +62,19 @@ Similarly, the link function for v is:
         stim = (np.asarray(dmatrix('0 + C(s,[[1],[-1]])',{'s':data.stimulus.ix[x.index]})))    
         return x * stim
 
-To specify a complete model you have to define a complete regression model and submit with the data to the model.
+To specify a complete model you have to define a complete regression model and submit it with the data to the model.
 ::
 
     z_reg = {'model': 'z ~ 1 + C(condition)', 'link_func': z_link_func}
     v_reg = {'model': 'v ~ 1 + C(condition)', 'link_func': lambda x : x}
-    reg_descr = [z_reg, v_reg]
-    hddm_regrssion_model = hddm.HDDMRegressor( data, reg_descr,include='z')
+    reg_model = [z_reg, v_reg]
+    hddm_regrssion_model = hddm.HDDMRegressor( data, reg_model,include='z')
 
-Of course, your model could also regress either z or v.
+Of course, your model could also regress either z or v. For example
+::
+
+    v_reg =  [{'model': 'v ~ 1 + C(condition)', 'link_func': v_link_func, group_only_regressors=True}]
+    hddm_regrssion_model = hddm.HDDMRegressor( data, v_reg, include = 'z')
 
 
 Include bias and inter-trial variability
