@@ -111,11 +111,17 @@ First we print the model stats
 
 Here is the relevent output for our purposes: 
 parameter                        mean       std      2.5q       25q       50q       75q     97.5q    mc err 
+
 z_Intercept                     -0.044598  0.148731 -0.348728 -0.141392 -0.045055  0.046041  0.271227  0.005647 
+
 z_C(condition)[T.level2]         0.395524  0.049708  0.304394  0.354014  0.402072  0.426116  0.496143  0.004200 
+
 z_C(condition)[T.level3]         0.818458  0.049148  0.712337  0.788209  0.820972  0.850570  0.903171  0.003559 
+
 v_Intercept                      0.269770  0.058421  0.151004  0.237380  0.271991  0.303675  0.380508  0.003125 
+
 v_C(condition)[T.level2]         0.159221  0.051821  0.065206  0.123976  0.157030  0.192976  0.271688  0.004290 
+
 v_C(condition)[T.level3]         0.250912  0.059487  0.152756  0.203228  0.251347  0.290904  0.373658  0.004719
 
 Lets first look at v. For level1 this is just the intercept. The value of .27 is in the ball park of the true value of .3. The fit is not perfect, but running a longer chain might help (we are ignoring sophisticated checks of model convergence for this example here). To get the values of v for levels 2 and 3, we have to add the respective parameters (0.16 and .25) to the intercept value. The resulting values of .43 and .52 are again close enough to the true values of .4 and .5. To get the estimated z value we first need to "convert" the regression value with our link function. For level 1 this is 1/(1+exp(-(-0.044))) = .48, which is close to the true value of .5. For level 2 this is 1/(1+exp(-(-0.044+0.396))) = .59, again cloe to the true value of .6, as is the case for level 3 (.68 vs. .7).
