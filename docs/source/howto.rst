@@ -2,6 +2,9 @@
 How-to
 ******
 
+Stimulus coding with HDDM regression
+####################################
+
 Code subject responses
 ######################
 
