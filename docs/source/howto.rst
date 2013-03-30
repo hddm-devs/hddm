@@ -581,8 +581,7 @@ We add a column to the data-frame identifying stimulus A as 1 and stimulus B as 
 Now we merge the data for stimulus A and B
 ::
 
-    mydata = data_a
-    mydata.append(data_b)
+    mydata = data_a.append(data_b)
 
 Setting up the HDDM regression model
 ************************************
