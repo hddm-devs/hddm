@@ -766,12 +766,14 @@ def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
         #plot two lines for each node
         tag = node_row['tag']
         tag = pretty_tag(tag)
+
         line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x', label=tag)[0]
         ax.plot(np.ones(nq)*(1-p_upper), q_lower, '-x', c=line.get_color())[0]
 
     #add legend
-    leg = plt.legend(loc='best', fancybox=True)
-    leg.get_frame().set_alpha(0.5)
+    if tag is not None:
+        leg = ax.legend()#loc='best', fancybox=True)
+        leg.get_frame().set_alpha(0.5)
 
 def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     """
@@ -783,7 +785,10 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
         p_upper - probability of hitting the upper boundary
     """
     if isinstance(data, pd.DataFrame):
-        data = flip_errors(data).rt.values
+        if 'response' in data.columns:
+            data = flip_errors(data).rt.values
+        else:
+            data = data.rt.values
 
     quantiles = np.asarray(quantiles)
     p_upper = float(np.mean(data>0))
