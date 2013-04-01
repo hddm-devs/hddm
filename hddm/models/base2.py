@@ -229,7 +229,7 @@ class HDDMInfo(HDDMBase2):
         if 'a' in include:
             knodes.update(self.create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
         if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_tau=5**-2, std_std=2))
+            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_mu=2, g_tau=3**-2, std_std=2))
         if 't' in include:
             knodes.update(self.create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
         if 'sv' in include:
