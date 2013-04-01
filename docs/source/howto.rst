@@ -9,7 +9,7 @@ There are two ways to code subject responses placed in the 'response'
 column in your data file.  You can either use *accuracy-coding*, where
 1's and 0's correspond to correct and error trials, or you can use
 *stimulus-coding*, where 1's and 0's correspond to the choice
-(e.g. categorization of the stimulus). HDDM interprets 0 and 1
+(e.g. categorization of the stimulus). ``HDDM`` interprets 0 and 1
 responses as lower and upper boundary responses, respectively, so in
 principle either of these schemes is valid.
 
@@ -35,10 +35,10 @@ which stimulus was correct and instantiate the model like this:
     model = hddm.HDDMStimCoding(data, include='z', stim_col='stim', split_param='v')
 
 This model expects data to have a column named stim with two distinct
-identifiers. For identifier 1, drift-rate v will be used while for
-identifier 2, -v will be used. So ultimately you only estimate one
-drift-rate. Alternatively you can use bias z and 1-z if you set
-split_param='z'. See the HDDMStimCoding help doc for more information.
+identifiers. For identifier 1, drift-rate ``v`` will be used while for
+identifier 2, ``-v`` will be used. So ultimately you only estimate one
+drift-rate. Alternatively you can use bias ``z`` and ``1-z`` if you set
+``split_param='z'``. See the HDDMStimCoding help doc for more information.
 
 
 Include bias and inter-trial variability
@@ -130,14 +130,14 @@ To estimate p_outlier from the data, run:
     m = hddm.HDDM(data, include=('p_outlier',))
 
 HDDM assumes that outliers come from a uniform distribution
-with a fixed density :math:`w_{outlier}` (as suggested by Ratcliff and Tuerlinckx, 2002).
+with a fixed density :math:``w_{outlier}`` (as suggested by Ratcliff and Tuerlinckx, 2002).
 The resulting likelihood is as follows:
 
 .. math::
 
    p(RT; v, a, t) = wfpt(RT; v, a, t) * (1-p_{outlier}) + w_{outlier} * p_{outlier}
 
-The default value of :math:`w_{outlier}` is 0.1, which is equivalent to uniform distribution
+The default value of :math:``w_{outlier}`` is 0.1, which is equivalent to uniform distribution
 from 0 to 5 seconds. However, in practice, the outlier model is applied to all RTs, even
 those  larger than 5.
 
@@ -178,8 +178,8 @@ chain. You can test your model by running:
     from kabuki.analyze import check_geweke
     print check_geweke(model)
 
-This will print `True` if non of the test-statistics is larger than 2
-and `False` otherwise. Check the `PyMC documentation` for more
+This will print ``True`` if non of the test-statistics is larger than 2
+and ``False`` otherwise. Check the ``PyMC documentation`` for more
 information on this test.
 
 
@@ -258,7 +258,7 @@ multiple copies of your model:
    models = []
    for i in range(5):
        m = hddm.HDDM(data)
-       m.map()
+       m.find_starting_values()
        m.sample(5000, burn=1000)
        models.append(m)
 
@@ -275,7 +275,7 @@ The output is a dictionary that provides the R-hat for each parameter:
 
 As of HDDM 0.4.1 you can also run multiple chains in parallel. One
 convenient way to do this is the IPython parallel module. Note that
-you do you have to set up your environment appropriately for this, see the `IPython parallel docs`.
+you do you have to set up your environment appropriately for this, see the ``IPython parallel docs``.
 
 ::
 
@@ -314,7 +314,7 @@ chains. This is commonly achieved by finding the maximum posterior
 
 ::
 
-    model.map()
+    model.find_starting_values()
 
 which will set the starting values to the MAP. Then sample as you
 would normally. This is a good idea in general.
@@ -338,70 +338,83 @@ but sv and st.
 Estimate a regression model
 ###########################
 
-HDDM 0.4 (and upwards) includes a regression model that allows
-estimation of trial-by-trial influences of a covariate (e.g. a brain
-measure like fMRI) onto DDM parameters. For example, if your
-prediction is that activity of a particular brain area has a linear
-correlation with drift-rate, you could specify the following
-regression model (make sure to have a column with the brain activity
-in your data, in our example name this column 'BOLD'):
+``HDDM`` includes a regression model that allows estimation of
+trial-by-trial influences of a covariate (e.g. a brain measure like
+fMRI) onto DDM parameters. For example, if your prediction is that
+activity of a particular brain area has a linear correlation with
+drift-rate, you could specify the following regression model (make
+sure to have a column with the brain activity in your data, in our
+example name this column ``BOLD``):
 
 ::
 
-   # Define regression function (linear in this case)
-   reg_func = lambda args, cols: args[0] + args[1]*cols[:,0]
+   m = hddm.models.HDDMRegressor(data, 'v ~ BOLD:C(trial_type)')
 
-   # Define regression descriptor
-   # regression function to use (func, defined above)
-   # args: parameter names (passed to reg_func; v_slope->args[0],
-   #                                            v_inter->args[1])
-   # covariates: data column to use as the covariate
-   #             (in this example, expects a column named
-   #             BOLD in the data)
-   # outcome: DDM parameter that will be replaced by trial-by-trial
-   #          regressor values (drift-rate v in this case)
-   reg = {'func': reg_func,
-          'args': ['v_inter','v_slope'],
-          'covariates': 'BOLD',
-          'outcome': 'v'}
+This syntax is similar to what ``R`` uses for specifying
+GLMs. Basically, this means that drift-rate ``v`` is distributed
+according to the BOLD response and trial-type. ``HDDMRegression`` will
+add an intercept and slope parameter for the BOLD trial-by-trial
+measure for each condition. The ``C()`` specifies that ``trial_type``
+(which might be a data column with ``A`` and ``B``) should be a
+categorical variable which will be dummy-coded.
 
-   # construct regression model. Second argument must be the
-   # regression descriptor. This model will have new parameters defined
-   # in args above, these can be used in depends_on like any other
-   # parameter.
-   m = hddm.HDDMRegressor(data, reg, depends_on={'v_slope':'trial_type'})
+Internally, ``HDDM`` uses ``Patsy`` for the spcification of the linear
+model. The `patsy documentation`_ gives a complete overview of the
+functionality.
 
-Note that in the last line, the regression coefficients become ordinary
-model parameters you can use in depends_on.
-
-You can also pass a list to covariates if you want to include multiple
-covariates. E.g.:
+You can also pass a list to linear model descriptors if you want to
+include multiple covariates. E.g.:
 
 ::
 
-   # Define regression function with interaction with exponential
-   # transform
+   m = hddm.models.HDDMRegressor(data, ['v ~ BOLD:C(trial_type)',
+                                        'a ~ Theta'])
 
-   reg_func = lambda args, cols: np.exp(args[0] + args[1]*cols[:,0] + args[2]*cols[:,1] + args[3]*cols[:,0]*cols[:,1])
 
-   reg = {'func': reg_func,
-          'args': ['a_intercept','a_slope_cov1', 'a_slope_cov2', 'a_interaction'],
-          'covariates': 'BOLD',
-          'outcome': 'a'}
 
-Note that these regression coefficients are often hard to estimate and
-require a lot of data. If you have problems with chain convergence,
-consider turning the coefficients into group_only_nodes (see above).
+Stimulus coding with HDDMRegression
+***********************************
 
-If you want to estimate two separate regressions, you can also supply
-a list of regression descriptors to HDDMRegressor:
+Stimulus coding can also be implemented in ``HDDMRegression``. The
+advantage of doing so is that more complex designs, including within
+participant designs can be analysed (see below). The disadvantage is
+the ``HDDMRegression`` is slower than ``HDDMStimCoding``.
 
+To implement stimulus coding for ``z`` one has to define a link function for ``HDDMRegression``:
 ::
 
-    m = hddm.HDDMRegressor(data, [reg_a, reg_t])
+    import hddm
+    import numpy as np
+    from patsy import dmatrix
 
-Make sure to give all regression coefficients different names.
+    def z_link_func(x, data=mydata):
+        stim = (np.asarray(dmatrix('0 + C(s,[[1],[-1]])', {'s':data.stimulus.ix[x.index]})))
+        return 1 / (1 + np.exp(-(x * stim)))
 
+Similarly, the link function for v is:
+::
+
+    def v_link_func(x, data=mydata):
+        stim = (np.asarray(dmatrix('0 + C(s,[[1],[-1]])', {'s':data.stimulus.ix[x.index]})))
+        return x * stim
+
+To specify a complete model you have to define a complete regression model and submit it with the data to the model.
+::
+
+    z_reg = {'model': 'z ~ 1 + C(condition)', 'link_func': z_link_func}
+    v_reg = {'model': 'v ~ 1 + C(condition)', 'link_func': lambda x: x}
+    reg_model = [z_reg, v_reg]
+    hddm_regrssion_model = hddm.HDDMRegressor(data, reg_model, include='z')
+
+Of course, your model could also regress either z or v. For example
+::
+
+    v_reg =  [{'model': 'v ~ 1 + C(condition)', 'link_func': v_link_func, group_only_regressors=True}]
+    hddm_regrssion_model = hddm.HDDMRegressor(data, v_reg, include='z')
+
+For a more elaborate example and parameter recovery study using
+``HDDMRegression``, see the :ref:`tutorial on using HDDMRegression for
+stimulus coding <chap_tutorial_hddm_regression>`.
 
 
 Perform model comparison
@@ -453,8 +466,8 @@ This will return a table of statistics which might look like this:
 The rows correspond to the different observed nodes and summary
 statistics that the model was evaluated on (e.g. mean_lb which represents the mean RT of lower boundary responses)). The columns correspond to the
 statistics of how the corresponding summary statistic of the real data
-relates to the simulated data sets. E.g. `wfpt`, `accuracy`, `Observed`
-represents the accuracy of the observed data. `Quantile` represents in
+relates to the simulated data sets. E.g. ``wfpt``, ``accuracy``, ``Observed``
+represents the accuracy of the observed data. ``Quantile`` represents in
 which quantile this mean RT is in the mean RT taken over the simulate
 data sets. If our model did a great job at recovering we wanted it to
 produce RTs that have the same mean as our actual data. So the closer
@@ -464,7 +477,7 @@ this is to the 50th quantile the better.
 Save and load models
 ####################
 
-HDDM models can be saved and reloaded in a separate python
+``HDDM`` models can be saved and reloaded in a separate python
 session. Note that you have to save the traces to file by using
 the db backend.
 
@@ -481,9 +494,11 @@ started above is completed.
 
    model = hddm.load('mymodel')
 
-HDDM uses the pickle module to save and load models.
+``HDDM`` uses the pickle module to save and load models.
+
 
 .. _PyMC docs: http://pymc-devs.github.com/pymc/database.html#saving-data-to-disk
 .. _DIC: http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml
 .. _PyMC documentation: http://pymc-devs.github.com/pymc/modelchecking.html#formal-methods
 .. _IPython Parallel Docs: http://ipython.org/ipython-doc/stable/parallel/index.html
+.. _Patsy: http://patsy.readthedocs.org/en/latest/
