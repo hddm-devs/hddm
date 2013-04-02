@@ -740,25 +740,67 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 def pretty_tag(tag):
     return tag[0] if len(tag) == 1 else string.join(tag, ', ')
 
-def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
+def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
     """
     qp plot
+    Input:
+        model : HDDM model
+
+        quantiles : sequence
+            sequence of quantiles
+
+        ncols : int
+            number of columns in output figure
     """
 
     #if model is a group model then we create an average model and plot it
     if model.is_group_model:
         avg_model = model.get_average_model()
-        return qp_plot(avg_model, quantiles=quantiles, ax=ax)
+        qp_plot(avg_model, quantiles=quantiles)
 
     #create axes
-    if ax is None:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-    ax.set_xlim(0,1)
+    n_subjs = model.num_subjs
+    if ncols is None:
+        ncols = min(4, n_subjs)
+    nrows = int(np.ceil(n_subjs / ncols))
+    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
+
+    #plot single subject model
+    obs = model.get_observeds()
+    if not model.is_group_model:
+        axs = np.array([axs])
+        _qp_plot_of_nodes_db(obs, quantiles=quantiles, ax=axs[0])
+
+    #plot group model
+    else:
+        for i, (subj_idx, t_nodes_db) in enumerate(obs.groupby('subj_idx')):
+            _qp_plot_of_nodes_db(t_nodes_db, quantiles=quantiles, ax=axs.flat[i])
+
+    #add legend
+    leg = axs.flat[0].legend(loc='best', fancybox=True)
+    if leg is not None:
+        leg.get_frame().set_alpha(0.5)
+
+def _qp_plot_of_nodes_db(nodes_db, quantiles, ax):
+    """
+    function used by qp_plot
+    Input
+        nodes_db : DataFrame
+            DataFram of observeds nodes (e.g. model.get_observeds())
+
+        quantiles : sequence
+            sequence of quantiles
+
+        ax : axes
+            axes to plot on
+    """
+
+    # ax.set_xlim(0,1)
     nq = len(quantiles)
+    nodes_db = nodes_db.sort_index()
 
     #loop over nodes
-    for name, node_row in model.iter_observeds():
+    for name, node_row in nodes_db.iterrows():
 
         #get quantiles
         q_lower, q_upper, p_upper = node_row['node'].empirical_quantiles(quantiles)
@@ -766,14 +808,9 @@ def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ax=None):
         #plot two lines for each node
         tag = node_row['tag']
         tag = pretty_tag(tag)
-
         line = ax.plot(np.ones(nq)*p_upper, q_upper, '-x', label=tag)[0]
         ax.plot(np.ones(nq)*(1-p_upper), q_lower, '-x', c=line.get_color())[0]
 
-    #add legend
-    if tag is not None:
-        leg = ax.legend()#loc='best', fancybox=True)
-        leg.get_frame().set_alpha(0.5)
 
 def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     """
