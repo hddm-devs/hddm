@@ -17,17 +17,17 @@ class HDDMBase2(HDDMBase):
                         'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1, 'p_outlier':1., 'v_var': 1}
 
         for name, node_descr in self.iter_stochastics():
-                node = node_descr['node']
-                if isinstance(node, pm.Normal) and np.all([isinstance(x, pm.Normal) for x in node.extended_children]):
-                    self.mc.use_step_method(steps.kNormalNormal, node)
+            node = node_descr['node']
+            if isinstance(node, pm.Normal) and np.all([isinstance(x, pm.Normal) for x in node.extended_children]):
+                self.mc.use_step_method(steps.kNormalNormal, node)
+            else:
+                knode_name = node_descr['knode_name'].replace('_subj', '')
+                if knode_name in ['st', 'sv', 'sz']:
+                    left = 0
                 else:
-                    knode_name = node_descr['knode_name'].replace('_subj', '')
-                    if knode_name in ['st', 'sv', 'sz']:
-                        left = 0
-                    else:
-                        left = None
-                    self.mc.use_step_method(steps.SliceStep, node, width=slice_widths.get(knode_name,1),
-                                            left=left, maxiter=5000)
+                    left = None
+                self.mc.use_step_method(steps.SliceStep, node, width=slice_widths.get(knode_name,1),
+                                        left=left, maxiter=5000)
 
 
     def create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
