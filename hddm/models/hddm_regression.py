@@ -5,7 +5,7 @@ import pandas as pd
 from patsy import dmatrix
 
 import hddm
-from hddm_gamma import HDDMGamma
+from base2 import HDDMInfo
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
@@ -79,7 +79,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
 
-class HDDMRegressor(HDDMGamma):
+class HDDMRegressor(HDDMInfo):
     """HDDMRegressor allows estimation of the DDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
@@ -187,27 +187,6 @@ class HDDMRegressor(HDDMGamma):
             for param in model_descr['params']:
                 assert len(self.depends[param]) == 0, "When using patsy, you can not use any model parameter in depends_on."
 
-    def pre_sample(self):
-        if not self.is_group_model:
-            return
-
-        slice_widths = {'a':2, 't':0.5, 'a_var': 0.2, 't_var': 0.15}
-
-        # apply gibbs sampler to normal group nodes
-        for name, node_descr in self.iter_stochastics():
-            node = node_descr['node']
-            knode_name = node_descr['knode_name'].replace('_trans', '')
-            if knode_name == 'v':
-                self.mc.use_step_method(steps.kNormalNormal, node)
-            elif knode_name == 'v_var':
-                self.mc.use_step_method(steps.UniformPriorNormalstd, node)
-            else:
-                try:
-                    self.mc.use_step_method(steps.SliceStep, node, width=slice_widths[knode_name],
-                                            left=0, maxiter=1000)
-                except KeyError:
-                    pass
-
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d['wfpt_reg_class']
@@ -243,6 +222,7 @@ class HDDMRegressor(HDDMGamma):
                 if reg not in self.group_only_nodes:
                     reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param)
                 knodes.update(reg_family)
+                self.slice_widths[param] = .05
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,

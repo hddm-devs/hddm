@@ -48,6 +48,11 @@ class TestMulti(unittest.TestCase):
 class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
+        self.includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
+        self.model_classes = [hddm.models.HDDMTruncated,
+                              hddm.models.HDDM, hddm.models.HDDMInfo,
+                              hddm.models.HDDMNoninfo
+        ]
 
         self.iter = 40
         self.burn = 10
@@ -56,9 +61,7 @@ class TestSingleBreakdown(unittest.TestCase):
         return
 
     def test_HDDM(self, assert_=False):
-        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
-        for include, model_class in itertools.product(includes, model_classes):
+        for include, model_class in itertools.product(self.includes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
             model = model_class(data, include=include, bias='z' in include, is_group_model=False)
@@ -68,9 +71,7 @@ class TestSingleBreakdown(unittest.TestCase):
         return model.mc
 
     def test_HDDM_group(self, assert_=False):
-        includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
-        for include, model_class in itertools.product(includes, model_classes):
+        for include, model_class in itertools.product(self.includes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
             model = model_class(data, include=include, bias='z' in include, is_group_model=True)
@@ -80,10 +81,8 @@ class TestSingleBreakdown(unittest.TestCase):
         return model.mc
 
     def test_HDDM_group_only_group_nodes(self, assert_=False):
-        group_only_nodes = [[], ['z'], ['z', 'st'], ['v', 'a']]
-        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM]
-
-        for nodes, model_class in itertools.product(group_only_nodes, model_classes):
+        group_only_nodes = ['v', 'a', 'z', 't']
+        for nodes, model_class in itertools.product(group_only_nodes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=nodes)
             data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
             model = model_class(data, include=nodes, group_only_nodes=nodes, is_group_model=True)
@@ -94,18 +93,17 @@ class TestSingleBreakdown(unittest.TestCase):
     def test_HDDM_load_save(self, assert_=False):
         include = ['z', 'sz', 'st', 'sv']
         dbs = ['pickle', 'sqlite']
-        model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDM, hddm.models.HDDMRegressor]
         params = hddm.generate.gen_rand_params(include=include)
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=2)
         data = pd.DataFrame(data)
         data['cov'] = 1.
 
-        for db, model_class in itertools.product(dbs, model_classes):
+        for db, model_class in itertools.product(dbs, self.model_classes):
             if model_class is hddm.models.HDDMRegressor:
                 model = model_class(data, 'v ~ cov', include=include, is_group_model=True)
             else:
                 model = model_class(data, include=include, is_group_model=True)
-            model.sample(20, dbname='test.db', db=db)
+            model.sample(50, dbname='test.db', db=db)
             model.save('test.model')
             m_load = hddm.load('test.model')
             os.remove('test.db')

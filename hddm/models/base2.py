@@ -9,13 +9,13 @@ from kabuki.hierarchical import Knode
 
 class HDDMBase2(HDDMBase):
     def __init__(self, *args, **kwargs):
+        self.slice_widths = {'a':1, 't':0.01, 'a_var': 1, 't_var': 0.15, 'sz': 1.1, 'v': 1.5,
+                             'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
+                             'p_outlier':1., 'v_var': 1}
+
         super(HDDMBase2, self).__init__(*args, **kwargs)
 
     def pre_sample(self, use_slice=True):
-
-        slice_widths = {'a':1, 't':0.01, 'a_var': 1, 't_var': 0.15, 'sz': 1.1, 'v': 1.5,
-                        'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1, 'p_outlier':1., 'v_var': 1}
-
         for name, node_descr in self.iter_stochastics():
             node = node_descr['node']
             if isinstance(node, pm.Normal) and np.all([isinstance(x, pm.Normal) for x in node.extended_children]):
@@ -26,7 +26,7 @@ class HDDMBase2(HDDMBase):
                     left = 0
                 else:
                     left = None
-                self.mc.use_step_method(steps.SliceStep, node, width=slice_widths.get(knode_name,1),
+                self.mc.use_step_method(steps.SliceStep, node, width=self.slice_widths.get(knode_name, 1),
                                         left=left, maxiter=5000)
 
 
@@ -238,7 +238,7 @@ class HDDMInfo(HDDMBase2):
             knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=3, value=0.01, depends=self.depends['sz'])
         if 'st' in include:
             knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
-        if 'z' in self.include:
+        if 'z' in include:
             knodes.update(self.create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
@@ -265,7 +265,7 @@ class HDDMNoninfo(HDDMBase2):
             knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=1, value=0.01, depends=self.depends['sz'])
         if 'st' in include:
             knodes['st_bottom'] = Knode(pm.Uniform, 'st', lower=1e-6, upper=1e3, value=0.01, depends=self.depends['st'])
-        if 'z' in self.include:
+        if 'z' in include:
             knodes.update(self.create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=1, value=0.01, depends=self.depends['p_outlier'])
