@@ -214,13 +214,20 @@ class HDDMRegressor(HDDMInfo):
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
         #create regressor params
-        for i_reg, reg in enumerate(self.model_descrs):
+        for reg in self.model_descrs:
             reg_parents = {}
             for param in reg['params']:
-                reg_family = self.create_family_normal(param, value=0)
-                reg_parents[param] = reg_family['%s_bottom' % param]
+                inter = param.find('Intercept')
+                if inter != -1:
+                    param_lookup = param[:inter-1]
+                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(set(param_lookup))
+                else:
+                    reg_family = self.create_family_normal(param, value=0)
+                    param_lookup = param
+
+                reg_parents[param] = reg_family['%s_bottom' % param_lookup]
                 if reg not in self.group_only_nodes:
-                    reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param)
+                    reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param_lookup)
                 knodes.update(reg_family)
                 self.slice_widths[param] = .05
 

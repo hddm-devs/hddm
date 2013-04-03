@@ -289,7 +289,7 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1].__name__, 'v_C(condition)[T.c1]_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].value)), 1)
