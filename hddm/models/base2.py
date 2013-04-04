@@ -211,7 +211,7 @@ class HDDMBase2(HDDMBase):
         super_init_function = super(self.__class__, self).__init__
         init_args = set(inspect.getargspec(super_init_function).args)
         known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
-        assert known_args == init_args, "Arguments of the constructor are not as expected"
+        assert known_args.issuperset(init_args), "Arguments of the constructor are not as expected"
 
         #create the avg model
         avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
@@ -220,6 +220,8 @@ class HDDMBase2(HDDMBase):
 
 
 class HDDMInfo(HDDMBase2):
+    """
+    """
     def __init__(self, *args, **kwargs):
         super(HDDMInfo, self).__init__(*args, **kwargs)
 
@@ -229,7 +231,7 @@ class HDDMInfo(HDDMBase2):
         if 'a' in include:
             knodes.update(self.create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
         if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_mu=2, g_tau=3**-2, std_std=2))
+            knodes.update(self.create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
         if 't' in include:
             knodes.update(self.create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
         if 'sv' in include:
