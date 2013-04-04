@@ -1,4 +1,5 @@
 from copy import deepcopy
+import math
 import numpy as np
 import pymc as pm
 import pandas as pd
@@ -70,11 +71,19 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         parents = {'args': args}
 
+        # Make sure design matrix is kosher
+        dm = dmatrix(reg['model'], data=data)
+        #if not math.isnan(dm.sum()):
+        #    raise NotImplementedError, 'DesignMatrix contains NaNs.'
+
         def func(args, design_matrix=dmatrix(reg['model'], data=data), link_func=reg['link_func']):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
+            if design_matrix.shape[1] != params.shape[1]:
+                raise NotImplementedError, 'Missing columns in design matrix. You need data for all conditions for all subjects.'
             predictor = link_func(pd.DataFrame((design_matrix * params).sum(axis=1), index=data.index))
+
             return pd.DataFrame(predictor, index=data.index)
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
@@ -85,7 +94,7 @@ class HDDMRegressor(HDDMInfo):
     fMRI or different conditions).
     """
 
-    def __init__(self, data, models, group_only_regressors=False, **kwargs):
+    def __init__(self, data, models, group_only_regressors=True, **kwargs):
         """Instantiate a regression model.
 
         :Arguments:
@@ -222,7 +231,7 @@ class HDDMRegressor(HDDMInfo):
                     param_lookup = param[:inter-1]
                     reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(set(param_lookup))
                 else:
-                    reg_family = self.create_family_normal(param, value=0)
+                    reg_family = self.create_family_normal(param)
                     param_lookup = param
 
                 reg_parents[param] = reg_family['%s_bottom' % param_lookup]
