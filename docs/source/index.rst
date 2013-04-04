@@ -16,6 +16,7 @@ Documentation
     methods
     tutorial
     howto
+    demo
     manual
 
 

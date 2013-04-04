@@ -248,7 +248,11 @@ deviation, :math:`\mathcal{HN}` represents a half-normal parameterized
 standard-deviation, :math:`\mathcal{G}` represents a Gamma
 distribution parameterized by mean and rate, :math:`\mathcal{B}`
 represents a Beta distribution parameterized by :math:`\alpha` and
-:math:`\beta`.
+:math:`\beta`. Note that in this model we do not attempt to estimate
+individual parameters for inter-trial variabilities. The reason is
+that the influence of these parameters onto the likelihood is often so
+small that very large amounts of data would be required to make
+meaningful inference at the individual level.
 
 These priors are created to roughly match parameter values reported in
 the literature and collected by :cite:`MatzkeWagenmakers09`. In the

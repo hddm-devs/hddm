@@ -1,3 +1,6 @@
+.. index:: Demo
+.. _chap_demo:
+
 Demo
 ----
 
@@ -298,7 +301,7 @@ Lets compare the two models using the deviance information criterion (DIC; lower
 
 
 Within-subject effects
-----------------------
+``````````````````````
 
 Note that while the ``m_stim`` model we created above estimates
 different drift-rates ``v`` for each subject, it implicitly assumes that
@@ -380,7 +383,7 @@ overall drift rate intercept, here applying to WL condition, is positive
 condition (WW and LL) are negative and do not overlap with zero.
 
 Fitting regression models
--------------------------
+`````````````````````````
 
 As mentioned above, cognitive neuroscience has embraced the DDM as it
 enables to link psychological processes to cognitive brain measures. The
@@ -499,7 +502,8 @@ vary when brain state is manipulated.
 .. image:: hddm_demo_files/hddm_demo_fig_09.png
 
 Dealing with outliers
----------------------
+`````````````````````
+
 
 It is common to have outliers in any data set and RT data is no
 exception. Outliers present a serious challenge to likelihood-based
