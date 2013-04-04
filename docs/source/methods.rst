@@ -208,7 +208,8 @@ Hierarchical Drift-Diffusion Models used in HDDM
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
 depiction of a hierarchical DDM model with informative priors and
-group only inter-trial variablity parameters.
+group only inter-trial variablity parameters. Note, however, that
+there is also a model with non-informative priors.
 
 ..  figure:: graphical_hddm.svg
 
