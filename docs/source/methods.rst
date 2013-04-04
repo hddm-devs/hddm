@@ -207,8 +207,8 @@ Hierarchical Drift-Diffusion Models used in HDDM
 
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
-depiction of the simple DDM hierarchical model (without any
-inter-trial variability).
+depiction of a hierarchical DDM model with informative priors and
+group only inter-trial variablity parameters.
 
 ..  figure:: graphical_hddm.svg
 
@@ -219,30 +219,46 @@ Individual graphical nodes are distributed as follows.
 
 .. math::
 
-    \mu_{a} &\sim \mathcal{N}(0, 1) \\
-    \mu_{z} &\sim \mathcal{N}(0, 1) \\
-    \mu_{v} &\sim \mathcal{N}(0, 1) \\
-    \mu_{ter} &\sim \mathcal{N}(0, 1) \\
+    \mu_{a} &\sim \mathcal{G}(1.5, 0.75) \\
+    \mu_{v} &\sim \mathcal{N}(2, 3) \\
+    \mu_{z} &\sim \mathcal{N}(0.5, 0.5) \\
+    \mu_{ter} &\sim \mathcal{G}(0.4, 0.2) \\
     \\
-    \sigma_{a} &\sim \mathcal{U}(1e^{-10}, 100) \\
-    \sigma_{z} &\sim \mathcal{U}(1e^{-10}, 100) \\
-    \sigma_{v} &\sim \mathcal{U}(1e^{-10}, 100) \\
-    \sigma_{ter} &\sim \mathcal{U}(1e^{-10}, 100) \\
+    \sigma_{a} &\sim \mathcal{HN}(0.1) \\
+    \sigma_{v} &\sim \mathcal{HN}(2) \\
+    \sigma_{z} &\sim \mathcal{HN}(0.05) \\
+    \sigma_{ter} &\sim \mathcal{HN}(1) \\
     \\
-    a_{j} &\sim \mathcal{N}(\mu_{a}, \sigma_{a}^2) \\
-    z_{j} &\sim \mathcal{N}(\mu_{z}, \sigma_{z}^2) \\
+    a_{j} &\sim \mathcal{G}(\mu_{a}, \sigma_{a}^2) \\
+    z_{j} &\sim \text{invlogit}(\mathcal{N}(\mu_{z}, \sigma_{z}^2)) \\
     v_{j} &\sim \mathcal{N}(\mu_{v}, \sigma_{v}^2) \\
     ter_{j} &\sim \mathcal{N}(\mu_{ter}, \sigma_{ter}^2) \\
     \\
-    x_{i, j} &\sim F(a_{i}, z_{i}, v_{i}, ter_{i})
+    sv &\sim \mathcal{HN}(2) \\
+    ster &\sim \mathcal{HN}(0.3) \\
+    sz &\sim \mathcal{B}(1, 3) \\
+    \\
+    x_{i, j} &\sim F(a_{i}, z_{i}, v_{i}, ter_{i}, sv, ster, sz)
 
 where :math:`x_{i, j}` represents the observed data consisting of
 reaction time and choice and :math:`F` represents the DDM likelihood
-function as formulated by :cite:`NavarroFuss09`. As can be seen,
-individual subject parameters are expected to be normal distributed
-around a group mean :math:`\mu` with variance :math:`\sigma^2`. HDDM
-then uses MCMC to estimate the joint posterior distribution of all
-model parameters.
+function as formulated by :cite:`NavarroFuss09`. :math:`\mathcal{N}`
+represents a normal distribution parameterized by mean and standard
+deviation, :math:`\mathcal{HN}` represents a half-normal parameterized
+standard-deviation, :math:`\mathcal{G}` represents a Gamma
+distribution parameterized by mean and rate, :math:`\mathcal{B}`
+represents a Beta distribution parameterized by :math:`\alpha` and
+:math:`\beta`.
+
+These priors are created to roughly match parameter values reported in
+the literature and collected by :cite:`MatzkeWagenmakers09`. In the
+below figure we overlayed those empirical values with the prior
+distribution used for each parameter.
+
+.. figure:: hddm_info_priors.svg
+
+HDDM then uses MCMC to estimate the joint posterior distribution of
+all model parameters.
 
 Note that the exact form of the model will be user-dependent; consider
 as an example a model where separate drift-rates *v* are estimated for
