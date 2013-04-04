@@ -6,7 +6,6 @@ import pandas as pd
 from patsy import dmatrix
 
 import hddm
-from base2 import HDDMInfo
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
@@ -88,7 +87,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents)
 
-class HDDMRegressor(HDDMInfo):
+class HDDMRegressor(hddm.HDDM):
     """HDDMRegressor allows estimation of the DDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).

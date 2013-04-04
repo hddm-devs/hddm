@@ -1,19 +1,66 @@
 from collections import OrderedDict
 import inspect
-import kabuki
 import numpy as np
 import pymc as pm
 import kabuki.step_methods as steps
 from hddm.models import HDDMBase
 from kabuki.hierarchical import Knode
 
-class HDDMBase2(HDDMBase):
+class HDDM(HDDMBase):
     def __init__(self, *args, **kwargs):
         self.slice_widths = {'a':1, 't':0.01, 'a_var': 1, 't_var': 0.15, 'sz': 1.1, 'v': 1.5,
                              'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
                              'p_outlier':1., 'v_var': 1}
 
-        super(HDDMBase2, self).__init__(*args, **kwargs)
+        self.is_informative = kwargs.pop('informative', True)
+        if self.is_informative:
+            self._create_stochastic_knodes = self._create_stochastic_knodes_info
+        else:
+            self._create_stochastic_knodes = self._create_stochastic_knodes_noninfo
+
+        super(HDDM, self).__init__(*args, **kwargs)
+
+    def _create_stochastic_knodes_info(self, include):
+        knodes = OrderedDict()
+        if 'a' in include:
+            knodes.update(self.create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
+        if 'v' in include:
+            knodes.update(self.create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
+        if 't' in include:
+            knodes.update(self.create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
+        if 'sv' in include:
+            knodes['sv_bottom'] = Knode(pm.HalfNormal, 'sv', tau=2**-2, value=1, depends=self.depends['sv'])
+        if 'sz' in include:
+            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=3, value=0.01, depends=self.depends['sz'])
+        if 'st' in include:
+            knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
+        if 'z' in include:
+            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
+        if 'p_outlier' in include:
+            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
+
+        return knodes
+
+    def _create_stochastic_knodes_noninfo(self, include):
+        knodes = OrderedDict()
+        if 'a' in include:
+            knodes.update(self.create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
+        if 'v' in include:
+            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
+        if 't' in include:
+            knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
+        if 'sv' in include:
+            knodes['sv_bottom'] = Knode(pm.Uniform, 'sv', lower=1e-6, upper=1e3, value=1, depends=self.depends['sv'])
+        if 'sz' in include:
+            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=1, value=0.01, depends=self.depends['sz'])
+        if 'st' in include:
+            knodes['st_bottom'] = Knode(pm.Uniform, 'st', lower=1e-6, upper=1e3, value=0.01, depends=self.depends['st'])
+        if 'z' in include:
+            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
+        if 'p_outlier' in include:
+            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=1, value=0.01, depends=self.depends['p_outlier'])
+
+        return knodes
 
     def pre_sample(self, use_slice=True):
         for name, node_descr in self.iter_stochastics():
@@ -216,60 +263,3 @@ class HDDMBase2(HDDMBase):
         #create the avg model
         avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
         return avg_model
-
-
-
-class HDDMInfo(HDDMBase2):
-    """
-    """
-    def __init__(self, *args, **kwargs):
-        super(HDDMInfo, self).__init__(*args, **kwargs)
-
-
-    def _create_stochastic_knodes(self, include):
-        knodes = OrderedDict()
-        if 'a' in include:
-            knodes.update(self.create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
-        if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
-        if 't' in include:
-            knodes.update(self.create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
-        if 'sv' in include:
-            knodes['sv_bottom'] = Knode(pm.HalfNormal, 'sv', tau=2**-2, value=1, depends=self.depends['sv'])
-        if 'sz' in include:
-            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=3, value=0.01, depends=self.depends['sz'])
-        if 'st' in include:
-            knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
-        if 'z' in include:
-            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
-        if 'p_outlier' in include:
-            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
-
-        return knodes
-
-
-class HDDMNoninfo(HDDMBase2):
-    def __init__(self, *args, **kwargs):
-        super(HDDMNoninfo, self).__init__(*args, **kwargs)
-
-
-    def _create_stochastic_knodes(self, include):
-        knodes = OrderedDict()
-        if 'a' in include:
-            knodes.update(self.create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
-        if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
-        if 't' in include:
-            knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
-        if 'sv' in include:
-            knodes['sv_bottom'] = Knode(pm.Uniform, 'sv', lower=1e-6, upper=1e3, value=1, depends=self.depends['sv'])
-        if 'sz' in include:
-            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=1, value=0.01, depends=self.depends['sz'])
-        if 'st' in include:
-            knodes['st_bottom'] = Knode(pm.Uniform, 'st', lower=1e-6, upper=1e3, value=0.01, depends=self.depends['st'])
-        if 'z' in include:
-            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
-        if 'p_outlier' in include:
-            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=1, value=0.01, depends=self.depends['p_outlier'])
-
-        return knodes

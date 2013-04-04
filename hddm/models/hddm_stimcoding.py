@@ -28,19 +28,17 @@ class HDDMStimCoding(HDDM):
     def __init__(self, *args, **kwargs):
         self.stim_col = kwargs.pop('stim_col', 'stim')
         self.split_param = kwargs.pop('split_param', 'z')
-        if self.split_param == 'z' and 'include' in kwargs:
-            if 'z' not in kwargs['include']:
+        if self.split_param == 'z':
+            print "Setting model to be non-informative"
+            kwargs['informative'] = False
+            if 'include' in kwargs and 'z' not in kwargs['include']:
                 kwargs['include'].append('z')
                 print "Adding z to includes."
-        else:
-            kwargs['include'] = ['z']
-            print "Adding z to includes."
-        #assert self.stim_col in self.data.columns, "Can not find column named %s" % self.stim_col
+
         self.stims = np.sort(np.unique(args[0][self.stim_col]))
         assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
 
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
-
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
