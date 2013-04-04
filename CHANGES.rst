@@ -7,11 +7,25 @@ Release Notes
 HDDM 0.5
 ========
 
-* New model HDDMInformative with informative priors.
-* HDDMRegression takes patsy model specification strings.
-* Ratcliff's quantile optimization method for single subjects and groups.
+* New model HDDMInfo with informative priors and HDDMNoninfo with
+  vague priors.
+    * These models uses slice sampling which leads to better
+      convergence while being slower to generate an individual
+      sample. In our experiments, burnin of 20 is often good enough.
+    * These models should be preferred over the older ones.
+* HDDMRegression takes patsy model specification strings. See
+  http://ski.clps.brown.edu/hddm_docs/howto.html#estimate-a-regression-model
+  and
+  http://ski.clps.brown.edu/hddm_docs/tutorial_regression_stimcoding.html#chap-tutorial-hddm-regression
+* HDDMRegression uses the informative priors from HDDMInfo and slice
+  sampling.
+* Better and extended online documentation at
+  http://ski.clps.brown.edu/hddm_docs
+* A new HDDM demo at http://ski.clps.brown.edu/hddm_docs/demo.html
+* Ratcliff's quantile optimization method for single subjects and
+  groups.
 * Maximum likelihood optimization.
-* Bugfixes.
+* Many bugfixes and better test coverage.
 
 HDDM 0.4.1
 ==========
