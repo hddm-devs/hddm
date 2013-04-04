@@ -50,8 +50,7 @@ class TestSingleBreakdown(unittest.TestCase):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
         self.includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
         self.model_classes = [hddm.models.HDDMTruncated,
-                              hddm.models.HDDM, hddm.models.HDDMInfo,
-                              hddm.models.HDDMNoninfo
+                              hddm.models.HDDM, hddm.model.HDDMStimCoding
         ]
 
         self.iter = 40
@@ -179,7 +178,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data['cov'] = 1.
-        m = hddm.HDDMRegressor(data, 'v ~ cov')
+        m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -194,7 +193,8 @@ class TestHDDMRegressor(unittest.TestCase):
         data = pd.DataFrame(data)
         data['cov'] = 1.
         link_func = lambda x: 1 / (1 + np.exp(-x))
-        m = hddm.HDDMRegressor(data, {'model': 'z ~ cov', 'link_func': link_func}, include='z')
+        m = hddm.HDDMRegressor(data, {'model': 'z ~ cov', 'link_func':
+                                      link_func}, group_only_regressors=False, include='z')
         m.sample(self.iter, burn=self.burn)
 
         self.assertIn('z', m.include)
@@ -212,7 +212,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
         data['cov'] = 1.
         del data['subj_idx']
-        m = hddm.HDDMRegressor(data, 'v ~ cov', is_group_model=False, depends_on={})
+        m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
         print m.nodes_db.index
 
@@ -228,7 +228,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
-        m = hddm.HDDMRegressor(data, 'v ~ cov1 + cov2')
+        m = hddm.HDDMRegressor(data, 'v ~ cov1 + cov2', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
@@ -244,7 +244,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data = pd.DataFrame(data)
         data['cov1'] = 1.
         data['cov2'] = -1
-        m = hddm.HDDMRegressor(data, ['v ~ cov1', 'a ~ cov2'])
+        m = hddm.HDDMRegressor(data, ['v ~ cov1', 'a ~ cov2'], group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
