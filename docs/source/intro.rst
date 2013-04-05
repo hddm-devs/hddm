@@ -106,7 +106,7 @@ toolbox and provide a tutorial for how to employ it; subsequent
 reports will quantitatively characterize its success in recovering
 model parameters and advantages relative to non-hierarchical or
 non-Bayesian methods as a function of the number of subjects and
-trials (Sofer, Wiecki & Frank; in preparation).
+trials (:cite: `SoferWieckiFrank`).
 
 .. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/
