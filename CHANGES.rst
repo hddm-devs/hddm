@@ -7,25 +7,29 @@ Release Notes
 HDDM 0.5
 ========
 
-* New model HDDMInfo with informative priors and HDDMNoninfo with
-  vague priors.
-    * These models uses slice sampling which leads to better
+* New and improved HDDM model with the following changes:
+    * Priors: by default model will use informative priors
+      (see http://ski.clps.brown.edu/hddm_docs/methods.html#hierarchical-drift-diffusion-models-used-in-hddm)
+      If you want uninformative priors, set ``informative=False``.
+    * This model uses slice sampling which leads to better
       convergence while being slower to generate an individual
       sample. In our experiments, burnin of 20 is often good enough.
-    * These models should be preferred over the older ones.
+    * Inter-trial variablity parameters are only estimated at the
+      group level, not for individual subjects.
+    * The old model has been renamed to ``HDDMTransformed``.
+    * HDDMRegression and HDDMStimCoding are also using this model.
 * HDDMRegression takes patsy model specification strings. See
   http://ski.clps.brown.edu/hddm_docs/howto.html#estimate-a-regression-model
   and
   http://ski.clps.brown.edu/hddm_docs/tutorial_regression_stimcoding.html#chap-tutorial-hddm-regression
-* HDDMRegression uses the informative priors from HDDMInfo and slice
-  sampling.
-* Better and extended online documentation at
+* Vastly improved online documentation at
   http://ski.clps.brown.edu/hddm_docs
 * A new HDDM demo at http://ski.clps.brown.edu/hddm_docs/demo.html
 * Ratcliff's quantile optimization method for single subjects and
-  groups.
+  groups using the ``.optimize()`` method
 * Maximum likelihood optimization.
 * Many bugfixes and better test coverage.
+* hddm_fit.py command line utility is depracated.
 
 HDDM 0.4.1
 ==========
