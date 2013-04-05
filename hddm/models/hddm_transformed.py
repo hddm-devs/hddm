@@ -5,7 +5,7 @@ import pymc as pm
 import kabuki.step_methods as steps
 from hddm.models import HDDMBase
 
-class HDDM(HDDMBase):
+class HDDMTransformed(HDDMBase):
     def __init__(self, *args, **kwargs):
         self.use_gibbs_for_mean = kwargs.pop('use_gibbs_for_mean', True)
         self.use_reject_for_std = kwargs.pop('use_reject_for_std', True)
