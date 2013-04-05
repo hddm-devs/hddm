@@ -148,7 +148,7 @@ the simplest model that does not allow parameters to vary by condition.
 
     # Instantiate model object passing it our data (no need to call flip_errors() before passing it).
     # This will tailor an individual hierarchical DDM around your dataset.
-    m = hddm.HDDMInfo(data)
+    m = hddm.HDDM(data)
     # find a good starting point which helps with the convergence.
     m.find_starting_values()
     # start drawing 7000 samples and discarding 5000 as burn-in
@@ -240,7 +240,7 @@ conditions we want to split by.
 
 .. code:: python
 
-    m_stim = hddm.models.HDDMInfo(data, depends_on={'v': 'stim'})
+    m_stim = hddm.HDDM(data, depends_on={'v': 'stim'})
     m_stim.find_starting_values()
     m_stim.sample(2000, burn=20)
 
@@ -525,7 +525,7 @@ DDM model without taking outliers into account.
 
 .. code:: python
 
-    m_no_outlier = hddm.HDDMInfo(outlier_data)
+    m_no_outlier = hddm.HDDM(outlier_data)
     m_no_outlier.sample(2000, burn=50)
 
 .. code:: python
@@ -551,7 +551,7 @@ Here, we specify that we expect roughly 5% outliers in our data.
 
 .. code:: python
 
-    m_outlier = hddm.HDDMInfo(outlier_data, p_outlier=.05)
+    m_outlier = hddm.HDDM(outlier_data, p_outlier=.05)
     m_outlier.sample(2000, burn=20)
 
 .. code:: python
