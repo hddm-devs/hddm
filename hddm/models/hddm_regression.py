@@ -73,8 +73,8 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         # Make sure design matrix is kosher
         dm = dmatrix(reg['model'], data=data)
-        #if not math.isnan(dm.sum()):
-        #    raise NotImplementedError, 'DesignMatrix contains NaNs.'
+        if math.isnan(dm.sum()):
+            raise NotImplementedError, 'DesignMatrix contains NaNs.'
 
         def func(args, design_matrix=dmatrix(reg['model'], data=data), link_func=reg['link_func']):
             # convert parents to matrix
