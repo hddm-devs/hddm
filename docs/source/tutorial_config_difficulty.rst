@@ -183,7 +183,7 @@ by the reduced drift-rate estimated for this condition.
 Moreover, HDDM generates the trace and histogram of the posterior
 samples. As pointed out in the introduction, we can rarely compute the
 posterior analytically so we have to estimate it. MCMC is a standard
-methods which allows you to draw samples from the posterior. On the
+method which allows you to draw samples from the posterior. On the
 left upper side of the plot we see the trace of this sampling. The
 main thing to look out for is if the chain drifts around such that the
 mean value is not stable or if there are periods where it seems stuck

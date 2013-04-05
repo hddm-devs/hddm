@@ -6,13 +6,12 @@ Creating a hierarchical group model
 ###################################
 
 Up until now, we have been looking at data that was generated from the
-same set of parameters. However, in most experiments, we test multiple
+same set of parameters. However, in some experiments, we test multiple
 subjects and only gather relatively few trials per subject; this is
 often the case in cognitive neuroscience experiments where we may also
 image subjects using fMRI during the task, or collect data from
 patient populations. Traditionally, we would
-either fit a separate model to each individual subject or fit one
-model to all subjects. Neither of these approaches are ideal as we
+either fit a separate model to each individual subject or fit a model to an "average" subject, created by averaging the responses of all subjects together. Neither of these approaches are ideal as we
 will see below. We can expect that subjects will be similar in many
 ways. If we fit separate models we ignore their similarities and need
 much more data per subject to make useful inference. If we fit one
