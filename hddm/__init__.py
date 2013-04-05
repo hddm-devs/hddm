@@ -12,6 +12,7 @@ import cdfdif_wrapper
 import models as model # remain backwards compatibility
 
 from models import *
+from kabuki import analyze
 
 import wfpt
 
