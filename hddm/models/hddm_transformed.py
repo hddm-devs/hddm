@@ -10,7 +10,7 @@ class HDDMTransformed(HDDMBase):
         self.use_gibbs_for_mean = kwargs.pop('use_gibbs_for_mean', True)
         self.use_reject_for_std = kwargs.pop('use_reject_for_std', True)
 
-        super(HDDM, self).__init__(*args, **kwargs)
+        super(HDDMTransformed, self).__init__(*args, **kwargs)
 
     def pre_sample(self):
         if not self.is_group_model:

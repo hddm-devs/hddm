@@ -49,9 +49,8 @@ class TestSingleBreakdown(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSingleBreakdown, self).__init__(*args, **kwargs)
         self.includes = [[], ['z'],['z', 'sv'],['z', 'st'],['z', 'sz'], ['z', 'sz','st'], ['z', 'sz','st','sv']]
-        self.model_classes = [hddm.models.HDDMTruncated,
-                              hddm.models.HDDM, hddm.model.HDDMStimCoding
-        ]
+        self.model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDMTransformed,
+                              hddm.models.HDDM]
 
         self.iter = 40
         self.burn = 10
@@ -133,17 +132,17 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
         assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
         assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'], pm.Normal)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['mu'], pm.Normal)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'], pm.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'], pm.Normal)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['mu'], pm.Normal)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'], pm.Deterministic)
-        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['x'].parents['tau'].parents['x'], pm.Uniform)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.HalfNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.Gamma)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['alpha'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['alpha'].parents['x'], pm.Gamma)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['beta'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['beta'].parents['y'], pm.HalfNormal)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.Gamma)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['alpha'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['alpha'].parents['x'], pm.Gamma)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['beta'], pm.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['beta'].parents['y'], pm.HalfNormal)
 
 
     def test_HDDMStimCoding(self):
@@ -286,7 +285,8 @@ class TestHDDMRegressor(unittest.TestCase):
         data = pd.DataFrame(data)
         data['cov'] = 1.
         m = hddm.HDDMRegressor(data, 'v ~ cov * C(condition)',
-                               depends_on={'a': 'condition'})
+                               depends_on={'a': 'condition'},
+                               group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))

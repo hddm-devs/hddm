@@ -13,12 +13,14 @@ class HDDM(HDDMBase):
                              'p_outlier':1., 'v_var': 1}
 
         self.is_informative = kwargs.pop('informative', True)
-        if self.is_informative:
-            self._create_stochastic_knodes = self._create_stochastic_knodes_info
-        else:
-            self._create_stochastic_knodes = self._create_stochastic_knodes_noninfo
 
         super(HDDM, self).__init__(*args, **kwargs)
+
+    def _create_stochastic_knodes(self, include):
+        if self.is_informative:
+            return self._create_stochastic_knodes_info(include)
+        else:
+            return self._create_stochastic_knodes_noninfo(include)
 
     def _create_stochastic_knodes_info(self, include):
         knodes = OrderedDict()
