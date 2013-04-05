@@ -86,7 +86,7 @@ diffusion models and (ii) the estimation of its posterior parameter
 distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
 models can be specified via a configuration file thus requiring no
 Python knowledge. Alternatively, more sophisticated usage of the
-toolbox is available interactively via, for example, IPython_ or by
+toolbox is available interactively via, for example, IPython_ (:cite:PER-GRA2007) or by
 writing succinct Python scripts. All run-time critical functions are coded in
 Cython_ (:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for
 speed which allows estimation of complex models in minutes. HDDM
