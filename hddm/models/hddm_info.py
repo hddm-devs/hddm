@@ -7,6 +7,57 @@ from hddm.models import HDDMBase
 from kabuki.hierarchical import Knode
 
 class HDDM(HDDMBase):
+    """Create hierarchical drift-diffusion model in which each subject
+    has a set of parameters that are constrained by a group distribution.
+
+    :Arguments:
+        data : pandas.DataFrame
+            Input data with a row for each trial.
+            Must contain the following columns:
+              * 'rt': Reaction time of trial in seconds.
+              * 'response': Binary response (e.g. 0->error, 1->correct)
+              * 'subj_idx': A unique ID (int) of each subject.
+              * Other user-defined columns that can be used in depends_on
+                keyword.
+
+    :Optional:
+        informative : bool <default=True>
+            Whether to use informative priors (True) or vague priors
+            (False).  Information about the priors can be found in the
+            methods section.  If you run a classical DDM experiment
+            you should use this. However, if you apply the DDM to a
+            novel domain like saccade data where RTs are much lower,
+            or RTs of rats, you should probably set this to False.
+
+        depends_on : dict
+            Specifies which parameter depends on data
+            of a column in data. For each unique element in that
+            column, a separate set of parameter distributions will be
+            created and applied. Multiple columns can be specified in
+            a sequential container (e.g. list)
+
+            :Example:
+
+            >>> depends_on={'a':['conditions']}
+
+            Suppose the column coditions has the elements 'cond1' and
+            'cond2', then parameters 'a_cond1' and 'a_cond2' will be
+            created and the corresponding parameter distribution and
+            data will be provided to the user-specified method.
+
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
+
+        trace_subjs : bool
+             Save trace for subjs (needed for many
+             statistics so probably a good idea.)
+
+    """
+
     def __init__(self, *args, **kwargs):
         self.slice_widths = {'a':1, 't':0.01, 'a_var': 1, 't_var': 0.15, 'sz': 1.1, 'v': 1.5,
                              'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
