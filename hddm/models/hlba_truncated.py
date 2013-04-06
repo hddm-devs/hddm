@@ -73,11 +73,11 @@ class HLBA(AccumulatorModel):
         """
 
         knodes = OrderedDict()
-        knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
-        knodes.update(self.create_family_trunc_normal('A', lower=1e-3, upper=1e3, value=.2))
-        knodes.update(self.create_family_trunc_normal('b', lower=1e-3, upper=1e3, value=1.5))
-        knodes.update(self.create_family_trunc_normal('s', lower=0, upper=1e3, value=1.))
-        knodes.update(self.create_family_trunc_normal('v', lower=0, upper=1, value=.5))
+        knodes.update(self._create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
+        knodes.update(self._create_family_trunc_normal('A', lower=1e-3, upper=1e3, value=.2))
+        knodes.update(self._create_family_trunc_normal('b', lower=1e-3, upper=1e3, value=1.5))
+        knodes.update(self._create_family_trunc_normal('s', lower=0, upper=1e3, value=1.))
+        knodes.update(self._create_family_trunc_normal('v', lower=0, upper=1, value=.5))
 
         knodes['wfpt'] = self.create_lba_knode(knodes)
 

@@ -112,11 +112,11 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes_info(self, include):
         knodes = OrderedDict()
         if 'a' in include:
-            knodes.update(self.create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
+            knodes.update(self._create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, var_value=0.1, value=1))
         if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
+            knodes.update(self._create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
         if 't' in include:
-            knodes.update(self.create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
+            knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, var_value=0.2))
         if 'sv' in include:
             knodes['sv_bottom'] = Knode(pm.HalfNormal, 'sv', tau=2**-2, value=1, depends=self.depends['sv'])
         if 'sz' in include:
@@ -124,7 +124,7 @@ class HDDM(HDDMBase):
         if 'st' in include:
             knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
         if 'z' in include:
-            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
+            knodes.update(self._create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
 
@@ -133,11 +133,11 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes_noninfo(self, include):
         knodes = OrderedDict()
         if 'a' in include:
-            knodes.update(self.create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
+            knodes.update(self._create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
         if 'v' in include:
-            knodes.update(self.create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
+            knodes.update(self._create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
         if 't' in include:
-            knodes.update(self.create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
+            knodes.update(self._create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
         if 'sv' in include:
             knodes['sv_bottom'] = Knode(pm.Uniform, 'sv', lower=1e-6, upper=1e3, value=1, depends=self.depends['sv'])
         if 'sz' in include:
@@ -145,7 +145,7 @@ class HDDM(HDDMBase):
         if 'st' in include:
             knodes['st_bottom'] = Knode(pm.Uniform, 'st', lower=1e-6, upper=1e3, value=0.01, depends=self.depends['st'])
         if 'z' in include:
-            knodes.update(self.create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
+            knodes.update(self._create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=1, value=0.01, depends=self.depends['p_outlier'])
 
@@ -166,7 +166,7 @@ class HDDM(HDDMBase):
                                         left=left, maxiter=5000)
 
 
-    def create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
+    def _create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
                              g_tau=15**-2, std_std=2,
                              var_value=.1):
         """Create a family of knodes. A family is a group of knodes
@@ -225,12 +225,12 @@ class HDDM(HDDMBase):
         return knodes
 
 
-    def create_family_gamma_gamma_hnormal(self, name, value=1, g_mean=1, g_std=1, std_std=2, var_value=.1):
-        """Similar to create_family_normal_normal_hnormal() but adds an exponential
+    def _create_family_gamma_gamma_hnormal(self, name, value=1, g_mean=1, g_std=1, std_std=2, var_value=.1):
+        """Similar to _create_family_normal_normal_hnormal() but adds an exponential
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, +oo).
 
-        See create_family_normal_normal_hnormal() help for more information.
+        See _create_family_normal_normal_hnormal() help for more information.
 
         """
 
@@ -268,13 +268,13 @@ class HDDM(HDDMBase):
 
         return knodes
 
-    def create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
+    def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
                                std_std=0.2, var_value=.1):
-        """Similar to create_family_normal_normal_hnormal() but adds a invlogit
+        """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, 1].
 
-        See create_family_normal_normal_hnormal() help for more information.
+        See _create_family_normal_normal_hnormal() help for more information.
 
         """
 
