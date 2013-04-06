@@ -307,16 +307,16 @@ class AccumulatorModel(kabuki.Hierarchical):
             return results, None
 
     def _create_family_normal(self, name, value=0, g_mu=None,
-                             g_tau=15**-2, var_lower=1e-10,
-                             var_upper=100, var_value=.1):
+                             g_tau=15**-2, std_lower=1e-10,
+                             std_upper=100, std_value=.1):
         """Create a family of knodes. A family is a group of knodes
         that belong together.
 
         For example, a family could consist of the following distributions:
         * group mean g_mean (Normal(g_mu, g_tau))
-        * group variability g_var (Uniform(var_lower, var_upper))
-        * transform node g_var_trans for g_var (x -> x**-2)
-        * subject (Normal(g_mean, g_var_trans))
+        * group standard deviation g_std (Uniform(std_lower, std_upper))
+        * transform node g_std_trans for g_std (x -> x**-2)
+        * subject (Normal(g_mean, g_std_trans))
 
         In fact, if is_group_model is True and the name does not appear in
         group_only nodes, this is the family that will be created.
@@ -330,7 +330,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         :Optional:
             value : float
                 Starting value.
-            g_mu, g_tau, var_lower, var_upper, var_value : float
+            g_mu, g_tau, std_lower, std_upper, std_value : float
                 The hyper parameters for the different family members (see above).
 
         :Returns:
@@ -344,16 +344,16 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
                       value=value, depends=self.depends[name])
-            var = Knode(pm.Uniform, '%s_var' % name, lower=var_lower,
-                        upper=var_upper, value=var_value)
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
+                        upper=std_upper, value=std_value)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
             subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau,
                          value=value, depends=('subj_idx',),
                          subj=True, plot=self.plot_subjs)
             knodes['%s'%name] = g
-            knodes['%s_var'%name] = var
+            knodes['%s_std'%name] = std
             knodes['%s_tau'%name] = tau
             knodes['%s_bottom'%name] = subj
 
@@ -367,8 +367,8 @@ class AccumulatorModel(kabuki.Hierarchical):
 
 
     def _create_family_trunc_normal(self, name, value=0, lower=None,
-                                   upper=None, var_lower=1e-10,
-                                   var_upper=100, var_value=.1):
+                                   upper=None, std_lower=1e-10,
+                                   std_upper=100, std_value=.1):
         """Similar to _create_family_normal() but creates a Uniform
         group distribution and a truncated subject distribution.
 
@@ -380,17 +380,17 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Uniform, '%s' % name, lower=lower,
                       upper=upper, value=value, depends=self.depends[name])
-            var = Knode(pm.Uniform, '%s_var' % name, lower=var_lower,
-                        upper=var_upper, value=var_value)
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
+                        upper=std_upper, value=std_value)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
             subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g,
                          tau=tau, a=lower, b=upper, value=value,
                          depends=('subj_idx',), subj=True, plot=self.plot_subjs)
 
             knodes['%s'%name] = g
-            knodes['%s_var'%name] = var
+            knodes['%s_std'%name] = std
             knodes['%s_tau'%name] = tau
             knodes['%s_bottom'%name] = subj
 
@@ -403,7 +403,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
-                               std_std=0.2, var_value=.1):
+                               std_std=0.2, std_value=.1):
         """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, 1].
@@ -435,10 +435,10 @@ class AccumulatorModel(kabuki.Hierarchical):
             g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
                       trace=True)
 
-            var = Knode(pm.HalfNormal, '%s_var' % name, tau=std_std**-2, value=var_value)
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
 
             tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
-                        % name, eval=lambda x: x**-2, x=var,
+                        % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
 
             subj_trans = Knode(pm.Normal, '%s_subj_trans'%name,
@@ -452,7 +452,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             knodes['%s_trans'%name]      = g_trans
             knodes['%s'%name]            = g
-            knodes['%s_var'%name]        = var
+            knodes['%s_std'%name]        = std
             knodes['%s_tau'%name]        = tau
 
             knodes['%s_subj_trans'%name] = subj_trans
@@ -473,15 +473,15 @@ class AccumulatorModel(kabuki.Hierarchical):
 
     def _create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
                              g_tau=15**-2, std_std=2,
-                             var_value=.1):
+                             std_value=.1):
         """Create a family of knodes. A family is a group of knodes
         that belong together.
 
         For example, a family could consist of the following distributions:
         * group mean g_mean (Normal(g_mu, g_tau))
-        * group variability g_var (Uniform(var_lower, var_upper))
-        * transform node g_var_trans for g_var (x -> x**-2)
-        * subject (Normal(g_mean, g_var_trans))
+        * group standard deviation g_std (Uniform(std_lower, std_upper))
+        * transform node g_std_trans for g_std (x -> x**-2)
+        * subject (Normal(g_mean, g_std_trans))
 
         In fact, if is_group_model is True and the name does not appear in
         group_only nodes, this is the family that will be created.
@@ -495,7 +495,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         :Optional:
             value : float
                 Starting value.
-            g_mu, g_tau, var_lower, var_upper, var_value : float
+            g_mu, g_tau, std_lower, std_upper, std_value : float
                 The hyper parameters for the different family members (see above).
 
         :Returns:
@@ -509,15 +509,15 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
                       value=value, depends=self.depends[name])
-            var = Knode(pm.HalfNormal, '%s_var' % name, tau=std_std**-2, value=var_value)
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
-                        doc='%s_tau' % name, eval=lambda x: x**-2, x=var,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
             subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau,
                          value=value, depends=('subj_idx',),
                          subj=True, plot=self.plot_subjs)
             knodes['%s'%name] = g
-            knodes['%s_var'%name] = var
+            knodes['%s_std'%name] = std
             knodes['%s_tau'%name] = tau
             knodes['%s_bottom'%name] = subj
 
@@ -530,7 +530,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
 
-    def _create_family_gamma_gamma_hnormal(self, name, value=1, g_mean=1, g_std=1, std_std=2, var_value=.1):
+    def _create_family_gamma_gamma_hnormal(self, name, value=1, g_mean=1, g_std=1, std_std=2, std_value=.1):
         """Similar to _create_family_normal_normal_hnormal() but adds an exponential
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, +oo).
@@ -546,13 +546,13 @@ class AccumulatorModel(kabuki.Hierarchical):
             g = Knode(pm.Gamma, name, alpha=g_shape, beta=g_rate,
                             value=g_mean, depends=self.depends[name])
 
-            var = Knode(pm.HalfNormal, '%s_var' % name, tau=std_std**-2, value=var_value)
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
 
             shape = Knode(pm.Deterministic, '%s_shape' % name, eval=lambda x,y: (x**2)/(y**2),
-                        x=g, y=var, plot=False, trace=False, hidden=True)
+                        x=g, y=std, plot=False, trace=False, hidden=True)
 
             rate = Knode(pm.Deterministic, '%s_rate' % name, eval=lambda x,y: x/(y**2),
-                        x=g, y=var, plot=False, trace=False, hidden=True)
+                        x=g, y=std, plot=False, trace=False, hidden=True)
 
 
             subj = Knode(pm.Gamma, '%s_subj'%name, alpha=shape, beta=rate,
@@ -560,7 +560,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                          subj=True, plot=False)
 
             knodes['%s'%name]            = g
-            knodes['%s_var'%name]        = var
+            knodes['%s_std'%name]        = std
             knodes['%s_rate'%name]       = rate
             knodes['%s_shape'%name]      = shape
             knodes['%s_bottom'%name]     = subj
