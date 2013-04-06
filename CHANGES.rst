@@ -11,7 +11,7 @@ HDDM 0.5
     * Priors: by default model will use informative priors
       (see http://ski.clps.brown.edu/hddm_docs/methods.html#hierarchical-drift-diffusion-models-used-in-hddm)
       If you want uninformative priors, set ``informative=False``.
-    * This model uses slice sampling which leads to better
+    * Sampling: This model uses slice sampling which leads to faster
       convergence while being slower to generate an individual
       sample. In our experiments, burnin of 20 is often good enough.
     * Inter-trial variablity parameters are only estimated at the
@@ -22,7 +22,7 @@ HDDM 0.5
   http://ski.clps.brown.edu/hddm_docs/howto.html#estimate-a-regression-model
   and
   http://ski.clps.brown.edu/hddm_docs/tutorial_regression_stimcoding.html#chap-tutorial-hddm-regression
-* Vastly improved online documentation at
+* Improved online documentation at
   http://ski.clps.brown.edu/hddm_docs
 * A new HDDM demo at http://ski.clps.brown.edu/hddm_docs/demo.html
 * Ratcliff's quantile optimization method for single subjects and

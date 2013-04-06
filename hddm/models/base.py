@@ -306,93 +306,332 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             return results, None
 
+    def _create_family_normal(self, name, value=0, g_mu=None,
+                             g_tau=15**-2, std_lower=1e-10,
+                             std_upper=100, std_value=.1):
+        """Create a family of knodes. A family is a group of knodes
+        that belong together.
+
+        For example, a family could consist of the following distributions:
+        * group mean g_mean (Normal(g_mu, g_tau))
+        * group standard deviation g_std (Uniform(std_lower, std_upper))
+        * transform node g_std_trans for g_std (x -> x**-2)
+        * subject (Normal(g_mean, g_std_trans))
+
+        In fact, if is_group_model is True and the name does not appear in
+        group_only nodes, this is the family that will be created.
+
+        Otherwise, only a Normal knode will be returned.
+
+        :Arguments:
+            name : str
+                Name of the family. Each family member will have this name prefixed.
+
+        :Optional:
+            value : float
+                Starting value.
+            g_mu, g_tau, std_lower, std_upper, std_value : float
+                The hyper parameters for the different family members (see above).
+
+        :Returns:
+            OrderedDict: member name -> member Knode
+        """
+        if g_mu is None:
+            g_mu = value
+
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
+                      value=value, depends=self.depends[name])
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
+                        upper=std_upper, value=std_value)
+            tau = Knode(pm.Deterministic, '%s_tau' % name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
+                        plot=False, trace=False, hidden=True)
+            subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau,
+                         value=value, depends=('subj_idx',),
+                         subj=True, plot=self.plot_subjs)
+            knodes['%s'%name] = g
+            knodes['%s_std'%name] = std
+            knodes['%s_tau'%name] = tau
+            knodes['%s_bottom'%name] = subj
+
+        else:
+            subj = Knode(pm.Normal, name, mu=g_mu, tau=g_tau,
+                         value=value, depends=self.depends[name])
+
+            knodes['%s_bottom'%name] = subj
+
+        return knodes
+
+
+    def _create_family_trunc_normal(self, name, value=0, lower=None,
+                                   upper=None, std_lower=1e-10,
+                                   std_upper=100, std_value=.1):
+        """Similar to _create_family_normal() but creates a Uniform
+        group distribution and a truncated subject distribution.
+
+        See _create_family_normal() help for more information.
+
+        """
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Uniform, '%s' % name, lower=lower,
+                      upper=upper, value=value, depends=self.depends[name])
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
+                        upper=std_upper, value=std_value)
+            tau = Knode(pm.Deterministic, '%s_tau' % name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
+                        plot=False, trace=False, hidden=True)
+            subj = Knode(pm.TruncatedNormal, '%s_subj' % name, mu=g,
+                         tau=tau, a=lower, b=upper, value=value,
+                         depends=('subj_idx',), subj=True, plot=self.plot_subjs)
+
+            knodes['%s'%name] = g
+            knodes['%s_std'%name] = std
+            knodes['%s_tau'%name] = tau
+            knodes['%s_bottom'%name] = subj
+
+        else:
+            subj = Knode(pm.Uniform, name, lower=lower,
+                         upper=upper, value=value,
+                         depends=self.depends[name])
+            knodes['%s_bottom'%name] = subj
+
+        return knodes
+
+    def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
+                               std_std=0.2, std_value=.1):
+        """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
+        transform knode to the subject and group mean nodes. This is useful
+        when the parameter space is restricted from [0, 1].
+
+        See _create_family_normal_normal_hnormal() help for more information.
+
+        """
+
+        if g_mu is None:
+            g_mu = value
+
+        # logit transform values
+        value_trans = np.log(value) - np.log(1-value)
+        g_mu_trans = np.log(g_mu) - np.log(1-g_mu)
+
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g_trans = Knode(pm.Normal,
+                            '%s_trans'%name,
+                            mu=g_mu_trans,
+                            tau=g_tau,
+                            value=value_trans,
+                            depends=self.depends[name],
+                            plot=False,
+                            hidden=True
+            )
+
+            g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
+                      trace=True)
+
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+
+            tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
+                        % name, eval=lambda x: x**-2, x=std,
+                        plot=False, trace=False, hidden=True)
+
+            subj_trans = Knode(pm.Normal, '%s_subj_trans'%name,
+                               mu=g_trans, tau=tau, value=value_trans,
+                               depends=('subj_idx',), subj=True,
+                               plot=False, hidden=True)
+
+            subj = Knode(pm.InvLogit, '%s_subj'%name,
+                         ltheta=subj_trans, depends=('subj_idx',),
+                         plot=self.plot_subjs, trace=True, subj=True)
+
+            knodes['%s_trans'%name]      = g_trans
+            knodes['%s'%name]            = g
+            knodes['%s_std'%name]        = std
+            knodes['%s_tau'%name]        = tau
+
+            knodes['%s_subj_trans'%name] = subj_trans
+            knodes['%s_bottom'%name]     = subj
+
+        else:
+            g_trans = Knode(pm.Normal, '%s_trans'%name, mu=g_mu_trans,
+                            tau=g_tau, value=value_trans,
+                            depends=self.depends[name], plot=False, hidden=True)
+
+            g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
+                      trace=True )
+
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s_bottom'%name] = g
+
+        return knodes
+
+    def _create_family_exp(self, name, value=0, g_mu=None,
+                           g_tau=15**-2, std_lower=1e-10, std_upper=100, std_value=.1):
+        """Similar to create_family_normal() but adds an exponential
+        transform knode to the subject and group mean nodes. This is useful
+        when the parameter space is restricted from [0, +oo).
+
+        See create_family_normal() help for more information.
+
+        """
+        if g_mu is None:
+            g_mu = value
+
+        value_trans = np.log(value)
+        g_mu_trans = np.log(g_mu)
+
+        knodes = OrderedDict()
+        if self.is_group_model and name not in self.group_only_nodes:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
+                            tau=g_tau, value=value_trans,
+                            depends=self.depends[name], plot=False, hidden=True)
+
+            g = Knode(pm.Deterministic, '%s'%name, eval=lambda x: np.exp(x),
+                      x=g_trans, plot=True)
+
+            std = Knode(pm.Uniform, '%s_std' % name,
+                        lower=std_lower, upper=std_upper, value=std_value)
+
+            tau = Knode(pm.Deterministic, '%s_tau' % name, eval=lambda x: x**-2,
+                        x=std, plot=False, trace=False, hidden=True)
+
+            subj_trans = Knode(pm.Normal, '%s_subj_trans'%name, mu=g_trans,
+                         tau=tau, value=value_trans, depends=('subj_idx',),
+                         subj=True, plot=False, hidden=True)
+
+            subj = Knode(pm.Deterministic, '%s_subj'%name, eval=lambda x: np.exp(x),
+                         x=subj_trans,
+                         depends=('subj_idx',), plot=self.plot_subjs,
+                         trace=True, subj=True)
+
+            knodes['%s_trans'%name]      = g_trans
+            knodes['%s'%name]            = g
+            knodes['%s_std'%name]        = std
+            knodes['%s_tau'%name]        = tau
+            knodes['%s_subj_trans'%name] = subj_trans
+            knodes['%s_bottom'%name]     = subj
+
+        else:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
+                            tau=g_tau, value=value_trans,
+                            depends=self.depends[name], plot=False, hidden=True)
+
+            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s_bottom'%name] = g
+
+        return knodes
+
+    def _create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
+                             g_tau=15**-2, std_std=2,
+                             std_value=.1):
+        """Create a family of knodes. A family is a group of knodes
+        that belong together.
+
+        For example, a family could consist of the following distributions:
+        * group mean g_mean (Normal(g_mu, g_tau))
+        * group standard deviation g_std (Uniform(std_lower, std_upper))
+        * transform node g_std_trans for g_std (x -> x**-2)
+        * subject (Normal(g_mean, g_std_trans))
+
+        In fact, if is_group_model is True and the name does not appear in
+        group_only nodes, this is the family that will be created.
+
+        Otherwise, only a Normal knode will be returned.
+
+        :Arguments:
+            name : str
+                Name of the family. Each family member will have this name prefixed.
+
+        :Optional:
+            value : float
+                Starting value.
+            g_mu, g_tau, std_lower, std_upper, std_value : float
+                The hyper parameters for the different family members (see above).
+
+        :Returns:
+            OrderedDict: member name -> member Knode
+        """
+        if g_mu is None:
+            g_mu = value
+
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
+                      value=value, depends=self.depends[name])
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+            tau = Knode(pm.Deterministic, '%s_tau' % name,
+                        doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
+                        plot=False, trace=False, hidden=True)
+            subj = Knode(pm.Normal, '%s_subj' % name, mu=g, tau=tau,
+                         value=value, depends=('subj_idx',),
+                         subj=True, plot=self.plot_subjs)
+            knodes['%s'%name] = g
+            knodes['%s_std'%name] = std
+            knodes['%s_tau'%name] = tau
+            knodes['%s_bottom'%name] = subj
+
+        else:
+            subj = Knode(pm.Normal, name, mu=g_mu, tau=g_tau,
+                         value=value, depends=self.depends[name])
+
+            knodes['%s_bottom'%name] = subj
+
+        return knodes
+
+
+    def _create_family_gamma_gamma_hnormal(self, name, value=1, g_mean=1, g_std=1, std_std=2, std_value=.1):
+        """Similar to _create_family_normal_normal_hnormal() but adds an exponential
+        transform knode to the subject and group mean nodes. This is useful
+        when the parameter space is restricted from [0, +oo).
+
+        See _create_family_normal_normal_hnormal() help for more information.
+
+        """
+
+        knodes = OrderedDict()
+        g_shape = (g_mean**2) / (g_std**2)
+        g_rate = g_mean / (g_std**2)
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Gamma, name, alpha=g_shape, beta=g_rate,
+                            value=g_mean, depends=self.depends[name])
+
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+
+            shape = Knode(pm.Deterministic, '%s_shape' % name, eval=lambda x,y: (x**2)/(y**2),
+                        x=g, y=std, plot=False, trace=False, hidden=True)
+
+            rate = Knode(pm.Deterministic, '%s_rate' % name, eval=lambda x,y: x/(y**2),
+                        x=g, y=std, plot=False, trace=False, hidden=True)
+
+
+            subj = Knode(pm.Gamma, '%s_subj'%name, alpha=shape, beta=rate,
+                         value=value, depends=('subj_idx',),
+                         subj=True, plot=False)
+
+            knodes['%s'%name]            = g
+            knodes['%s_std'%name]        = std
+            knodes['%s_rate'%name]       = rate
+            knodes['%s_shape'%name]      = shape
+            knodes['%s_bottom'%name]     = subj
+
+        else:
+            g = Knode(pm.Gamma, name, alpha=g_shape, beta=g_rate, value=value,
+                            depends=self.depends[name])
+
+            knodes['%s_bottom'%name] = g
+
+        return knodes
 
 class HDDMBase(AccumulatorModel):
-    """Implements the hierarchical Ratcliff drift-diffusion model
-    using the Navarro & Fuss likelihood and numerical integration over
-    the variability parameters.
-
-    :Arguments:
-        data : numpy.recarray
-            Input data with a row for each trial.
-             Must contain the following columns:
-              * 'rt': Reaction time of trial in seconds.
-              * 'response': Binary response (e.g. 0->error, 1->correct)
-             May contain:
-              * 'subj_idx': A unique ID (int) of the subject.
-              * Other user-defined columns that can be used in depends on keyword.
-    :Example:
-        >>> data, params = hddm.generate.gen_rand_data() # gen data
-        >>> model = hddm.HDDM(data) # create object
-        >>> mcmc = model.mcmc() # Create pymc.MCMC object
-        >>> mcmc.sample() # Sample from posterior
-    :Optional:
-        include : iterable
-            Optional parameters to include. These include all inter-trial
-            variability parameters ('sv', 'sz', 'st'), as well as the bias parameter ('z'), and
-            the probability for outliers ('p_outlier').
-            Can be any combination of 'sv', 'sz', 'st', 'z', and 'p_outlier'.
-            Passing the string 'all' will include all five.
-
-            Note: Including 'sz' and/or 'st' will increase run time significantly!
-
-        is_group_model : bool
-            If True, this results in a hierarchical
-            model with separate parameter distributions for each
-            subject. The subject parameter distributions are
-            themselves distributed according to a group parameter
-            distribution.
-
-            If not provided, this parameter is set to True if data
-            provides a column 'subj_idx' and False otherwise.
-
-        depends_on : dict
-            Specifies which parameter depends on data
-            of a column in data. For each unique element in that
-            column, a separate set of parameter distributions will be
-            created and applied. Multiple columns can be specified in
-            a sequential container (e.g. list)
-
-            :Example:
-
-                >>> hddm.HDDM(data, depends_on={'v':'difficulty'})
-
-                Separate drift-rate parameters will be estimated
-                for each difficulty. Requires 'data' to have a
-                column difficulty.
-
-
-        bias : bool
-            Whether to allow a bias to be estimated. This
-            is normally used when the responses represent
-            left/right and subjects could develop a bias towards
-            responding right. This is normally never done,
-            however, when the 'response' column codes
-            correct/error.
-
-        plot_var : bool
-             Plot group variability parameters when calling pymc.Matplot.plot()
-             (i.e. variance of Normal distribution.)
-
-        wiener_params : dict
-             Parameters for wfpt evaluation and
-             numerical integration.
-
-         :Parameters:
-             * err: Error bound for wfpt (default 1e-4)
-             * n_st: Maximum depth for numerical integration for st (default 2)
-             * n_sz: Maximum depth for numerical integration for Z (default 2)
-             * use_adaptive: Whether to use adaptive numerical integration (default True)
-             * simps_err: Error bound for Simpson integration (default 1e-3)
-
-        p_outlier : double (default=0)
-            The probability of outliers in the data. if p_outlier is passed in the
-            'include' argument, then it is estimated from the data and the value passed
-            using the p_outlier argument is ignored.
-
-        default_intervars : dict (default = {'sz': 0, 'st': 0, 'sv': 0})
-            Fix intertrial variabilities to a certain value. Note that this will only
-            have effect for variables not estimated from the data.
+    """HDDM base class. Not intended to be used directly. Instead, use hddm.HDDM.
     """
 
     def __init__(self, data, bias=False, include=(),
