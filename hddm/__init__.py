@@ -11,6 +11,7 @@ import models
 import cdfdif_wrapper
 
 from models import *
+from kabuki import analyze
 
 import wfpt
 
