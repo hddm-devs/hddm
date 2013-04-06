@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.5dev
+:Version: 0.5
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=develop
 
@@ -44,30 +44,11 @@ Features
 * Built-in Bayesian hypothesis testing and several convergence and
   goodness-of-fit diagnostics.
 
-Usage
-=====
+Quick-start
+===========
 
-Command line
-------------
-
-The easiest way to use HDDM is by creating a configuration file for your model:
-
-example.conf
-::
-
-    [depends]
-    v = difficulty
-
-Then call hddm_fit.py:
-
-::
-
-    hddm_fit.py --samples 10000 --burn 5000 example.conf mydata.csv
-
-Python
-------
-
-Of course, you can also use HDDM directly from within Python:
+The following is a minimal python script to load data, run a model and
+examine its parameters and fit.
 
 ::
 
@@ -90,16 +71,15 @@ Of course, you can also use HDDM directly from within Python:
    model.plot_posterior_predictive(save=True)
 
 
-Installing
-==========
+Installation
+============
 
 Windows
 -------
 
-The easiest way is to download and install the `Enthought Python
-Distribution`_ (EPD) which is free for academic use. An untested
-alternative is the Python(x,y) distribution. Please let us know your
-experiences if you test this option.
+The easiest way is to download and install `Anaconda`_ or the
+`Enthought Python Distribution`_ (EPD) which is free for academic
+use.
 
 We recommend using pip to download and install HDDM. The easiest way
 to install pip is via easy_install. Start the windows command shell
@@ -184,3 +164,4 @@ Join our low-traffic `mailing list`_.
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
+.. _Anaconda: http://continuum.io/anaconda
