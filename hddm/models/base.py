@@ -471,6 +471,63 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return knodes
 
+    def _create_family_exp(self, name, value=0, g_mu=None,
+                           g_tau=15**-2, std_lower=1e-10, std_upper=100, std_value=.1):
+        """Similar to create_family_normal() but adds an exponential
+        transform knode to the subject and group mean nodes. This is useful
+        when the parameter space is restricted from [0, +oo).
+
+        See create_family_normal() help for more information.
+
+        """
+        if g_mu is None:
+            g_mu = value
+
+        value_trans = np.log(value)
+        g_mu_trans = np.log(g_mu)
+
+        knodes = OrderedDict()
+        if self.is_group_model and name not in self.group_only_nodes:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
+                            tau=g_tau, value=value_trans,
+                            depends=self.depends[name], plot=False, hidden=True)
+
+            g = Knode(pm.Deterministic, '%s'%name, eval=lambda x: np.exp(x),
+                      x=g_trans, plot=True)
+
+            std = Knode(pm.Uniform, '%s_std' % name,
+                        lower=std_lower, upper=std_upper, value=std_value)
+
+            tau = Knode(pm.Deterministic, '%s_tau' % name, eval=lambda x: x**-2,
+                        x=std, plot=False, trace=False, hidden=True)
+
+            subj_trans = Knode(pm.Normal, '%s_subj_trans'%name, mu=g_trans,
+                         tau=tau, value=value_trans, depends=('subj_idx',),
+                         subj=True, plot=False, hidden=True)
+
+            subj = Knode(pm.Deterministic, '%s_subj'%name, eval=lambda x: np.exp(x),
+                         x=subj_trans,
+                         depends=('subj_idx',), plot=self.plot_subjs,
+                         trace=True, subj=True)
+
+            knodes['%s_trans'%name]      = g_trans
+            knodes['%s'%name]            = g
+            knodes['%s_std'%name]        = std
+            knodes['%s_tau'%name]        = tau
+            knodes['%s_subj_trans'%name] = subj_trans
+            knodes['%s_bottom'%name]     = subj
+
+        else:
+            g_trans = Knode(pm.Normal, '%s_trans' % name, mu=g_mu_trans,
+                            tau=g_tau, value=value_trans,
+                            depends=self.depends[name], plot=False, hidden=True)
+
+            g = Knode(pm.Deterministic, '%s'%name, doc='%s'%name, eval=lambda x: np.exp(x), x=g_trans, plot=True)
+            knodes['%s_trans'%name] = g_trans
+            knodes['%s_bottom'%name] = g
+
+        return knodes
+
     def _create_family_normal_normal_hnormal(self, name, value=0, g_mu=None,
                              g_tau=15**-2, std_std=2,
                              std_value=.1):
