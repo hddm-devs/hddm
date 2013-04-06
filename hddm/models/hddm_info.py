@@ -29,6 +29,13 @@ class HDDM(HDDMBase):
             novel domain like saccade data where RTs are much lower,
             or RTs of rats, you should probably set this to False.
 
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
+
         depends_on : dict
             Specifies which parameter depends on data
             of a column in data. For each unique element in that
@@ -38,23 +45,52 @@ class HDDM(HDDMBase):
 
             :Example:
 
-            >>> depends_on={'a':['conditions']}
+                >>> hddm.HDDM(data, depends_on={'v': 'difficulty'})
 
-            Suppose the column coditions has the elements 'cond1' and
-            'cond2', then parameters 'a_cond1' and 'a_cond2' will be
-            created and the corresponding parameter distribution and
-            data will be provided to the user-specified method.
+                Separate drift-rate parameters will be estimated
+                for each difficulty. Requires 'data' to have a
+                column difficulty.
 
-        is_group_model : bool
-            If True, this results in a hierarchical
-            model with separate parameter distributions for each
-            subject. The subject parameter distributions are
-            themselves distributed according to a group parameter
-            distribution.
+        bias : bool
+            Whether to allow a bias to be estimated. This
+            is normally used when the responses represent
+            left/right and subjects could develop a bias towards
+            responding right. This is normally never done,
+            however, when the 'response' column codes
+            correct/error.
+
+        p_outlier : double (default=0)
+            The probability of outliers in the data. if p_outlier is passed in the
+            'include' argument, then it is estimated from the data and the value passed
+            using the p_outlier argument is ignored.
+
+        default_intervars : dict (default = {'sz': 0, 'st': 0, 'sv': 0})
+            Fix intertrial variabilities to a certain value. Note that this will only
+            have effect for variables not estimated from the data.
+
+        plot_var : bool
+             Plot group variability parameters when calling pymc.Matplot.plot()
+             (i.e. variance of Normal distribution.)
 
         trace_subjs : bool
              Save trace for subjs (needed for many
              statistics so probably a good idea.)
+
+        wiener_params : dict
+             Parameters for wfpt evaluation and
+             numerical integration.
+
+         :Parameters:
+             * err: Error bound for wfpt (default 1e-4)
+             * n_st: Maximum depth for numerical integration for st (default 2)
+             * n_sz: Maximum depth for numerical integration for Z (default 2)
+             * use_adaptive: Whether to use adaptive numerical integration (default True)
+             * simps_err: Error bound for Simpson integration (default 1e-3)
+
+    :Example:
+        >>> data, params = hddm.generate.gen_rand_data() # gen data
+        >>> model = hddm.HDDM(data) # create object
+        >>> mcmc.sample(5000, burn=20) # Sample from posterior
 
     """
 

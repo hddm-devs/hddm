@@ -1,8 +1,8 @@
 .. index:: Tutorial
 .. _chap_tutorial_python:
 
-Specifying Models in Python
-===========================
+Build your first model
+======================
 
 Imagine that we collected data from one subject on the moving dots or
 coherent motion task (e.g., :cite:`RoitmanShadlen02`). In this task,
