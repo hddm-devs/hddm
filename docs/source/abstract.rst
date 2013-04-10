@@ -33,4 +33,5 @@ HDDM supports the estimation of how trial-by-trial measurements
 (e.g. fMRI) influence decision making parameters. This paper will
 first describe the theoretical background of drift-diffusion model and
 Bayesian inference. We then illustrate usage of the toolbox on a
-real-world data set from our lab.
+real-world data set from our lab. The software and documentation can
+be downloaded at: http://ski.clps.brown.edu/hddm_docs/
