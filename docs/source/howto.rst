@@ -113,8 +113,7 @@ probability for obtaining an outlier (e.g. 0.05 will assume 5% of the
 RTs are outliers) or estimate this from the data. In practice, the
 precise value of p_outlier does not matter.  Values greater than 0.001
 and less than 0.1 are sufficient to capture the outliers, and the
-effect on the recovered parameters is small (Sofer et al, in
-preparation).
+effect on the recovered parameters is small (:cite: `SoferWieckiFrank`).
 
 To instantiate a model with a fixed probability of getting
 an outlier run:
