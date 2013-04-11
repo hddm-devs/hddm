@@ -231,7 +231,7 @@ class HDDMRegressor(HDDM):
                     param_lookup = param[:inter-1]
                     reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(set(param_lookup))
                 else:
-                    reg_family = self.create_family_normal(param)
+                    reg_family = self._create_family_normal(param)
                     param_lookup = param
 
                 reg_parents[param] = reg_family['%s_bottom' % param_lookup]

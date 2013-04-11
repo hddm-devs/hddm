@@ -1,6 +1,6 @@
 from distutils.core import setup
 from distutils.extension import Extension
-from glob import glob
+
 try:
     from Cython.Build import cythonize
     ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx']),
@@ -18,16 +18,16 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.4.1',
+    version='0.5beta',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
     author_email='thomas_wiecki@brown.edu',
     url='http://github.com/hddm-devs/hddm',
     packages=['hddm', 'hddm.tests', 'hddm.models', 'hddm.examples'],
     package_data={'hddm':['examples/*.csv', 'examples/*.conf']},
-    scripts=['scripts/hddm_fit.py', 'scripts/hddm_demo.py'],
+    scripts=['scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2', 'patsy'],
-    setup_requires=['NumPy >=1.5.0', 'SciPy >= 0.6.0', 'kabuki >= 0.4.1', 'PyMC >= 2.2', 'patsy'],
+    install_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.5beta', 'PyMC == 2.2', 'pandas >= 0.10.0', 'patsy'],
+    setup_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.5beta', 'PyMC == 2.2', 'pandas >= 0.10.0', 'patsy'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',

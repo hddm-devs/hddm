@@ -8,37 +8,18 @@ In the following we will show an example session of using HDDM to
 analyze a real-world dataset. The main purpose is to provide an overview
 of some of the funcionality and interface. By no means, however, is it a
 complete overview of all the functionality in HDDM. For more
-information, including on how to use HDDM as a command-line utility, we
-refer to the online tutorial at
-http://ski.clps.brown.edu/hddm\_docs/tutorial.html and the how-to at
-http://ski.clps.brown.edu/hddm\_docs/howto.html. For a reference manual,
-see http://ski.clps.brown.edu/hddm\_docs.
+information, including on how to use HDDM as a command-line utility, 
+online tutorial and a refernce manual
+see http://ski.clps.brown.edu/hddm_docs.
 
-First, we have to import the modules we are going to use so that they
-are available in our namespace. Pandas provides a table-oriented
-data-structure and matplotlib is a module for generating graphs and
-plots.
-
-.. code:: python
-
-    import pandas as pd
-    import matplotlib.pyplot as plt
-
-Next, we will import HDDM and the accompanying module kabuki. At the
-time of this writing, these version were used.
+First, we have to load the modules we are going to use.
 
 .. code:: python
 
     import hddm
-    print hddm.__version__
+    import matplotlib.pyplot as plt
 
-    import kabuki
-    print kabuki.__version__
-
-.. parsed-literal::
-
-    0.5dev
-    0.5dev
+We import HDDM(0.5dev) and matplotlib, a module for generating graphs and
 
 
 Loading data
@@ -47,19 +28,14 @@ Loading data
 Next, we will load in a data set. The easiest way to get your data into
 HDDM is by storing it in a csv (comma-separated-value, see below) file.
 In this example we will be using data collected in a reward-based
-decision making experiment in our lab (Cavanagh et al 2011). In brief,
-subjects choose between two symbols that have different histories of
-reinforcement, which they first acquire through a learning phase: some
-symbols more often leads to wins (W; 80%, 70% and 60% of trials in which
-they are selected), whereas others only lead to win on 40%, 30%, or 20%
-of the time and otherwise lead to losses (L). A test phase ensures in
-which subjects choose between all paired combination of symbols without
-feedback. These test trials can be devided into win-win (WW) trials, in
-which they select between two symbols that had led to wins before (but
-one more often than another); lose-lose trials (LL), and win-lose (WL)
-trials, which are the easiest because one symbol had been a winner most
-of the time. Thus WW and LL decisions together comprise high conflict
-(HC) test trials (although there are other differences between them, we
+decision making experiment in our lab (:cite:CavanaghWieckiCohenEtAl11). In brief, at each trial subjects choose
+between two symbols. The trials were divided into win-win trials (WW),
+in which the two symbols were associated with high winning chances;
+lose-lose trials (LL), in which the symbols were associated with low
+winning chances, and win-lose trials (WL), which are the easiest because
+only one symbol was associated with high winning chances. Thus WW and LL
+decisions together comprise high conflict
+(HC) trials (although there are other differences between them, we
 don't focus on those here), whereas WL decisions are low conflict (LC).
 The main hypothesis of the study was that high conflict trials induce an
 increase in the decision threshold, and that the mechanism for this
@@ -76,6 +52,7 @@ theta were related to adjustments in decision threshold during high
 conflict trials. They tested the STN component of the theory by
 administering the same experiment to patients who had deep brain
 stimulation (dbs) of the STN, which interferes with normal processing.
+
 
 The first ten lines of the data file look as follows:
 
@@ -151,7 +128,7 @@ the simplest model that does not allow parameters to vary by condition.
     m = hddm.HDDM(data)
     # find a good starting point which helps with the convergence.
     m.find_starting_values()
-    # start drawing 7000 samples and discarding 5000 as burn-in
+    # start drawing 2000 samples and discarding 20 as burn-in
     m.sample(2000, burn=20)
 
 We now want to analyze our estimated model. ``m.print_stats()`` will

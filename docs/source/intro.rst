@@ -84,19 +84,18 @@ HDDM_ is an open-source software package written in Python_ which
 allows (i) the flexible construction of hierarchical Bayesian drift
 diffusion models and (ii) the estimation of its posterior parameter
 distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
-models can be specified via a configuration file thus requiring no
-Python knowledge. Alternatively, more sophisticated usage of the
-toolbox is available interactively via, for example, IPython_ (:cite:PER-GRA2007) or by
-writing succinct Python scripts. All run-time critical functions are coded in
-Cython_ (:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for
-speed which allows estimation of complex models in minutes. HDDM
-includes many commonly used statistics and plotting functionality
-generally used to assess model fit. The code is released under the
-permissive BSD 3-clause license, test-covered to assure correct
-behavior and well documented. Finally, HDDM allows flexible estimation
-of trial-by-trial regressions where an external measurement
-(e.g. brain activity as measured by fMRI) is correlated with one or
-more decision making parameters.
+models can be created via a simple python script or be used
+interactively via, for example, IPython_ interpreter shell (:cite:PER-GRA2007). All
+run-time critical functions are coded in Cython_
+(:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for speed
+which allows estimation of complex models in minutes. HDDM includes
+many commonly used statistics and plotting functionality generally
+used to assess model fit. The code is released under the permissive
+BSD 3-clause license, test-covered to assure correct behavior and well
+documented. Finally, HDDM allows flexible estimation of trial-by-trial
+regressions where an external measurement (e.g. brain activity as
+measured by fMRI) is correlated with one or more decision making
+parameters.
 
 With HDDM we aim to provide a user-friendly but powerful tool that can
 be used by experimentalists to construct and fit complex,

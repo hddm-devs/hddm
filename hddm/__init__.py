@@ -2,16 +2,16 @@
 
 __docformat__ = 'restructuredtext'
 
-__version__ = '0.5dev'
+__version__ = '0.5beta'
 
 import likelihoods
 import generate
 import utils
 import models
 import cdfdif_wrapper
-import models as model # remain backwards compatibility
 
 from models import *
+from kabuki import analyze
 
 import wfpt
 

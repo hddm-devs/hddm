@@ -8,7 +8,5 @@ Tutorial
 .. toctree::
    :maxdepth: 2
 
-   tutorial_config_difficulty
-   tutorial_config_subjects
    tutorial_python
    tutorial_regression_stimcoding
