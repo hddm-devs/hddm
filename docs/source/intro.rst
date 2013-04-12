@@ -85,7 +85,7 @@ allows (i) the flexible construction of hierarchical Bayesian drift
 diffusion models and (ii) the estimation of its posterior parameter
 distributions via PyMC_ (:cite:`PatilHuardFonnesbeck10`). User-defined
 models can be created via a simple python script or be used
-interactively via, for example, IPython_ interpreter shell. All
+interactively via, for example, IPython_ interpreter shell (:cite:PER-GRA2007). All
 run-time critical functions are coded in Cython_
 (:cite:`BehnelBradshawCitroEtAl11`) and compiled natively for speed
 which allows estimation of complex models in minutes. HDDM includes
@@ -105,7 +105,7 @@ toolbox and provide a tutorial for how to employ it; subsequent
 reports will quantitatively characterize its success in recovering
 model parameters and advantages relative to non-hierarchical or
 non-Bayesian methods as a function of the number of subjects and
-trials (Sofer, Wiecki & Frank; in preparation).
+trials (:cite: `SoferWieckiFrank`).
 
 .. _HDDM: http://github.com/twiecki/hddm
 .. _Python: http://www.python.org/

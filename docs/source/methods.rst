@@ -78,8 +78,7 @@ account are referred to as the full DDM
 (:cite:`RatcliffRouder98`). HDDM uses analytic integration of the
 likelihood function for variability in drift-rate and numerical
 integration for variability in non-decision time and bias. More
-information on the model specifics can be found in Sofer, Wiecki, &
-Frank (in preparation).
+information on the model specifics can be found in :cite: `SoferWieckiFrank`.
 
 
 Linear Ballistic Accumulator

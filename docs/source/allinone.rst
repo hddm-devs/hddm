@@ -3,7 +3,7 @@
 .. include :: methods.rst
 
 *******
-Results
+Real World Example
 *******
 
 .. include :: demo.rst
