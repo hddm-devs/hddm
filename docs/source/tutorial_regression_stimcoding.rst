@@ -5,7 +5,7 @@ Stimulus coding with HDDMRegression
 ###################################
 
 Note: This tutorial is more advanced. If you are just starting you might want
-to head to the :demo:`demo` instead.
+to head to the :ref:`demo <chap_demo>` instead.
 
 In some situations it is useful to fix the magnitude of parameters
 across stimulus types while also forcing them to have different
