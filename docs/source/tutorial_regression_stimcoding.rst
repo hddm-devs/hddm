@@ -4,6 +4,9 @@
 Stimulus coding with HDDMRegression
 ###################################
 
+Note: This tutorial is more advanced. If you are just starting you might want
+to head to the :demo:`demo` instead.
+
 In some situations it is useful to fix the magnitude of parameters
 across stimulus types while also forcing them to have different
 directions. For example, an independent variable could influence both
@@ -74,6 +77,7 @@ accross levels ::
     level3a = {'v':.5, 'a':2, 't':.3, 'sv':0, 'z':.7, 'sz':0, 'st':0}
 
 Now we generate the data for stimulus A
+
 ::
 
     data_a, params_a = hddm.generate.gen_rand_data({'level1': level1a,
@@ -94,6 +98,7 @@ towards incorrect responses.  ::
     level3b = {'v':.5, 'a':2, 't':.3,'sv': 0, 'z':.3, 'sz': 0, 'st': 0}
 
 Now we generate the data for stimulus B
+
 ::
 
     data_b, params_b = hddm.generate.gen_rand_data({'level1': level1b,
@@ -103,12 +108,14 @@ Now we generate the data for stimulus B
 						    subjs=n_subjects)
 
 We add a column to the ``DataFrame`` identifying stimulus A as 1 and stimulus B as 2.
+
 ::
 
     data_a['stimulus'] = Series(np.ones((len(data_a))), index=data_a.index)
     data_b['stimulus'] = Series(np.ones((len(data_b)))*2, index=data_a.index)
 
 Now we merge the data for stimulus A and B
+
 ::
 
     mydata = data_a.append(data_b)
@@ -178,7 +185,7 @@ are certainly noisier than the simulated data one should sample ca 10
 times as many samples).
 ::
 
-    m_reg.sample(20000, burn=15000)
+    m_reg.sample(5000, burn=200)
 
 Comparing generative and recovered model parameters
 ***************************************************
