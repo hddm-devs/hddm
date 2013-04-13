@@ -116,6 +116,8 @@ Then install kabuki and HDDM:
 
 ::
 
+    sudo pip install pandas
+    sudo pip install pymc
     sudo pip install kabuki
     sudo pip install hddm
 
