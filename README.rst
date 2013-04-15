@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.5beta
+:Version: 0.5beta2
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=develop
 
