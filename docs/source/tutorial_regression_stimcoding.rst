@@ -118,7 +118,7 @@ Now we merge the data for stimulus A and B
 
 ::
 
-    mydata = data_a.append(data_b)
+    mydata = data_a.append(data_b, ignore_index=True)
 
 Setting up the HDDM regression model
 ************************************
