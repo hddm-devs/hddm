@@ -505,7 +505,7 @@ def _gen_statistics():
 
     return statistics
 
-def gen_ppc_stats(quantiles = (10, 30, 50, 70, 90)):
+def gen_ppc_stats(quantiles=(10, 30, 50, 70, 90)):
     """Generate default statistics for posterior predictive check on
     RT data.
 
@@ -515,21 +515,21 @@ def gen_ppc_stats(quantiles = (10, 30, 50, 70, 90)):
     from collections import OrderedDict
 
     stats = OrderedDict()
-    stats['accuracy'] = lambda x: np.mean(x>0)
+    stats['accuracy'] = lambda x: np.mean(x.rt>0)
 
     #upper bound stats
-    stats['mean_ub'] = lambda x: np.mean(x[x>0])
-    stats['std_ub'] = lambda x: np.std(x[x>0])
+    stats['mean_ub'] = lambda x: np.mean(x.ix[x.rt>0].rt)
+    stats['std_ub'] = lambda x: np.std(x.ix[x.rt>0].rt)
     for q in quantiles:
         key = str(q) + 'q'
-        stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q) if np.any(x>0) else np.nan
+        stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x.ix[x.rt>0].rt.values, q) if np.any(x.rt>0) else np.nan
 
     #lower bound stats
-    stats['mean_lb'] = lambda x: np.mean(x[x<0])
-    stats['std_lb'] = lambda x: np.std(x[x<0])
+    stats['mean_lb'] = lambda x: np.mean(x.ix[x.rt<0].rt)
+    stats['std_lb'] = lambda x: np.std(x.ix[x.rt<0].rt)
     for q in quantiles:
         key = str(q) + 'q'
-        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x[x<0]), q) if np.any(x<0) else np.nan
+        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x.ix[x.rt<0].rt.values), q) if np.any(x.rt<0) else np.nan
 
     return stats
 

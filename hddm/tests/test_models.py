@@ -1,7 +1,7 @@
 from __future__ import division
 from copy import copy
 import itertools
-import glob
+import kabuki
 import os
 
 import unittest
@@ -311,6 +311,7 @@ def test_posterior_plots_breakdown():
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()
+    hddm.utils.post_pred_check(m)
 
 if __name__=='__main__':
     print "Run nosetest.py"
