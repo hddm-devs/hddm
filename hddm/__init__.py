@@ -2,7 +2,7 @@
 
 __docformat__ = 'restructuredtext'
 
-__version__ = '0.5beta2'
+__version__ = '0.5'
 
 import likelihoods
 import generate
