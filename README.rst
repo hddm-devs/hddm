@@ -38,8 +38,9 @@ Features
   conditions; or predicted changes in model parameters as a function
   of other indicators like brain activity).
 
-* Easy specification of models via configuration file fosters exchange
-  of models and research results.
+* Estimate trial-by-trial correlations between a brain measure
+  (e.g. fMRI BOLD) and a diffusion model parameter using the
+  `HDDMRegression` model.
 
 * Built-in Bayesian hypothesis testing and several convergence and
   goodness-of-fit diagnostics.
@@ -61,14 +62,14 @@ examine its parameters and fit.
    model = hddm.HDDM(data, depends_on={'v':'difficulty'})
 
    # Create model and start MCMC sampling
-   model.sample(10000, burn=5000)
+   model.sample(2000, burn=20)
 
    # Print fitted parameters and other model statistics
    model.print_stats()
 
    # Plot posterior distributions and theoretical RT distributions
-   model.plot_posteriors(save=True)
-   model.plot_posterior_predictive(save=True)
+   model.plot_posteriors()
+   model.plot_posterior_predictive()
 
 
 Installation
