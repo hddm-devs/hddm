@@ -258,7 +258,7 @@ multiple copies of your model:
    for i in range(5):
        m = hddm.HDDM(data)
        m.find_starting_values()
-       m.sample(5000, burn=1000)
+       m.sample(5000, burn=200)
        models.append(m)
 
    gelman_rubin(models)
@@ -267,14 +267,20 @@ The output is a dictionary that provides the R-hat for each parameter:
 
 ::
 
-   {'a_trans': 1.0028806196268818,
-   't_trans': 1.0100017175108695,
-   'v': 1.0232548747719443}
+   {'a': 1.0028806196268818,
+    't': 1.0100017175108695,
+    'v': 1.0232548747719443}
 
 
 As of HDDM 0.4.1 you can also run multiple chains in parallel. One
-convenient way to do this is the IPython parallel module. Note that
-you do you have to set up your environment appropriately for this, see the ``IPython parallel docs``.
+convenient way to do this is the IPython parallel module. To launch a
+cluster locally, in a shell (not Python) type::
+
+    ipcluster start
+
+This will launch the workers in the background. IPython Parallel is
+much more feature rich, for more information, see the ``IPython
+parallel docs``.
 
 ::
 
@@ -283,12 +289,12 @@ you do you have to set up your environment appropriately for this, see the ``IPy
        data = hddm.load_csv('mydata.csv')
        m = hddm.HDDM(data)
        m.find_starting_values()
-       m.sample(20000, burn=15000, dbname='db%i'%id, db='pickle')
+       m.sample(5000, burn=20, dbname='db%i'%id, db='pickle')
        return m
 
    from IPython.parallel import Client
-   v = Client(profile='hddm')[:]
-   jobs = v.map(run_model, range(4))
+   v = Client()[:]
+   jobs = v.map(run_model, range(4)) # 4 is the number of CPUs
    models = jobs.get()
    gelman_rubin(models)
 
