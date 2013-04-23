@@ -279,8 +279,8 @@ cluster locally, in a shell (not Python) type::
     ipcluster start
 
 This will launch the workers in the background. IPython Parallel is
-much more feature rich, for more information, see the ``IPython
-parallel docs``.
+much more feature rich, for more information, see the `IPython
+parallel docs`.
 
 ::
 
@@ -311,9 +311,9 @@ burn-in and more thinning. E.g.:
 
 ::
 
-    model.sample(50000, burn=45000, thin=5)
+    model.sample(10000, burn=5000, thin=5)
 
-This will cause the first 45000 samples to be discarded. Of the
+This will cause the first 5000 samples to be discarded. Of the
 remaining 5000 samples only every 5th sample will be saved. Thus,
 after sampling our trace will have a length of a 1000 samples.
 
