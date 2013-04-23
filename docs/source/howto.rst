@@ -298,6 +298,10 @@ parallel docs``.
    models = jobs.get()
    gelman_rubin(models)
 
+   # Create a new model that has all traces concatenated
+   # of individual models.
+   combined_model = kabuki.utils.concat_models(models)
+
 
 What to do about lack of convergence
 ************************************
