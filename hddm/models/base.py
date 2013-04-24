@@ -110,7 +110,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return average_model
 
-    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None):
+    def optimize(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3, n_bootstraps=0, parallel_profile=None, full_output=True):
         """
         Optimize model using ML, chi^2 or G^2.
 
@@ -131,6 +131,9 @@ class AccumulatorModel(kabuki.Hierarchical):
             parrall_profile : str <default=None>
                 IPython profile for parallelization.
 
+            full_output : bool <default=True>
+                Whether to output optimization messages.
+
         :Output:
             results <dict> - a results dictionary of the parameters values.
 
@@ -139,7 +142,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             The nodes of group models are not updated
         """
 
-        results = self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs)
+        results = self._run_optimization(method=method, quantiles=quantiles, n_runs=n_runs, full_output=full_output)
 
         #bootstrap if requested
         if n_bootstraps == 0:
@@ -193,7 +196,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         self.bootstrap_stats = stats.sort_index()
         return results
 
-    def _run_optimization(self, method, quantiles, n_runs):
+    def _run_optimization(self, method, quantiles, n_runs, full_output=True):
         """function used by optimize.
         """
 
@@ -201,14 +204,14 @@ class AccumulatorModel(kabuki.Hierarchical):
             if self.is_group_model:
                 raise TypeError, "optimization method is not defined for group models"
             else:
-                results, _ = self._optimization_single(method, quantiles, n_runs=n_runs)
+                results, _ = self._optimization_single(method, quantiles, n_runs=n_runs, full_output=full_output)
                 return results
 
         else:
             return self._quantiles_optimization(method, quantiles, n_runs=n_runs)
 
 
-    def _optimization_single(self, method, quantiles, n_runs, compute_stats=True):
+    def _optimization_single(self, method, quantiles, n_runs, compute_stats=True, full_output=True):
         """
         function used by chisquare_optimization to fit the a single subject model
         Input:
@@ -281,9 +284,9 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #optimze
             try:
-                res_tuple = fmin_powell(objective, values, full_output=True)
+                res_tuple = fmin_powell(objective, values, full_output=full_output)
             except Exception:
-                res_tuple = fmin(objective, values, full_output=True)
+                res_tuple = fmin(objective, values, full_output=full_output)
             all_results.append(res_tuple)
 
             #reset inf_objective so values be resampled
