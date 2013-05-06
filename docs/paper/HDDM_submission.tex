@@ -128,21 +128,7 @@ Sequential sampling models (SSMs) \citep{TownsendAshby83}) have established them
 
 Bayesian data analytic methods are quickly gaining popularity in the cognitive sciences because of their many desirable properties \citep{LeeWagenmakers13,Kruschke10}). First, Bayesian methods allow inference of the full posterior distribution of each parameter, thus quantifying uncertainty in their estimation, rather than simply provide their most likely value. Second, hierarchical modeling is naturally formulated in a Bayesian framework. Traditionally, psychological models either assume subjects are completely independent of each other, fitting models separately to each individual, or that all subjects are the same, fitting models to the group as if they are all copies of some ``average subject''. Both approaches are sub-optimal in that the former fails to capitalize on statistic strength offered by the degree to which subjects are similar in one or more model parameters, whereas the latter approach fails to account for the differences among subjects, and hence could lead to a situation where the estimated model cannot fit any individual subject. The same limitations apply to current DDM software packages such as \href{http://ppw.kuleuven.be/okp/software/dmat/}{DMAT} \citep{VandekerckhoveTuerlinckx08} and \href{http://seehuhn.de/pages/fast-dm}{fast-dm} \citep{VossVoss07}. Hierarchical Bayesian methods provide a remedy for this problem by allowing group and subject parameters to be estimated simultaneously at different hierarchical levels \citep{LeeWagenmakers13,Kruschke10,VandekerckhoveTuerlinckxLee11}). Subject parameters are assumed to be drawn from a group distribution, and to the degree that subject are similar to each other, the variance in the group distribution will be estimated to be small, which reciprocally has a greater influence on constraining parameter estimates of any individual. Even in this scenario, the method still allows the posterior for any given individual subject to differ substantially from that of the rest of the group given sufficient data to overwhelm the group prior. Thus the method capitalizes on statistical strength shared across the individuals, and can do so to different degrees even within the same sample and model, depending on the extent to which subjects are similar to each other in one parameter vs. another. In the DDM for example, it may be the case that there is relatively little variability across subjects in the perceptual time for stimulus encoding, quantified by the ``non-decision time'' but more variability in their degree of response caution, quantified by the ``decision threshold''. The estimation should be able to capitalize on this structure so that the non-decision time in any given subject is anchored by that of the group, potentially allowing for more efficient estimation of that subjects decision threshold. This approach may be particularly helpful when relatively few trials per condition are available for each subject, and when incorporating noisy trial-by-trial neural data into the estimation of DDM parameters.\\
 
-\href{http://github.com/twiecki/hddm}{HDDM} is an open-source software package written in \href{http://www.python.org/}{Python} which
-allows (i) the flexible construction of hierarchical Bayesian drift
-diffusion models and (ii) the estimation of its posterior parameter
-distributions via \href{http://code.google.com/p/pymc/}{PyMC} \citep{PatilHuardFonnesbeck10}). User-defined
-models can be created via a simple python script or be used
-interactively via, for example, \href{http://ipython.org}{IPython} interpreter shell (:cite:PER-GRA2007). All
-run-time critical functions are coded in \href{http://www.cython.org/}{Cython}
-\citep{BehnelBradshawCitroEtAl11}) and compiled natively for speed
-which allows estimation of complex models in minutes. HDDM includes
-many commonly used statistics and plotting functionality generally
-used to assess model fit. The code is released under the permissive
-BSD 3-clause license, test-covered to assure correct behavior and well
-documented. Finally, HDDM allows flexible estimation of trial-by-trial
-regressions where an external measurement (e.g. brain activity as
-measured by fMRI) is correlated with one or more decision making
+\href{http://github.com/twiecki/hddm}{HDDM} is an open-source software package written in \href{http://www.python.org/}{Python} which allows (i) the flexible construction of hierarchical Bayesian drift diffusion models and (ii) the estimation of its posterior parameter distributions via \href{http://code.google.com/p/pymc/}{PyMC} \citep{PatilHuardFonnesbeck10}). User-defined models can be created via a simple python script or be used interactively via, for example, \href{http://ipython.org}{IPython} interpreter shell \citep{PerezGranger07}. All run-time critical functions are coded in \href{http://www.cython.org/}{Cython} \citep{BehnelBradshawCitroEtAl11}) and compiled natively for speed which allows estimation of complex models in minutes. HDDM includes many commonly used statistics and plotting functionality generally used to assess model fit. The code is released under the permissive BSD 3-clause license, test-covered to assure correct behavior and well documented. Finally, HDDM allows flexible estimation of trial-by-trial regressions where an external measurement (e.g. brain activity as measured by fMRI) is correlated with one or more decision making
 parameters.\\
 
 With HDDM we aim to provide a user-friendly but powerful tool that can
@@ -311,12 +297,10 @@ data. As above, observed data points of each subject $x_{i,j}$
 = 1, \dots, N$ for $N$ subjects) are distributed according to
 some likelihood function $f | \theta$.  We now assume that
 individual subject parameters $\theta_j$ are normally
-distributed around a group mean with a specific group variance
-($\lambda = (\mu, \sigma)$, where these group parameters are
-estimated from the data given hyper-priors $G_0$), resulting in
+distributed around a group mean $\mu$ with a specific group variance $\sigma$, resulting in
 the following generative description:
 \begin{gather}
-\begin{split}\mu, \sigma &\sim G_0() \\
+\begin{split}
 \theta_j &\sim \mathcal{N}(\mu, \sigma^2) \\
 x_{i, j} &\sim f(\theta_j)\end{split}\notag
 \end{gather}\begin{figure}[htbp]
@@ -394,55 +378,22 @@ will create a hierarchical model with group parameters
 $\mu_{v_{\text{easy}}}$, $\sigma_{v_{\text{easy}}}$,
 $\mu_{v_{\text{hard}}}$, $\sigma_{v_{\text{hard}}}$,and individual subject parameters $v_{j_{\text{easy}}}$, and $v_{j_{\text{hard}}}$.
 
-\section{Real world example}
+\section{Results}
 \label{demo:index-0}\label{demo:demo}\label{demo:chap-demo}\label{demo::doc}\label{demo:patsy}
-In the following we will show an example session of using HDDM to
-analyze a real-world dataset. The main purpose is to provide an overview
-of some of the funcionality and interface. By no means, however, is it a
-complete overview of all the functionality in HDDM. For more
-information, including on how to use HDDM as a command-line utility,
-online tutorial and a refernce manual
-see \href{http://ski.clps.brown.edu/hddm\_docs}{http://ski.clps.brown.edu/hddm\_docs}.
+In the following we will demonstrate how HDDM can be used to infer different components of the decision making process in a reward-based learning task. While demonstrating core features this is by no means a complete overview of all the functionality in HDDM. For more information, including on how to use HDDM as a command-line utility, online tutorial and a refernce manual see \href{http://ski.clps.brown.edu/hddm\_docs}{http://ski.clps.brown.edu/hddm\_docs}.
 
-First, we have to load the modules we are going to use.
+Python requires modules to be imported before they can be used.
 \DUspan{keyword,namespace}{}\DUspan{name,namespace}{}\DUspan{keyword,namespace}{}\DUspan{name,namespace}{}\DUspan{keyword,namespace}{}\DUspan{name,namespace}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{k+kn}{import} \PYG{n+nn}{hddm}
 \PYG{k+kn}{import} \PYG{n+nn}{matplotlib.pyplot} \PYG{k+kn}{as} \PYG{n+nn}{plt}
 \end{Verbatim}
 
-We import HDDM and matplotlib, a module for generating graphs.
-
+Matplotlib is Python module for generating graphics.
 
 \subsection{Loading data}
 \label{demo:loading-data}
-Next, we will load in a data set. The easiest way to get your data into
-HDDM is by storing it in a csv (comma-separated-value, see below) file.
-In this example we will be using data collected in a reward-based
-decision making experiment in our lab \citep{CavanaghWieckiCohenEtAl11}. In brief, at each trial subjects choose
-between two symbols. The trials were divided into win-win trials (WW),
-in which the two symbols were associated with high winning chances;
-lose-lose trials (LL), in which the symbols were associated with low
-winning chances, and win-lose trials (WL), which are the easiest because
-only one symbol was associated with high winning chances. Thus WW and LL
-decisions together comprise high conflict
-(HC) trials (although there are other differences between them, we
-don't focus on those here), whereas WL decisions are low conflict (LC).
-The main hypothesis of the study was that high conflict trials induce an
-increase in the decision threshold, and that the mechanism for this
-threshold modulation depends on communication between mediofrontal
-cortex (which exhibits increased activity under conditions of choice
-uncertainty or conflict) and the subthalamic nucleus (STN) of the basal
-ganglia (which provides a temporary brake on response selection by
-increasing the decision threshold). The details of this mechanism are
-described in other modeling papers \citep[e.g.][]{RatcliffFrank12}.
-Cavanagh et al 2011 tested this theory by measuring EEG activity over
-mid-frontal cortex, focusing on the theta band, given prior associations
-with conflict, and testing whether trial-to-trial variations in frontal
-theta were related to adjustments in decision threshold during high
-conflict trials. They tested the STN component of the theory by
-administering the same experiment to patients who had deep brain
-stimulation (dbs) of the STN, which interferes with normal processing.
+It is recommended to store your trial-by-trial reaction time and choice data in a csv (comma-separated-value, see below for exact specifications) file. In this example we will be using data collected in a reward-based decision making experiment in our lab \citep{CavanaghWieckiCohenEtAl11}. In brief, at each trial subjects choose between two symbols. The trials were divided into win-win trials (WW), in which the two symbols were associated with high winning chances; lose-lose trials (LL), in which the symbols were associated with low winning chances, and win-lose trials (WL), which are the easiest because only one symbol was associated with high winning chances. Thus WW and LL decisions together comprise high conflict (HC) trials (although there are other differences between them, we don't focus on those here), whereas WL decisions are low conflict (LC).  The main hypothesis of the study was that high conflict trials induce an increase in the decision threshold, and that the mechanism for this threshold modulation depends on communication between mediofrontal cortex (which exhibits increased activity under conditions of choice uncertainty or conflict) and the subthalamic nucleus (STN) of the basal ganglia (which provides a temporary brake on response selection by increasing the decision threshold). The details of this mechanism are described in other modeling papers \citep[e.g.][]{RatcliffFrank12}. \citet{CavanaghWieckiCohenEtAl11} tested this theory by measuring EEG activity over mid-frontal cortex, focusing on the theta band, given prior associations with conflict, and testing whether trial-to-trial variations in frontal theta were related to adjustments in decision threshold during high conflict trials. They tested the STN component of the theory by administering the same experiment to patients who had deep brain stimulation (dbs) of the STN, which interferes with normal processing.
 
 The first ten lines of the data file look as follows:
 \DUspan{error}{}\DUspan{name}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}
@@ -463,8 +414,7 @@ The first ten lines of the data file look as follows:
 \PYG{l+m+mi}{0}\PYG{p}{,}\PYG{n}{WW}\PYG{p}{,}\PYG{l+m+mf}{0.85699999999999998}\PYG{p}{,}\PYG{l+m+mf}{1.0}\PYG{p}{,}\PYG{l+m+mf}{0.11861689909799999}\PYG{p}{,}\PYG{l+m+mi}{1}\PYG{p}{,}\PYG{n}{HC}
 \end{Verbatim}
 
-We use the \code{hddm.load\_csv()} function to load this file.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The \code{hddm.load\_csv()} function can then be used to load this file. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{load\PYGZus{}csv}\PYG{p}{(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{hddm\PYGZus{}demo.csv}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
@@ -487,12 +437,7 @@ We use the \code{hddm.load\_csv()} function to load this file.
 9         0   WL  1.500         0  0.823626    1   LC
 \end{Verbatim}
 
-Lets look at the RT distributions of each individual subject using
-pandas' \code{groupby()} functionality. Because there are two possible
-responses (here we are using accuracy coding where 1 means the more
-rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs
-to be negative.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator,word}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+To provide a sense of what how RT data is normally distributed we next plot the histograms (we are using pandas' \code{groupby()} functionality to loop over the data corresponding to each invidual subject). Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be negative. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator,word}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{utils}\PYG{o}{.}\PYG{n}{flip\PYGZus{}errors}\PYG{p}{(}\PYG{n}{data}\PYG{p}{)}
 
@@ -507,12 +452,11 @@ to be negative.
 
 \subsection{Fitting a hierarchical model}
 \label{demo:fitting-a-hierarchical-model}
-Lets fit a hierarchical DDM to this data set, starting off first with
-the simplest model that does not allow parameters to vary by condition.
+The previous figure shows that while each individual's RT histogram is different, there is also a lot of similarity. Hierarchical Bayesian modeling allows us to exploit this similarity. The \code{HDDM} class constructs such a hierarchical DDM. The {HDDM.sample()} method then performs Bayesian inference by drawing posterior samples using the MCMC algorithm.
 \DUspan{comment}{}\DUspan{comment}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{comment}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{comment}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{c}{\PYGZsh{} Instantiate model object passing it our data (no need to call flip\PYGZus{}errors() before passing it).}
-\PYG{c}{\PYGZsh{} This will tailor an individual hierarchical DDM around your dataset.}
+\PYG{c}{\PYGZsh{} This will tailor an individual hierarchical DDM around the dataset.}
 \PYG{n}{m} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{data}\PYG{p}{)}
 \PYG{c}{\PYGZsh{} find a good starting point which helps with the convergence.}
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{find\PYGZus{}starting\PYGZus{}values}\PYG{p}{(}\PYG{p}{)}
@@ -520,10 +464,8 @@ the simplest model that does not allow parameters to vary by condition.
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
 \end{Verbatim}
 
-We now want to analyze our estimated model. \code{m.print\_stats()} will
-print a table of summary statistics for each parameters' posterior.
-Because that is quite long we only print a subset of the parameters
-using pandas selection functionality.
+It is critical to assess the statistics of our estimated model. The
+\code{HDDM.print\_stats()} method outputs a table of summary statistics for each parameters' posterior (note that the output is abridged due to its length).
 \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{stats} \PYG{o}{=} \PYG{n}{m}\PYG{o}{.}\PYG{n}{gen\PYGZus{}stats}\PYG{p}{(}\PYG{p}{)}
@@ -545,96 +487,43 @@ a\_subj.0  0.001727
 a\_subj.1  0.002113
 \end{Verbatim}
 
-As you can see, the model estimated the group mean parameter for
-threshold \code{a}, group variability \code{a\_var} and individual subject
-parameters \code{a\_subj.0}. Other parameters are not shown here.
+The output contains various summary statistics describing the posterior of each parameter: group mean parameter for
+threshold \code{a}, group variability \code{a\_var} and individual subject parameters \code{a\_subj.0}. Other parameters are not shown here but were still estimated.
 
-The inference algorithm, MCMC, requires the chains of the model to have
-properly converged. While there is no way to guarantee convergence for a
-finite set of samples in MCMC, there are many heuristics that allow you
-identify problems of convergence. One main analysis to look at is the
-trace, the autocorrelation, and the marginal posterior. You can plot
-these using the \code{plot\_posteriors()} function. For the sake of brevity
-we only plot three here. In practice, however, you will always want to
-examine all of them.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One main analysis to investigate is the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method. For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posteriors}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a}\PYG{l+s}{\PYGZsq{}}{]}\PYG{p}{)}
 \end{Verbatim}
 
 \includegraphics[scale=.5]{hddm_demo_fig_01.png}
 
-As you can see, there are no drifts or large jumps in the trace. The
-autocorrelation is also very low.
+Problematic patterns in the trace would be drifts or large jumps which are absent here. The autocorrelation should also not be exceedingly high as is here the case.
 
-We might also be interested in how well the model fits the data. To
-inspect this visually you can call \code{plot\_posterior\_predictive()} to
-plot individual subject RT distributions in red on top of the predictive
-likelihood in blue.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+While these above steps increase confidence in whether the samples stem from the true posterior, these analyses do not convey how well the model actually fits the data. A posterior predictive check is commonly used to assess absolute model fit. A visual depiction of this can be created by calling the \code{HDDM.plot\_posterior\_predictive()} method. This will create a plot for each individual subject RT distribution in red on top of the predictive likelihood in blue. Intuitively, the two lines should match closely if the model provides a good fit to the data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{14}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}\PYG{p}{)}
 \end{Verbatim}
 
 \includegraphics{hddm_demo_fig_05.png}
 
-While visually the fit looks decent, we also have prior knowledge about
-our experiment which could be leveraged to improve the model. For
-example, we would expect that because LL and WW trials are harder than
-WL trials, drift rate would be higher in WL, which has lower uncertainty
-about the correct choice. (One could also develop a posterior predictive
-check statistic that would evaluate whether accuracy and mean RT are
-different in the different conditions. Since the parameters of the model
-were estimated to be the same across conditions, the posterior
-predictive distributions for these conditions would not look different
-from each other, whereas those in the data do. A formal posterior
-predictive check would thus show that the data violates the simple
-assumptions of the model. This is not evident above because we simply
-plotted the distributions collapsed across conditions).
+While the fit looks appropriate visually, we also have prior knowledge about the structure of the data as a result of our experimental procedure. For example, we would expect that because LL and WW trials are harder than WL trials, drift rate would be higher in WL, which has lower uncertainty about the correct choice. (One could also develop a posterior predictive check statistic that would evaluate whether accuracy and mean RT are different in the different conditions. Since the parameters of the model were estimated to be the same across conditions, the posterior predictive distributions for these conditions would not look different from each other, whereas those in the data do. A formal posterior predictive check would thus show that the data violates the simple assumptions of the model. This is not evident above because we simply plotted the distributions collapsed across conditions).
 
-In any case, we can create a new model quite easily which estimates
-separate drift-rate \code{v} for those different conditions by using the
-\code{depends\_on} keyword argument. This argument expects a Python \code{dict}
-which maps the parameter to be split to the column name containing the
-conditions we want to split by.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+To test this hypothesis we create a new model which estimates separate drift-rate \code{v} for those different conditions by using the \code{depends\_on} keyword argument to \code{HDDM}. This argument expects a Python \code{dict} which maps the parameter to be split to the column name containing the conditions we want to split by. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}stim} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{data}\PYG{p}{,} \PYG{n}{depends\PYGZus{}on}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{stim}\PYG{l+s}{\PYGZsq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{)}
 \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{find\PYGZus{}starting\PYGZus{}values}\PYG{p}{(}\PYG{p}{)}
 \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
 \end{Verbatim}
 
-We will skip examining the traces for this model and instead look at the
-posteriors of \code{v} for the different conditions. Below you can see that
-the drift rate for the low conflict WL condition is substantially
-greater than that for the other two conditions, which are fairly similar
-to each other.
-\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
+By examining the posterior for the different drift-rate conditions we can conclude that the WL condition drift-rate is substantially greater than that for the other two conditions, which are fairly similar to each other\footnote{While it would be easy to provide syntacic sugar for the below expression there are many cases where you want access to the underlying distributions. These are stored inside of \code{nodes\_db} which is a pandas \code{DataFrame} containing information about each distribution. Here we retrieve the actual node objects containing the trace from the \code{node} column.}. \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL} \PYG{o}{=} \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(WW)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(LL)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(WL)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{]}
-\PYG{n}{kabuki}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL}\PYG{p}{]}\PYG{p}{)}
+\PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
-\includegraphics{hddm_demo_fig_06.png}
+\includegraphics[scale=.7]{hddm_demo_fig_06.png}
 
-While it would be easy to provide syntacic sugar for the above
-expression there are many cases where you want access to the underlying
-distributions. These are stored inside of \code{nodes\_db} which is a pandas
-\code{DataFrame} containing information about each distribution. Here we
-retrieve the actual node objects containing the trace from the \code{node}
-colum.
-
-One benefit of estimating the model in a Bayesian framework is that we
-can do significance testing directly on the posterior rather than
-relying on frequentist statistics (See Kruschke's book for many examples
-of the advantages of this approach). For example, we might be interested
-in whether the drift-rate for WW is larger than that for LL, or whether
-drift-rate for LL is larger than WL. The below code allows us to examine
-the proportion of the posteriors in which the drift rate for one
-condition is greater than the other. It can be seen that the posteriors
-for LL do not overlap at all for WL, and thus the probability that LL is
-greater than WL should be near zero.
-\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
+One benefit of estimating the model in a Bayesian framework is that we can do significance testing directly on the posterior rather than relying on frequentist statistics (See Kruschke's book for many examples of the advantages of this approach). For example, we might be interested in whether the drift-rate for WW is larger than that for LL, or whether drift-rate for LL is larger than WL. The below code computes the proportion of the posteriors in which the drift rate for one condition is greater than the other. It can be seen that the posteriors for LL do not overlap at all for WL, and thus the probability that LL is greater than WL should be near zero. \DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{P(WW \PYGZgt{} LL) = }\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{v\PYGZus{}WW}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{n}{v\PYGZus{}LL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{P(LL \PYGZgt{} WL) = }\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{v\PYGZus{}LL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{n}{v\PYGZus{}WL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}
@@ -645,8 +534,7 @@ greater than WL should be near zero.
 \PYG{n}{P}\PYG{p}{(}\PYG{n}{LL} \PYG{o}{\PYGZgt{}} \PYG{n}{WL}\PYG{p}{)} \PYG{o}{=}  \PYG{l+m+mf}{0.0}
 \end{Verbatim}
 
-Lets compare the two models using the deviance information criterion (DIC; lower is better). Note that the DIC measures the fit of the model to the data, penalizing for complexity in the addition of degrees of freedom (the model with three drift rates has more dF than the model with one). The DIC is known to be somewhat biased in selecting the model with greater complexity, although alternative forms exist (see Plummer 2008). One should use the DIC with caution, although other forms of model comparison such as the Bayes Factor (BF) have other problems, such as being overly sensitive to the prior parameter distributions of the models. Future versions of HDDM will include the partial Bayes Factor, which allows the BF to be computed based on informative priors taken from a subset of the data, and which we generally believe to provide a better measure of model fit. Nevertheless, DIC can be a useful metric with these caveats in mind.
-\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{literal,string,interpol}{}\DUspan{literal,string}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{literal,string,interpol}{}\DUspan{literal,string}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}
+In addition to computing the overlap of the posterior distributions we can compare two models using the deviance information criterion (DIC; lower is better). Note that the DIC measures the fit of the model to the data, penalizing for complexity in the addition of degrees of freedom (the model with three drift rates has more dF than the model with one). The DIC is known to be somewhat biased in selecting the model with greater complexity, although alternative forms exist \citep[see][]{Plummer08}. Nevertheless, DIC can be a useful metric with this caveat in mind. \DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{literal,string,interpol}{}\DUspan{literal,string}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{literal,string,interpol}{}\DUspan{literal,string}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Lumped model DIC: }\PYG{l+s+si}{\PYGZpc{}f}\PYG{l+s}{\PYGZdq{}} \PYG{o}{\PYGZpc{}} \PYG{n}{m}\PYG{o}{.}\PYG{n}{dic}
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{Stimulus model DIC: }\PYG{l+s+si}{\PYGZpc{}f}\PYG{l+s}{\PYGZdq{}} \PYG{o}{\PYGZpc{}} \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{dic}
@@ -660,69 +548,27 @@ Stimulus model DIC: 10775.615192
 
 \subsection{Within-subject effects}
 \label{demo:within-subject-effects}
-Note that while the \code{m\_stim} model we created above estimates
-different drift-rates \code{v} for each subject, it implicitly assumes that
-the different conditions are completely independent of each other,
-because each drift rate was sampled from a separate group prior.
-However, there may be individual differences in overall performance, and
-if so it is reasonable to assume that someone who would be better at
-\code{WL} would also be better at \code{LL}. To model this intuition we can
-use a within-subject model where an intercept is used to capture overall
-performance in the `WL' condition as a baseline, and then the other
-\code{LL} and \code{WW} conditions are expressed relative to \code{WL}. (Perhaps
-every subject has a higher drift in WL than LL but there is huge
-variance in their overall drift rates. In this scenario, the earlier
-model would not have the power to detect the effect of condition on this
-within subject effect, because there would be large posterior variance
-in all of the drift rates, which would then overlap with each other. In
-contrast, the within-subject model would estimate large variance in the
-intercept but still allow the model to infer a non-zero effect of
-condition with high precision).
+Note that while the \code{m\_stim} model we created above estimates different drift-rates \code{v} for each subject, it implicitly assumes that the different conditions are completely independent of each other, because each drift rate was sampled from a separate group prior. However, there may be individual differences in overall performance, and if so it is reasonable to assume that someone who would be better at \code{WL} would also be better at \code{LL}. To model this intuition we can use a within-subject model where an intercept is used to capture overall performance in the `WL' condition as a baseline, and then the other \code{LL} and \code{WW} conditions are expressed relative to \code{WL}. (Perhaps every subject has a higher drift in WL than LL but there is huge variance in their overall drift rates. In this scenario, the earlier model would not have the power to detect the effect of condition on this within subject effect, because there would be large posterior variance in all of the drift rates, which would then overlap with each other.  In contrast, the within-subject model would estimate large variance in the intercept but still allow the model to infer a non-zero effect of condition with high precision).
 
-\code{HDDM} supports this via the \code{patsy} module which transforms model
-strings to design matrices.
-\DUspan{keyword,namespace}{}\DUspan{name,namespace}{}\DUspan{keyword,namespace}{}\DUspan{name}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k+kn}{from} \PYG{n+nn}{patsy} \PYG{k+kn}{import} \PYG{n}{dmatrix}
-\PYG{n}{dmatrix}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{data}\PYG{o}{.}\PYG{n}{head}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)}\PYG{p}{)}
-\end{Verbatim}
-
-\begin{Verbatim}[commandchars=\\\{\}]
-DesignMatrix with shape (10, 3)
-  Intercept  C(stim, Treatment('WL'))[T.LL]  C(stim, Treatment('WL'))[T.WW]
-          1                               1 0
-          1                               0 0
-          1                               0 1
-          1                               0 0
-          1                               0 1
-          1                               0 0
-          1                               1 0
-          1                               0 0
-          1                               0 1
-          1                               0 0
-  Terms:
-    'Intercept' (column 0)
-    "C(stim, Treatment('WL'))" (columns 1:3)
-\end{Verbatim}
-
-\code{Patsy} model specifications can be passed to the \code{HDDMRegressor}
-class as part of a descriptor that contains the string describing the
-linear model and the \code{outcome} variable that should be replaced with
-the output of the linear model -- in this case \code{v}.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The \code{HDDMRegressor} class supports modeling within-subject effects. In addition to the data, this class's constructor expects a linear model descriptor string. This descriptor contains the \code{outcome} variable that should be replaced with the output of the linear model -- in this case \code{v}. The \code{C()} specifies that the \code{stim} column contains categorical data. The \code{Treatment} argument encodes which condition should be used as the intercept. The two other conditions -- \code{LL} and \code{WW} -- will then be expressed \textit{relative} to \code{WL}. Internally, \code{HDDMRegressor} uses \code{Patsy} to construct a design matrix from the linear model descriptor, see \href{https://patsy.readthedocs.org/en/latest/}{https://patsy.readthedocs.org/en/latest/} for more details. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}within\PYGZus{}subj} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDMRegressor}\PYG{p}{(}\PYG{n}{data}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v \PYGZti{} C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
 \end{Verbatim}
 
+Which outputs the newly created covariates which will be used in the regression:
 \begin{Verbatim}[commandchars=\\\{\}]
 Adding these covariates:
 ['v\_Intercept', "v\_C(stim, Treatment('WL'))[T.LL]", "v\_C(stim, Treatment('WL'))[T.WW]"]
 \end{Verbatim}
+
+To estimate the model we again have to draw samples from the posterior:
 \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{5000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{)}
 \end{Verbatim}
 \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
+
+To examine the marginal posteriors of our individual regressors we can again plot them:
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW} \PYG{o}{=} \PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}Intercept}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
                                                 \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))[T.LL]}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
@@ -730,30 +576,13 @@ Adding these covariates:
 \PYG{n}{kabuki}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
-\includegraphics{hddm_demo_fig_07.png}
+\includegraphics[scale=.7]{hddm_demo_fig_07.png}
 
-Note that in the above plot \code{LL} and \code{WW} are expressed relative to
-the \code{WL} condition (i.e. \code{v\_Intercept}). You can see that the
-overall drift rate intercept, here applying to WL condition, is positive
-(mode value roughly 0.7), whereas the within subject effects of
-condition (WW and LL) are negative and do not overlap with zero.
-
+Note that in the above plot \code{LL} and \code{WW} are expressed relative to the \code{WL} condition (i.e. \code{v\_Intercept}). Thus, while the overall drift rate intercept, here applying to the \code{WL} condition, is positive (mode value roughly 0.7), the relative within subject effects of condition (\code{WW} and \code{LL}) are negative and do not overlap with zero suggesting a significant effect of this condition on drift-rate.
 
 \subsection{Fitting regression models}
 \label{demo:fitting-regression-models}
-As mentioned above, cognitive neuroscience has embraced the DDM as it
-enables to link psychological processes to cognitive brain measures. The
-Cavanagh et al (2011) study is a great example of this. EEG recordings
-provided a trial-ty-trial measure of brain activity (frontal theta), and
-it was found that this activity correlated with increases in decision
-threshold in high conflict trials. Note that the data set and results
-exhibit more features than we consider here for the time being
-(specifically the manipulation of deep brain stimulation), but for
-illustrative purposes, we replicate here that main theta-threshold
-relationship in a model restricted to participants without brain
-stimulation. For more information, see
-\href{http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf}{http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf}
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name,builtin,pseudo}{}\DUspan{punctuation}{}
+As mentioned above, cognitive neuroscience has embraced the DDM as it enables to link psychological processes to cognitive brain measures. The \citet{CavanaghWieckiCohenEtAl11} study is a great example of this. EEG recordings provided a trial-ty-trial measure of brain activity (frontal theta), and it was found that this activity correlated with increases in decision threshold in high conflict trials. Note that the data set and results exhibit more features than we consider here for the time being (specifically the manipulation of deep brain stimulation), but for illustrative purposes, we replicate here that main theta-threshold relationship in a model restricted to participants without brain stimulation. For more information, see \href{http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf}{http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf} \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name,builtin,pseudo}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}reg} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDMRegressor}\PYG{p}{(}\PYG{n}{data}\PYG{p}{[}\PYG{n}{data}\PYG{o}{.}\PYG{n}{dbs} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,}
                            \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{a \PYGZti{} theta:C(conf, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{LC}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
@@ -761,38 +590,15 @@ stimulation. For more information, see
                            \PYG{n}{group\PYGZus{}only\PYGZus{}regressors}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
 \end{Verbatim}
 
+Which produces the following output:
 \begin{Verbatim}[commandchars=\\\{\}]
 Adding these covariates:
 ['a\_Intercept', "a\_theta:C(conf, Treatment('LC'))[HC]", "a\_theta:C(conf, Treatment('LC'))[LC]"]
 \end{Verbatim}
 
-Instead of estimating one static threshold per subject across trials,
-this model assumes the threshold to vary on each trial according to the
-linear model specified above (as a function of their measured theta
-activity). We also test whether this effect interacts with decision
-conflict. For the stimuli we use dummy treatment coding with the
-intercept being set on the WL condition. Internally, HDDM uses Patsy for
-the linear model specification, see
-\href{https://patsy.readthedocs.org/en/latest/}{https://patsy.readthedocs.org/en/latest/} for more details. The output
-notifies us about the different variables that being estimated as part
-of the linear model.
+Instead of estimating one static threshold per subject across trials, this model assumes the threshold to vary on each trial according to the linear model specified above (as a function of their measured theta activity). We also test whether this effect interacts with decision conflict. For the stimuli we use dummy treatment coding with the intercept being set on the WL condition. The output notifies us about the different variables that being estimated as part of the linear model.
 
-Finally, the keyword argument \code{group\_only\_regressors} instructs HDDM
-to only use a group parameter for each regression coefficient. We use
-this here for the regression coefficient only as it leads to much better
-convergence than trying to estimate individual coefficients for each
-subject separately. (We still allow individual subject nodes on all the
-other parameters, including the threshold intercept, but due to the much
-noisier theta measure, we treat that as a fixed effect within a group of
-subjects. Nevertheless, this group parameter should be estimated
-separately when the hypothesis tests the assumption that the
-relationship between brain activity and threshold would differ between
-different groups. Indeed the Cavanagh paper, and results shown later
-below, illustrate that this brain/behavior relationship differs as a
-function of whether patients are on or off STN deep brain stimulation,
-as hypothesized by the model that STN is responsible for increasing the
-decision threshold when cortical theta rises).
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+Finally, the keyword argument \code{group\_only\_regressors} instructs HDDM to only use a group parameter for each regression coefficient. We use this here for the regression coefficient only as it leads to much better convergence than trying to estimate individual coefficients for each subject separately. (We still allow individual subject nodes on all the other parameters, including the threshold intercept, but due to the much noisier theta measure, we treat that as a fixed effect within a group of subjects. Nevertheless, this group parameter should be estimated separately when the hypothesis tests the assumption that the relationship between brain activity and threshold would differ between different groups. Indeed the Cavanagh paper, illustrate that this brain/behavior relationship differs as a function of whether patients are on or off STN deep brain stimulation, as hypothesized by the model that STN is responsible for increasing the decision threshold when cortical theta rises). \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}reg}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{5000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{)}
 \end{Verbatim}
@@ -810,6 +616,12 @@ decision threshold when cortical theta rises).
 \includegraphics{hddm_demo_fig_08.png}
 
 The above posterior shows that the effect of trial to trial variations in frontal theta are to increase the estimated decision threshold: the regression coefficient is positive, and more than 96\% of it is greater than zero.
+
+\section{Discussion}
+We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. Since its first release in 2011, HDDM has been downloaded over 8000 times on PyPI and attracted an active community of users that frequently interact on the \href{https://groups.google.com/group/hddm-users/}{HDDM-users mailing   list}. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter recover by modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area, a reliable software package implementing this method was previously not available. Special care has been taken to make this software easy to install and use. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
+
+\section{Acknowledgements}
+The software was written by TVW and IS. The paper was written by TVW and MJF. The authors are thankful to Guido Biele and Øystein Sandvik for useful feedback and code contributions.
 
 \bibliographystyle{plainnat}
 \bibliography{hddm}
