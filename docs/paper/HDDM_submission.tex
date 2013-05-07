@@ -615,7 +615,111 @@ Finally, the keyword argument \code{group\_only\_regressors} instructs HDDM to o
 
 \includegraphics{hddm_demo_fig_08.png}
 
-The above posterior shows that the effect of trial to trial variations in frontal theta are to increase the estimated decision threshold: the regression coefficient is positive, and more than 96\% of it is greater than zero.
+The above posterior shows that the effect of trial to trial variations
+in frontal theta are to increase the estimated decision threshold: the
+regression coefficient is positive, and more than 96\% of it is greater
+than zero.
+
+As noted above, this experiment also tested patients on deep brain
+stimulation (dbs). The full model in the paper thus allowed an
+additional factor to estimate how dbs interacts with theta-threshold
+relationship. Here we show for illustrative purposes that we can capture
+the same effect by simply fitting a separate model to data only
+including the case when dbs was turned on. You should see below that in
+this case, the influence of theta on threshold reverses. This exercise
+thus shows that HDDM can be used both to assess the influence of
+trial-by-trial brain measures on DDM parameters, but also how parameters
+vary when brain state is manipulated.
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name,builtin,pseudo}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}reg\PYGZus{}off} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDMRegressor}\PYG{p}{(}\PYG{n}{data}\PYG{p}{[}\PYG{n}{data}\PYG{o}{.}\PYG{n}{dbs} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{,}
+                               \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{a \PYGZti{} theta:C(conf, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{LC}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
+                               \PYG{n}{depends\PYGZus{}on}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{stim}\PYG{l+s}{\PYGZsq{}}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+                               \PYG{n}{group\PYGZus{}only\PYGZus{}regressors}\PYG{o}{=}\PYG{n+nb+bp}{True}\PYG{p}{)}
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+Adding these covariates:
+['a\_Intercept', "a\_theta:C(conf, Treatment('LC'))[HC]", "a\_theta:C(conf, Treatment('LC'))[LC]"]
+\end{Verbatim}
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}reg\PYGZus{}off}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{5000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{)}
+\end{Verbatim}
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{theta} \PYG{o}{=} \PYG{n}{m\PYGZus{}reg\PYGZus{}off}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{a\PYGZus{}theta:C(conf, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{LC}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))[HC]}\PYG{l+s}{\PYGZdq{}}\PYG{p}{]}
+\PYG{n}{kabuki}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{theta}\PYG{p}{]}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
+\PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{P(a\PYGZus{}theta \PYGZgt{} 0) = }\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{theta}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{P}\PYG{p}{(}\PYG{n}{a\PYGZus{}theta} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{=}  \PYG{l+m+mf}{0.0122916666667}
+\end{Verbatim}
+
+\includegraphics{hddm_demo_fig_09.png}
+
+
+\subsection{Dealing with outliers}
+\label{demo:dealing-with-outliers}
+It is common to have outliers in any data set and RT data is no
+exception. Outliers present a serious challenge to likelihood-based
+approaches, as used in HDDM. Consider the possibility that 5\% of trials
+are not generated by the DDM process, but by some other process (e.g.
+due to an attentional lapse). The observed data in those trials may be
+very unlikely given the best DDM parameters that fit 95\% of the data. In
+the extreme case, the likelihood of a single trial may be zero (e.g. if
+subjects respond very quickly, faster than the non-decision time \code{t}
+parameter that would fit the rest of the data). Thus this single outlier
+would force the DDM parameters to adjust substantially. To see the
+effect of this we will generate data with outliers, but fit a standard
+DDM model without taking outliers into account.
+\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{outlier\PYGZus{}data}\PYG{p}{,} \PYG{n}{params} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{generate}\PYG{o}{.}\PYG{n}{gen\PYGZus{}rand\PYGZus{}data}\PYG{p}{(}\PYG{n}{params}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{t}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
+                                                   \PYG{n}{size}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{,} \PYG{n}{n\PYGZus{}fast\PYGZus{}outliers}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
+\end{Verbatim}
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}no\PYGZus{}outlier} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{outlier\PYGZus{}data}\PYG{p}{)}
+\PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{50}\PYG{p}{)}
+\end{Verbatim}
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
+\end{Verbatim}
+
+\includegraphics{hddm_demo_fig_10.png}
+
+As you can see, the predictive likelihood does not fit the RT data very
+well. The model predicts far more RTs near the leading edge of the
+distribution than are actually observed. This is because non-decision
+time \code{t} is forced to be estimated small enough to account for a few
+fast RTs.
+
+What we can do instead is fit a mixture model which assumes that
+outliers come from a uniform distribution. (Note, outliers do not have
+to be very fast or very slow, and the above example is just an obvious
+illustration. Some proportion of the trials can be assumed to simply
+come from a different process for which we make no assumptions about its
+generation, and hence use a uniform distribution. This allows the model
+to find the best DDM parameters that capture the majority of trials).
+Here, we specify that we expect roughly 5\% outliers in our data.
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}outlier} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{outlier\PYGZus{}data}\PYG{p}{,} \PYG{n}{p\PYGZus{}outlier}\PYG{o}{=}\PYG{o}{.}\PYG{l+m+mo}{05}\PYG{p}{)}
+\PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
+\end{Verbatim}
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
+\end{Verbatim}
+
+\includegraphics{hddm_demo_fig_11.png}
+
+As you can see, the model provides a much better fit. The outlier RTs
+are having less of an effect because they get assigned to the uniform
+outlier distribution.
 
 \section{Discussion}
 We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. Since its first release in 2011, HDDM has been downloaded over 8000 times on PyPI and attracted an active community of users that frequently interact on the \href{https://groups.google.com/group/hddm-users/}{HDDM-users mailing   list}. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter recover by modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area, a reliable software package implementing this method was previously not available. Special care has been taken to make this software easy to install and use. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
