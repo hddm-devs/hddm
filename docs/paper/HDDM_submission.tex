@@ -586,9 +586,25 @@ The mixture model provides a much better fit because outlier RTs are having less
 \section*{Discussion}
 We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter recover by modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area, a reliable software package implementing this method was previously not available. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
 
-Using data from our lab on a reinforcement learning task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this toolbox can successfully be used to estimate differences in information processing based solely on RT and choice data. We then extended this analysis to estimate within-subject effects. By using the \code{HDDMRegression} model we are able to not only quantify latent decision making processes in individuals but also how these latent processes relate to brain measures (here theta power as measured by EEG had a positive effect on threshold) on a trial-by-trial basis. Critically, changing brain state via DBS revealed that the effect of theta power on threshold was reversed. As these trial-by-trial effects are often very noise our hierarchical Bayesian approach helped with the detection of this effect as information was pooled across subjects instead of estimating each subject individually. Note furthermore that these results prove much more insightful than e.g. a positive relationship between theta power and RT would as increases in RT can be a result of various factors that the DDM is able to factorize.
+Using data from our lab on a reward-based learning and decision making
+ task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this
+ toolbox can successfully be used to estimate differences in
+ information processing based solely on RT and choice data. We then
+ extended this analysis to estimate within-subject effects. By using
+ the \code{HDDMRegression} model we are able to not only quantify
+ latent decision making processes in individuals but also how these
+ latent processes relate to brain measures (here theta power as
+ measured by EEG had a positive effect on threshold) on a
+ trial-by-trial basis. Critically, changing brain state via DBS
+ revealed that the effect of theta power on threshold was reversed. As
+ these trial-by-trial effects are often quite noisy, our hierarchical
+ Bayesian approach facilitated the detection of this effect, due to
+ shared statistical structure among subjects in determining model
+ parameters. This analysis is more informative than a straight
+ behavioral relationship between brain activity and RT or accuracy
+ alone.
 
-In conclusion, we think that \code{HDDM} is the ideal tool as it allows researchers to study the neurocognitive implementations of psychological decision making processes. The hierarchical modeling provides power to detect even small correlations between brain activity and decision making processes. The Bayesian estimation supports the recent paradigm shift away from frequentist statistics for hypothesis testing \citep{Kruschke10,LeeWagenmakers13}.
+In conclusion, \code{HDDM} is a novel tool that allows researchers to study the neurocognitive implementations of psychological decision making processes. The hierarchical modeling provides power to detect even small correlations between brain activity and decision making processes. Bayesian estimation supports the recent paradigm shift away from frequentist statistics for hypothesis testing \citep{Kruschke10,LeeWagenmakers13}.
 
 \section*{Acknowledgements}
 The authors are thankful to Guido Biele and Øystein Sandvik for useful feedback and code contributions. This work was supported by NIMH Grant RO1 MH080066-01 and NSF Grant \#1125788.
