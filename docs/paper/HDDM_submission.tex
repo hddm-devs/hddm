@@ -311,7 +311,7 @@ there is also a model with non-informative priors which the user can opt to use.
 \capstart
 
 \includegraphics[scale=.5]{graphical_hddm.pdf}
-\caption{Basic graphical hierarchical model implemented by HDDM for   estimation of the drift-diffusion model. Round nodes represent   random variables. Shaded nodes represent observed data. Directed   arrows from parents to children visualize that parameters of the   child random variable are distributed according to its   parents. Plates denote that multiple random variables with the same   parents and children exist.}\end{figure}
+\caption{Basic graphical hierarchical model implemented by HDDM for estimation of the drift-diffusion model. Round nodes represent random variables. Shaded nodes represent observed data. Directed arrows from parents to children visualize that parameters of the child random variable are distributed according to its   parents. Plates denote that multiple random variables with the same   parents and children exist.}\end{figure}
 
 Individual graphical nodes are distributed as follow:\\
 \begin{center}
@@ -569,7 +569,7 @@ It is common to have outliers in any data set and RT data is no exception. Outli
 
 As the above figure shows, the predictive likelihood does not fit the RT data very well. The model predicts far more RTs near the leading edge of the distribution than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
 
-To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. (Note, outliers do not have to be very fast or very slow; the above example is just an obvious illustration. Some proportion of the trials can be assumed to simply come from a different process for which we make no assumptions about its generation, and hence use a uniform distribution. This allows the model to find the best DDM parameters that capture the majority of trials).  Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
+To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}outlier} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{outlier\PYGZus{}data}\PYG{p}{,} \PYG{n}{p\PYGZus{}outlier}\PYG{o}{=}\PYG{o}{.}\PYG{l+m+mo}{05}\PYG{p}{)}
 \PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
