@@ -483,6 +483,37 @@ produce RTs that have the same mean as our actual data. So the closer
 this is to the 50th quantile the better.
 
 
+Run Quantile Opimization
+########################
+
+Even though Hierarchical Bayesian estimation tends to produce better
+fit -- especially with few number of trials -- it is quite a bit
+slower than the Quantile optimization method that e.g. Roger Ratcliff
+uses. If you have lots of data (>100 trials per condition) and you
+don't care about posterior estimates you can use the `HDDM.optimize()`
+method to run quantile optimization. The first argument is a string
+identifier of which optimization method you want to run and can be one
+of `chisquare`, `gsquare` or `ML`.
+
+::
+
+    model = hddm.HDDM(data, depends_on={'v': ['word_freq', 'reps']})
+    params = model.optimize('chisquare')
+
+Note that this function will by default not estimate individual
+subject parameters but rather do quantile averaging to only estimate
+group parameters. Running different models for each individual subject
+is quite easy however:
+
+::
+
+   subj_params = []
+   for subj_idx, subj_data in data.groupby('subj_idx'):
+      m_subj = hddm.HDDM(subj_data, depends_on={'v': ['word_freq', 'reps']})
+      subj_params.append(m_subj.optimize('chisquare'))
+   params = pandas.DataFrame(subj_params)
+
+
 Save and load models
 ####################
 
@@ -493,7 +524,7 @@ the db backend.
 ::
 
     model = hddm.HDDM(data, bias=True)  # a very simple model...
-    model.sample(5000, burn=1000, dbname='traces.db', db='pickle')
+    model.sample(5000, burn=20, dbname='traces.db', db='pickle')
     model.save('mymodel')
 
 Now assume that you start a new python session, after the chain
