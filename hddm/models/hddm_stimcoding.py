@@ -44,7 +44,7 @@ class HDDMStimCoding(HDDM):
                 kwargs['include'] = ['z']
             print "Adding z to includes."
 
-        self.stims = np.sort(np.unique(args[0][self.stim_col]))
+        self.stims = np.asarray(np.sort(np.unique(args[0][self.stim_col])))
         assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
 
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
