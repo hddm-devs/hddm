@@ -15,7 +15,7 @@ class HDDMStimCoding(HDDM):
     contains information about which the correct response was.
 
     :Arguments:
-        split_param : str ('v' or 'z')
+        split_param : {'v', 'z'} <default='z'>
             There are two ways to model stimulus coding in the case where both stimuli
             have equal information (so that there can be no difference in drift):
             * 'z': Use z for stimulus A and 1-z for stimulus B
@@ -24,11 +24,18 @@ class HDDMStimCoding(HDDM):
         stim_col : str
             Column name for extracting the stimuli to use for splitting.
 
+        drift_criterion : bool <default=False>
+            Whether to estimate a constant factor added to the drift-rate.
+            Requires split_param='v' to be set.
+
     """
     def __init__(self, *args, **kwargs):
         self.stim_col = kwargs.pop('stim_col', 'stim')
         self.split_param = kwargs.pop('split_param', 'z')
+        self.drift_criterion = kwargs.pop('drift_criterion', False)
+
         if self.split_param == 'z':
+            assert not self.drift_criterion, "Setting drift_criterion requires split_param='v'."
             print "Setting model to be non-informative"
             kwargs['informative'] = False
             if 'include' in kwargs and 'z' not in kwargs['include']:
@@ -41,6 +48,24 @@ class HDDMStimCoding(HDDM):
         assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
 
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
+
+    def _create_stochastic_knodes(self, include):
+        knodes = super(HDDMStimCoding, self)._create_stochastic_knodes(include)
+        if self.drift_criterion:
+            # Add drift-criterion parameter
+            knodes.update(self._create_family_normal_normal_hnormal('dc',
+                                                                    value=0,
+                                                                    g_mu=0,
+                                                                    g_tau=3**-2,
+                                                                    std_std=2))
+
+        return knodes
+
+    def _create_wfpt_parents_dict(self, knodes):
+        wfpt_parents = super(HDDMStimCoding, self)._create_wfpt_parents_dict(knodes)
+        if self.drift_criterion:
+            wfpt_parents['dc'] = knodes['dc_bottom']
+        return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
@@ -59,6 +84,7 @@ class KnodeWfptStimCoding(Knode):
         self.split_param = kwargs.pop('split_param')
         self.stims = kwargs.pop('stims')
         self.stim_col = kwargs.pop('stim_col')
+
         super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
@@ -68,16 +94,19 @@ class KnodeWfptStimCoding(Knode):
         # following lines check if the variable stim is equal to the
         # value of stim for which z' = 1-z and transforms z if this is
         # the case (similar to v)
+        dc = kwargs.pop('dc', None)
         if all(data[self.stim_col] == self.stims[0]):
             if self.split_param == 'z':
-                z = kwargs['z']
-                kwargs['z'] = 1-z
-            elif self.split_param == 'v':
-                v = kwargs['v']
-                kwargs['v'] = -v
+                kwargs['z'] = 1-kwargs['z']
+            elif self.split_param == 'v' and dc is None:
+                kwargs['v'] = -kwargs['v']
+            elif self.split_param == 'v' and dc != 0:
+                kwargs['v'] = -kwargs['v'] + dc
             else:
                 raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
 
             return self.pymc_node(name, **kwargs)
         else:
+            if dc is not None:
+                kwargs['v'] = kwargs['v'] + dc
             return self.pymc_node(name, **kwargs)

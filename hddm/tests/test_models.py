@@ -168,6 +168,16 @@ class TestSingleBreakdown(unittest.TestCase):
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'].parents['a'], int)
         assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
 
+        m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v', drift_criterion=True)
+        m.sample(self.iter, burn=self.burn)
+        assert isinstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        self.assertEqual(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['a'].__name__, 'v')
+        self.assertEqual(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['b'].__name__, 'dc')
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['a'], pm.PyMCObjects.Deterministic)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['b'], pm.Normal)
+        assert isinstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['a'].parents['self'], pm.Normal)
+
 
 class TestHDDMRegressor(unittest.TestCase):
     def __init__(self, *args, **kwargs):
