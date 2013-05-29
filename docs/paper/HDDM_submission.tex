@@ -159,32 +159,19 @@ commonly used SSMs: the drift diffusion model (DDM)
 class of diffusion models and the linear ballistic accumulator (LBA)
 \citep{BrownHeathcote08}) belonging to the class of race models.
 
+As input these methods require trial-by-trial RT and choice data (HDDM currently only supports binary decisions) as illustrated in the below example table:
+
+\begin{tabular}{c|c|c|c}
+RT & response & condition & brain measure \\
+\hline
+0.8 & 1 & hard & 0.01 \\
+1.2 & 0 & easy & 0.23 \\
+0.25 & 1 & hard & -0.3
+\end{tabular}
 
 \subsubsection*{Drift Diffusion Model}
 \label{methods:drift-diffusion-model}
-The DDM models decision making in two-choice tasks. Each choice is
-represented as an upper and lower boundary. A drift-process
-accumulates evidence over time until it crosses one of the two
-boundaries and initiates the corresponding response
-\citep{RatcliffRouder98,SmithRatcliff04}). The speed with
-which the accumulation process approaches one of the two boundaries is
-called drift-rate \emph{v} and represents the relative evidence for or
-against a particular response. Because there is noise in the drift
-process, the time of the boundary crossing and the selected response
-will vary between trials. The distance between the two boundaries
-(i.e. threshold \emph{a}) influences how much evidence must be accumulated
-until a response is executed. A lower threshold makes responding
-faster in general but increases the influence of noise on decision
-making and can hence lead to errors or impulsive choice, whereas a
-higher threshold leads to more cautious responding (slower, more
-skewed RT distributions, but more accurate). Response time, however,
-is not solely comprised of the decision making process -- perception,
-movement initiation and execution all take time and are lumped in the
-DDM by a single non-decision time parameter \emph{t}. The model also allows
-for a prepotent bias \emph{z} affecting the starting point of the drift
-process relative to the two boundaries. The termination times of this
-generative process gives rise to the reaction time distributions of
-both choices.
+The DDM models decision making in two-choice tasks. Each choice is represented as an upper and lower boundary. A drift-process accumulates evidence over time until it crosses one of the two boundaries and initiates the corresponding response \citep{RatcliffRouder98,SmithRatcliff04}). The speed with which the accumulation process approaches one of the two boundaries is called drift-rate \emph{v} and represents the relative evidence for or against a particular response. Because there is noise in the drift process, the time of the boundary crossing and the selected response will vary between trials. The distance between the two boundaries (i.e. threshold \emph{a}) influences how much evidence must be accumulated until a response is executed. A lower threshold makes responding faster in general but increases the influence of noise on decision making and can hence lead to errors or impulsive choice, whereas a higher threshold leads to more cautious responding (slower, more skewed RT distributions, but more accurate). Response time, however, is not solely comprised of the decision making process -- perception, movement initiation and execution all take time and are lumped in the DDM by a single non-decision time parameter \emph{t}. The model also allows for a prepotent bias \emph{z} affecting the starting point of the drift process relative to the two boundaries. The termination times of this generative process gives rise to the reaction time distributions of both choices.
 \begin{figure}[htbp]
 \centering
 \capstart
@@ -200,19 +187,10 @@ the termination times was provided by \citep{Feller68}:
 Since the formula contains an infinite sum, HDDM uses an approximation
 provided by \citep{NavarroFuss09}.
 
-Subsequently, the DDM was extended to include additional noise parameters
-capturing inter-trial variability in the drift-rate, the non-decision
-time and the starting point in order to account for two phenomena
-observed in decision making tasks, most notably cases where errors are
-faster or slower than correct responses. Models that take this into
-account are referred to as the full DDM
-\citep{RatcliffRouder98}). HDDM uses analytic integration of the
-likelihood function for variability in drift-rate and numerical
-integration for variability in non-decision time and bias. More
-information on the model specifics can be found in \citep{SoferWieckiFrank}.
+Subsequently, the DDM was extended to include additional noise parameters capturing inter-trial variability in the drift-rate, the non-decision time and the starting point in order to account for two phenomena observed in decision making tasks, most notably cases where errors are faster or slower than correct responses. Models that take this into account are referred to as the full DDM \citep{RatcliffRouder98}). HDDM uses analytic integration of the likelihood function for variability in drift-rate and numerical integration for variability in non-decision time and bias. More information on the model specifics can be found in \citep{SoferWieckiFrank}.
 
 
-\subsubsection{Linear Ballistic Accumulator}
+\subsubsection*{Linear Ballistic Accumulator}
 \label{methods:linear-ballistic-accumulator}
 The Linear Ballistic Accumulator (LBA) model belongs to the class of
 race models \citep{BrownHeathcote08}). Instead of one drift process
@@ -305,7 +283,8 @@ HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
 depiction of a hierarchical DDM model with informative priors and
 group only inter-trial variablity parameters. Note, however, that
-there is also a model with non-informative priors which the user can opt to use. Nevertheless, we recommend using informative priors as they constrain parameter estimates to be in the range of plausible values based on past literature (see below), which can aid in reducing issues with parameter collinearity, and leads to better recovery of true parameters in simulation studies \cite{SoferWieckiFrank}.
+there is also a model with non-informative priors which the user can opt to use. Nevertheless, we recommend using informative priors as they constrain parameter estimates to be in the range of plausible values based on past literature (see below), which can aid in reducing issues with parameter collinearity, and leads to better recovery of true parameters in simulation studies -- especially with few trials \cite{SoferWieckiFrank}. Specifically, we find that our hierarchical method already provides excellent parameter recovery with as little as 30 trials per condition in a simulation study with 12 subjects.
+
 \begin{figure}[htbp]
 \centering
 \capstart
@@ -396,7 +375,7 @@ The \code{hddm.load\_csv()} function can then be used to load this file. \DUspan
 \PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{load\PYGZus{}csv}\PYG{p}{(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{hddm\PYGZus{}demo.csv}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
 
-To provide a sense of what how RT data is normally distributed we next plot histograms of each individual subject. Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be negative.
+To provide a sense of how RT data is normally distributed we next plot histograms of each individual subject. Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be negative.
 
 \includegraphics[scale=0.6]{hddm_demo_fig_00.png}
 
@@ -460,6 +439,8 @@ To test this hypothesis we create a new model which estimates separate drift-rat
 \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{find\PYGZus{}starting\PYGZus{}values}\PYG{p}{(}\PYG{p}{)}
 \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
 \end{Verbatim}
+
+Note that while here every subject was tested on each condition this is not a requirement. The \code{depends\_on} keyword can also be used to test between-group differences. For example, if we collected data where one group received a drug and the other one a placebo we would include a column in the data labeled 'drug' that contained 'drug' or 'placebo' for each subject. In our model specification we could test the hypothesis that the drug affects threshold by specifying \code{depends\_on=\{'a': 'drug'\}}.
 
 By examining the posterior for the different drift-rate conditions we can conclude that the \code{WL} condition drift-rate is substantially greater than that for the other two conditions, which are fairly similar to each other\footnote{While it would be easy to provide syntacic sugar for the below expression there are many cases where you want access to the underlying distributions. These are stored inside of \code{nodes\_db} which is a pandas \code{DataFrame} containing information about each distribution. Here we retrieve the actual node objects containing the trace from the \code{node} column.}. \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -586,23 +567,7 @@ The mixture model provides a much better fit because outlier RTs are having less
 \section*{Discussion}
 We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter recover by modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area, a reliable software package implementing this method was previously not available. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
 
-Using data from our lab on a reward-based learning and decision making
- task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this
- toolbox can successfully be used to estimate differences in
- information processing based solely on RT and choice data. We then
- extended this analysis to estimate within-subject effects. By using
- the \code{HDDMRegression} model we are able to not only quantify
- latent decision making processes in individuals but also how these
- latent processes relate to brain measures (here theta power as
- measured by EEG had a positive effect on threshold) on a
- trial-by-trial basis. Critically, changing brain state via DBS
- revealed that the effect of theta power on threshold was reversed. As
- these trial-by-trial effects are often quite noisy, our hierarchical
- Bayesian approach facilitated the detection of this effect, due to
- shared statistical structure among subjects in determining model
- parameters. This analysis is more informative than a straight
- behavioral relationship between brain activity and RT or accuracy
- alone.
+Using data from our lab on a reward-based learning and decision making task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this toolbox can successfully be used to estimate differences in information processing based solely on RT and choice data. We then extended this analysis to estimate within-subject effects. By using the \code{HDDMRegression} model we are able to not only quantify latent decision making processes in individuals but also how these latent processes relate to brain measures (here theta power as measured by EEG had a positive effect on threshold) on a trial-by-trial basis. Critically, changing brain state via DBS revealed that the effect of theta power on threshold was reversed. As these trial-by-trial effects are often quite noisy, our hierarchical Bayesian approach facilitated the detection of this effect, due to shared statistical structure among subjects in determining model parameters. This analysis is more informative than a straight behavioral relationship between brain activity and RT or accuracy alone. While we used EEG to measure brain activity this method should be easily extendable towards other techniques like fMRI. While trial-by-trial BOLD responses from an event-related study design are often very noisy we obtained promising results in our lab with this approach.
 
 In conclusion, \code{HDDM} is a novel tool that allows researchers to study the neurocognitive implementations of psychological decision making processes. The hierarchical modeling provides power to detect even small correlations between brain activity and decision making processes. Bayesian estimation supports the recent paradigm shift away from frequentist statistics for hypothesis testing \citep{Kruschke10,LeeWagenmakers13}.
 
