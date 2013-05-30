@@ -477,6 +477,7 @@ Lumped model DIC: 10960.570932
 Stimulus model DIC: 10775.615192
 \end{Verbatim}
 
+Based on the lower DIC score for the model allowing drift-rate to vary by stimulus condition we might conclude that it provides better fit than the model which forces the drift-rates to be equal, despite the increased complexity.
 
 \subsection*{Within-subject effects}
 \label{demo:within-subject-effects}
@@ -553,7 +554,7 @@ It is common to have outliers in any data set and RT data are no exception. Outl
 
 \includegraphics[scale=0.5]{hddm_demo_fig_10.png}
 
-As the above figure shows, the predictive likelihood does not fit the RT data very well. The model predicts far more RTs near the leading edge of the distribution than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
+As the above figure shows, the predictive likelihood does not fit the RT data very well. The model predicts far more fast RTs than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
 
 To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
