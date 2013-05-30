@@ -358,9 +358,7 @@ negative.
     \PYG{n}{ax}\PYG{o}{.}\PYG{n}{hist}\PYG{p}{(}\PYG{n}{subj\PYGZus{}data}\PYG{o}{.}\PYG{n}{rt}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{,} \PYG{n}{histtype}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{step}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
 
-
-
-\includegraphics[scale=0.6]{hddm_demo_fig_00.png}
+\includegraphics[scale=0.6]{hddm_demo_fig_00.pdf}
 
 
 \subsection*{Fitting a hierarchical model}
@@ -449,7 +447,8 @@ We next turn to comparing the posterior for the different drift-rate conditions.
 \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
-\includegraphics[scale=.7]{hddm_demo_fig_06.png}
+\includegraphics[scale=.7]{hddm_demo_fig_06.pdf}
+
 Based on the above figure we might reason that the \code{WL} condition drift-rate is substantially greater than that for the other two conditions, which are fairly similar to each other.
 
 One benefit of estimating the model in a Bayesian framework is that we can do significance testing directly on the posterior rather than relying on frequentist statistics \citep{Lindley65} (see also \citet{Kruschke10} for many examples of the advantages of this approach). For example, we might be interested in whether the drift-rate for \code{WW} is larger than that for \code{LL}, or whether drift-rate for \code{LL} is larger than \code{WL}. The below code computes the proportion of the posteriors in which the drift rate for one condition is greater than the other. It can be seen that the posteriors for \code{LL} do not overlap at all for \code{WL}, and thus the probability that \code{LL} is greater than \code{WL} should be near zero. \DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
@@ -508,7 +507,7 @@ To examine the marginal posteriors of our individual regressors we can again plo
 \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
-\includegraphics[scale=.7]{hddm_demo_fig_07.png}
+\includegraphics[scale=.7]{hddm_demo_fig_07.pdf}
 
 Note that in the above plot \code{LL} and \code{WW} are expressed relative to the \code{WL} condition (i.e. \code{v\_Intercept}). Thus, while the overall drift rate intercept, here applying to the \code{WL} condition, is positive (mode value roughly 0.7), the relative within subject effects of condition (\code{WW} and \code{LL}) are negative and do not overlap with zero -- suggesting a significant effect of this condition on drift-rate.
 
@@ -550,8 +549,10 @@ It is common to have outliers in any data set and RT data are no exception. Outl
 \PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}
 \includegraphics[scale=0.5]{hddm_demo_fig_10.png}
-
+\caption{Posterior predictive likelihood of the model which does not account for outliers. Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis. }
+\end{figure}
 As the above figure shows, the predictive likelihood does not fit the RT data very well. The model predicts far more fast RTs than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
 
 To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
@@ -564,7 +565,10 @@ To solve this issue, HDDM includes a mixture model which assumes that outliers c
 \PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}
 \includegraphics[scale=0.5]{hddm_demo_fig_11.png}
+\caption{Posterior predictive likelihood of the model which does account for outliers. Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis.}
+\end{figure}
 
 The mixture model provides a much better fit because outlier RTs are having less of an effect because they get assigned to the uniform outlier distribution. Note that it is also possible to estimate the probability of obtaining outliers from the data by setting \code{include=['p\_outlier']} instead of \code{p\_outlier=x} when \code{HDDM} in instantiated.
 
