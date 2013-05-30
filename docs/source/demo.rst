@@ -1,6 +1,3 @@
-.. index:: Demo
-.. _chap_demo:
-
 Demo
 ----
 
@@ -8,18 +5,37 @@ In the following we will show an example session of using HDDM to
 analyze a real-world dataset. The main purpose is to provide an overview
 of some of the funcionality and interface. By no means, however, is it a
 complete overview of all the functionality in HDDM. For more
-information, including on how to use HDDM as a command-line utility, 
-online tutorial and a refernce manual
-see http://ski.clps.brown.edu/hddm_docs.
+information, including on how to use HDDM as a command-line utility, we
+refer to the online tutorial at
+http://ski.clps.brown.edu/hddm\_docs/tutorial.html and the how-to at
+http://ski.clps.brown.edu/hddm\_docs/howto.html. For a reference manual,
+see http://ski.clps.brown.edu/hddm\_docs.
 
-First, we have to load the modules we are going to use.
+First, we have to import the modules we are going to use so that they
+are available in our namespace. Pandas provides a table-oriented
+data-structure and matplotlib is a module for generating graphs and
+plots.
+
+In[1]:
+
+.. code:: python
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+Next, we will import HDDM. At the time of this writing, this version was
+used.
+
+In[2]:
 
 .. code:: python
 
     import hddm
-    import matplotlib.pyplot as plt
+    print hddm.__version__
 
-We import HDDM(0.5dev) and matplotlib, a module for generating graphs and
+.. parsed-literal::
+
+    0.5.1.dev
 
 
 Loading data
@@ -28,14 +44,19 @@ Loading data
 Next, we will load in a data set. The easiest way to get your data into
 HDDM is by storing it in a csv (comma-separated-value, see below) file.
 In this example we will be using data collected in a reward-based
-decision making experiment in our lab (:cite:CavanaghWieckiCohenEtAl11). In brief, at each trial subjects choose
-between two symbols. The trials were divided into win-win trials (WW),
-in which the two symbols were associated with high winning chances;
-lose-lose trials (LL), in which the symbols were associated with low
-winning chances, and win-lose trials (WL), which are the easiest because
-only one symbol was associated with high winning chances. Thus WW and LL
-decisions together comprise high conflict
-(HC) trials (although there are other differences between them, we
+decision making experiment in our lab (Cavanagh et al 2011). In brief,
+subjects choose between two symbols that have different histories of
+reinforcement, which they first acquire through a learning phase: some
+symbols more often leads to wins (W; 80%, 70% and 60% of trials in which
+they are selected), whereas others only lead to win on 40%, 30%, or 20%
+of the time and otherwise lead to losses (L). A test phase ensures in
+which subjects choose between all paired combination of symbols without
+feedback. These test trials can be devided into win-win (WW) trials, in
+which they select between two symbols that had led to wins before (but
+one more often than another); lose-lose trials (LL), and win-lose (WL)
+trials, which are the easiest because one symbol had been a winner most
+of the time. Thus WW and LL decisions together comprise high conflict
+(HC) test trials (although there are other differences between them, we
 don't focus on those here), whereas WL decisions are low conflict (LC).
 The main hypothesis of the study was that high conflict trials induce an
 increase in the decision threshold, and that the mechanism for this
@@ -53,8 +74,9 @@ conflict trials. They tested the STN component of the theory by
 administering the same experiment to patients who had deep brain
 stimulation (dbs) of the STN, which interferes with normal processing.
 
-
 The first ten lines of the data file look as follows:
+
+In[3]:
 
 .. code:: python
 
@@ -76,13 +98,19 @@ The first ten lines of the data file look as follows:
 
 We use the ``hddm.load_csv()`` function to load this file.
 
+In[3]:
+
 .. code:: python
 
-    data = hddm.load_csv('hddm_demo.csv')
+    data = hddm.load_csv('./cavanagh_theta_nn.csv')
+
+In[5]:
 
 .. code:: python
 
     data.head(10)
+
+Out[5]:
 
 .. parsed-literal::
 
@@ -104,10 +132,12 @@ responses (here we are using accuracy coding where 1 means the more
 rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs
 to be negative.
 
+In[4]:
+
 .. code:: python
 
     data = hddm.utils.flip_errors(data)
-
+    
     fig = plt.figure()
     ax = fig.add_subplot(111, xlabel='RT', ylabel='count', title='RT distributions')
     for i, subj_data in data.groupby('subj_idx'):
@@ -121,6 +151,8 @@ Fitting a hierarchical model
 Lets fit a hierarchical DDM to this data set, starting off first with
 the simplest model that does not allow parameters to vary by condition.
 
+In[5]:
+
 .. code:: python
 
     # Instantiate model object passing it our data (no need to call flip_errors() before passing it).
@@ -128,33 +160,51 @@ the simplest model that does not allow parameters to vary by condition.
     m = hddm.HDDM(data)
     # find a good starting point which helps with the convergence.
     m.find_starting_values()
-    # start drawing 2000 samples and discarding 20 as burn-in
+    # start drawing 7000 samples and discarding 5000 as burn-in
     m.sample(2000, burn=20)
+
+.. parsed-literal::
+
+     [****************100%******************]  2000 of 2000 complete
+
+Out[5]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xb0dd58c>
+
+.. parsed-literal::
+
+    
+
 
 We now want to analyze our estimated model. ``m.print_stats()`` will
 print a table of summary statistics for each parameters' posterior.
 Because that is quite long we only print a subset of the parameters
 using pandas selection functionality.
 
+In[24]:
+
 .. code:: python
 
     stats = m.gen_stats()
     stats[stats.index.isin(['a', 'a_var', 'a_subj.0', 'a_subj.1'])]
 
+Out[24]:
+
 .. parsed-literal::
 
-                  mean       std      2.5q       25q       50q       75q     97.5q
-
-    a         2.058015  0.102570  1.862412  1.988854  2.055198  2.123046  2.261410
-    a_var     0.379303  0.089571  0.244837  0.316507  0.367191  0.426531  0.591643
-    a_subj.0  2.384066  0.059244  2.274352  2.340795  2.384700  2.423012  2.500647
-    a_subj.1  2.127582  0.061901  2.003605  2.086776  2.126963  2.166261  2.254350
-
-                mc err
-    a         0.002539
-    a_var     0.002973
-    a_subj.0  0.001727
-    a_subj.1  0.002113
+                  mean       std      2.5q       25q       50q       75q     97.5q  \
+    a         2.058015  0.102570  1.862412  1.988854  2.055198  2.123046  2.261410   
+    a_var     0.379303  0.089571  0.244837  0.316507  0.367191  0.426531  0.591643   
+    a_subj.0  2.384066  0.059244  2.274352  2.340795  2.384700  2.423012  2.500647   
+    a_subj.1  2.127582  0.061901  2.003605  2.086776  2.126963  2.166261  2.254350   
+    
+                mc err  
+    a         0.002539  
+    a_var     0.002973  
+    a_subj.0  0.001727  
+    a_subj.1  0.002113  
 
 As you can see, the model estimated the group mean parameter for
 threshold ``a``, group variability ``a_var`` and individual subject
@@ -169,9 +219,31 @@ these using the ``plot_posteriors()`` function. For the sake of brevity
 we only plot three here. In practice, however, you will always want to
 examine all of them.
 
+In[25]:
+
 .. code:: python
 
     m.plot_posteriors(['a', 't', 'v', 'a_var'])
+
+.. parsed-literal::
+
+    Plotting a
+    Plotting
+
+.. parsed-literal::
+
+     a_var
+    Plotting
+
+.. parsed-literal::
+
+     v
+    Plotting
+
+.. parsed-literal::
+
+     t
+
 
 .. image:: hddm_demo_files/hddm_demo_fig_01.png
 
@@ -184,10 +256,91 @@ examine all of them.
 As you can see, there are no drifts or large jumps in the trace. The
 autocorrelation is also very low.
 
+The Gelman-Rubin statistic provides a more formal test for convergence
+that compares the intra-chain variance to the intra-chain variance of
+different runs of the same model.
+
+In[6]:
+
+.. code:: python
+
+    models = []
+    for i in range(5):
+        m = hddm.HDDM(data)
+        m.find_starting_values()
+        m.sample(5000, burn=20)
+        models.append(m)
+    
+    hddm.analyze.gelman_rubin(models)
+
+.. parsed-literal::
+
+     [****************100%******************]  5000 of 5000 complete
+
+Out[6]:
+
+.. parsed-literal::
+
+    {'a': 1.0000668111053685,
+     'a_std': 1.0010173058530589,
+     'a_subj.0': 1.0000047087722486,
+     'a_subj.1': 1.0000009370933347,
+     'a_subj.10': 0.99990847344304434,
+     'a_subj.11': 1.0001437561806241,
+     'a_subj.12': 0.99984508571992803,
+     'a_subj.13': 1.000099216819198,
+     'a_subj.2': 1.0000372909826893,
+     'a_subj.3': 0.99995040868910168,
+     'a_subj.4': 1.0003312508690589,
+     'a_subj.5': 1.0001912117528458,
+     'a_subj.6': 1.0010658258173637,
+     'a_subj.7': 1.0001071467593925,
+     'a_subj.8': 1.0004783963512398,
+     'a_subj.9': 1.0007746563445141,
+     't': 1.0000308090923631,
+     't_std': 1.000512844955934,
+     't_subj.0': 1.0001733500142438,
+     't_subj.1': 0.99984654104076831,
+     't_subj.10': 1.000069470630345,
+     't_subj.11': 1.000090486786988,
+     't_subj.12': 0.99991055555329111,
+     't_subj.13': 1.000486690945217,
+     't_subj.2': 1.000616737308744,
+     't_subj.3': 0.99998238885938351,
+     't_subj.4': 1.0008013713710087,
+     't_subj.5': 1.0001465145834043,
+     't_subj.6': 1.0010657942771291,
+     't_subj.7': 1.0002045162669302,
+     't_subj.8': 1.000052195799799,
+     't_subj.9': 1.0009813739575015,
+     'v': 0.99990979757285559,
+     'v_std': 1.0008867759333817,
+     'v_subj.0': 1.0002321809656014,
+     'v_subj.1': 0.99994337959651836,
+     'v_subj.10': 0.99993877280516663,
+     'v_subj.11': 1.0000010631106975,
+     'v_subj.12': 1.0001356513668358,
+     'v_subj.13': 1.0001126158544547,
+     'v_subj.2': 0.9998662758666288,
+     'v_subj.3': 1.0000307358429708,
+     'v_subj.4': 1.0000226747245802,
+     'v_subj.5': 0.99993856707080053,
+     'v_subj.6': 1.0002290483736591,
+     'v_subj.7': 0.99988999493060371,
+     'v_subj.8': 1.0000010588560522,
+     'v_subj.9': 1.0005820059667723}
+
+.. parsed-literal::
+
+    
+
+
 We might also be interested in how well the model fits the data. To
 inspect this visually you can call ``plot_posterior_predictive()`` to
 plot individual subject RT distributions in red on top of the predictive
 likelihood in blue.
+
+In[12]:
 
 .. code:: python
 
@@ -215,11 +368,27 @@ separate drift-rate ``v`` for those different conditions by using the
 which maps the parameter to be split to the column name containing the
 conditions we want to split by.
 
+In[18]:
+
 .. code:: python
 
     m_stim = hddm.HDDM(data, depends_on={'v': 'stim'})
     m_stim.find_starting_values()
     m_stim.sample(2000, burn=20)
+
+.. parsed-literal::
+
+     [****************100%******************]  2000 of 2000 complete
+
+Out[18]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xaf29ccc>
+
+.. parsed-literal::
+
+    
 
 
 We will skip examining the traces for this model and instead look at the
@@ -228,10 +397,12 @@ the drift rate for the low conflict WL condition is substantially
 greater than that for the other two conditions, which are fairly similar
 to each other.
 
+In[19]:
+
 .. code:: python
 
     v_WW, v_LL, v_WL = m_stim.nodes_db.node[['v(WW)', 'v(LL)', 'v(WL)']]
-    kabuki.analyze.plot_posterior_nodes([v_WW, v_LL, v_WL])
+    hddm.analyze.plot_posterior_nodes([v_WW, v_LL, v_WL])
 
 .. image:: hddm_demo_files/hddm_demo_fig_06.png
 
@@ -253,6 +424,8 @@ condition is greater than the other. It can be seen that the posteriors
 for LL do not overlap at all for WL, and thus the probability that LL is
 greater than WL should be near zero.
 
+In[20]:
+
 .. code:: python
 
     print "P(WW > LL) = ", (v_WW.trace() > v_LL.trace()).mean()
@@ -265,6 +438,7 @@ greater than WL should be near zero.
 
 
 Lets compare the two models using the deviance information criterion (DIC; lower is better). Note that the DIC measures the fit of the model to the data, penalizing for complexity in the addition of degrees of freedom (the model with three drift rates has more dF than the model with one). The DIC is known to be somewhat biased in selecting the model with greater complexity, although alternative forms exist (see Plummer 2008). One should use the DIC with caution, although other forms of model comparison such as the Bayes Factor (BF) have other problems, such as being overly sensitive to the prior parameter distributions of the models. Future versions of HDDM will include the partial Bayes Factor, which allows the BF to be computed based on informative priors taken from a subset of the data, and which we generally believe to provide a better measure of model fit. Nevertheless, DIC can be a useful metric with these caveats in mind.
+In[26]:
 
 .. code:: python
 
@@ -278,7 +452,7 @@ Lets compare the two models using the deviance information criterion (DIC; lower
 
 
 Within-subject effects
-``````````````````````
+----------------------
 
 Note that while the ``m_stim`` model we created above estimates
 different drift-rates ``v`` for each subject, it implicitly assumes that
@@ -302,10 +476,14 @@ condition with high precision).
 ``HDDM`` supports this via the ``patsy`` module which transforms model
 strings to design matrices.
 
+In[16]:
+
 .. code:: python
 
     from patsy import dmatrix
     dmatrix("C(stim, Treatment('WL'))", data.head(10))
+
+Out[16]:
 
 .. parsed-literal::
 
@@ -330,6 +508,8 @@ class as part of a descriptor that contains the string describing the
 linear model and the ``outcome`` variable that should be replaced with
 the output of the linear model -- in this case ``v``.
 
+In[17]:
+
 .. code:: python
 
     m_within_subj = hddm.HDDMRegressor(data, "v ~ C(stim, Treatment('WL'))")
@@ -340,16 +520,35 @@ the output of the linear model -- in this case ``v``.
     ['v_Intercept', "v_C(stim, Treatment('WL'))[T.LL]", "v_C(stim, Treatment('WL'))[T.WW]"]
 
 
+In[18]:
+
 .. code:: python
 
     m_within_subj.sample(5000, burn=200)
 
+.. parsed-literal::
+
+     [****************100%******************]  5000 of 5000 complete
+
+Out[18]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xb41712c>
+
+.. parsed-literal::
+
+    
+
+
+In[22]:
+
 .. code:: python
 
-    v_WL, v_LL, v_WW = m_within_subj.nodes_db.node[["v_Intercept",
-                                                    "v_C(stim, Treatment('WL'))[T.LL]",
+    v_WL, v_LL, v_WW = m_within_subj.nodes_db.node[["v", 
+                                                    "v_C(stim, Treatment('WL'))[T.LL]", 
                                                     "v_C(stim, Treatment('WL'))[T.WW]"]]
-    kabuki.analyze.plot_posterior_nodes([v_WL, v_LL, v_WW])
+    hddm.analyze.plot_posterior_nodes([v_WL, v_LL, v_WW])
 
 .. image:: hddm_demo_files/hddm_demo_fig_07.png
 
@@ -360,7 +559,7 @@ overall drift rate intercept, here applying to WL condition, is positive
 condition (WW and LL) are negative and do not overlap with zero.
 
 Fitting regression models
-`````````````````````````
+-------------------------
 
 As mentioned above, cognitive neuroscience has embraced the DDM as it
 enables to link psychological processes to cognitive brain measures. The
@@ -375,12 +574,13 @@ relationship in a model restricted to participants without brain
 stimulation. For more information, see
 http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf
 
+In[7]:
+
 .. code:: python
 
-    m_reg = hddm.HDDMRegressor(data[data.dbs == 0],
-                               "a ~ theta:C(conf, Treatment('LC'))",
-                               depends_on={'v': 'stim'},
-                               group_only_regressors=True)
+    m_reg = hddm.HDDMRegressor(data[data.dbs == 0], 
+                               "a ~ theta:C(conf, Treatment('LC'))", 
+                               depends_on={'v': 'stim'})
 
 .. parsed-literal::
 
@@ -394,35 +594,31 @@ linear model specified above (as a function of their measured theta
 activity). We also test whether this effect interacts with decision
 conflict. For the stimuli we use dummy treatment coding with the
 intercept being set on the WL condition. Internally, HDDM uses Patsy for
-the linear model specification, see
-https://patsy.readthedocs.org/en/latest/ for more details. The output
-notifies us about the different variables that being estimated as part
-of the linear model.
+the linear model specification, see the `Patsy
+documentation <https://patsy.readthedocs.org/en/latest/>`__ for more
+details. The output notifies us about the different variables that being
+estimated as part of the linear model. The Cavanagh paper, and results
+shown later below, illustrate that this brain/behavior relationship
+differs as a function of whether patients are on or off STN deep brain
+stimulation, as hypothesized by the model that STN is responsible for
+increasing the decision threshold when cortical theta rises).
 
-Finally, the keyword argument ``group_only_regressors`` instructs HDDM
-to only use a group parameter for each regression coefficient. We use
-this here for the regression coefficient only as it leads to much better
-convergence than trying to estimate individual coefficients for each
-subject separately. (We still allow individual subject nodes on all the
-other parameters, including the threshold intercept, but due to the much
-noisier theta measure, we treat that as a fixed effect within a group of
-subjects. Nevertheless, this group parameter should be estimated
-separately when the hypothesis tests the assumption that the
-relationship between brain activity and threshold would differ between
-different groups. Indeed the Cavanagh paper, and results shown later
-below, illustrate that this brain/behavior relationship differs as a
-function of whether patients are on or off STN deep brain stimulation,
-as hypothesized by the model that STN is responsible for increasing the
-decision threshold when cortical theta rises).
+In[*]:
 
 .. code:: python
 
     m_reg.sample(5000, burn=200)
 
+.. parsed-literal::
+
+     [*****************82%***********       ]  4100 of 5000 complete
+
+In[6]:
+
 .. code:: python
 
     theta = m_reg.nodes_db.node["a_theta:C(conf, Treatment('LC'))[HC]"]
-    kabuki.analyze.plot_posterior_nodes([theta], bins=20)
+    hddm.analyze.plot_posterior_nodes([theta], bins=20)
     print "P(a_theta < 0) = ", (theta.trace() < 0).mean()
 
 .. parsed-literal::
@@ -448,12 +644,13 @@ thus shows that HDDM can be used both to assess the influence of
 trial-by-trial brain measures on DDM parameters, but also how parameters
 vary when brain state is manipulated.
 
+In[8]:
+
 .. code:: python
 
-    m_reg_off = hddm.HDDMRegressor(data[data.dbs == 1],
-                                   "a ~ theta:C(conf, Treatment('LC'))",
-                                   depends_on={'v': 'stim'},
-                                   group_only_regressors=True)
+    m_reg_off = hddm.HDDMRegressor(data[data.dbs == 1], 
+                                   "a ~ theta:C(conf, Treatment('LC'))", 
+                                   depends_on={'v': 'stim'})
 
 .. parsed-literal::
 
@@ -461,26 +658,48 @@ vary when brain state is manipulated.
     ['a_Intercept', "a_theta:C(conf, Treatment('LC'))[HC]", "a_theta:C(conf, Treatment('LC'))[LC]"]
 
 
+In[9]:
+
 .. code:: python
 
     m_reg_off.sample(5000, burn=200)
 
+.. parsed-literal::
+
+     [****************100%******************]  5000 of 5000 complete
+
+Out[9]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xbfc9e8c>
+
+.. parsed-literal::
+
+    
+
+
+In[10]:
+
 .. code:: python
 
     theta = m_reg_off.nodes_db.node["a_theta:C(conf, Treatment('LC'))[HC]"]
-    kabuki.analyze.plot_posterior_nodes([theta], bins=10)
+    hddm.analyze.plot_posterior_nodes([theta], bins=10)
     print "P(a_theta > 0) = ", (theta.trace() > 0).mean()
 
 .. parsed-literal::
 
-    P(a_theta > 0) =  0.0122916666667
+    P(a_theta > 0) =  0.021875
+
+.. parsed-literal::
+
+    
 
 
 .. image:: hddm_demo_files/hddm_demo_fig_09.png
 
 Dealing with outliers
-`````````````````````
-
+---------------------
 
 It is common to have outliers in any data set and RT data is no
 exception. Outliers present a serious challenge to likelihood-based
@@ -495,15 +714,35 @@ would force the DDM parameters to adjust substantially. To see the
 effect of this we will generate data with outliers, but fit a standard
 DDM model without taking outliers into account.
 
-.. code:: python
-
-    outlier_data, params = hddm.generate.gen_rand_data(params={'a': 2, 't': .4, 'v': .5},
-                                                       size=200, n_fast_outliers=10)
+In[10]:
 
 .. code:: python
 
-    m_no_outlier = hddm.HDDM(outlier_data)
+    outlier_data, params = hddm.generate.gen_rand_data(params={'a': 2, 't': .4, 'v': .5}, size=200, n_fast_outliers=10)
+
+In[11]:
+
+.. code:: python
+
+    m_no_outlier = hddm.HDDMInfo(outlier_data)
     m_no_outlier.sample(2000, burn=50)
+
+.. parsed-literal::
+
+     [****************100%******************]  2000 of 2000 complete
+
+Out[11]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xad7a90c>
+
+.. parsed-literal::
+
+    
+
+
+In[12]:
 
 .. code:: python
 
@@ -526,10 +765,29 @@ generation, and hence use a uniform distribution. This allows the model
 to find the best DDM parameters that capture the majority of trials).
 Here, we specify that we expect roughly 5% outliers in our data.
 
+In[13]:
+
 .. code:: python
 
-    m_outlier = hddm.HDDM(outlier_data, p_outlier=.05)
+    m_outlier = hddm.HDDMInfo(outlier_data, p_outlier=.05)
     m_outlier.sample(2000, burn=20)
+
+.. parsed-literal::
+
+     [****************100%******************]  2000 of 2000 complete
+
+Out[13]:
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0xaf2c9cc>
+
+.. parsed-literal::
+
+    
+
+
+In[14]:
 
 .. code:: python
 

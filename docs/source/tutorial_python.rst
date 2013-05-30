@@ -5,7 +5,7 @@ Build your first model
 ======================
 
 Imagine that we collected data from one subject on the moving dots or
-coherent motion task (e.g., :cite:`RoitmanShadlen02`). In this task,
+coherent motion task (e.g., ). In this task,
 participants indicate, via a keypress, in which of two directions dots are
 moving on a screen. Only some proportion of the dots move in a coherent
 direction; the remaining dots move in random directions (i.e. incoherent; see the figure). In our

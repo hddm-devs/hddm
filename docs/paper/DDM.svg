@@ -25,7 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -590,14 +590,14 @@
     <text
        xml:space="preserve"
        style="font-size:8.40386295px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="58.575245"
-       y="177.24364"
+       x="73.872604"
+       y="179.77621"
        id="text5831"
        transform="matrix(0.92995716,-0.36766789,0.36766789,0.92995716,0,0)"><tspan
          sodipodi:role="line"
          id="tspan5833"
-         x="58.575245"
-         y="177.24364">drift rate (v)</tspan></text>
+         x="73.872604"
+         y="179.77621">drift rate (v)</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.80000001px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend)"
        d="M 90.997546,143.74516 182.77662,109.52987"
@@ -626,61 +626,61 @@
          id="tspan1073">time (t)</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:8.00000023px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="216.77293"
+       style="font-size:8px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="223.01407"
        y="70.397987"
        id="text5831-3-1"><tspan
          sodipodi:role="line"
-         id="tspan5833-5-3"
-         x="216.77293"
-         y="70.397987">Upper boundary</tspan><tspan
+         x="223.01407"
+         y="70.397987"
+         id="tspan1106">Response density</tspan><tspan
          sodipodi:role="line"
-         x="216.77293"
-         y="82.514763"
-         id="tspan1106">histogram</tspan></text>
+         x="223.01407"
+         y="80.397987"
+         id="tspan1050">(upper boundary)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:8px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="187.05975"
-       y="205.78429"
+       x="186.76256"
+       y="203.10951"
        id="text5831-3-1-6"><tspan
          sodipodi:role="line"
-         x="187.05975"
-         y="205.78429"
-         id="tspan1106-5">Lower boundary</tspan><tspan
+         x="186.76256"
+         y="203.10951"
+         id="tspan1134">Reponse density</tspan><tspan
          sodipodi:role="line"
-         x="187.05975"
-         y="215.78429"
-         id="tspan1134">histogram</tspan></text>
+         x="186.76256"
+         y="213.10951"
+         id="tspan1046">(lower boundary)</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:9.69341946px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="159.95364"
-       y="104.31318"
+       style="font-size:9.41343784px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="151.96021"
+       y="104.24943"
        id="text5831-3-1-8"><tspan
          sodipodi:role="line"
          id="tspan5833-5-3-6"
-         x="159.95364"
-         y="104.31318"
-         style="font-size:8px">Upper response boundary</tspan><tspan
+         x="151.96021"
+         y="104.24943"
+         style="font-size:7.76893091px">Upper response boundary</tspan><tspan
          sodipodi:role="line"
-         x="159.95364"
-         y="114.31318"
+         x="151.96021"
+         y="113.96059"
          id="tspan1106-0" /></text>
     <text
        xml:space="preserve"
-       style="font-size:9.69341946px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="157.01154"
-       y="186.86612"
+       style="font-size:8.94922352px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="152.23251"
+       y="186.69669"
        id="text5831-3-1-8-7"><tspan
          sodipodi:role="line"
          id="tspan5833-5-3-6-6"
-         x="157.01154"
-         y="186.86612"
-         style="font-size:8px">Lower response boundary</tspan><tspan
+         x="152.23251"
+         y="186.69669"
+         style="font-size:7.38581324px">Lower response boundary</tspan><tspan
          sodipodi:role="line"
-         x="157.01154"
-         y="196.86612"
+         x="152.23251"
+         y="195.92896"
          id="tspan1106-0-6" /></text>
     <text
        xml:space="preserve"
