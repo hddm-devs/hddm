@@ -380,28 +380,7 @@ We recommend drawing between 2000 and 5000 posterior samples, depending on the c
 
 Note that it is also possible to fit a non-hierarchical model to an individual subject by setting \code{is\_group\_model=False} in the instantiation of \code{HDDM} or by passing in data which lacks a \code{subj\_idx} column. In this case, HDDM will use the group-mean priors from above for the individual parameters.
 
-It is critical to assess the statistics of our estimated model. The
-\code{HDDM.print\_stats()} method outputs a table of summary statistics for each parameters' posterior (note that the output is abridged due to its length).
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{stats} \PYG{o}{=} \PYG{n}{m}\PYG{o}{.}\PYG{n}{gen\PYGZus{}stats}\PYG{p}{(}\PYG{p}{)}
-\PYG{n}{stats}\PYG{p}{[}\PYG{n}{stats}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{isin}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}var}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}subj.0}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}subj.1}\PYG{l+s}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}\PYG{p}{]}
-\end{Verbatim}
-
-\begin{Verbatim}[commandchars=\\\{\}]
-              mean       std      2.5q       25q       50q       75q 97.5q
-
-a         2.058015  0.102570  1.862412  1.988854  2.055198  2.123046 2.261410
-a\_var     0.379303  0.089571  0.244837  0.316507  0.367191  0.426531 0.591643
-a\_subj.0  2.384066  0.059244  2.274352  2.340795  2.384700  2.423012 2.500647
-a\_subj.1  2.127582  0.061901  2.003605  2.086776  2.126963  2.166261 2.254350
-
-\end{Verbatim}
-
-The output contains various summary statistics describing the posterior of each parameter: group mean parameter for
-threshold \code{a}, group variability \code{a\_var} and individual subject parameters \code{a\_subj.0}. Other parameters are not shown here but were still estimated.
-
-The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One main analysis to investigate is the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method. For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method. For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posteriors}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a', 'a_var}\PYG{l+s}{\PYGZsq{}}{]}\PYG{p}{)}
 \end{Verbatim}
@@ -435,6 +414,25 @@ Which produces the following output (abridged to preserve space):
 \end{Verbatim}
 
 Values should be close to 1 and not larger than 1.02 which would indicate convergence problems.
+
+Once convinced that the chains have properly converged we can analyze the posterior values. The \code{HDDM.print\_stats()} method outputs a table of summary statistics for each parameters' posterior (note that the output is abridged due to its length). \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{stats} \PYG{o}{=} \PYG{n}{m}\PYG{o}{.}\PYG{n}{gen\PYGZus{}stats}\PYG{p}{(}\PYG{p}{)}
+\PYG{n}{stats}\PYG{p}{[}\PYG{n}{stats}\PYG{o}{.}\PYG{n}{index}\PYG{o}{.}\PYG{n}{isin}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}var}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}subj.0}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a\PYGZus{}subj.1}\PYG{l+s}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{)}\PYG{p}{]}
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\}]
+              mean       std      2.5q       25q       50q       75q 97.5q
+
+a         2.058015  0.102570  1.862412  1.988854  2.055198  2.123046 2.261410
+a\_var     0.379303  0.089571  0.244837  0.316507  0.367191  0.426531 0.591643
+a\_subj.0  2.384066  0.059244  2.274352  2.340795  2.384700  2.423012 2.500647
+a\_subj.1  2.127582  0.061901  2.003605  2.086776  2.126963  2.166261 2.254350
+
+\end{Verbatim}
+
+The output contains various summary statistics describing the posterior of each parameter: group mean parameter for
+threshold \code{a}, group variability \code{a\_var} and individual subject parameters \code{a\_subj.0}. Other parameters are not shown here for reasons of brevity but were still estimated.
 
 To test whether the different conflict conditions affect drift-rate we create a new model which estimates separate drift-rate \code{v} for the three conflict conditions. HDDM supports splitting by condition via the \code{depends\_on} keyword argument supplied to the \code{HDDM} class. This argument expects a Python \code{dict} which maps the parameter to be split to the column name containing the conditions we want to split by. This way of defining parameters to be split by condition is directly inspired by the fast-dm toolbox \citep{VossVoss07}. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]

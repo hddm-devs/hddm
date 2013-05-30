@@ -44,7 +44,7 @@
      showgrid="false"
      inkscape:zoom="2.6918192"
      inkscape:cx="170.38992"
-     inkscape:cy="137.50925"
+     inkscape:cy="107.78957"
      inkscape:window-x="-3"
      inkscape:window-y="-3"
      inkscape:window-maximized="1"
@@ -612,17 +612,17 @@
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
-       style="font-size:5.01243687px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       x="80.586922"
-       y="126.73289"
+       style="font-size:6.30909109px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="82.218338"
+       y="124.94113"
        id="text5831-4"><tspan
          sodipodi:role="line"
          id="tspan5833-7"
-         x="80.586922"
-         y="126.73289">non-decision</tspan><tspan
+         x="82.218338"
+         y="124.94113">non-decision</tspan><tspan
          sodipodi:role="line"
-         x="80.586922"
-         y="132.99844"
+         x="82.218338"
+         y="132.82748"
          id="tspan1073">time (t)</tspan></text>
     <text
        xml:space="preserve"
