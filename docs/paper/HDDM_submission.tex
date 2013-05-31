@@ -10,8 +10,11 @@
 \usepackage{longtable}
 \usepackage{sphinx}
 \usepackage{multirow}
+\usepackage{float}
 \usepackage[sectionbib]{natbib}
-
+\usepackage{fancyhdr}
+\pagestyle{plain}
+\pagenumbering{arabic}
 \title{HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python}
 \date{May 6, 2013}
 \author{Thomas V. Wiecki, Imri Sofer, Michael J. Frank}
@@ -125,11 +128,11 @@ The diffusion model is a commonly used tool to infer latent psychological proces
 
 \section*{Introduction}
 \label{intro:introduction}\label{intro:index-0}\label{intro:chap-introduction}\label{intro::doc}
-Sequential sampling models (SSMs) \citep{TownsendAshby83}) have established themselves as the de-facto standard for modeling reaction-time data from simple two-alternative forced choice decision making tasks \citep{SmithRatcliff04}). Each decision is modeled as an accumulation of noisy information indicative of one choice or the other, with sequential evaluation of the accumulated evidence at each time step. Once this evidence crosses a threshold, the corresponding response is executed. This simple assumption about the underlying psychological process has the appealing property of reproducing not only choice probabilities, but the full distribution of response times for each of the two choices. Models of this class have been used successfully in mathematical psychology since the 60s and more recently adopted in cognitive neuroscience investigations. These studies are typically interested in neural mechanisms associated with the accumulation process or for regulating the decision threshold \citep[e.g.][]{ForstmannDutilhBrownEtAl08,CavanaghWieckiCohenEtAl11,RatcliffPhiliastidesSajda09}. One issue in such model-based cognitive neuroscience approaches is that the trial numbers in each condition are often low, making it difficult to estimate model parameters. For example, studies with patient populations, especially if combined with intraoperative recordings, typically have substantial constraints on the duration of the task. Similarly, model-based fMRI or EEG studies are often interested not in static model parameters, but how these dynamically vary with trial-by-trial variations in recorded brain activity. Efficient and reliable estimation methods that take advantage of the full statistical structure available in the data across subjects and conditions are critical to the success of these endeavors.
+Sequential sampling models (SSMs) \citep{TownsendAshby83} have established themselves as the de-facto standard for modeling reaction-time data from simple two-alternative forced choice decision making tasks \citep{SmithRatcliff04}. Each decision is modeled as an accumulation of noisy information indicative of one choice or the other, with sequential evaluation of the accumulated evidence at each time step. Once this evidence crosses a threshold, the corresponding response is executed. This simple assumption about the underlying psychological process has the appealing property of reproducing not only choice probabilities, but the full distribution of response times for each of the two choices. Models of this class have been used successfully in mathematical psychology since the 60s and more recently adopted in cognitive neuroscience investigations. These studies are typically interested in neural mechanisms associated with the accumulation process or for regulating the decision threshold \citep[e.g.][]{ForstmannDutilhBrownEtAl08,CavanaghWieckiCohenEtAl11,RatcliffPhiliastidesSajda09}. One issue in such model-based cognitive neuroscience approaches is that the trial numbers in each condition are often low, making it difficult to estimate model parameters. For example, studies with patient populations, especially if combined with intraoperative recordings, typically have substantial constraints on the duration of the task. Similarly, model-based fMRI or EEG studies are often interested not in static model parameters, but how these dynamically vary with trial-by-trial variations in recorded brain activity. Efficient and reliable estimation methods that take advantage of the full statistical structure available in the data across subjects and conditions are critical to the success of these endeavors.
 
-Bayesian data analytic methods are quickly gaining popularity in the cognitive sciences because of their many desirable properties \citep{LeeWagenmakers13,Kruschke10}). First, Bayesian methods allow inference of the full posterior distribution of each parameter, thus quantifying uncertainty in their estimation, rather than simply provide their most likely value. Second, hierarchical modeling is naturally formulated in a Bayesian framework. Traditionally, psychological models either assume subjects are completely independent of each other, fitting models separately to each individual, or that all subjects are the same, fitting models to the group as if they are all copies of some ``average subject''. Both approaches are sub-optimal in that the former fails to capitalize on statistical strength offered by the degree to which subjects are similar with respect to one or more model parameters, whereas the latter approach fails to account for the differences among subjects, and hence could lead to a situation where the estimated model cannot fit any individual subject. The same limitations apply to current DDM software packages such as \href{http://ppw.kuleuven.be/okp/software/dmat/}{DMAT} \citep{VandekerckhoveTuerlinckx08} and \href{http://seehuhn.de/pages/fast-dm}{fast-dm} \citep{VossVoss07}. Hierarchical Bayesian methods provide a remedy for this problem by allowing group and subject parameters to be estimated simultaneously at different hierarchical levels \citep{LeeWagenmakers13,Kruschke10,VandekerckhoveTuerlinckxLee11}). Subject parameters are assumed to be drawn from a group distribution, and to the degree that subject are similar to each other, the variance in the group distribution will be estimated to be small, which reciprocally has a greater influence on constraining parameter estimates of any individual. Even in this scenario, the method still allows the posterior for any given individual subject to differ substantially from that of the rest of the group given sufficient data to overwhelm the group prior. Thus the method capitalizes on statistical strength shared across the individuals, and can do so to different degrees even within the same sample and model, depending on the extent to which subjects are similar to each other in one parameter vs. another. In the DDM for example, it may be the case that there is relatively little variability across subjects in the perceptual time for stimulus encoding, quantified by the ``non-decision time'' but more variability in their degree of response caution, quantified by the ``decision threshold''. The estimation should be able to capitalize on this structure so that the non-decision time in any given subject is anchored by that of the group, potentially allowing for more efficient estimation of that subject's decision threshold. This approach may be particularly helpful when relatively few trials per condition are available for each subject, and when incorporating noisy trial-by-trial neural data into the estimation of DDM parameters.
+Bayesian data analytic methods are quickly gaining popularity in the cognitive sciences because of their many desirable properties \citep{LeeWagenmakers13,Kruschke10}. First, Bayesian methods allow inference of the full posterior distribution of each parameter, thus quantifying uncertainty in their estimation, rather than simply provide their most likely value. Second, hierarchical modeling is naturally formulated in a Bayesian framework. Traditionally, psychological models either assume subjects are completely independent of each other, fitting models separately to each individual, or that all subjects are the same, fitting models to the group as if they are all copies of some ``average subject''. Both approaches are sub-optimal in that the former fails to capitalize on statistical strength offered by the degree to which subjects are similar with respect to one or more model parameters, whereas the latter approach fails to account for the differences among subjects, and hence could lead to a situation where the estimated model cannot fit any individual subject. The same limitations apply to current DDM software packages such as \href{http://ppw.kuleuven.be/okp/software/dmat/}{DMAT} \citep{VandekerckhoveTuerlinckx08} and \href{http://seehuhn.de/pages/fast-dm}{fast-dm} \citep{VossVoss07}. Hierarchical Bayesian methods provide a remedy for this problem by allowing group and subject parameters to be estimated simultaneously at different hierarchical levels \citep{LeeWagenmakers13,Kruschke10,VandekerckhoveTuerlinckxLee11}. Subject parameters are assumed to be drawn from a group distribution, and to the degree that subject are similar to each other, the variance in the group distribution will be estimated to be small, which reciprocally has a greater influence on constraining parameter estimates of any individual. Even in this scenario, the method still allows the posterior for any given individual subject to differ substantially from that of the rest of the group given sufficient data to overwhelm the group prior. Thus the method capitalizes on statistical strength shared across the individuals, and can do so to different degrees even within the same sample and model, depending on the extent to which subjects are similar to each other in one parameter vs. another. In the DDM for example, it may be the case that there is relatively little variability across subjects in the perceptual time for stimulus encoding, quantified by the ``non-decision time'' but more variability in their degree of response caution, quantified by the ``decision threshold''. The estimation should be able to capitalize on this structure so that the non-decision time in any given subject is anchored by that of the group, potentially allowing for more efficient estimation of that subject's decision threshold. This approach may be particularly helpful when relatively few trials per condition are available for each subject, and when incorporating noisy trial-by-trial neural data into the estimation of DDM parameters.
 
-\href{http://github.com/twiecki/hddm}{HDDM} is an open-source software package written in \href{http://www.python.org/}{Python} which allows (i) the flexible construction of hierarchical Bayesian drift diffusion models and (ii) the estimation of its posterior parameter distributions via \href{http://code.google.com/p/pymc/}{PyMC} \citep{PatilHuardFonnesbeck10}). User-defined models can be created via a simple Python script or be used interactively via, for example, the \href{http://ipython.org}{IPython} interpreter shell \citep{PerezGranger07}. All run-time critical functions are coded in \href{http://www.cython.org/}{Cython} \citep{BehnelBradshawCitroEtAl11}) and compiled natively for speed which allows estimation of complex models in minutes. HDDM includes many commonly used statistics and plotting functionality generally used to assess model fit. The code is released under the permissive BSD 3-clause license, test-covered to assure correct behavior and well documented. An active \href{https://groups.google.com/group/hddm-users/}{mailing list} exists to facilitate community interaction and help users. Finally, HDDM allows flexible estimation of trial-by-trial regressions where an external measurement (e.g. brain activity as measured by fMRI) is correlated with one or more decision making
+\href{http://github.com/twiecki/hddm}{HDDM} is an open-source software package written in \href{http://www.python.org/}{Python} which allows (i) the flexible construction of hierarchical Bayesian drift diffusion models and (ii) the estimation of its posterior parameter distributions via \href{http://code.google.com/p/pymc/}{PyMC} \citep{PatilHuardFonnesbeck10}. User-defined models can be created via a simple Python script or be used interactively via, for example, the \href{http://ipython.org}{IPython} interpreter shell \citep{PerezGranger07}. All run-time critical functions are coded in \href{http://www.cython.org/}{Cython} \citep{BehnelBradshawCitroEtAl11} and compiled natively for speed which allows estimation of complex models in minutes. HDDM includes many commonly used statistics and plotting functionality generally used to assess model fit. The code is released under the permissive BSD 3-clause license, test-covered to assure correct behavior and well documented. An active \href{https://groups.google.com/group/hddm-users/}{mailing list} exists to facilitate community interaction and help users. Finally, HDDM allows flexible estimation of trial-by-trial regressions where an external measurement (e.g. brain activity as measured by fMRI) is correlated with one or more decision making
 parameters.
 
 With HDDM we aim to provide a user-friendly but powerful tool that can
@@ -140,7 +143,7 @@ toolbox and provide a tutorial for how to employ it; subsequent
 reports will quantitatively characterize its success in recovering
 model parameters and advantages relative to non-hierarchical or
 non-Bayesian methods as a function of the number of subjects and
-trials \citep{SoferWieckiFrank}.
+trials.
 
 \index{Methods}
 
@@ -153,11 +156,11 @@ SSMs generally fall into one of two classes: (i) diffusion models
 which assume that \emph{relative} evidence is accumulated over time
 and (ii) race models which assume independent evidence accumulation
 and response commitment once the first accumulator crossed a boundary
-\citep{LaBerge62,Vickers70}). Currently, HDDM includes two of the most
+\citep{LaBerge62,Vickers70}. Currently, HDDM includes two of the most
 commonly used SSMs: the drift diffusion model (DDM)
-\citep{RatcliffRouder98,RatcliffMcKoon08}) belonging to the
+\citep{RatcliffRouder98,RatcliffMcKoon08} belonging to the
 class of diffusion models and the linear ballistic accumulator (LBA)
-\citep{BrownHeathcote08}) belonging to the class of race models.
+\citep{BrownHeathcote08} belonging to the class of race models.
 
 As input these methods require trial-by-trial RT and choice data (HDDM currently only supports binary decisions) as illustrated in the below example table:
 
@@ -171,14 +174,16 @@ RT & response & condition & brain measure \\
 
 \subsubsection*{Drift Diffusion Model}
 \label{methods:drift-diffusion-model}
-The DDM models decision making in two-choice tasks. Each choice is represented as an upper and lower boundary. A drift-process accumulates evidence over time until it crosses one of the two boundaries and initiates the corresponding response \citep{RatcliffRouder98,SmithRatcliff04}). The speed with which the accumulation process approaches one of the two boundaries is called drift-rate \emph{v} and represents the relative evidence for or against a particular response. Because there is noise in the drift process, the time of the boundary crossing and the selected response will vary between trials. The distance between the two boundaries (i.e. threshold \emph{a}) influences how much evidence must be accumulated until a response is executed. A lower threshold makes responding faster in general but increases the influence of noise on decision making and can hence lead to errors or impulsive choice, whereas a higher threshold leads to more cautious responding (slower, more skewed RT distributions, but more accurate). Response time, however, is not solely comprised of the decision making process -- perception, movement initiation and execution all take time and are lumped in the DDM by a single non-decision time parameter \emph{t}. The model also allows for a prepotent bias \emph{z} affecting the starting point of the drift process relative to the two boundaries. The termination times of this generative process gives rise to the reaction time distributions of both choices.
+The DDM models decision making in two-choice tasks . Each choice is represented as an upper and lower boundary. A drift-process accumulates evidence over time until it crosses one of the two boundaries and initiates the corresponding response \citep{RatcliffRouder98,SmithRatcliff04} (see figure \ref{fig.ddm} for an illustration). The speed with which the accumulation process approaches one of the two boundaries is called drift-rate \emph{v} and represents the relative evidence for or against a particular response. Because there is noise in the drift process, the time of the boundary crossing and the selected response will vary between trials. The distance between the two boundaries (i.e. threshold \emph{a}) influences how much evidence must be accumulated until a response is executed. A lower threshold makes responding faster in general but increases the influence of noise on decision making and can hence lead to errors or impulsive choice, whereas a higher threshold leads to more cautious responding (slower, more skewed RT distributions, but more accurate). Response time, however, is not solely comprised of the decision making process -- perception, movement initiation and execution all take time and are lumped in the DDM by a single non-decision time parameter \emph{t}. The model also allows for a prepotent bias \emph{z} affecting the starting point of the drift process relative to the two boundaries. The termination times of this generative process gives rise to the reaction time distributions of both choices.
 
 \begin{figure}
 \centering
 \capstart
 
 \includegraphics{DDM.pdf}
-\caption{Trajectories of multiple drift-processes (blue and red lines, middle panel). Evidence is noisily accumulated over time (x-axis) with average drift-rate \textit{v} until one of two boundaries (separated by threshold \textit{a}) is crossed and a response is initiated. Upper (blue) and lower (red) panels contain density plots over boundary-crossing-times for two possible responses. The flat line in the beginning of the drift-processes denotes the non-decision time \textit{t} where no accumulation happens. The histogram shapes match closely to that observed in reaction time measurements of research participants. Note that HDDM uses a closed-form likelihood function and not actual simulation as depicted here.}\end{figure}
+\caption{Trajectories of multiple drift-processes (blue and red lines, middle panel). Evidence is noisily accumulated over time (x-axis) with average drift-rate \textit{v} until one of two boundaries (separated by threshold \textit{a}) is crossed and a response is initiated. Upper (blue) and lower (red) panels contain density plots over boundary-crossing-times for two possible responses. The flat line in the beginning of the drift-processes denotes the non-decision time \textit{t} where no accumulation happens. The histogram shapes match closely to that observed in reaction time measurements of research participants. Note that HDDM uses a closed-form likelihood function and not actual simulation as depicted here.}
+\label{fig.ddm}
+\end{figure}
 
 An analytic solution to the resulting probability distribution of
 the termination times was provided by \citep{Feller68}:
@@ -188,44 +193,29 @@ the termination times was provided by \citep{Feller68}:
 Since the formula contains an infinite sum, HDDM uses an approximation
 provided by \citep{NavarroFuss09}.
 
-Subsequently, the DDM was extended to include additional noise parameters capturing inter-trial variability in the drift-rate, the non-decision time and the starting point in order to account for two phenomena observed in decision making tasks, most notably cases where errors are faster or slower than correct responses. Models that take this into account are referred to as the full DDM \citep{RatcliffRouder98}). HDDM uses analytic integration of the likelihood function for variability in drift-rate and numerical integration for variability in non-decision time and bias. More information on the model specifics can be found in \citep{SoferWieckiFrank}.
+Subsequently, the DDM was extended to include additional noise parameters capturing inter-trial variability in the drift-rate, the non-decision time and the starting point in order to account for two phenomena observed in decision making tasks, most notably cases where errors are faster or slower than correct responses. Models that take this into account are referred to as the full DDM \citep{RatcliffRouder98}. HDDM uses analytic integration of the likelihood function for variability in drift-rate and numerical integration for variability in non-decision time and bias.
 
 
 \subsubsection*{Linear Ballistic Accumulator}
 \label{methods:linear-ballistic-accumulator}
-The Linear Ballistic Accumulator (LBA) model belongs to the class of
-race models \citep{BrownHeathcote08}). Instead of one drift process
-and two boundaries, the LBA contains one drift process for each
-possible response with a single boundary each. Thus, the LBA can model
-decision making when more than two responses are possible. Moreover,
-unlike the DDM, the LBA drift process has no intra-trial variance. RT
-variability is obtained by including inter-trial variability in the
-drift-rate and the starting point distribution. Note that the
-simplifying assumption of a noiseless drift-process simplifies the
-math significantly leading to a computationally more efficient
-likelihood function for this model.
+The Linear Ballistic Accumulator (LBA) model belongs to the class of race models \citep{BrownHeathcote08}. Instead of one drift process and two boundaries, the LBA contains one drift process for each possible response with a single boundary each (see figure \ref{fig.lba}). Thus, the LBA can model decision making when more than two responses are possible. Moreover, unlike the DDM, the LBA drift process has no intra-trial variance. RT variability is obtained by including inter-trial variability in the drift-rate and the starting point distribution. Note that the simplifying assumption of a noiseless drift-process simplifies the math significantly leading to a computationally more efficient likelihood function for this model.
 
 In a simulation study it was shown that the LBA and DDM lead to
 similar results as to which parameters are affected by certain
-manipulations \citep{DonkinBrownHeathcoteEtAl11}).
+manipulations \citep{DonkinBrownHeathcoteEtAl11}.
 \begin{figure}[htbp]
 \centering
 \capstart
 
 \includegraphics[scale=.6]{lba.png}
-\caption{Two linear ballistic accumulators (left and right) with different
-noiseless drifts (arrows) sampled from a normal distribution
-initiated at different starting points sampled from a uniform
-distribution. In this case, the accumulator for response
-alternative 1 is more likely to reach the criterion first, and
-therefore gets selected more often. Because of this race between
-two accumulators towards a common threshold these model are called
-race-models. Reproduced from \citep{DonkinBrownHeathcoteEtAl11}.}\end{figure}
+\caption{Two linear ballistic accumulators (left and right) with   different noiseless drifts (arrows) sampled from a normal   distribution initiated at different starting points sampled from a   uniform distribution. In this case, the accumulator for response   alternative 1 is more likely to reach the criterion first, and   therefore gets selected more often. Because of this race between two   accumulators towards a common threshold these model are called   race-models. Reproduced from   \citep{DonkinBrownHeathcoteEtAl11}.}
+\label{fig.lba}
+\end{figure}
 
 
 \subsection*{Hierarchical Bayesian Estimation}
 \label{methods:hierarchical-bayesian-estimation}
-Statistics and machine learning have developed efficient and versatile Bayesian methods to solve various inference problems \citep{Poirier06}. More recently, they have seen wider adoption in applied fields such as genetics \citep{StephensBalding09} and psychology \citep{ClemensDeSelenEtAl11}. One reason for this Bayesian revolution is the ability to quantify the certainty one has in a particular estimation of a model parameter. Moreover, hierarchical Bayesian models provide an elegant solution to the problem of estimating parameters of individual subjects and groups of subjects, as outlined above. Under the assumption that participants within each group are similar to each other, but not identical, a hierarchical model can be constructed where individual parameter estimates are constrained by group-level distributions \citep{NilssonRieskampWagenmakers11,ShiffrinLeeKim08}).
+Statistics and machine learning have developed efficient and versatile Bayesian methods to solve various inference problems \citep{Poirier06}. More recently, they have seen wider adoption in applied fields such as genetics \citep{StephensBalding09} and psychology \citep{ClemensDeSelenEtAl11}. One reason for this Bayesian revolution is the ability to quantify the certainty one has in a particular estimation of a model parameter. Moreover, hierarchical Bayesian models provide an elegant solution to the problem of estimating parameters of individual subjects and groups of subjects, as outlined above. Under the assumption that participants within each group are similar to each other, but not identical, a hierarchical model can be constructed where individual parameter estimates are constrained by group-level distributions \citep{NilssonRieskampWagenmakers11,ShiffrinLeeKim08}.
 
 Bayesian methods require specification of a generative process in form
 of a likelihood function that produced the observed data $x$
@@ -234,8 +224,8 @@ given some parameters $\theta$. By specifying our prior beliefs
 invert the generative model and make inference on the probability of
 parameters $\theta$:
 \phantomsection\label{methods:bayes}\begin{gather}
-\begin{split}P(\theta|x) = \frac{P(x|\theta) \times P(\theta)}{P(x)}\end{split}\notag
-\end{gather},
+\begin{split}P(\theta|x) = \frac{P(x|\theta) \times P(\theta)}{P(x)}\end{split}\notag,
+\end{gather}
 where $P(x|\theta)$ is the likelihood of observing the data (in
 this case choices and RTs) given each parameter value and
 $P(\theta)$ is the prior probability of the parameters. In most
@@ -259,15 +249,16 @@ x_{i, j} &\sim f(\theta_j)\end{split}\notag
 HDDM includes several hierarchical Bayesian model formulations for the
 DDM and LBA. For illustrative purposes we present the graphical model
 depiction of a hierarchical DDM model with informative priors and
-group only inter-trial variablity parameters. Note, however, that
+group-only inter-trial variability parameters in figure \ref{fig.graphical}. Note, however, that
 there is also a model with non-informative priors which the user can opt to use. Nevertheless, we recommend using informative priors as they constrain parameter estimates to be in the range of plausible values based on past literature (see below), which can aid in reducing issues with parameter collinearity, and leads to better recovery of true parameters in simulation studies -- especially with few trials (unpublished results). Specifically, we find that our hierarchical method already provides excellent parameter recovery with as little as 30 trials per condition in a simulation study with 12 subjects.
 
 \begin{figure}[htbp]
 \centering
 \capstart
-
 \includegraphics[scale=.7]{graphical_hddm.pdf}
-\caption{Basic graphical hierarchical model implemented by HDDM for estimation of the drift-diffusion model. Round nodes represent random variables. Shaded nodes represent observed data. Directed arrows from parents to children visualize that parameters of the child random variable are distributed according to its   parents. Plates denote that multiple random variables with the same   parents and children exist.}\end{figure}
+\caption{Basic graphical hierarchical model implemented by HDDM for estimation of the drift-diffusion model. Round nodes represent random variables. Shaded nodes represent observed data. Directed arrows from parents to children visualize that parameters of the child random variable are distributed according to its   parents. Plates denote that multiple random variables with the same   parents and children exist.}
+\label{fig.graphical}
+\end{figure}
 
 Graphical nodes are distributed as follows:\\
 \begin{center}
@@ -296,11 +287,12 @@ that the influence of these parameters onto the likelihood is often so
 small that very large amounts of data would be required to make
 meaningful inference at the individual level.
 
-The informative group mean priors are created to roughly match parameter values reported in the literature and collected by \citep{MatzkeWagenmakers09}. In the below figure we overlayed those empirical values with the prior distribution used for each parameter.
+The informative group mean priors are created to roughly match parameter values reported in the literature and collected by \citep{MatzkeWagenmakers09}. Figure \ref{fig.priors} shows the the prior probability densities used for each group mean parameter on top of the empirical values reported in the literature.
 \begin{figure}[htbp]
 \centering
 \includegraphics[scale=.5]{hddm_info_priors.pdf}
-\caption{Prior distributions.}
+\caption{Green: Probability densities of prior distributions for group means of each DDM parameter of the informative HDDM model. Blue: Histogram over DDM parameters reported in the literature \citep{MatzkeWagenmakers09}.}
+\label{fig.priors}
 \end{figure}
 
 HDDM then uses MCMC to estimate the joint posterior distribution of
@@ -345,8 +337,8 @@ The \code{hddm.load\_csv()} function can then be used to load this file. \DUspan
 \PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{load\PYGZus{}csv}\PYG{p}{(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{hddm\PYGZus{}demo.csv}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
 
-To provide the reader with a sense of how RT data is distributed we next plot histograms of each individual's RTs (note the similarity to the DDM density in figure 1). Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be
-negative.
+To provide the reader with a sense of how RT data is distributed we plot histograms of each individual's RTs in figure \ref{fig.rt_histograms} (note the similarity to the DDM density in figure \ref{fig.ddm}). Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be
+negative. The following code was used to generate the RT histogram plot and uses \code{Pandas}' \code{groupby} functionality which splits the data set into parts containing individual subject data.
 
 \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator,word}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -358,8 +350,11 @@ negative.
     \PYG{n}{ax}\PYG{o}{.}\PYG{n}{hist}\PYG{p}{(}\PYG{n}{subj\PYGZus{}data}\PYG{o}{.}\PYG{n}{rt}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{,} \PYG{n}{histtype}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{step}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}[H]
 \includegraphics[scale=0.6]{hddm_demo_fig_00.pdf}
-
+\caption{Reaction time histograms of individual subjects. Reaction time is distributed along the x-axis. Error responses are mirrored on the y-axis and thus appear negative. Bin-count is distributed along the y-axis.}
+\label{fig.rt_histograms}
+\end{figure}
 
 \subsection*{Fitting a hierarchical model}
 \label{demo:fitting-a-hierarchical-model}
@@ -378,14 +373,17 @@ We recommend drawing between 2000 and 5000 posterior samples, depending on the c
 
 Note that it is also possible to fit a non-hierarchical model to an individual subject by setting \code{is\_group\_model=False} in the instantiation of \code{HDDM} or by passing in data which lacks a \code{subj\_idx} column. In this case, HDDM will use the group-mean priors from above for the individual parameters.
 
-The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method. For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method (see figure \ref{fig.posterior_trace}). For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posteriors}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a', 'a_var}\PYG{l+s}{\PYGZsq{}}{]}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}[H]
 \includegraphics[width=.5\columnwidth]{hddm_demo_fig_01.png}
 \includegraphics[width=.5\columnwidth]{hddm_demo_fig_02.png}
-
+\caption{Posterior plots for group mean threshold \emph{a} (left half) and group standard-deviation threshold \emph{a} (right half). Posterior trace (upper left inlay), auto-correlation (lower left inlay), and posterior histogram (right inlay; solid black line denotes posterior mean and dotted black line denotes 2.5\% and 97.5\% percentiles.}
+\label{fig.posterior_trace}
+\end{figure}
 Problematic patterns in the trace would be drifts or large jumps which are absent here. The autocorrelation should also not be exceedingly high (i.e. well smaller than 50) as is the case here.
 
 The Gelman-Rubin statistic provides a more formal test for convergence
@@ -441,14 +439,17 @@ To test whether the different conflict conditions affect drift-rate we create a 
 
 Note that while here every subject was tested on each condition this is not a requirement. The \code{depends\_on} keyword can also be used to test between-group differences. For example, if we collected data where one group received a drug and the other one a placebo we would include a column in the data labeled 'drug' that contained 'drug' or 'placebo' for each subject. In our model specification we could test the hypothesis that the drug affects threshold by specifying \code{depends\_on=\{'a': 'drug'\}}.
 
-We next turn to comparing the posterior for the different drift-rate conditions. To plot the different traces we need to access the underlying node object. These are stored inside the \code{nodes\_db} attribute which is a table (specifically, a \code{Pandas} \code{DataFrame}) containing each model parameter as rows (e.g. \code{v(WW)}) and the correspond information about that parameter columns. The \code{node} column used here represents the \code{PyMC} node object. Multiple assignment is then used to assign the 3 drift-rate nodes to separate variables. \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
+We next turn to comparing the posterior for the different drift-rate conditions. To plot the different traces we need to access the underlying node object. These are stored inside the \code{nodes\_db} attribute which is a table (specifically, a \code{Pandas} \code{DataFrame}) containing each model parameter as rows (e.g. \code{v(WW)}) and the correspond information about that parameter columns. The \code{node} column used here represents the \code{PyMC} node object. Multiple assignment is then used to assign the 3 drift-rate nodes to separate variables. The \code{hddm.analyze.plot\_posterior\_nodes()} function takes a list of \code{PyMC} nodes and plots the density by interpolating the posterior histogram (see figure \ref{fig.post_drift}). \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL} \PYG{o}{=} \PYG{n}{m\PYGZus{}stim}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(WW)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(LL)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v(WL)}\PYG{l+s}{\PYGZsq{}}\PYG{p}{]}\PYG{p}{]}
 \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WW}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WL}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}[H]
 \includegraphics[scale=.7]{hddm_demo_fig_06.pdf}
-
+\caption{Posterior density plot of the group means of the 3 different drift-rates \emph{v} as produced by the \code{hddm.analyze.plot\_posterior\_nodes()} function. Regions of high probability are more credible than those of low probability.}
+\label{fig.post_drift}
+\end{figure}
 Based on the above figure we might reason that the \code{WL} condition drift-rate is substantially greater than that for the other two conditions, which are fairly similar to each other.
 
 One benefit of estimating the model in a Bayesian framework is that we can do significance testing directly on the posterior rather than relying on frequentist statistics \citep{Lindley65} (see also \citet{Kruschke10} for many examples of the advantages of this approach). For example, we might be interested in whether the drift-rate for \code{WW} is larger than that for \code{LL}, or whether drift-rate for \code{LL} is larger than \code{WL}. The below code computes the proportion of the posteriors in which the drift rate for one condition is greater than the other. It can be seen that the posteriors for \code{LL} do not overlap at all for \code{WL}, and thus the probability that \code{LL} is greater than \code{WL} should be near zero. \DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
@@ -499,7 +500,7 @@ To estimate the model we again draw samples from the posterior:
 \end{Verbatim}
 \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 
-To examine the marginal posteriors of our individual regressors we can again plot them:
+To examine the marginal posteriors of our individual regressors we can again plot them using the following code (see figure \ref{fig.post_within} for the output):
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW} \PYG{o}{=} \PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}Intercept}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
                                                 \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))[T.LL]}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
@@ -507,8 +508,11 @@ To examine the marginal posteriors of our individual regressors we can again plo
 \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW}\PYG{p}{]}\PYG{p}{)}
 \end{Verbatim}
 
+\begin{figure}[H]
 \includegraphics[scale=.7]{hddm_demo_fig_07.pdf}
-
+\caption{Posterior density plot of the group means of the 3 different within-subject drift-rates \emph{v} as produced by the \code{hddm.analyze.plot\_posterior\_nodes()} function. Note that while \emph{v} (blue line) represents the drift-rate of the \code{WL} condition, the other two posteriors (green and red lines) are expressed relative to this condition.}
+\label{fig.post_within}
+\end{figure}
 Note that in the above plot \code{LL} and \code{WW} are expressed relative to the \code{WL} condition (i.e. \code{v\_Intercept}). Thus, while the overall drift rate intercept, here applying to the \code{WL} condition, is positive (mode value roughly 0.7), the relative within subject effects of condition (\code{WW} and \code{LL}) are negative and do not overlap with zero -- suggesting a significant effect of this condition on drift-rate.
 
 \subsection*{Fitting regression models}
@@ -528,10 +532,13 @@ Adding these covariates:
 
 Instead of estimating one static threshold per subject across trials, this model assumes the threshold to vary on each trial according to the linear model specified above (as a function of their measured theta activity). \citet{CavanaghWieckiCohenEtAl11} illustrates that this brain/behavior relationship differs as a function of whether patients are on or off STN deep brain stimulation, as hypothesized by the model that STN is responsible for increasing the decision threshold when cortical theta rises).
 
-As noted above, this experiment also tested patients on deep brain stimulation (DBS). The below figure shows the regression coefficient of theta on threshold when the above model is estimated in the DBS off condition (in blue) and the DBS on condition (in green; code to estimate not shown). As can be seen, the influence of theta on threshold reverses. This exercise thus shows that HDDM can be used both to assess the influence of trial-by-trial brain measures on DDM parameters, but also how parameters vary when brain state is manipulated.
+As noted above, this experiment also tested patients on deep brain stimulation (DBS). Figure \ref{fig.post_theta} shows the regression coefficient of theta on threshold when the above model is estimated in the DBS off condition (in blue) and the DBS on condition (in green; code to estimate not shown). As can be seen, the influence of theta on threshold reverses. This exercise thus shows that HDDM can be used both to assess the influence of trial-by-trial brain measures on DDM parameters, but also how parameters vary when brain state is manipulated.
 
+\begin{figure}
 \includegraphics[scale=0.6]{theta_threshold_on_off.pdf}
-
+\caption{Posterior density of the group theta regression coefficients on threshold \emph{a} when DBS is turned on (blue) and off (green).}
+\label{fig.post_theta}
+\end{figure}
 \subsection*{Dealing with outliers}
 \label{demo:dealing-with-outliers}
 It is common to have outliers in any data set and RT data are no exception. Outliers present a serious challenge to likelihood-based approaches, as used in HDDM. Consider the possibility that 5\% of trials are not generated by the DDM process, but by some other process (e.g.  due to an attentional lapse). The observed data in those trials may be very unlikely given the best DDM parameters that fit 95\% of the data.  In the extreme case, the likelihood of a single trial may be zero (e.g.  if subjects respond very quickly, faster than the non-decision time \code{t} parameter that would fit the rest of the data). Thus this single outlier would force the DDM parameters to adjust substantially. To illustrate the effect of this we will generate data with outliers, but fit a standard DDM model without taking outliers into account. \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
@@ -549,11 +556,7 @@ It is common to have outliers in any data set and RT data are no exception. Outl
 \PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
 \end{Verbatim}
 
-\begin{figure}
-\includegraphics[scale=0.5]{hddm_demo_fig_10.png}
-\caption{Posterior predictive likelihood of the model which does not account for outliers. Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis. }
-\end{figure}
-As the above figure shows, the predictive likelihood does not fit the RT data very well. The model predicts far more fast RTs than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
+As the left plot of figure \ref{fig.outlier} shows, the predictive likelihood does not fit the RT data very well. The model predicts far more fast RTs than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
 
 To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -566,11 +569,14 @@ To solve this issue, HDDM includes a mixture model which assumes that outliers c
 \end{Verbatim}
 
 \begin{figure}
-\includegraphics[scale=0.5]{hddm_demo_fig_11.png}
-\caption{Posterior predictive likelihood of the model which does account for outliers. Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis.}
+\includegraphics[width=0.5\columnwidth]{hddm_demo_fig_10.png}
+\includegraphics[width=0.5\columnwidth]{hddm_demo_fig_11.png}
+\caption{Posterior predictive likelihood of the model which does not allow for outliers (left) and the model which does allow for outliers (right). Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis. }
+\label{fig.outliers}
 \end{figure}
 
-The mixture model provides a much better fit because outlier RTs are having less of an effect because they get assigned to the uniform outlier distribution. Note that it is also possible to estimate the probability of obtaining outliers from the data by setting \code{include=['p\_outlier']} instead of \code{p\_outlier=x} when \code{HDDM} in instantiated.
+
+The mixture model provides a much better fit (see the right plot in figure \ref{fig.outliers}) because outlier RTs are having less of an effect because they get assigned to the uniform outlier distribution. Note that it is also possible to estimate the probability of obtaining outliers from the data by setting \code{include=['p\_outlier']} instead of \code{p\_outlier=x} when \code{HDDM} in instantiated.
 
 \section*{Discussion}
 We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter estimation by explicitly modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area \citep{VandekerckhoveTuerlinckxLee11}, a reliable software package implementing this method was previously not available. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
@@ -580,9 +586,9 @@ Using data from our lab on a reward-based learning and decision making task \cit
 In conclusion, \code{HDDM} is a novel tool that allows researchers to study the neurocognitive implementations of psychological decision making processes. The hierarchical modeling provides power to detect even small correlations between brain activity and decision making processes. Bayesian estimation supports the recent paradigm shift away from frequentist statistics for hypothesis testing \citep{Lindley65,Kruschke10,LeeWagenmakers13}.
 
 \section*{Acknowledgements}
-The authors are thankful to Guido Biele and Øystein Sandvik for useful feedback and code contributions. This work was supported by NIMH Grant RO1 MH080066-01 and NSF Grant \#1125788.
+The authors are thankful to Guido Biele, Øystein Sandvik and Eric-Jan Wagenmakers for useful feedback and code contributions. This work was supported by NIMH Grant RO1 MH080066-01 and NSF Grant \#1125788.
 
-\bibliographystyle{plainnat}
+\bibliographystyle{apalike}
 \bibliography{hddm}
 
 \renewcommand{\indexname}{Index}
