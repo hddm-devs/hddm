@@ -150,7 +150,7 @@ trials.
 \section*{Methods}
 \label{methods:ipython}\label{methods:index-0}\label{methods::doc}\label{methods:methods}\label{methods:chap-methods}
 
-\subsection*{Sequential Sampling Models}
+\subsection*{Drift Diffusion Model}
 \label{methods:sequential-sampling-models}
 SSMs generally fall into one of two classes: (i) diffusion models
 which assume that \emph{relative} evidence is accumulated over time
@@ -160,7 +160,7 @@ and response commitment once the first accumulator crossed a boundary
 commonly used SSMs: the drift diffusion model (DDM)
 \citep{RatcliffRouder98,RatcliffMcKoon08} belonging to the
 class of diffusion models and the linear ballistic accumulator (LBA)
-\citep{BrownHeathcote08} belonging to the class of race models.
+\citep{BrownHeathcote08} belonging to the class of race models. In the remainder of this paper we focus on the DDM as it is better developed.
 
 As input these methods require trial-by-trial RT and choice data (HDDM currently only supports binary decisions) as illustrated in the below example table:
 
@@ -172,8 +172,6 @@ RT & response & condition & brain measure \\
 0.25 & 1 & hard & -0.3
 \end{tabular}
 
-\subsubsection*{Drift Diffusion Model}
-\label{methods:drift-diffusion-model}
 The DDM models decision making in two-choice tasks . Each choice is represented as an upper and lower boundary. A drift-process accumulates evidence over time until it crosses one of the two boundaries and initiates the corresponding response \citep{RatcliffRouder98,SmithRatcliff04} (see figure \ref{fig.ddm} for an illustration). The speed with which the accumulation process approaches one of the two boundaries is called drift-rate \emph{v} and represents the relative evidence for or against a particular response. Because there is noise in the drift process, the time of the boundary crossing and the selected response will vary between trials. The distance between the two boundaries (i.e. threshold \emph{a}) influences how much evidence must be accumulated until a response is executed. A lower threshold makes responding faster in general but increases the influence of noise on decision making and can hence lead to errors or impulsive choice, whereas a higher threshold leads to more cautious responding (slower, more skewed RT distributions, but more accurate). Response time, however, is not solely comprised of the decision making process -- perception, movement initiation and execution all take time and are lumped in the DDM by a single non-decision time parameter \emph{t}. The model also allows for a prepotent bias \emph{z} affecting the starting point of the drift process relative to the two boundaries. The termination times of this generative process gives rise to the reaction time distributions of both choices.
 
 \begin{figure}
@@ -194,23 +192,6 @@ Since the formula contains an infinite sum, HDDM uses an approximation
 provided by \citep{NavarroFuss09}.
 
 Subsequently, the DDM was extended to include additional noise parameters capturing inter-trial variability in the drift-rate, the non-decision time and the starting point in order to account for two phenomena observed in decision making tasks, most notably cases where errors are faster or slower than correct responses. Models that take this into account are referred to as the full DDM \citep{RatcliffRouder98}. HDDM uses analytic integration of the likelihood function for variability in drift-rate and numerical integration for variability in non-decision time and bias.
-
-
-\subsubsection*{Linear Ballistic Accumulator}
-\label{methods:linear-ballistic-accumulator}
-The Linear Ballistic Accumulator (LBA) model belongs to the class of race models \citep{BrownHeathcote08}. Instead of one drift process and two boundaries, the LBA contains one drift process for each possible response with a single boundary each (see figure \ref{fig.lba}). Thus, the LBA can model decision making when more than two responses are possible. Moreover, unlike the DDM, the LBA drift process has no intra-trial variance. RT variability is obtained by including inter-trial variability in the drift-rate and the starting point distribution. Note that the simplifying assumption of a noiseless drift-process simplifies the math significantly leading to a computationally more efficient likelihood function for this model.
-
-In a simulation study it was shown that the LBA and DDM lead to
-similar results as to which parameters are affected by certain
-manipulations \citep{DonkinBrownHeathcoteEtAl11}.
-\begin{figure}[htbp]
-\centering
-\capstart
-
-\includegraphics[scale=.6]{lba.png}
-\caption{Two linear ballistic accumulators (left and right) with   different noiseless drifts (arrows) sampled from a normal   distribution initiated at different starting points sampled from a   uniform distribution. In this case, the accumulator for response   alternative 1 is more likely to reach the criterion first, and   therefore gets selected more often. Because of this race between two   accumulators towards a common threshold these model are called   race-models. Reproduced from   \citep{DonkinBrownHeathcoteEtAl11}.}
-\label{fig.lba}
-\end{figure}
 
 
 \subsection*{Hierarchical Bayesian Estimation}
@@ -369,9 +350,9 @@ The previous figure shows that while each individual's RT histogram is different
 \PYG{c}{\PYGZsh{} start drawing 2000 samples and discarding 20 as burn\PYGZhy{}in}
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
 \end{Verbatim}
-We recommend drawing between 2000 and 5000 posterior samples, depending on the convergence. Discarding the first 20-200 samples as burn-in is often enough in our experience. Auto-correlation of the samples can be reduced by adding the \code{thin=n} keyword which only keeps every nth sample, but unless memory is an issue we recommend keeping all samples and increasing the sample size if auto-correlation is high.
+We recommend drawing between 2000 and 10000 posterior samples, depending on the convergence. Discarding the first 20-1000 samples as burn-in is often enough in our experience. Auto-correlation of the samples can be reduced by adding the \code{thin=n} keyword to \code{sample()} which only keeps every \code{n}th sample, but unless memory is an issue we recommend keeping all samples and instead drawing more samples if auto-correlation is high.
 
-Note that it is also possible to fit a non-hierarchical model to an individual subject by setting \code{is\_group\_model=False} in the instantiation of \code{HDDM} or by passing in data which lacks a \code{subj\_idx} column. In this case, HDDM will use the group-mean priors from above for the individual parameters.
+Note that it is also possible to fit a non-hierarchical model to an individual subject by setting \code{is\_group\_model=False} in the instantiation of \code{HDDM} or by passing in data which lacks a \code{subj\_idx} column. In this case, HDDM will use the group-mean priors from above for the DDM parameters.
 
 The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method (see figure \ref{fig.posterior_trace}). For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -386,9 +367,7 @@ The inference algorithm, MCMC, requires the chains of the model to have properly
 \end{figure}
 Problematic patterns in the trace would be drifts or large jumps which are absent here. The autocorrelation should also not be exceedingly high (i.e. well smaller than 50) as is the case here.
 
-The Gelman-Rubin statistic provides a more formal test for convergence
-that compares the intra-chain variance to the intra-chain variance of
-different runs of the same model. The following code demonstrates how 5 models can be run in a for-loop and stored in a list (here called \code{models}).
+The Gelman-Rubin $\hat{R}$ statistic provides a more formal test for convergence that compares the intra-chain variance to the intra-chain variance of different runs of the same model. The following code demonstrates how 5 models can be run in a for-loop and stored in a list (here called \code{models}).
 
 \DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{name}{}\DUspan{operator,word}{}\DUspan{name,builtin}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
@@ -453,6 +432,7 @@ We next turn to comparing the posterior for the different drift-rate conditions.
 Based on the above figure we might reason that the \code{WL} condition drift-rate is substantially greater than that for the other two conditions, which are fairly similar to each other.
 
 One benefit of estimating the model in a Bayesian framework is that we can do significance testing directly on the posterior rather than relying on frequentist statistics \citep{Lindley65} (see also \citet{Kruschke10} for many examples of the advantages of this approach). For example, we might be interested in whether the drift-rate for \code{WW} is larger than that for \code{LL}, or whether drift-rate for \code{LL} is larger than \code{WL}. The below code computes the proportion of the posteriors in which the drift rate for one condition is greater than the other. It can be seen that the posteriors for \code{LL} do not overlap at all for \code{WL}, and thus the probability that \code{LL} is greater than \code{WL} should be near zero. \DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
+
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{P(WW \PYGZgt{} LL) = }\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{v\PYGZus{}WW}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{n}{v\PYGZus{}LL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}
 \PYG{k}{print} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{P(LL \PYGZgt{} WL) = }\PYG{l+s}{\PYGZdq{}}\PYG{p}{,} \PYG{p}{(}\PYG{n}{v\PYGZus{}LL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{n}{v\PYGZus{}WL}\PYG{o}{.}\PYG{n}{trace}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}\PYG{o}{.}\PYG{n}{mean}\PYG{p}{(}\PYG{p}{)}
@@ -477,6 +457,8 @@ Stimulus model DIC: 10775.615192
 
 Based on the lower DIC score for the model allowing drift-rate to vary by stimulus condition we might conclude that it provides better fit than the model which forces the drift-rates to be equal, despite the increased complexity.
 
+Note that Bayesian hypothesis testing and model comparison are areas of active research. While we largely follow the approach laid out by \citep{Kruschke10} we acknowledge that there are divergent views. One alternative to analyzing the posterior directly and the DIC score is the Bayes Factor \citep[e.g.][]{WagenmakersLodewyckxKuriyalEtAl10}.
+
 \subsection*{Within-subject effects}
 \label{demo:within-subject-effects}
 Note that while the \code{m\_stim} model we created above estimates different drift-rates \code{v} for each subject, it implicitly assumes that the different conditions are completely independent:  each drift rate was sampled from a separate group prior. However, there may be individual differences in overall performance, and if so it is reasonable to assume that someone who would be better at \code{WL} would also be better at \code{LL}. To model this intuition we can use a within-subject model where an intercept is used to capture overall performance in the \code{WL} condition as a baseline, and then the other \code{LL} and \code{WW} conditions are expressed relative to \code{WL}. (Perhaps every subject has a higher drift in \code{WL} than \code{LL} but there is huge variance in their overall drift rates. In this scenario, the earlier model would not have the power to detect the effect of condition on this within subject effect, because there would be large posterior variance in all of the drift rates, which would then overlap with each other.  In contrast, the within-subject model would estimate large variance in the intercept but still allow the model to infer a non-zero effect of condition with high precision).
@@ -493,10 +475,10 @@ Adding these covariates:
 \end{Verbatim}
 As alluded to above, \code{WL} will be used as the intercept. \code{v\_C(stim, Treatment('WL'))[T.LL]} and \code{v\_C(stim, Treatment('WL'))[T.WW]} are new parameters that will be estimated relative to the intercept.
 
-To estimate the model we again draw samples from the posterior:
+To estimate the model we again draw samples from the posterior. Note that regression models are often slower to converge so we use more burn-in and draw more samples to accommodate this fact.
 \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{5000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{)}
+\PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{10000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{1000}\PYG{p}{)}
 \end{Verbatim}
 \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
 
@@ -581,7 +563,7 @@ The mixture model provides a much better fit (see the right plot in figure \ref{
 \section*{Discussion}
 We developed an open-source Python toolbox that allows hierarchical Bayesian parameter estimation of the DDM and LBA and is successfully being used in various experimental psychology and neurocognitive research laboratories. The DDM and LBA can be used to infer latent psychological processes underlying decision making given reaction time and choice data. The benefit of the hierarchical Bayesian approach is two-fold: (i) improved accuracy of individual subject parameter estimation by explicitly modeling subject similarity in a hierarchical fashion; and (ii) full Bayesian posterior inference that obsoletes frequentist statistics and confidence intervals. Despite prior methodological advancements in this area \citep{VandekerckhoveTuerlinckxLee11}, a reliable software package implementing this method was previously not available. A simple yet powerful model description mechanism allows the creation of arbitrarily complex models where separate parameters can be estimated for different conditions. Additional features like posterior-predictive-checks allow for model validation and comparison. Finally, to facilitate cross-domain application of this toolbox in the cognitive neurosciences, it is simple to estimate trial-by-trial influences of e.g. brain-measures on individual model parameters.
 
-Using data from our lab on a reward-based learning and decision making task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this toolbox can successfully be used to estimate differences in information processing based solely on RT and choice data. We then extended this analysis to estimate within-subject effects. By using the \code{HDDMRegression} model we are able to not only quantify latent decision making processes in individuals but also how these latent processes relate to brain measures (here theta power as measured by EEG had a positive effect on threshold) on a trial-by-trial basis. Critically, changing brain state via DBS revealed that the effect of theta power on threshold was reversed. As these trial-by-trial effects are often quite noisy, our hierarchical Bayesian approach facilitated the detection of this effect, due to shared statistical structure among subjects in determining model parameters. This analysis is more informative than a straight behavioral relationship between brain activity and RT or accuracy alone. While we used EEG to measure brain activity this method should be easily extendable towards other techniques like fMRI. While trial-by-trial BOLD responses from an event-related study design are often very noisy we obtained promising results in our lab with this approach.
+Using data from our lab on a reward-based learning and decision making task \citep{CavanaghWieckiCohenEtAl11} we demonstrate how this toolbox can successfully be used to estimate differences in information processing based solely on RT and choice data. We then extended this analysis to estimate within-subject effects. By using the \code{HDDMRegression} model we are able to not only quantify latent decision making processes in individuals but also how these latent processes relate to brain measures (here theta power as measured by EEG had a positive effect on threshold) on a trial-by-trial basis. Critically, changing brain state via DBS revealed that the effect of theta power on threshold was reversed. As these trial-by-trial effects are often quite noisy, our hierarchical Bayesian approach facilitated the detection of this effect, due to shared statistical structure among subjects in determining model parameters. This analysis is more informative than a straight behavioral relationship between brain activity and RT or accuracy alone. While we used EEG to measure brain activity this method should be easily extendable towards other techniques like fMRI \citep[e.g.][]{ManenBrownEicheleEtAl11}. While trial-by-trial BOLD responses from an event-related study design are often very noisy we obtained promising results in our lab with this approach.
 
 In conclusion, \code{HDDM} is a novel tool that allows researchers to study the neurocognitive implementations of psychological decision making processes. The hierarchical modeling provides power to detect even small correlations between brain activity and decision making processes. Bayesian estimation supports the recent paradigm shift away from frequentist statistics for hypothesis testing \citep{Lindley65,Kruschke10,LeeWagenmakers13}.
 
