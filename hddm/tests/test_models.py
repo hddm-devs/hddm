@@ -65,7 +65,7 @@ class TestSingleBreakdown(unittest.TestCase):
         model.find_starting_values()
         model.sample(self.iter, burn=self.burn)
 
-    def test_HDDM(self, assert_=False):
+    def test_HDDM(self):
         for include, model_class in itertools.product(self.includes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=1)
@@ -96,7 +96,7 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return model.mc
 
-    def test_HDDM_group_only_group_nodes(self, assert_=False):
+    def test_HDDM_group_only_group_nodes(self):
         group_only_nodes = ['v', 'a', 'z', 't']
         for nodes, model_class in itertools.product(group_only_nodes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=nodes)
@@ -106,7 +106,7 @@ class TestSingleBreakdown(unittest.TestCase):
                 self.assertNotIn(node+'_subj', model.nodes_db.index)
                 self.assertIn(node, model.nodes_db.index)
 
-    def test_HDDM_load_save(self, assert_=False):
+    def test_HDDM_load_save(self):
         include = ['z', 'sz', 'st', 'sv']
         dbs = ['pickle', 'sqlite']
         params = hddm.generate.gen_rand_params(include=include)
