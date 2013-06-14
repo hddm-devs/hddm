@@ -186,37 +186,9 @@ provided by \citep{NavarroFuss09}.
 
 Subsequently, the DDM was extended to include additional noise parameters capturing inter-trial variability in the drift-rate, the non-decision time and the starting point in order to account for two phenomena observed in decision making tasks, most notably cases where errors are faster or slower than correct responses. Models that take this into account are referred to as the full DDM \citep{RatcliffRouder98}. HDDM uses analytic integration of the likelihood function for variability in drift-rate and numerical integration for variability in non-decision time and bias.
 
-
 \subsection*{Hierarchical Bayesian Estimation}
 \label{methods:hierarchical-bayesian-estimation}
 Statistics and machine learning have developed efficient and versatile Bayesian methods to solve various inference problems \citep{Poirier06}. More recently, they have seen wider adoption in applied fields such as genetics \citep{StephensBalding09} and psychology \citep{ClemensDeSelenEtAl11}. One reason for this Bayesian revolution is the ability to quantify the certainty one has in a particular estimation of a model parameter. Moreover, hierarchical Bayesian models provide an elegant solution to the problem of estimating parameters of individual subjects and groups of subjects, as outlined above. Under the assumption that participants within each group are similar to each other, but not identical, a hierarchical model can be constructed where individual parameter estimates are constrained by group-level distributions \citep{NilssonRieskampWagenmakers11,ShiffrinLeeKim08}.
-
-Bayesian methods require specification of a generative process in form
-of a likelihood function that produced the observed data $x$
-given some parameters $\theta$. By specifying our prior beliefs
-(which can be informed or non-informed) we can use Bayes formula to
-invert the generative model and make inference on the probability of
-parameters $\theta$:
-\phantomsection\label{methods:bayes}\begin{gather}
-\begin{split}P(\theta|x) = \frac{P(x|\theta) \times P(\theta)}{P(x)}\end{split}\notag,
-\end{gather}
-where $P(x|\theta)$ is the likelihood of observing the data (in
-this case choices and RTs) given each parameter value and
-$P(\theta)$ is the prior probability of the parameters. In most
-cases the computation of the denominator is quite complicated and
-requires to compute an analytically intractable integral. Sampling
-methods like Markov-Chain Monte Carlo (MCMC) \citep{GamermanLopes06}
-circumvent this problem by providing a way to produce samples from the
-posterior distribution. These methods have been used with great
-success in many different scenarios \citep{GelmanCarlinSternEtAl03}
-and will be discussed in more detail below.
-
-As noted above, the Bayesian method lends itself naturally to a hierarchical design. In such a design, parameters of a distribution can themselves be expressed as random variables with their own priors. This hierarchical property has a particular benefit to cognitive modeling where data is often scarce: We can construct a hierarchical model that explicitly captures the similarity between individual's parameter values. As above, observed data points of each subject $x_{i,j}$ (where $i = 1, \dots, S_j$ data points per subject and $j = 1, \dots, N$ for $N$ subjects) are distributed according to some likelihood function $f(\theta)$.  We now assume that individual subject parameters $\theta_j$ are normally distributed around a group mean $\mu$ with a specific group standard deviation $\sigma$, resulting in the following generative description:
-\begin{gather}
-\begin{split}
-\theta_j &\sim \mathcal{N}(\mu, \sigma^2) \\
-x_{i, j} &\sim f(\theta_j)\end{split}\notag
-\end{gather}
 
 \subsection*{Hierarchical Drift-Diffusion Models used in HDDM}
 \label{methods:hierarchical-drift-diffusion-models-used-in-hddm}
@@ -260,14 +232,6 @@ individual parameters for inter-trial variabilities. The reason is
 that the influence of these parameters onto the likelihood is often so
 small that very large amounts of data would be required to make
 meaningful inference at the individual level.
-
-The informative group mean priors are created to roughly match parameter values reported in the literature and collected by \citep{MatzkeWagenmakers09}. Figure \ref{fig.priors} shows the the prior probability densities used for each group mean parameter on top of the empirical values reported in the literature.
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=.5]{hddm_info_priors.pdf}
-\caption{Green: Probability densities of prior distributions for group means of each DDM parameter of the informative HDDM model. Blue: Histogram over DDM parameters reported in the literature \citep{MatzkeWagenmakers09}.}
-\label{fig.priors}
-\end{figure}
 
 HDDM then uses MCMC to estimate the joint posterior distribution of
 all model parameters.
@@ -452,43 +416,6 @@ Based on the lower DIC score for the model allowing drift-rate to vary by stimul
 
 Note that Bayesian hypothesis testing and model comparison are areas of active research. While we largely follow the approach laid out by \citep{Kruschke10} we acknowledge that there are divergent views. One alternative to analyzing the posterior directly and the DIC score is the Bayes Factor \citep[e.g.][]{WagenmakersLodewyckxKuriyalEtAl10}.
 
-\subsection*{Within-subject effects}
-\label{demo:within-subject-effects}
-Note that while the \code{m\_stim} model we created above estimates different drift-rates \code{v} for each subject, it implicitly assumes that the different conditions are completely independent:  each drift rate was sampled from a separate group prior. However, there may be individual differences in overall performance, and if so it is reasonable to assume that someone who would be better at \code{WL} would also be better at \code{LL}. To model this intuition we can use a within-subject model where an intercept is used to capture overall performance in the \code{WL} condition as a baseline, and then the other \code{LL} and \code{WW} conditions are expressed relative to \code{WL}. (Perhaps every subject has a higher drift in \code{WL} than \code{LL} but there is huge variance in their overall drift rates. In this scenario, the earlier model would not have the power to detect the effect of condition on this within subject effect, because there would be large posterior variance in all of the drift rates, which would then overlap with each other.  In contrast, the within-subject model would estimate large variance in the intercept but still allow the model to infer a non-zero effect of condition with high precision).
-
-The \code{HDDMRegressor} class allows individual parameters to be described by a linear model specification. As can be seen below, by specifying a linear model that uses categorical dummy-coding we can estimate within-subject effects. In addition to the data argument, \code{HDDMRegressor} expects a linear model descriptor string to be provided. This descriptor contains the \code{outcome} variable that should be replaced with the output of the linear model -- in this case \code{v}. The \code{C()} specifies that the \code{stim} column contains categorical data and will result in \code{WL}, \code{LL}, and \code{WW} being dummy coded. The \code{Treatment} argument encodes which condition should be used as the intercept. The two other conditions -- \code{LL} and \code{WW} -- will then be expressed \textit{relative} to \code{WL}. Internally, \code{HDDMRegressor} uses the \code{Patsy} module to construct a design matrix from the linear model descriptor, see \href{https://patsy.readthedocs.org/en/latest/}{https://patsy.readthedocs.org/en/latest/} for more details. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}within\PYGZus{}subj} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDMRegressor}\PYG{p}{(}\PYG{n}{data}\PYG{p}{,} \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v \PYGZti{} C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{)}
-\end{Verbatim}
-
-Which outputs the newly created covariates which will be used in the regression:
-\begin{Verbatim}[commandchars=\\\{\}]
-Adding these covariates:
-['v\_Intercept', "v\_C(stim, Treatment('WL'))[T.LL]", "v\_C(stim, Treatment('WL'))[T.WW]"]
-\end{Verbatim}
-As alluded to above, \code{WL} will be used as the intercept. \code{v\_C(stim, Treatment('WL'))[T.LL]} and \code{v\_C(stim, Treatment('WL'))[T.WW]} are new parameters that will be estimated relative to the intercept.
-
-To estimate the model we again draw samples from the posterior. Note that regression models are often slower to converge so we use more burn-in and draw more samples to accommodate this fact.
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{10000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{1000}\PYG{p}{)}
-\end{Verbatim}
-\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}
-
-To examine the marginal posteriors of our individual regressors we can again plot them using the following code (see figure \ref{fig.post_within} for the output):
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW} \PYG{o}{=} \PYG{n}{m\PYGZus{}within\PYGZus{}subj}\PYG{o}{.}\PYG{n}{nodes\PYGZus{}db}\PYG{o}{.}\PYG{n}{node}\PYG{p}{[}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}Intercept}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
-                                                \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))[T.LL]}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
-                                                \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{v\PYGZus{}C(stim, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{WL}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))[T.WW]}\PYG{l+s}{\PYGZdq{}}\PYG{p}{]}\PYG{p}{]}
-\PYG{n}{hddm}\PYG{o}{.}\PYG{n}{analyze}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}nodes}\PYG{p}{(}\PYG{p}{[}\PYG{n}{v\PYGZus{}WL}\PYG{p}{,} \PYG{n}{v\PYGZus{}LL}\PYG{p}{,} \PYG{n}{v\PYGZus{}WW}\PYG{p}{]}\PYG{p}{)}
-\end{Verbatim}
-
-\begin{figure}[H]
-\includegraphics[scale=.7]{hddm_demo_fig_07.pdf}
-\caption{Posterior density plot of the group means of the 3 different within-subject drift-rates \emph{v} as produced by the \code{hddm.analyze.plot\_posterior\_nodes()} function. Note that while \emph{v} (blue line) represents the drift-rate of the \code{WL} condition, the other two posteriors (green and red lines) are expressed relative to this condition.}
-\label{fig.post_within}
-\end{figure}
-Note that in the above plot \code{LL} and \code{WW} are expressed relative to the \code{WL} condition (i.e. \code{v\_Intercept}). Thus, while the overall drift rate intercept, here applying to the \code{WL} condition, is positive (mode value roughly 0.7), the relative within subject effects of condition (\code{WW} and \code{LL}) are negative and do not overlap with zero -- suggesting a significant effect of this condition on drift-rate.
 
 \subsection*{Fitting regression models}
 \label{demo:fitting-regression-models}
@@ -514,44 +441,6 @@ As noted above, this experiment also tested patients on deep brain stimulation (
 \caption{Posterior density of the group theta regression coefficients on threshold \emph{a} when DBS is turned on (blue) and off (green).}
 \label{fig.post_theta}
 \end{figure}
-\subsection*{Dealing with outliers}
-\label{demo:dealing-with-outliers}
-It is common to have outliers in any data set and RT data are no exception. Outliers present a serious challenge to likelihood-based approaches, as used in HDDM. Consider the possibility that 5\% of trials are not generated by the DDM process, but by some other process (e.g.  due to an attentional lapse). The observed data in those trials may be very unlikely given the best DDM parameters that fit 95\% of the data.  In the extreme case, the likelihood of a single trial may be zero (e.g.  if subjects respond very quickly, faster than the non-decision time \code{t} parameter that would fit the rest of the data). Thus this single outlier would force the DDM parameters to adjust substantially. To illustrate the effect of this we will generate data with outliers, but fit a standard DDM model without taking outliers into account. \DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{outlier\PYGZus{}data}\PYG{p}{,} \PYG{n}{params} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{generate}\PYG{o}{.}\PYG{n}{gen\PYGZus{}rand\PYGZus{}data}\PYG{p}{(}\PYG{n}{params}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{t}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{o}{.}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+s}{\PYGZsq{}}\PYG{l+s}{v}\PYG{l+s}{\PYGZsq{}}\PYG{p}{:} \PYG{o}{.}\PYG{l+m+mi}{5}\PYG{p}{\PYGZcb{}}\PYG{p}{,}
-                                                   \PYG{n}{size}\PYG{o}{=}\PYG{l+m+mi}{200}\PYG{p}{,} \PYG{n}{n\PYGZus{}fast\PYGZus{}outliers}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
-\end{Verbatim}
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}no\PYGZus{}outlier} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{outlier\PYGZus{}data}\PYG{p}{)}
-\PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{50}\PYG{p}{)}
-\end{Verbatim}
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}no\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
-\end{Verbatim}
-
-As the left plot of figure \ref{fig.outlier} shows, the predictive likelihood does not fit the RT data very well. The model predicts far more fast RTs than are actually observed. This is because non-decision time \code{t} is forced to be estimated small enough to account for a few fast RTs.\\
-
-To solve this issue, HDDM includes a mixture model which assumes that outliers come from a uniform distribution. Here, we specify that we expect roughly 5\% outliers in our data. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,oct}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}outlier} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDM}\PYG{p}{(}\PYG{n}{outlier\PYGZus{}data}\PYG{p}{,} \PYG{n}{p\PYGZus{}outlier}\PYG{o}{=}\PYG{o}{.}\PYG{l+m+mo}{05}\PYG{p}{)}
-\PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{sample}\PYG{p}{(}\PYG{l+m+mi}{2000}\PYG{p}{,} \PYG{n}{burn}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{)}
-\end{Verbatim}
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{m\PYGZus{}outlier}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posterior\PYGZus{}predictive}\PYG{p}{(}\PYG{p}{)}
-\end{Verbatim}
-
-\begin{figure}
-\includegraphics[width=0.5\columnwidth]{hddm_demo_fig_10.pdf}
-\includegraphics[width=0.5\columnwidth]{hddm_demo_fig_11.pdf}
-\caption{Posterior predictive likelihood of the model which does not allow for outliers (left) and the model which does allow for outliers (right). Error responses are mirrored along the y-axis. Histogram of reaction times in red and posterior predictive likelihood in blue. Time increases along the x-axis while probability density is plotted against the y-axis. }
-\label{fig.outliers}
-\end{figure}
-
-
-The mixture model provides a much better fit (see the right plot in figure \ref{fig.outliers}) because outlier RTs are having less of an effect because they get assigned to the uniform outlier distribution. Note that it is also possible to estimate the probability of obtaining outliers from the data by setting \code{include=['p\_outlier']} instead of \code{p\_outlier=x} when \code{HDDM} in instantiated.
 
 \section*{Simulations}
 
