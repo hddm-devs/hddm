@@ -76,6 +76,11 @@ class HDDM(HDDMBase):
              Save trace for subjs (needed for many
              statistics so probably a good idea.)
 
+        std_depends : bool (default=False)
+             Should the depends_on keyword affect the group std node.
+             If True it means that both, group mean and std will be split
+             by condition.
+
         wiener_params : dict
              Parameters for wfpt evaluation and
              numerical integration.

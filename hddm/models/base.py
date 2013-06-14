@@ -35,6 +35,7 @@ class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
         data = hddm.utils.flip_errors(data)
+        self.std_depends = kwargs.pop('std_depends', False)
 
         super(AccumulatorModel, self).__init__(data, **kwargs)
 
@@ -344,8 +345,9 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
                       value=value, depends=self.depends[name])
+            depends_std = self.depends[name] if self.std_depends else ()
             std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
-                        upper=std_upper, value=std_value)
+                        upper=std_upper, value=std_value, depends=depends_std)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
                         doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
@@ -380,8 +382,10 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Uniform, '%s' % name, lower=lower,
                       upper=upper, value=value, depends=self.depends[name])
+
+            depends_std = self.depends[name] if self.std_depends else ()
             std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
-                        upper=std_upper, value=std_value)
+                        upper=std_upper, value=std_value, depends=depends_std)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
                         doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
@@ -435,7 +439,9 @@ class AccumulatorModel(kabuki.Hierarchical):
             g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
                       trace=True)
 
-            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2,
+                        value=std_value, depends=depends_std)
 
             tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
                         % name, eval=lambda x: x**-2, x=std,
@@ -495,8 +501,9 @@ class AccumulatorModel(kabuki.Hierarchical):
             g = Knode(pm.Deterministic, '%s'%name, eval=lambda x: np.exp(x),
                       x=g_trans, plot=True)
 
-            std = Knode(pm.Uniform, '%s_std' % name,
-                        lower=std_lower, upper=std_upper, value=std_value)
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower, upper=std_upper,
+                        value=std_value, depends=depends_std)
 
             tau = Knode(pm.Deterministic, '%s_tau' % name, eval=lambda x: x**-2,
                         x=std, plot=False, trace=False, hidden=True)
@@ -566,7 +573,9 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
                       value=value, depends=self.depends[name])
-            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2,
+                        value=std_value, depends=depends_std)
             tau = Knode(pm.Deterministic, '%s_tau' % name,
                         doc='%s_tau' % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
@@ -602,8 +611,9 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(pm.Gamma, name, alpha=g_shape, beta=g_rate,
                             value=g_mean, depends=self.depends[name])
-
-            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2, value=std_value)
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2,
+                        value=std_value, depends=depends_std)
 
             shape = Knode(pm.Deterministic, '%s_shape' % name, eval=lambda x,y: (x**2)/(y**2),
                         x=g, y=std, plot=False, trace=False, hidden=True)

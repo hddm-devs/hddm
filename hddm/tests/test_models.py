@@ -75,7 +75,18 @@ class TestSingleBreakdown(unittest.TestCase):
 
         return model.mc
 
-    def test_HDDM_group(self, assert_=False):
+    def test_HDDM_split_std(self):
+        data, _ = hddm.generate.gen_rand_data({'cond1': {'v':0, 'a':2, 't':.3, 'z': .5, 'sv': .1, 'st': .1, 'sz': .1},
+                                               'cond2': {'v':0, 'a':2, 't':.3, 'z': .5, 'sv': .1, 'st': .1, 'sz': .1}})
+
+        for param in ['a', 'v', 'z', 't']:
+            model = hddm.HDDM(data, include='all', depends_on={param: 'condition'}, is_group_model=True, std_depends=True)
+            idx = model.nodes_db.knode_name == param + '_std'
+            self.assertEqual(len(model.nodes_db.node[idx]), 2)
+
+        return model.mc
+
+    def test_HDDM_group(self):
         for include, model_class in itertools.product(self.includes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=include)
             data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
