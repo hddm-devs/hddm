@@ -128,36 +128,6 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
     return cond_params, merged_params
 
 
-def gen_antisaccade_rts(params=None, samples_pro=500, samples_anti=500, dt=1e-4, subj_idx=0):
-    if params is None:
-        params = {'v':-2.,
-                  'v_switch': 2.,
-                  'V_switch': .1,
-                  'a': 2.5,
-                  't': .3,
-                  't_switch': .3,
-                  'z':.5,
-                  'st': 0, 'sz':0, 'sv':0}
-    # Generate prosaccade trials
-    pro_params = copy(params)
-    del pro_params['t_switch']
-    del pro_params['v_switch']
-
-    rts = np.empty(samples_pro+samples_anti, dtype=[('response', np.float), ('rt', np.float), ('instruct', int), ('subj_idx', int)])
-
-    pro_rts = gen_rts(pro_params, samples=samples_pro, dt=dt, subj_idx=subj_idx)
-    anti_rts = gen_rts(params, samples=samples_anti, dt=dt, subj_idx=subj_idx, method='drift')
-
-    rts['instruct'][:samples_pro] = 0
-    rts['instruct'][samples_pro:] = 1
-    rts['response'][:samples_pro] = np.array((pro_rts > 0), float)
-    rts['response'][samples_pro:] = np.array((anti_rts > 0), float)
-    rts['rt'][:samples_pro] = np.abs(pro_rts)
-    rts['rt'][samples_pro:] = np.abs(anti_rts)
-    rts['subj_idx'] = subj_idx
-
-    return rts, params
-
 ####################################################################
 # Functions to generate RT distributions with specified parameters #
 ####################################################################
