@@ -200,8 +200,7 @@ there is also a model with non-informative priors which the user can opt to use.
 
 \begin{figure}
 \centering
-\capstart
-\includegraphics[scale=.7]{graphical_hddm.pdf}
+\includegraphics[scale=.6]{graphical_hddm.pdf}
 \caption{Basic graphical hierarchical model implemented by HDDM for estimation of the drift-diffusion model. Round nodes represent random variables. Shaded nodes represent observed data. Directed arrows from parents to children visualize that parameters of the child random variable are distributed according to its   parents. Plates denote that multiple random variables with the same   parents and children exist.}
 \label{fig.graphical}
 \end{figure}
@@ -246,10 +245,7 @@ Python requires modules to be imported before they can be used.
 \DUspan{keyword,namespace}{}\DUspan{name,namespace}{}\DUspan{keyword,namespace}{}\DUspan{name,namespace}{}\DUspan{keyword,namespace}{}\DUspan{name,namespace}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{k+kn}{import} \PYG{n+nn}{hddm}
-\PYG{k+kn}{import} \PYG{n+nn}{matplotlib.pyplot} \PYG{k+kn}{as} \PYG{n+nn}{plt}
 \end{Verbatim}
-
-Matplotlib is a Python module for generating graphics.
 
 \subsection*{Loading data}
 \label{demo:loading-data}
@@ -275,25 +271,6 @@ The \code{hddm.load\_csv()} function can then be used to load this file. \DUspan
 \PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{load\PYGZus{}csv}\PYG{p}{(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{hddm\PYGZus{}demo.csv}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
 \end{Verbatim}
 
-To provide the reader with a sense of how RT data is distributed we plot histograms of each individual's RTs in figure \ref{fig.rt_histograms} (note the similarity to the DDM density in figure \ref{fig.ddm}). Because there are two possible responses (here we are using accuracy coding where 1 means the more rewarding symbol was chosen, and 0 the less rewarding) we flip error RTs to be
-negative. The following code was used to generate the RT histogram plot and uses \code{Pandas}' \code{groupby} functionality which splits the data set into parts containing individual subject data.
-
-\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{keyword}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator,word}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{n}{data} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{utils}\PYG{o}{.}\PYG{n}{flip\PYGZus{}errors}\PYG{p}{(}\PYG{n}{data}\PYG{p}{)}
-
-\PYG{n}{fig} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{figure}\PYG{p}{(}\PYG{p}{)}
-\PYG{n}{ax} \PYG{o}{=} \PYG{n}{fig}\PYG{o}{.}\PYG{n}{add\PYGZus{}subplot}\PYG{p}{(}\PYG{l+m+mi}{111}\PYG{p}{,} \PYG{n}{xlabel}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{RT}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{ylabel}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{count}\PYG{l+s}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{title}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{RT distributions}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
-\PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{subj\PYGZus{}data} \PYG{o+ow}{in} \PYG{n}{data}\PYG{o}{.}\PYG{n}{groupby}\PYG{p}{(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{subj\PYGZus{}idx}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}\PYG{p}{:}
-    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{hist}\PYG{p}{(}\PYG{n}{subj\PYGZus{}data}\PYG{o}{.}\PYG{n}{rt}\PYG{p}{,} \PYG{n}{bins}\PYG{o}{=}\PYG{l+m+mi}{20}\PYG{p}{,} \PYG{n}{histtype}\PYG{o}{=}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{step}\PYG{l+s}{\PYGZsq{}}\PYG{p}{)}
-\end{Verbatim}
-
-\begin{figure}
-\includegraphics[scale=0.6]{hddm_demo_fig_00.pdf}
-\caption{Reaction time histograms of individual subjects. Reaction time is distributed along the x-axis. Error responses are mirrored on the y-axis and thus appear negative. Bin-count is distributed along the y-axis.}
-\label{fig.rt_histograms}
-\end{figure}
-
 \subsection*{Fitting a hierarchical model}
 \label{demo:fitting-a-hierarchical-model}
 The previous figure shows that while each individual's RT histogram is different, there is also a lot of similarity. Hierarchical Bayesian modeling allows us to exploit this similarity. The \code{HDDM} class constructs such a hierarchical DDM. To speed up convergence, the starting point is set the maximum a-posterior value (MAP) by calling the \code{HDDM.find\_starting\_values} method. The \code{HDDM.sample()} method then performs Bayesian inference by drawing posterior samples using the MCMC algorithm.
@@ -311,7 +288,7 @@ We recommend drawing between 2000 and 10000 posterior samples, depending on the 
 
 Note that it is also possible to fit a non-hierarchical model to an individual subject by setting \code{is\_group\_model=False} in the instantiation of \code{HDDM} or by passing in data which lacks a \code{subj\_idx} column. In this case, HDDM will use the group-mean priors from above for the DDM parameters.
 
-The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method (see figure \ref{fig.posterior_trace}). For the sake of brevity we only plot one here. In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
+The inference algorithm, MCMC, requires the chains of the model to have properly converged. While there is no way to guarantee convergence for a finite set of samples in MCMC, there are many heuristics that allow identification of problems of convergence. One analysis to perform is to visually investigate the trace, the autocorrelation, and the marginal posterior. These can be plotted using the \code{HDDM.plot\_posteriors()} method (see figure \ref{fig.posterior_trace}). For the sake of brevity we only plot two here (group mean and standard deviation of threshold). In practice, however, one should examine all of them. \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m}\PYG{o}{.}\PYG{n}{plot\PYGZus{}posteriors}\PYG{p}{(}\PYG{p}{[}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{a', 'a_var}\PYG{l+s}{\PYGZsq{}}{]}\PYG{p}{)}
 \end{Verbatim}
@@ -416,10 +393,14 @@ Based on the lower DIC score for the model allowing drift-rate to vary by stimul
 
 Note that Bayesian hypothesis testing and model comparison are areas of active research. While we largely follow the approach laid out by \citep{Kruschke10} we acknowledge that there are divergent views. One alternative to analyzing the posterior directly and the DIC score is the Bayes Factor \citep[e.g.][]{WagenmakersLodewyckxKuriyalEtAl10}.
 
-
 \subsection*{Fitting regression models}
 \label{demo:fitting-regression-models}
-As mentioned above, cognitive neuroscience has embraced the DDM as it enables to link psychological processes to cognitive brain measures. The \citet{CavanaghWieckiCohenEtAl11} study provides a useful illustration of the functionaility. EEG recordings provided a trial-ty-trial measure of brain activity (frontal theta), and it was found that this activity correlated with increases in decision threshold in high conflict trials. Note that the data set and results exhibit more features than we consider here for the time being (specifically the manipulation of deep brain stimulation), but for illustrative purposes, we replicate here the main theta-threshold relationship in a model restricted to participants without brain stimulation. For more information, see \citet{CavanaghWieckiCohenEtAl11} \DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name,builtin,pseudo}{}\DUspan{punctuation}{}
+As mentioned above, cognitive neuroscience has embraced the DDM as it enables to link psychological processes to cognitive brain measures. The \citet{CavanaghWieckiCohenEtAl11} study provides a useful illustration of the functionaility. EEG recordings provided a trial-ty-trial measure of brain activity (frontal theta), and it was found that this activity correlated with increases in decision threshold in high conflict trials. Note that the data set and results exhibit more features than we consider here for the time being (specifically the manipulation of deep brain stimulation), but for illustrative purposes, we replicate here the main theta-threshold relationship in a model restricted to participants without brain stimulation. For more information, see \citet{CavanaghWieckiCohenEtAl11}.
+
+The \code{HDDMRegressor} class allows individual parameters to be described by a linear model specification. As can be seen below, by specifying a linear model that uses categorical dummy-coding we can estimate a within-subject effect of theta power on threshold in different conditions. In addition to the data argument, \code{HDDMRegressor} expects a linear model descriptor string to be provided. This descriptor contains the \code{outcome} variable that should be replaced with the output of the linear model -- in this case \code{a}. \code{theta:C(stim)} specifies an interaction between theta power and stimulus. The \code{C()} specifies that the \code{stim} column contains categorical data and will result in \code{WL}, \code{LL}, and \code{WW} being dummy coded. The \code{Treatment} argument encodes which condition should be used as the intercept. The two other conditions -- \code{LL} and \code{WW} -- will then be expressed \textit{relative} to \code{WL}.
+
+\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{literal,number,integer}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{literal,string}{}\DUspan{punctuation}{}\DUspan{name}{}\DUspan{operator}{}\DUspan{name,builtin,pseudo}{}\DUspan{punctuation}{}
+
 \begin{Verbatim}[commandchars=\\\{\}]
 \PYG{n}{m\PYGZus{}reg} \PYG{o}{=} \PYG{n}{hddm}\PYG{o}{.}\PYG{n}{HDDMRegressor}\PYG{p}{(}\PYG{n}{data}\PYG{p}{[}\PYG{n}{data}\PYG{o}{.}\PYG{n}{dbs} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{]}\PYG{p}{,}
                            \PYG{l+s}{\PYGZdq{}}\PYG{l+s}{a \PYGZti{} theta:C(conf, Treatment(}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{LC}\PYG{l+s}{\PYGZsq{}}\PYG{l+s}{))}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
@@ -455,12 +436,12 @@ We compared four methods: (i) the hierarchical Bayesian model presented above wi
 
 For each dataset and estimation method we computed whether an effect was detected. For the non-hierarchical methods (ML, quantiles, nHB), an effect is detected if a paired t-test found a significant difference between the two drift rate of the individuals (p < .05). For HB, we used Bayesian hypothesis testing \citep{Lindley65,Kruschke10}. We computed the 2.5 and 97.5 quantiles of the posterior of the group variable that models the difference between the two drift rates. An effect is detected if zero fell outside the quantiles.
 
-The detection likelihood for a given factor manipulation and estimation method was defined as the number of times an effect was detected divided by the total number of experiments. To investigate the difference in parameter recovery between the methods, we also computed the mean absolute error of the recovery for each parameter and method. We excluded the largest errors(5\%) from our calculation for each method to avoid cases where unrealistic parameters were recovered (this happened only for ML and the quantiles method).
+The detection likelihood for a given factor manipulation and estimation method was defined as the number of times an effect was detected divided by the total number of experiments. To investigate the difference in parameter recovery between the methods, we also computed the mean absolute error of the recovery for each parameter and method. We excluded the largest errors (5\%) from our calculation for each method to avoid cases where unrealistic parameters were recovered (this happened only for ML and the quantiles method).
 
 \subsection*{Experiment 3 setup}
 In the third experiment, we investigated the detection likelihood of trial-by-trial effects of a given covariate (e.g. a brain measure) on the drift-rate. We fixed the number of subjects at 12, and manipulated both the covariate effect-size (0.1, 0.3, 0.5) and the number of trials (20, 30, 40, 50, 75, 100, 150). To generate data, we first sample an auxiliary variable, $\alpha_i$ from $\mathcal{N}(1, 0.1)$ for each subject $i$. We then sampled a drift rate for each subject and each trial from $\mathcal{N}(\alpha_i, 1)$. The drift rate of each subject were set to be correlated to a standard normally distributed covariate according to the tested effect size. The rest of the variables were sampled as in the first experiments.
 
-We compared all previous methods except the quantiles method, which cannot be used to estimate trial-by-trial effects. For the non-hierarchical methods (ML, quantiles, nHB), an effect is detected if a one sample t-test finds the covariate to be significantly different than zero (p < .05). For the HB estimation, we computed the 2.5 and 97.5 quantiles of the posterior of the group covariate variable. If zero fell outside the quantiles, then an effect was detected.
+We compared all previous methods except the quantiles method, which cannot be used to estimate trial-by-trial effects. For the non-hierarchical methods (ML, quantiles, nHB), an effect is detected if a one sample t-test finds the covariate to be significantly different than zero ($p < .05$). For the HB estimation, we computed the 2.5 and 97.5 quantiles of the posterior of the group covariate variable. If zero fell outside the quantiles, then an effect was detected.
 
 
 \subsection*{Results}
