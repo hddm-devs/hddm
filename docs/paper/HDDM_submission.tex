@@ -1033,14 +1033,14 @@ are estimated using a hierarchical model.
 
 \begin{figure}
 \includegraphics[width=.7\columnwidth]{trials_exp_single_mean_inlay.pdf}
-\caption{Trials experiment: Trimmed mean-squared recovery error (i.e.
-MSE after removing the 2.5 and 9.75 percentile; y-axis) for different
+\caption{Trials experiment: Trimmed mean absolute error (i.e.
+MAE after removing the 2.5 and 9.75 percentile; y-axis) for different
 number of trials (x-axis) for each DDM parameter (subplots). Colors
 code for the different estimation methods (HB=Hierarchical Bayes,
 nHB=non-hierarchical Bayes, ML=maximum likelihood, and
 Quantiles=$\chi^2$-Quantile method). The inlay in the upper right
-corner of each subplot plots the difference of the Mses between HB and
-ML while error-bars represent squared-error from the mean. If the
+corner of each subplot plots the difference of the MAEs between HB and
+ML, and the error-bars represent 95% confidence interval. If the
 lower end of the error-bar is above zero, HB provides a statistically
 significantly better fit than ML. While the difference is biggest for
 drift-rate with few trials, HB produces a consistently lower error
