@@ -86,7 +86,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
             return pd.DataFrame(predictor, index=data.index)
 
-        return self.pymc_node(func, kwargs['doc'], name, parents=parents)
+        return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=False)
 
 class HDDMRegressor(HDDM):
     """HDDMRegressor allows estimation of the DDM where parameter
