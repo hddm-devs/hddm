@@ -292,28 +292,7 @@ helpful when relatively few trials per condition are available for
 each subject, and when incorporating noisy trial-by-trial neural data
 into the estimation of DDM parameters.
 
-\href{http://github.com/twiecki/hddm}{HDDM} is an open-source software
-package written in \href{http://www.python.org/}{Python} which allows
-(i) the flexible construction of hierarchical Bayesian drift diffusion
-models and (ii) the estimation of its posterior parameter
-distributions via \href{http://code.google.com/p/pymc/}{PyMC}
-\citep{PatilHuardFonnesbeck10}. User-defined models can be created via
-a simple Python script or be used interactively via, for example, the
-\href{http://ipython.org}{IPython} interpreter shell
-\citep{PerezGranger07}. All run-time critical functions are coded in
-\href{http://www.cython.org/}{Cython}
-\citep{BehnelBradshawCitroEtAl11} and compiled natively for speed
-which allows estimation of complex models in minutes. HDDM includes
-many commonly used statistics and plotting functionality generally
-used to assess model fit. The code is released under the permissive
-BSD 3-clause license, test-covered to assure correct behavior and well
-documented. An active
-\href{https://groups.google.com/group/hddm-users/}{mailing list}
-exists to facilitate community interaction and help users. Finally,
-HDDM allows flexible estimation of trial-by-trial regressions where an
-external measurement (e.g. brain activity as measured by fMRI) is
-correlated with one or more decision making
-parameters.
+\href{http://ski.clps.brown.edu/hddm_docs/}{HDDM} is an open-source software package written in \href{http://www.python.org/}{Python} which allows (i) the flexible construction of hierarchical Bayesian drift diffusion models and (ii) the estimation of its posterior parameter distributions via \href{http://code.google.com/p/pymc/}{PyMC} \citep{PatilHuardFonnesbeck10}. User-defined models can be created via a simple Python script or be used interactively via, for example, the \href{http://ipython.org}{IPython} interpreter shell \citep{PerezGranger07}. All run-time critical functions are coded in \href{http://www.cython.org/}{Cython} \citep{BehnelBradshawCitroEtAl11} and compiled natively for speed which allows estimation of complex models in minutes. HDDM includes many commonly used statistics and plotting functionality generally used to assess model fit. The code is released under the permissive BSD 3-clause license, test-covered to assure correct behavior and well documented. An active \href{https://groups.google.com/group/hddm-users/}{mailing list} exists to facilitate community interaction and help users. Finally, HDDM allows flexible estimation of trial-by-trial regressions where an external measurement (e.g. brain activity as measured by fMRI) is correlated with one or more decision making parameters.
 
 This report is intended to familiarize experimentalists with the usage
 and benefits of HDDM. The purpose of this report is thus two-fold; (i)
@@ -326,7 +305,7 @@ non-hierarchical or non-Bayesian methods as a function of the number
 of subjects and trials. We show that it outperforms these other
 methods and has greater power to detect dependencies of model
 parameters on other measures such as brain activity, when such
-relationships are present in the data.
+relationships are present in the data. These simulations results can also inform experimental design by showing minimum number of trials and subjects to achieve a desired level of precision.
 
 \index{Methods}
 
@@ -960,7 +939,7 @@ of both of these can be found in the supplement.
 \section*{Simulations}
 
 To quantify the quality of the fit of our hierarchical Bayesian method
-we ran three simulation experiments.
+we ran three simulation experiments. All code to replicate the simulation experiments can be found online at \html{https://github.com/hddm-devs/HDDM-paper}{https://github.com/hddm-devs/HDDM-paper}.
 
 \subsection*{Experiment 1 and 2 setup}
 For the first and second experiments, we simulated an experiment with
