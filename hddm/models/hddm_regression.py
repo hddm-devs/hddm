@@ -34,24 +34,27 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
                                            p_outlier=p_outlier)
 
 
-    def random(v, sv, a, z, sz, t, st, reg_outcomes, p_outlier, size=None):
+    def random(self):
+        param_dict = deepcopy(self.parents.value)
+        del param_dict['reg_outcomes']
+        sampled_rts = self.value.copy()
 
-        param_dict = {'v':v, 'z':z, 't':t, 'a':a, 'sz':sz, 'sv':sv, 'st':st}
-        sampled_rts = np.empty(size)
-
-        for i_sample in xrange(len(sampled_rts)):
+        for i in self.value.index:
             #get current params
-            for p in reg_outcomes:
-                param_dict[p] = locals()[p][i_sample]
+            for p in self.parents['reg_outcomes']:
+                param_dict[p] = np.asscalar(self.parents.value[p].ix[i])
             #sample
-            sampled_rts[i_sample] = hddm.generate.gen_rts(param_dict,
-                                                          method=sampling_method,
-                                                          samples=1,
-                                                          dt=sampling_dt)
+            samples = hddm.generate.gen_rts(method=sampling_method,
+                                            size=1, dt=sampling_dt, **param_dict)
+
+            sampled_rts.ix[i]['rt'] = hddm.utils.flip_errors(samples).rt
+
         return sampled_rts
 
-    return stochastic_from_dist('wfpt_reg', wiener_multi_like,
-                                random=random)
+    stoch = stochastic_from_dist('wfpt_reg', wiener_multi_like)
+    stoch.random = random
+
+    return stoch
 
 
 wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
