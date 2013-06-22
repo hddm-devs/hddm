@@ -63,6 +63,10 @@ wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
 ################################################################################################
 
 class KnodeRegress(kabuki.hierarchical.Knode):
+    def __init__(self, *args, **kwargs):
+        self.keep_regressor_trace = kwargs.pop('keep_regressor_trace', False)
+        super(KnodeRegress, self).__init__(*args, **kwargs)
+
     def create_node(self, name, kwargs, data):
         reg = kwargs['regressor']
         # order parents according to user-supplied args
@@ -89,7 +93,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
             return pd.DataFrame(predictor, index=data.index)
 
-        return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=False)
+        return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=self.keep_regressor_trace)
 
 class HDDMRegressor(HDDM):
     """HDDMRegressor allows estimation of the DDM where parameter
@@ -97,7 +101,7 @@ class HDDMRegressor(HDDM):
     fMRI or different conditions).
     """
 
-    def __init__(self, data, models, group_only_regressors=True, **kwargs):
+    def __init__(self, data, models, group_only_regressors=True, keep_regressor_trace=False, **kwargs):
         """Instantiate a regression model.
 
         :Arguments:
@@ -113,9 +117,12 @@ class HDDMRegressor(HDDM):
 
         :Optional:
 
-            * group_only_regressors : bool
+            * group_only_regressors : bool (default=True)
                 Do not estimate individual subject parameters for all regressors.
-            * Additional keyword args are passed on to HDDMGamma.
+            * keep_regressor_trace : bool (default=False)
+                Whether to keep a trace of the regressor. This will use much more space
+                but if you need it if you want to run PPCs.
+            * Additional keyword args are passed on to HDDM.
 
         :Note:
 
@@ -149,6 +156,7 @@ class HDDMRegressor(HDDM):
             and v_C(condition)[T.cond2] for cond1+cond2.
 
         """
+        self.keep_regressor_trace = keep_regressor_trace
         if isinstance(models, (basestring, dict)):
             models = [models]
 
@@ -249,6 +257,7 @@ class HDDMRegressor(HDDM):
                                      plot=False,
                                      trace=False,
                                      hidden=True,
+                                     keep_regressor_trace=self.keep_regressor_trace,
                                      **reg_parents)
 
             knodes['%s_bottom' % reg['outcome']] = reg_knode
