@@ -12,7 +12,7 @@ install:
   - pip install pandas
   - pip install patsy
   - pip install --no-deps pymc
-  - pip install --no-deps git+https://github.com/hddm-devs/kabuki
+  - pip install --no-deps git+https://github.com/hddm-devs/kabuki@develop
   - python setup.py build_ext --inplace
 script: 
   - nosetests -s hddm/tests/test_likelihoods.py
