@@ -119,7 +119,7 @@ class TestSingleBreakdown(unittest.TestCase):
                 model = model_class(data, 'v ~ cov', include=include, is_group_model=True)
             else:
                 model = model_class(data, include=include, is_group_model=True)
-            model.sample(50, dbname='test.db', db=db)
+            model.sample(100, dbname='test.db', db=db)
             model.save('test.model')
             m_load = hddm.load('test.model')
             os.remove('test.db')

@@ -515,21 +515,21 @@ def gen_ppc_stats(quantiles=(10, 30, 50, 70, 90)):
     from collections import OrderedDict
 
     stats = OrderedDict()
-    stats['accuracy'] = lambda x: np.mean(x.rt>0)
+    stats['accuracy'] = lambda x: np.mean(x>0)
 
     #upper bound stats
-    stats['mean_ub'] = lambda x: np.mean(x.ix[x.rt>0].rt)
-    stats['std_ub'] = lambda x: np.std(x.ix[x.rt>0].rt)
+    stats['mean_ub'] = lambda x: np.mean(x[x>0])
+    stats['std_ub'] = lambda x: np.std(x[x>0])
     for q in quantiles:
         key = str(q) + 'q'
-        stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x.ix[x.rt>0].rt.values, q) if np.any(x.rt>0) else np.nan
+        stats[key+'_ub'] = lambda x, q=q: scoreatpercentile(x[x>0], q) if np.any(x>0) else np.nan
 
     #lower bound stats
-    stats['mean_lb'] = lambda x: np.mean(x.ix[x.rt<0].rt)
-    stats['std_lb'] = lambda x: np.std(x.ix[x.rt<0].rt)
+    stats['mean_lb'] = lambda x: np.mean(x[x<0])
+    stats['std_lb'] = lambda x: np.std(x[x<0])
     for q in quantiles:
         key = str(q) + 'q'
-        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x.ix[x.rt<0].rt.values), q) if np.any(x.rt<0) else np.nan
+        stats[key+'_lb'] = lambda x, q=q: scoreatpercentile(np.abs(x[x<0]), q) if np.any(x<0) else np.nan
 
     return stats
 
@@ -561,7 +561,7 @@ def post_pred_check(model, **kwargs):
     """
 
     stats = gen_ppc_stats()
-    return kabuki.analyze.post_pred_check(model, stats=stats, **kwargs)
+    return kabuki.analyze.post_pred_check(model, stats=stats, field='rt', **kwargs)
 
 def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
@@ -837,4 +837,3 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
