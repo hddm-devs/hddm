@@ -181,6 +181,13 @@ PYG@tok@sd\endcsname{\let\PYG@it=\textit\def\PYG@tc##1{\textcolor[rgb]{0.25,0.44
 \maketitle
 
 $^\ast$ Both authors contributed equally.
+Email addresses:\\
+Thomas Wiecki: thomas\_wiecki@brown.edu\\
+Imri Sofer: imri\_sofer@brown.edu\\
+Michael Frank: michael\_frank@brown.edu\\
+
+To whom correspondence should be directed:\\
+thomas\_wiecki@brown.edu\\
 \begin{abstract}
 \label{abstract:abstract}
 The diffusion model is a commonly used tool to infer latent
@@ -757,7 +764,7 @@ directly and the DIC score is the Bayes Factor
 As mentioned above, cognitive neuroscience has embraced the DDM as it
 enables to link psychological processes to cognitive brain measures.
 The \citet{CavanaghWieckiCohenEtAl11} study provides a useful
-illustration of the functionaility. EEG recordings provided a
+illustration of the functionality. EEG recordings provided a
 trial-ty-trial measure of brain activity (frontal theta), and it was
 found that this activity correlated with increases in decision
 threshold in high conflict trials. Note that the data set and results
@@ -870,18 +877,7 @@ The detection likelihood results for the first experiment are very similar to th
 
 \begin{figure}
 \includegraphics[width=.7\columnwidth]{trials_exp_single_mean_inlay.pdf}
-\caption{Trials experiment: Trimmed mean absolute error (i.e.
-MAE after removing the 2.5 and 9.75 percentile; y-axis) for different
-number of trials (x-axis) for each DDM parameter (subplots). Colors
-code for the different estimation methods (HB=Hierarchical Bayes,
-nHB=non-hierarchical Bayes, ML=maximum likelihood, and
-Quantiles=$\chi^2$-Quantile method). The inlay in the upper right
-corner of each subplot plots the difference of the MAEs between HB and
-ML, and the error-bars represent 95\% confidence interval. If the
-lower end of the error-bar is above zero, HB provides a statistically
-significantly better fit than ML. While the difference is biggest for
-drift-rate with few trials, HB produces a consistently lower error
-than other methods.}
+\caption{Trials experiment. Trimmed mean absolute error (MAE, after removing the 2.5 and 9.75 percentiles) as a function of trial number for each DDM parameter. Colors code for the different estimation methods (HB=Hierarchical Bayes, nHB=non-hierarchical Bayes, ML=maximum likelihood, and Quantiles=$\chi^2$-Quantile method). The inlay in the upper right corner of each subplot plots the difference of the MAEs between HB and ML, and the error-bars represent 95\% confidence interval.  HB provides a statistically significantly better parameter recovery than ML when the lower end of the error bar is above zero (as it is in each case, with largest effects on drift rate with few trials).}
 \label{fig.trials}
 \end{figure}
 
