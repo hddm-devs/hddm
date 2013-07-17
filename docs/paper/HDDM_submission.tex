@@ -21,6 +21,7 @@ Model in Python}
 \author{Thomas V. Wiecki$^\ast$, Imri Sofer$^\ast$, Michael J. Frank}
 \newcommand{\sphinxlogo}{}
 \renewcommand{\releasename}{Release}
+\graphicspath{{gfx/}}
 \makeindex
 
 \makeatletter
@@ -372,7 +373,7 @@ both choices.
 \centering
 \capstart
 
-\includegraphics{DDM.pdf}
+\includegraphics{fig1.pdf}
 \caption{Trajectories of multiple drift-processes (blue and red lines,
 middle panel). Evidence is noisily accumulated over time (x-axis) with
 average drift-rate \textit{v} until one of two boundaries (separated
@@ -422,7 +423,7 @@ HDDM includes several hierarchical Bayesian model formulations for the DDM and L
 
 \begin{figure}
 \centering
-\includegraphics[scale=.6]{graphical_hddm.pdf}
+\includegraphics[scale=.6]{fig2.pdf}
 \caption{Basic graphical hierarchical model implemented by HDDM for
 estimation of the drift-diffusion model. Round nodes represent random
 variables. Shaded nodes represent observed data. Directed arrows from
@@ -586,8 +587,7 @@ however, one should examine all of them.
 \end{Verbatim}
 
 \begin{figure}
-\includegraphics[width=.5\columnwidth]{hddm_demo_fig_01.png}
-\includegraphics[width=.5\columnwidth]{hddm_demo_fig_02.png}
+%\includegraphics[width=\columnwidth]{fig3.tiff}
 \caption{Posterior plots for the group mean (left half) and group standard-deviation (right half) of the threshold parameter \emph{a}. Posterior trace (upper left inlay), auto-correlation (lower left inlay), and marginal posterior histogram (right inlay; solid black line denotes posterior mean and dotted black line denotes 2.5\% and 97.5\% percentiles).}
 \label{fig.posterior_trace}
 \end{figure}
@@ -666,7 +666,7 @@ histogram (see figure \ref{fig.post_drift}).
 \end{Verbatim}
 
 \begin{figure}
-\includegraphics[scale=.7]{hddm_demo_fig_06.pdf}
+\includegraphics[scale=.7]{fig4.pdf}
 \caption{Posterior density plot of the group means of the 3 different
 drift-rates \emph{v} as produced by the
 \code{hddm.analyze.plot\_posterior\_nodes()} function. Regions of high
@@ -790,7 +790,7 @@ parameters, but also how parameters vary when brain state is
 manipulated.
 
 \begin{figure}
-\includegraphics[scale=0.6]{theta_threshold_on_off.pdf}
+\includegraphics[scale=0.6]{fig5.pdf}
 \caption{Posterior density of the group theta regression coefficients
 on threshold \emph{a} when DBS is turned on (blue) and off (green).}
 \label{fig.post_theta}
@@ -856,13 +856,13 @@ detected.
 The detection likelihood results for the first experiment are very similar to the results of the second experiment, and were omitted for the sake of brevity. The HB method had the lowest recovery error and highest likelihood of detection in all experiments (figure \ref{fig.trials}, \ref{fig.subjs}, \ref{fig.regress}). The results clearly demonstrates the increased power the hierarchical model has over non-hierarchical ones. To validate that the increase in detection rate is not due to the different statistical test (Bayesian hypothesis testing compared to t-testing), but rather due to the hierarchical model itself, we also applied a t-test to the HB method. The likelihood of detection increased dramatically, which shows that the Bayesian hypothesis testing is not the source of the increase. However, the t-test results were omitted since the independence assumption of the test does not hold for parameters that are estimated using a hierarchical model.
 
 \begin{figure}
-\includegraphics[width=.7\columnwidth]{trials_exp_single_mean_inlay.pdf}
+\includegraphics[width=\columnwidth]{fig6.pdf}
 \caption{Trials experiment. Trimmed mean absolute error (MAE, after removing the 2.5 and 9.75 percentiles) as a function of trial number for each DDM parameter. Colors code for the different estimation methods (HB=Hierarchical Bayes, nHB=non-hierarchical Bayes, ML=maximum likelihood, and Quantiles=$\chi^2$-Quantile method). The inlay in the upper right corner of each subplot plots the difference of the MAEs between HB and ML, and the error-bars represent 95\% confidence interval.  HB provides a statistically significantly better parameter recovery than ML when the lower end of the error bar is above zero (as it is in each case, with largest effects on drift rate with few trials).}
 \label{fig.trials}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=.6\columnwidth]{subjs_exp_prob_headings.pdf}
+\includegraphics[width=.6\columnwidth]{fig7.pdf}
 \caption{Subjects experiment: Probability of detecting a drift-rate
 difference (y-axis) for different numbers of subjects (x-axis) and
 different estimation methods (color coded; HB=Hierarchical Bayes,
@@ -874,7 +874,7 @@ higher probability of detecting an effect.}
 \end{figure}
 
 \begin{figure}
-  \includegraphics[width=.5\columnwidth]{regress_detection_headings.pdf}
+  \includegraphics[width=\columnwidth]{fig8.pdf}
 \caption{Trial-by-trial covariate experiment: Probability of detecting
 a trial-by-trial effect on drift-rate (y-axis) with effect-sizes 0.1
 (top plot), 0.3 (middle plot) and 0.5 (bottom plot) for different

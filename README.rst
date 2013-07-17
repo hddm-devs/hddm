@@ -144,7 +144,8 @@ How to cite
 
 If HDDM was used in your research, please cite the following:
 
-Wiecki, T. V., Sofer, I. and Frank, M. J. Hierarchical Bayesian estimation of the drift diffusion model: quantitative comparison with maximum likelihood. Program No. 494.13/CCC30. 2012 Neuroscience Meeting Planner. New Orleans, LA: Society for Neuroscience, 2012.
+Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
+Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
 Getting started
 ===============
