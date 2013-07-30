@@ -1,0 +1,42 @@
+package:
+  name: hddm     # lower case name of package, may contain '-' but no spaces
+  version: 0.5.1.dev    # version of package
+
+source:
+# The source section specifies where the source code of the package is coming
+# from, it may be coming from a source tarball like:
+  git_url: git@github.com:hddm-devs/hddm.git
+  git_tag: develop                                     # (optional)
+
+# the build and runtime requirements:
+requirements:     # (optional)
+  build:
+    - python
+    - numpy
+    - pymc
+    - pandas
+    - matplotlib
+    - kabuki
+    - cython
+    - patsy
+  run:
+    - python
+    - numpy
+    - pymc
+    - pandas
+    - matplotlib
+    - kabuki
+    - patsy
+test:             # (optional)
+# in addition to the run-time requirements, we can specify requirements
+# needed during testing
+  requires:
+    - nose
+
+  imports:
+    - hddm
+# The script run_test.py will be run automatically if it is part of the recipe
+
+about:            # (optional)
+  home: https://ski.clps.brown.edu/hddm_docs/
+  license: BSD
