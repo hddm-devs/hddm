@@ -2,7 +2,8 @@
 cimport numpy as np
 import numpy as np
 
-cdef extern double cdfdif(double t, int x, double *par, double *prob)
+cdef extern from "cdfdif.h":
+    double cdfdif(double t, int x, double *par, double *prob)
 
 cdef extern from "math.h":
     double fabs(double)
