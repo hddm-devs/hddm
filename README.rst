@@ -72,26 +72,22 @@ examine its parameters and fit.
    model.plot_posterior_predictive()
 
 
+For more information about the software and theories behind it,
+please see the main `publication`_.
+
 Installation
 ============
 
 Windows
 -------
 
-The easiest way is to download and install `Anaconda`_ or the
-`Enthought Python Distribution`_ (EPD) which is free for academic
-use.
+The easiest way is to download and install `Anaconda`_.
 
-We recommend using pip to download and install HDDM. The easiest way
-to install pip is via easy_install. Start the windows command shell
-(cmd.exe) and type ::
 
-    easy_install pip
-
-Then install kabuki and HDDM:
+Then install pymc, kabuki and HDDM:
 
 ::
-
+    pip install pymc
     pip install kabuki
     pip install hddm
 
@@ -142,7 +138,7 @@ Then install kabuki and HDDM:
 How to cite
 ===========
 
-If HDDM was used in your research, please cite the following:
+If HDDM was used in your research, please cite the publication_ (link to pdf):
 
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
@@ -169,3 +165,4 @@ Join our low-traffic `mailing list`_.
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://continuum.io/anaconda
+.. _publication: https://github.com/hddm-devs/hddm/blob/develop/docs/paper/HDDM_submission.pdf?raw=true
