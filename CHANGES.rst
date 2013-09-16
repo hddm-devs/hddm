@@ -4,6 +4,13 @@
 Release Notes
 =============
 
+HDDM 0.5.2 (bugfix release)
+===========================
+
+* Refactored posterior predictive plots and added tutorial:
+  http://ski.clps.brown.edu/hddm_docs/tutorial_post_pred.html
+* Smaller bugfixes.
+
 HDDM 0.5
 ========
 
