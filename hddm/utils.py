@@ -7,6 +7,7 @@ import sys
 import kabuki
 import pandas as pd
 import string
+from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
@@ -534,16 +535,15 @@ def gen_ppc_stats(quantiles=(10, 30, 50, 70, 90)):
     return stats
 
 
-def post_pred_check(model, **kwargs):
-    """Run posterior predictive check on a model.
+def post_pred_stats(data, sim_datasets, **kwargs):
+    """Calculate a set of summary statistics over posterior predictives.
 
     :Arguments:
-        model : kabuki.Hierarchical
-            Kabuki model over which to compute the ppc on.
+        data : pandas.DataFrame
+
+        sim_data : pandas.DataFrame
 
     :Optional:
-        samples : int
-            How many samples to generate for each node.
         bins : int
             How many bins to use for computing the histogram.
         evals : dict
@@ -551,17 +551,20 @@ def post_pred_check(model, **kwargs):
             :Example: {'percentile': scoreatpercentile}
         plot : bool
             Whether to plot the posterior predictive distributions.
-        progress_bar: bool
+        progress_bar : bool
             Display progress bar while sampling.
-
 
     :Returns:
         Hierarchical pandas.DataFrame with the different statistics.
 
     """
+    data = flip_errors(data)
+    sim_datasets = flip_errors(sim_datasets)
 
-    stats = gen_ppc_stats()
-    return kabuki.analyze.post_pred_check(model, stats=stats, field='rt', **kwargs)
+    if 'stats' not in kwargs:
+        kwargs['stats'] = gen_ppc_stats()
+
+    return kabuki.analyze.post_pred_stats(data['rt'], sim_datasets['rt'], **kwargs)
 
 def plot_posteriors(model, **kwargs):
     """Generate posterior plots for each parameter.
