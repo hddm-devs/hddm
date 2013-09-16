@@ -453,34 +453,9 @@ Posterior predictive check
 A very elegant method to compare models is to sample new data sets
 from the estimated model and see how well these simulated data sets
 corresponds to the actual data on some measurement (e.g. is the mean
-RT well recovered by this model?). This test is called posterior
-predictive check and you can run it like this:
+RT well recovered by this model?).
 
-::
-
-   from hddm.utils import post_pred_check
-   post_pred_check(model)
-
-This will return a table of statistics which might look like this:
-
-::
-
-		   observed  credible   quantile       SEM  mahalanobis      mean       std      2.5q       25q       50q       75q     97.5q  NaN
-    node stat
-    wfpt std_ub    0.353652         1  49.298597  0.000647     0.153912  0.379096  0.165319  0.120420  0.265707  0.354912  0.465269  0.778341    1
-	 mean_lb  -0.958116         1  58.200000  0.000400     0.205017 -0.978110  0.097522 -1.206278 -1.030025 -0.971118 -0.911902 -0.811491    0
-	 mean_ub   0.958336         1  51.703407  0.000216     0.090950  0.973042  0.161691  0.699320  0.859808  0.949264  1.067915  1.333156    1
-	 accuracy  0.200000         1  55.700000  0.000005     0.029034  0.197720  0.078529  0.060000  0.140000  0.180000  0.240000  0.380000    0
-
-The rows correspond to the different observed nodes and summary
-statistics that the model was evaluated on (e.g. mean_lb which represents the mean RT of lower boundary responses)). The columns correspond to the
-statistics of how the corresponding summary statistic of the real data
-relates to the simulated data sets. E.g. ``wfpt``, ``accuracy``, ``Observed``
-represents the accuracy of the observed data. ``Quantile`` represents in
-which quantile this mean RT is in the mean RT taken over the simulate
-data sets. If our model did a great job at recovering we wanted it to
-produce RTs that have the same mean as our actual data. So the closer
-this is to the 50th quantile the better.
+The best place to learn about this is :ref:``Posterior Predictive Tutorial <chap_tutorial_post_pred>``.
 
 
 Run Quantile Opimization

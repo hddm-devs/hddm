@@ -9,4 +9,5 @@ Tutorial
    :maxdepth: 2
 
    tutorial_python
+   tutorial_post_pred
    tutorial_regression_stimcoding
