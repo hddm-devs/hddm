@@ -28,10 +28,6 @@ Lets do a simple analysis using simulated data. First, import HDDM.
 
     import hddm
 
-.. parsed-literal::
-
-    Couldn't import dot_parser, loading of dot files will not be possible.
-
 
 Simulate data from known parameters and two conditions (easy and hard).
 
