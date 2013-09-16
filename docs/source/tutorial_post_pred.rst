@@ -396,7 +396,7 @@ anything but you'll get the idea.
     plt.xlabel('slope')
 
 
-.. image:: tutorial_post_pred_files/tutorial_post_pred_32_1.png
+.. image:: post_pred_plot.png
 
 
 As you can see, the simulated data sets have on average no correlation
