@@ -332,7 +332,8 @@ def test_posterior_plots_breakdown():
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()
-    hddm.utils.post_pred_check(m)
+    ppc = hddm.utils.post_pred_gen(m, samples=10)
+    hddm.utils.post_pred_stats(data, ppc)
 
 if __name__=='__main__':
     print "Run nosetest.py"
