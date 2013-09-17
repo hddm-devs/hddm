@@ -4,6 +4,7 @@ include hddm/models *.py
 recursive-include hddm/examples *.py *.csv *.conf *.png
 include scripts/*.py
 include src/*.c
+include src/*.h
 include src/*.pyx
 include src/*.pxi
 recursive-include docs *.rst
