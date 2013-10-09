@@ -5,16 +5,9 @@
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu), 2010
 # GPLv3
-from __future__ import division
-from copy import copy
+
 import numpy as np
 cimport numpy as np
-
-import scipy as sp
-import scipy.stats
-from scipy.stats.distributions import norm
-
-cimport cython
 
 # Define data type
 DTYPE = np.double
@@ -55,15 +48,19 @@ cdef DTYPE_t fptpdf_single(DTYPE_t t, double z, double a, double driftrate, doub
 
     return (driftrate*(norm_cdf(azu)-norm_cdf(azumax)) + sddrift*(norm_pdf(azumax)-norm_pdf(azu)))/z
 
-cdef inline bint p_outlier_in_range(double p_outlier): return (p_outlier >= 0) & (p_outlier <= 1)
+cdef inline bint p_outlier_in_range(double p_outlier):
+    if (p_outlier >= 0) and (p_outlier <= 1):
+        return 1
+    else:
+        return 0
 
 def lba_like(np.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, double sv, double v0, double v1, bint normalize_v=False, double p_outlier=0, double w_outlier=0):
-    cdef np.ndarray[DTYPE_t, ndim=1] rt = (np.abs(value) - ter)
     cdef Py_ssize_t size = value.shape[0]
     cdef Py_ssize_t i = 0
     cdef double sum_logp = 0
     cdef double p = 0
     cdef double wp_outlier = w_outlier * p_outlier
+    cdef double rt
 
     assert sv >= 0, "sv must be larger than 0"
 
@@ -79,12 +76,15 @@ def lba_like(np.ndarray[DTYPE_t, ndim=1] value, double z, double a, double ter, 
 
     #print "z: %f, a: %f, ter: %i, v: %f, sv: %f" % (z, a, ter, v[0], sv)
     for i in range(size):
-        if value[i] > 0:
-            p = (1-fptcdf_single(fabs(value[i]), z, a, v1, sv)) * \
-                         fptpdf_single(fabs(value[i]), z, a, v0, sv)
-        else:
-            p = (1-fptcdf_single(fabs(value[i]), z, a, v0, sv)) * \
-                       fptpdf_single(fabs(value[i]), z, a, v1, sv)
+        rt = fabs(value[i]) - ter
+        if rt < 0:
+            p = 0
+        elif value[i] > 0:
+            p = (1-fptcdf_single(rt, z, a, v1, sv)) * \
+                fptpdf_single(rt, z, a, v0, sv)
+        elif value[i] < 0:
+            p = (1-fptcdf_single(rt, z, a, v0, sv)) * \
+                fptpdf_single(rt, z, a, v1, sv)
 
         p = p * (1 - p_outlier) + wp_outlier
         if p == 0:

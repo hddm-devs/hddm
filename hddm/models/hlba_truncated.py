@@ -16,6 +16,15 @@ def lba_like(value, t, A, b, s, v, p_outlier, w_outlier=.1):
     """
     return hddm.lba.lba_like(value['rt'], A, b, t, s, v, 0, normalize_v=True, p_outlier=p_outlier, w_outlier=w_outlier)
 
+def pdf(self, x):#value, t, A, b, s, v, p_outlier, w_outlier=.1):
+    """LBA likelihood.
+    """
+    p = np.empty_like(x)
+    for i, xi in enumerate(x):
+        p[i] = hddm.lba.lba_like(np.atleast_1d(xi), self.parents['A'], self.parents['b'], self.parents['t'], self.parents['s'], self.parents['v'], 0, normalize_v=True, p_outlier=self.parents['p_outlier'], w_outlier=.1)
+
+    return np.exp(p)
+
 def lba_random(t, A, b, s, v, size=1):
     """Generate RTs from LBA process.
     """
@@ -47,19 +56,25 @@ def lba_random(t, A, b, s, v, size=1):
     return sampled_rts
 
 lba_class = stochastic_from_dist(name='lba_like', logp=lba_like, random=lba_random)
+lba_class.pdf = pdf
 
 class HLBA(AccumulatorModel):
-    def __init__(self, *args, **kwargs):
-        self.informative = kwargs.get('informative', True)
+    def __init__(self, data, **kwargs):
+        self.informative = kwargs.pop('informative', True)
         self.std_depends = kwargs.get('std_depends', False)
-        self.slice_widths = {'b':1, 'A':.05, 'A_std': 1, 'v1': .5, 'v2': .5, 'p_outlier':1.}
-        self.p_outlier = kwargs.get('p_outlier', 0.)
+        self.slice_widths = {'b': 1, 'b_std': .5,
+                             'A':1, 'A_std': .5,
+                             'v': 1., 'v_std': .5, 'v_certainty': 10,
+                             't': 0.05, 't_std': .1,
+                             'p_outlier':1.,
+                             's': .2, 's_std': .05}
+        self.p_outlier = kwargs.pop('p_outlier', 0.)
         if self.p_outlier is True:
             self.include = ['p_outlier']
         else:
             self.include = []
 
-        super(hddm.AccumulatorModel, self).__init__(*args, **kwargs)
+        super(HLBA, self).__init__(data, **kwargs)
 
     def pre_sample(self, use_slice=True):
         from kabuki import steps
@@ -114,9 +129,10 @@ class HLBA(AccumulatorModel):
     def _create_knodes_informative(self):
         knodes = OrderedDict()
         knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, std_value=0.2))
-        knodes.update(self._create_family_gamma_gamma_hnormal('b', g_mean=2, g_std=2, std_std=2, std_value=0.1, value=2))
+        knodes.update(self._create_family_gamma_gamma_hnormal('b', g_mean=1.5, g_std=.75, std_std=2, std_value=0.1, value=1.5))
         knodes.update(self._create_family_gamma_gamma_hnormal('A', g_mean=.5, g_std=1, std_std=2, std_value=0.1, value=.2))
-        knodes.update(self._create_family_gamma_gamma_hnormal('s', g_mean=1, g_std=2, std_std=2, value=1.))
+        knodes['s_bottom'] = Knode(pm.HalfNormal, 's', tau=0.3**-2, value=0.1, depends=self.depends['s'])
+        #knodes.update(self._create_family_gamma_gamma_hnormal('s', g_mean=1, g_std=2, std_std=2, value=1.))
         knodes.update(self._create_family_beta('v', value=.75, g_mean=.75, g_certainty=0.75**-2))
         if 'p_outlier' in self.include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
@@ -131,7 +147,8 @@ class HLBA(AccumulatorModel):
         knodes.update(self._create_family_trunc_normal('t', lower=0, upper=1, value=.001))
         knodes.update(self._create_family_trunc_normal('A', lower=1e-3, upper=10, value=.2))
         knodes.update(self._create_family_trunc_normal('b', lower=1e-3, upper=10, value=1.5))
-        knodes.update(self._create_family_trunc_normal('s', lower=0, upper=10, value=1.))
+        knodes['s_bottom'] = Knode(pm.Uniform, 's', lower=1e-6, upper=3, value=0.1, depends=self.depends['s'])
+        #knodes.update(self._create_family_trunc_normal('s', lower=0, upper=10, value=1.))
         knodes.update(self._create_family_trunc_normal('v', lower=0, upper=1, value=.5))
         if 'p_outlier' in self.include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
