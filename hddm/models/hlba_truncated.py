@@ -128,7 +128,7 @@ class HLBA(AccumulatorModel):
 
     def _create_knodes_informative(self):
         knodes = OrderedDict()
-        knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, std_value=0.2))
+        knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=1., value=0.001, std_std=.5, std_value=0.2))
         knodes.update(self._create_family_gamma_gamma_hnormal('b', g_mean=1.5, g_std=.75, std_std=2, std_value=0.1, value=1.5))
         knodes.update(self._create_family_gamma_gamma_hnormal('A', g_mean=.5, g_std=1, std_std=2, std_value=0.1, value=.2))
         knodes['s_bottom'] = Knode(pm.HalfNormal, 's', tau=0.3**-2, value=0.1, depends=self.depends['s'])
