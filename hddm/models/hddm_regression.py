@@ -210,9 +210,9 @@ class HDDMRegressor(HDDM):
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d['wfpt_reg_class']
-        print "WARNING: Will not save custom link functions."
         for model in d['model_descrs']:
             if 'link_func' in model:
+                print "WARNING: Will not save custom link functions."
                 del model['link_func']
         return d
 
