@@ -212,7 +212,8 @@ class HDDMRegressor(HDDM):
         del d['wfpt_reg_class']
         print "WARNING: Will not save custom link functions."
         for model in d['model_descrs']:
-            del model['link_func']
+            if 'link_func' in model:
+                del model['link_func']
         return d
 
     def __setstate__(self, d):
