@@ -138,7 +138,7 @@ Then install kabuki and HDDM:
 How to cite
 ===========
 
-If HDDM was used in your research, please cite the publication_ (link to pdf):
+If HDDM was used in your research, please cite the publication_:
 
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
@@ -165,4 +165,4 @@ Join our low-traffic `mailing list`_.
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://continuum.io/anaconda
-.. _publication: https://github.com/hddm-devs/hddm/blob/develop/docs/paper/HDDM_submission.pdf?raw=true
+.. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
