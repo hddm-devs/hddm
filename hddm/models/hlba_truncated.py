@@ -4,6 +4,7 @@ from collections import OrderedDict
 import numpy as np
 from numpy.random import rand, randn
 import pymc as pm
+import pandas as pd
 
 import hddm
 import kabuki
@@ -25,11 +26,15 @@ def pdf(self, x):#value, t, A, b, s, v, p_outlier, w_outlier=.1):
 
     return np.exp(p)
 
-def lba_random(t, A, b, s, v, size=1):
+def lba_random(size=100, **params):
     """Generate RTs from LBA process.
     """
-    v0 = v
-    v1 = 1 - v
+    t = params['t']
+    A = params['A']
+    b = params['b']
+    s = params['s']
+    v0 = params['v']
+    v1 = 1 - v0
     sampled_rts = np.empty(size)
     for i_sample in xrange(size):
         positive = False
@@ -53,10 +58,151 @@ def lba_random(t, A, b, s, v, size=1):
                 else:
                     sampled_rts[i_sample] = -rt1
 
-    return sampled_rts
+    data = pd.DataFrame(sampled_rts, columns=['rt'])
+    data['response'] = 1.
+    data['response'][data['rt']<0] = 0.
+    data['rt'] = np.abs(data['rt'])
+
+    return data
+
 
 lba_class = stochastic_from_dist(name='lba_like', logp=lba_like, random=lba_random)
 lba_class.pdf = pdf
+
+def gen_single_params_set():
+    """Returns a dict of DDM parameters with random values for a singel conditin
+    the function is used by gen_rand_params.
+    """
+    params = {}
+    params['s'] = 2.5*rand()
+    params['b'] = 0.5+rand()*1.5
+    params['A'] = rand() * params['b']
+    params['v'] = rand()
+    params['t'] = 0.2+rand()*0.3
+
+    return params
+
+
+def gen_rand_params(cond_dict=None, seed=None):
+    """Returns a dict of DDM parameters with random values.
+
+        :Optional:
+            cond_dict : dictionary
+                cond_dict is used when multiple conditions are desired.
+                the dictionary has the form of {param1: [value_1, ... , value_n], param2: [value_1, ... , value_n]}
+                and the function will output n sets of parameters. each set with values from the
+                appropriate place in the dictionary
+                for instance if cond_dict={'v': [0, 0.5, 1]} then 3 parameters set will be created.
+                the first with v=0 the second with v=0.5 and the third with v=1.
+
+            seed: float
+                random seed
+
+            Output:
+            if conditions is None:
+                params: dictionary
+                    a dictionary holding the parameters values
+            else:
+                cond_params: a dictionary holding the parameters for each one of the conditions,
+                    that has the form {'c1': params1, 'c2': params2, ...}
+                    it can be used directly as an argument in gen_rand_data.
+                merged_params:
+                     a dictionary of parameters that can be used to validate the optimization
+                     and learning algorithms.
+    """
+
+
+    #set seed
+    if seed is not None:
+        np.random.seed(seed)
+
+    #if there is only a single condition then we can use gen_single_params_set
+    if cond_dict is None:
+       return gen_single_params_set()
+
+    #generate original parameter set
+    org_params = gen_single_params_set()
+
+    #create a merged set
+    merged_params = org_params.copy()
+    for name in cond_dict.iterkeys():
+        del merged_params[name]
+
+    cond_params = {};
+    n_conds = len(cond_dict.values()[0])
+    for i in range(n_conds):
+        #create a set of parameters for condition i
+        #put them in i_params, and in cond_params[c#i]
+        i_params = org_params.copy()
+        for name in cond_dict.iterkeys():
+            i_params[name] = cond_dict[name][i]
+            cond_params['c%d' %i] = i_params
+
+            #update merged_params
+            merged_params['%s(c%d)' % (name, i)] = cond_dict[name][i]
+
+    return cond_params, merged_params
+
+
+def gen_rand_data(params=None, **kwargs):
+    """Generate simulated RTs with random parameters.
+
+       :Optional:
+            params : dict <default=generate randomly>
+                Either dictionary mapping param names to values.
+
+                Or dictionary mapping condition name to parameter
+                dictionary (see example below).
+
+                If not supplied, takes random values.
+
+            n_fast_outliers : int <default=0>
+                How many fast outliers to add (outlier_RT < ter)
+
+            n_slow_outliers : int <default=0>
+                How many late outliers to add.
+
+            The rest of the arguments are forwarded to kabuki.generate.gen_rand_data
+
+       :Returns:
+            data array with RTs
+            parameter values
+
+       :Example:
+            # Generate random data set
+            >>> data, params = hddm.generate.gen_rand_data({'v':0, 'a':2, 't':.3},
+                                                           size=100, subjs=5)
+
+            # Generate 2 conditions
+            >>> data, params = hddm.generate.gen_rand_data({'cond1': {'v':0, 'a':2, 't':.3},
+                                                            'cond2': {'v':1, 'a':2, 't':.3}})
+
+       :Notes:
+            Wrapper function for kabuki.generate.gen_rand_data. See
+            the help doc of that function for more options.
+
+    """
+
+    if params is None:
+        params = gen_rand_lba_params()
+
+    from numpy import inf
+
+    # set valid param ranges
+    bounds = {'b': (0, inf),
+              'A': (0, inf),
+              'v': (0, 1),
+              's': (0, inf),
+              't': (0, inf)
+    }
+
+    if 'share_noise' not in kwargs:
+        kwargs['share_noise'] = set(['b','A','t','s','v'])
+
+    # Create RT data
+    data, subj_params = kabuki.generate.gen_rand_data(lba_random, params,
+                                                      bounds=bounds, **kwargs)
+    return data, subj_params
 
 class HLBA(AccumulatorModel):
     def __init__(self, data, **kwargs):
@@ -64,11 +210,19 @@ class HLBA(AccumulatorModel):
         self.std_depends = kwargs.get('std_depends', False)
         self.slice_widths = {'b': 1, 'b_std': .5,
                              'A':1, 'A_std': .5,
-                             'v': 1., 'v_std': .5, 'v_certainty': 10,
+                             'v': 1., 'v_std': .5, 'v_certainty': 5,
+                             't': 0.05, 't_std': .1,
+                             'p_outlier':1.,
+                             's': .2, 's_std': .05}
+        self.emcee_dispersions = {'b': 1, 'b_std': .5,
+                             'A':.5, 'A_std': .5,
+                             'v': 1., 'v_std': .5, 'v_certainty': 2,
                              't': 0.05, 't_std': .1,
                              'p_outlier':1.,
                              's': .2, 's_std': .05}
         self.p_outlier = kwargs.pop('p_outlier', 0.)
+        self.fix_A = kwargs.pop('fix_A', False)
+
         if self.p_outlier is True:
             self.include = ['p_outlier']
         else:
@@ -130,8 +284,9 @@ class HLBA(AccumulatorModel):
         knodes = OrderedDict()
         knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=1., value=0.001, std_std=.5, std_value=0.2))
         knodes.update(self._create_family_gamma_gamma_hnormal('b', g_mean=1.5, g_std=.75, std_std=2, std_value=0.1, value=1.5))
-        knodes.update(self._create_family_gamma_gamma_hnormal('A', g_mean=.5, g_std=1, std_std=2, std_value=0.1, value=.2))
-        knodes['s_bottom'] = Knode(pm.HalfNormal, 's', tau=0.3**-2, value=0.1, depends=self.depends['s'])
+        if self.fix_A is False:
+            knodes.update(self._create_family_gamma_gamma_hnormal('A', g_mean=.5, g_std=1, std_std=2, std_value=0.1, value=.2))
+        knodes['s_bottom'] = Knode(pm.HalfNormal, 's', tau=0.3**-2, value=1., depends=self.depends['s'])
         #knodes.update(self._create_family_gamma_gamma_hnormal('s', g_mean=1, g_std=2, std_std=2, value=1.))
         knodes.update(self._create_family_beta('v', value=.75, g_mean=.75, g_certainty=0.75**-2))
         if 'p_outlier' in self.include:
@@ -145,7 +300,8 @@ class HLBA(AccumulatorModel):
         """
         knodes = OrderedDict()
         knodes.update(self._create_family_trunc_normal('t', lower=0, upper=1, value=.001))
-        knodes.update(self._create_family_trunc_normal('A', lower=1e-3, upper=10, value=.2))
+        if self.fix_A is False:
+            knodes.update(self._create_family_trunc_normal('A', lower=1e-3, upper=10, value=.2))
         knodes.update(self._create_family_trunc_normal('b', lower=1e-3, upper=10, value=1.5))
         knodes['s_bottom'] = Knode(pm.Uniform, 's', lower=1e-6, upper=3, value=0.1, depends=self.depends['s'])
         #knodes.update(self._create_family_trunc_normal('s', lower=0, upper=10, value=1.))
@@ -159,7 +315,7 @@ class HLBA(AccumulatorModel):
         lba_parents = OrderedDict()
         lba_parents['t'] = knodes['t_bottom']
         lba_parents['v'] = knodes['v_bottom']
-        lba_parents['A'] = knodes['A_bottom']
+        lba_parents['A'] = knodes['A_bottom'] if self.fix_A is False else self.fix_A
         lba_parents['b'] = knodes['b_bottom']
         lba_parents['s'] = knodes['s_bottom']
         lba_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
@@ -178,5 +334,5 @@ class HLBA(AccumulatorModel):
 
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:
-            kwargs['value_range'] = np.linspace(-1.5, 1.5, 100)
+            kwargs['value_range'] = np.linspace(-5, 5, 100)
         kabuki.analyze.plot_posterior_predictive(self, *args, **kwargs)

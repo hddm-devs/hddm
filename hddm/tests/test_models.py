@@ -62,7 +62,7 @@ class TestSingleBreakdown(unittest.TestCase):
         params = hddm.generate.gen_rand_params()
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=10)
         model = hddm.models.HLBA(data)
-        model.find_starting_values()
+        #model.find_starting_values()
         model.sample(self.iter, burn=self.burn)
 
     def test_HDDM(self):
