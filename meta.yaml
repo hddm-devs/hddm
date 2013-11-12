@@ -1,12 +1,12 @@
 package:
   name: hddm     # lower case name of package, may contain '-' but no spaces
-  version: 0.5.1.dev    # version of package
+  version: 0.5.2    # version of package
 
 source:
 # The source section specifies where the source code of the package is coming
 # from, it may be coming from a source tarball like:
   git_url: git@github.com:hddm-devs/hddm.git
-  git_tag: develop                                     # (optional)
+  git_tag: master                                     # (optional)
 
 # the build and runtime requirements:
 requirements:     # (optional)
