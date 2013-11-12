@@ -10,6 +10,12 @@ HDDM 0.5.2 (bugfix release)
 * Refactored posterior predictive plots and added tutorial:
   http://ski.clps.brown.edu/hddm_docs/tutorial_post_pred.html
 * Smaller bugfixes.
+* Works with PyMC 2.3.
+* Experimental features:
+    * Updated HLBA model but currently has bad recovery.
+    * Added sample_emcee() to use the emcee parallel sampler.
+      Seems to work but requires some tuning and does not seem
+      to beat slice sampling.
 
 HDDM 0.5
 ========
