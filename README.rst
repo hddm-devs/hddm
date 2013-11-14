@@ -81,15 +81,12 @@ Installation
 Windows
 -------
 
-The easiest way is to download and install `Anaconda`_.
 
-
-Then install pymc, kabuki and HDDM:
-
-::
-    pip install pymc
-    pip install kabuki
-    pip install hddm
+1. Download and install `Anaconda`_.
+2. Go to Start->Programs->Anaconda->Anaconda command prompt.
+3. Enter easy_install pymc
+4. Enter easy_install kabuki
+5. Enter easy_install hddm
 
 
 Linux (Debian based, such as Ubuntu)
@@ -164,5 +161,5 @@ Join our low-traffic `mailing list`_.
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
-.. _Anaconda: http://continuum.io/anaconda
+.. _Anaconda: http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-1.8.0-Windows-x86.exe
 .. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
