@@ -5,8 +5,8 @@ package:
 source:
 # The source section specifies where the source code of the package is coming
 # from, it may be coming from a source tarball like:
-  git_url: git@github.com:hddm-devs/hddm.git
-  git_tag: master                                     # (optional)
+  fn: v0.5.2.zip
+  url: https://github.com/hddm-devs/hddm/archive/v0.5.2.zip
 
 # the build and runtime requirements:
 requirements:     # (optional)
@@ -27,15 +27,6 @@ requirements:     # (optional)
     - matplotlib
     - kabuki
     - patsy
-test:             # (optional)
-# in addition to the run-time requirements, we can specify requirements
-# needed during testing
-  requires:
-    - nose
-
-  imports:
-    - hddm
-# The script run_test.py will be run automatically if it is part of the recipe
 
 about:            # (optional)
   home: https://ski.clps.brown.edu/hddm_docs/
