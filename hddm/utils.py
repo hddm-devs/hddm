@@ -28,11 +28,11 @@ def flip_errors(data):
         return data
 
     # Copy data
-    data = data.copy()
+    data = pd.DataFrame(data.copy())
 
     # Flip sign for lower boundary response
     idx = data['response'] == 0
-    data['rt'][idx] = -data['rt'][idx]
+    data['rt'].ix[idx] = -data['rt'].ix[idx]
 
     return data
 
