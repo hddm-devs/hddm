@@ -1,9 +1,9 @@
 fptcdf=function(z,x0max,chi,driftrate,sddrift) {
-  zs=z*sddrift; 
+  zs=z*sddrift;
   zu=z*driftrate;
   chiminuszu=chi-zu;
   xx=chiminuszu-x0max
-  chizu=chiminuszu/zs; 
+  chizu=chiminuszu/zs;
   chizumax=xx/zs
   tmp1=zs*(dnorm(chizumax)-dnorm(chizu))
   tmp2=xx*pnorm(chizumax)-chiminuszu*pnorm(chizu)
@@ -16,7 +16,7 @@ fptpdf=function(z,x0max,chi,driftrate,sddrift) {
   chiminuszu=chi-zu
   chizu=chiminuszu/zs
   chizumax=(chiminuszu-x0max)/zs
-  (driftrate*(pnorm(chizu)-pnorm(chizumax)) + 
+  (driftrate*(pnorm(chizu)-pnorm(chizumax)) +
     sddrift*(dnorm(chizumax)-dnorm(chizu)))/x0max
 }
 
@@ -29,7 +29,7 @@ allrtCDF=function(t,x0max,chi,drift,sdI) {
 }
 
 n1PDF=function(t,x0max,chi,drift,sdI) {
-  # Generates defective PDF for responses on node #1. 
+  # Generates defective PDF for responses on node #1.
   N=length(drift) # Number of responses.
   if (N>2) {
     tmp=array(dim=c(length(t),N-1))
@@ -42,7 +42,7 @@ n1PDF=function(t,x0max,chi,drift,sdI) {
 }
 
 n1CDF=function(t,x0max,chi,drift,sdI) {
-  # Generates defective CDF for responses on node #1. 
+  # Generates defective CDF for responses on node #1.
   outs=numeric(length(t)) ; bounds=c(0,t)
   for (i in 1:length(t)) {
     tmp="error"
@@ -68,7 +68,7 @@ n1CDF=function(t,x0max,chi,drift,sdI) {
 }
 
 n1mean=function(x0max,chi,drift,sdI) {
-  # Generates mean RT for responses on node #1. 
+  # Generates mean RT for responses on node #1.
    pc=n1CDF(Inf,x0max,chi,drift,sdI)
    fn=function(t,x0max,chi,drift,sdI,pc) t*n1PDF(t,x0max,chi,drift,sdI)/pc
    tmp=integrate(f=fn,lower=0,upper=100*chi,x0max=x0max,chi=chi,pc=pc,
@@ -92,10 +92,10 @@ actPDF=function(z,t,x0max,chi,drift,sdI) {
   tmp1=pnorm((z-x0max)/t,mean=drift,sd=sdI)
   tmp2=pnorm(z/t,mean=drift,sd=sdI)
   (-tmp1+tmp2)/x0max
-}  
-  
+}
+
 lbameans=function(Is,sdI,x0max,Ter,chi) {
-  # Ter should be a vector of length ncond, the others atomic, 
+  # Ter should be a vector of length ncond, the others atomic,
   # except Is which is ncond x 2.
   ncond=length(Is)/2
   outm<-outp<-array(dim=c(ncond,2))
@@ -109,7 +109,7 @@ lbameans=function(Is,sdI,x0max,Ter,chi) {
 }
 
 deadlineaccuracy=function(t,x0max,chi,drift,sdI,guess=.5,meth="noboundary") {
-  # Works out deadline accuracy, using one of three 
+  # Works out deadline accuracy, using one of three
   # methods:
   #   - noboundary = no implicity boundaries.
   #   - partial =  uses implicit boundaries, and partial information.
@@ -140,11 +140,11 @@ deadlineaccuracy=function(t,x0max,chi,drift,sdI,guess=.5,meth="noboundary") {
   }
   if (meth=="noboundary") {
     noboundaries(t,x0max,chi,drift,sdI,ulimit=Inf)
-  } else { 
+  } else {
     pt=n1CDF(t=t,x0max=x0max,chi=chi,drift=drift,sdI=sdI)
     pa=allrtCDF(t=t,x0max=x0max,chi=chi,drift=drift,sdI=sdI)
     pguess=switch(meth,"nopartial"=guess*(1-pa),"partial"=
       noboundaries(t=t,x0max=x0max,chi=chi,drift=drift,sdI=sdI,ulimit=chi))
-    pt+pguess  
+    pt+pguess
   }
 }
