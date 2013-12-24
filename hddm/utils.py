@@ -743,7 +743,101 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 def pretty_tag(tag):
     return tag[0] if len(tag) == 1 else string.join(tag, ', ')
 
-def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
+def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, draw_lines=True):
+    """
+    qp plot
+    Input:
+        x : either a HDDM model or data
+
+        grouby: <list>
+            a list of conditions to group the data. if x is a model then groupby is ignored.
+
+        quantiles : sequence
+            sequence of quantiles
+
+        ncols : int
+            number of columns in output figure
+
+        draw_lines: boolean (default: True)
+            draw lines to connect the same quantiles across conditions
+    """
+    # if x is a hddm model use _qp_plot_model
+    if isinstance(x, hddm.HDDMBase):
+        return _qp_plot_model(model=x, quantiles=quantiles, ncols=ncols)
+
+    # else x is a dataframe
+    data = x.copy()
+
+    # add subj_idx column if necessary
+    if 'subj_idx' not in data.columns:
+        data['subj_idx'] = 1
+    if groupby is None:
+        groupby = ['tmp_cond12331']
+        data[groupby[0]] = 1
+
+    # compute quantiles for each condition and subject
+    stats = {}
+    for i_subj, (subj, subj_data) in enumerate(data.groupby(['subj_idx'])):
+        for key, cond_data in subj_data.groupby(groupby):
+            if not stats.has_key(key):
+                stats[key] = {}
+            stats[key][subj] = data_quantiles(cond_data, quantiles=quantiles)
+
+    #plot group quantiles
+    fig, ax = plt.subplots(1,1)
+    ax.set_title('Group')
+    nq = len(quantiles)
+    points = np.zeros((nq, len(stats)*2))
+    p = np.zeros(len(stats)*2)
+    for i_key, (key, cond_data) in enumerate(stats.items()):
+        q_lower = np.mean([x[0] for x in cond_data.values()],0)
+        q_upper = np.mean([x[1] for x in cond_data.values()],0)
+        p_upper = np.mean([x[2] for x in cond_data.values()],0)
+        points[:,i_key*2] = q_lower
+        points[:,i_key*2+1] = q_upper
+        p[i_key*2] = 1 - p_upper
+        p[i_key*2+1] = p_upper
+
+    _points_to_qp_plot(points, p, ax, draw_lines)
+
+    #create axes for subjects
+    n_subjs = len(data.subj_idx.unique())
+    if ncols is None:
+        ncols = min(4, n_subjs)
+    nrows = int(np.ceil(n_subjs / ncols))
+    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
+
+    #plot single subject model
+    for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
+        points = np.zeros((nq, len(stats)*2))
+        p = np.zeros(len(stats)*2)
+        for i_key, (key, cond_data) in enumerate(stats.items()):
+            points[:,i_key*2] = cond_data[subj_idx][0]
+            points[:,i_key*2+1] = cond_data[subj_idx][1]
+            p[i_key*2] = 1 - cond_data[subj_idx][2]
+            p[i_key*2+1] = cond_data[subj_idx][2]
+
+        ax = axs.item(i_subj)
+        _points_to_qp_plot(points, p, ax, draw_lines)
+        ax.set_title(subj_idx)
+
+
+def _points_to_qp_plot(points, p, ax, draw_lines):
+    """
+    plot the points created by the qp_plot function
+    """
+    idx = p.argsort()
+    points = points[:, idx]
+    p = p[idx]
+    fmt = '-x' if draw_lines else 'x'
+    for i_q in range(points.shape[0]):
+        ax.plot(p, points[i_q,:], fmt, c='b')
+
+    ax.set_xlim(0, 1)
+
+
+
+def _qp_plot_model(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
     """
     qp plot
     Input:
