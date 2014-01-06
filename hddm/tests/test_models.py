@@ -209,7 +209,7 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
@@ -225,10 +225,10 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertIn('z', m.include)
-        self.assertIn('z', m.nodes_db.knode_name)
+        self.assertIn('z_Intercept', m.nodes_db.knode_name)
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].parents['ltheta'],
                                    pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].__name__, 'z_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].__name__, 'z_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1].__name__, 'z_cov_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['z'].value)), 1)
@@ -241,10 +241,9 @@ class TestHDDMRegressor(unittest.TestCase):
         del data['subj_idx']
         m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
-        print m.nodes_db.index
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v')
+        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
@@ -259,7 +258,7 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][2].__name__, 'v_cov2_subj.0')
@@ -276,8 +275,8 @@ class TestHDDMRegressor(unittest.TestCase):
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0], pm.Gamma))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0].__name__, 'a_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0].__name__, 'a_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
@@ -292,7 +291,7 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
@@ -318,11 +317,26 @@ class TestHDDMRegressor(unittest.TestCase):
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_subj.0')
+        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
         self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1], pm.Normal))
         self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1].__name__, 'v_C(condition)[T.c1]_subj.0')
         self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].value)), 1)
 
+    def test_categorical_wo_intercept(self):
+        params = hddm.generate.gen_rand_params(cond_dict={'a': [1, 2, 3]})
+        data, params_true = hddm.generate.gen_rand_data(params[0], size=10, subjs=4)
+        data = pd.DataFrame(data)
+        data['cov'] = 1.
+        m = hddm.HDDMRegressor(data, 'a ~ 0 + C(condition) * cov',
+                               group_only_regressors=False)
+        m.sample(self.iter, burn=self.burn)
+
+        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c0]_subj.0']['node'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c1]_subj.0']['node'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c2]_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.ix['a_C(condition)[T.c1]:cov_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.ix['a_C(condition)[T.c2]:cov_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.ix['a_cov_subj.0']['node'], pm.Gamma)
 
 def test_posterior_plots_breakdown():
     params = hddm.generate.gen_rand_params()

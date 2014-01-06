@@ -234,15 +234,38 @@ class HDDMRegressor(HDDM):
         # with regressors.
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
-        #create regressor params
+        # This is in dire need of refactoring. Like any monster, it just grew over time.
+        # The main problem is that it's not always clear which prior to use. For the intercept
+        # we want to use the original parameters' prior. Also for categoricals that do not
+        # have an intercept, but not when the categorical is part of an interaction....
+
+        # create regressor params
         for reg in self.model_descrs:
             reg_parents = {}
-            for param in reg['params']:
-                inter = param.find('Intercept')
-                if inter != -1:
-                    param_lookup = param[:inter-1]
-                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(set(param_lookup))
+            # Find intercept parameter
+            intercept = np.asarray([param.find('Intercept') for param in reg['params']]) != -1
+            # If no intercept specified (via 0 + C()) assume all C() are different conditions
+            # -> all are intercepts
+            if not np.any(intercept):
+                # Has categorical but no interaction
+                intercept = np.asarray([(param.find('C(') != -1) and (param.find(':') == -1)
+                                        for param in reg['params']])
+
+            for inter, param in zip(intercept, reg['params']):
+                if inter:
+                    # Intercept parameter should have original prior (not centered on 0)
+                    param_lookup = param[:param.find('_')]
+                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes([param_lookup])
+                    # Rename nodes to avoid collissions
+                    names = reg_family.keys()
+                    for name in names:
+                        knode = reg_family.pop(name)
+                        knode.name = knode.name.replace(param_lookup, param, 1)
+                        reg_family[name.replace(param_lookup, param, 1)] = knode
+                    param_lookup = param
+
                 else:
+                    #param_lookup = param[:param.find('_')]
                     reg_family = self._create_family_normal(param)
                     param_lookup = param
 
@@ -251,6 +274,7 @@ class HDDMRegressor(HDDM):
                     reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param_lookup)
                 knodes.update(reg_family)
                 self.slice_widths[param] = .05
+
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,
