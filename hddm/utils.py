@@ -32,7 +32,7 @@ def flip_errors(data):
 
     # Flip sign for lower boundary response
     idx = data['response'] == 0
-    data['rt'].ix[idx] = -data['rt'].ix[idx]
+    data.ix[idx, 'rt'] = -data.ix[idx, 'rt']
 
     return data
 

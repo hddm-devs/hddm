@@ -15,7 +15,7 @@ from kabuki.utils import stochastic_from_dist
 def lba_like(value, t, A, b, s, v, p_outlier, w_outlier=.1):
     """LBA likelihood.
     """
-    return hddm.lba.lba_like(value['rt'], A, b, t, s, v, 0, normalize_v=True, p_outlier=p_outlier, w_outlier=w_outlier)
+    return hddm.lba.lba_like(value['rt'].values, A, b, t, s, v, 0, normalize_v=True, p_outlier=p_outlier, w_outlier=w_outlier)
 
 def pdf(self, x):#value, t, A, b, s, v, p_outlier, w_outlier=.1):
     """LBA likelihood.

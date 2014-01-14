@@ -49,7 +49,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #create likelihood function
     def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
-        return hddm.wfpt.wiener_like(x['rt'], v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
+        return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 
 
     #create random function
@@ -241,4 +241,3 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
 
 #create default Wfpt class
 Wfpt = generate_wfpt_stochastic_class()
-

@@ -9,7 +9,6 @@ import pymc as pm
 import numpy as np
 import pandas as pd
 import nose
-pd.set_printoptions(precision=4)
 from nose import SkipTest
 
 import hddm
@@ -303,7 +302,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data['cov'] = 1.
         # Create one merged column
         data['condition2'] = 'merged'
-        data[data.condition == 'c1']['condition2'] = 'single'
+        data.ix[data.condition == 'c1', 'condition2'] = 'single'
         self.assertRaises(AssertionError, hddm.HDDMRegressor, data, 'v ~ cov', depends_on={'v_Intercept': 'condition2'}, group_only_regressors=True)
 
     def test_contrast_coding(self):
