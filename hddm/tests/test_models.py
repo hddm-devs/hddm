@@ -348,5 +348,59 @@ def test_posterior_plots_breakdown():
     ppc = hddm.utils.post_pred_gen(m, samples=10)
     hddm.utils.post_pred_stats(data, ppc)
 
+
+class TestRecovery(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(TestRecovery, self).__init__(*args, **kwargs)
+        self.iter = 2000
+        self.burn = 20
+        np.random.seed(1)
+
+    def runTest(self):
+        return
+
+    @SkipTest
+    def test_HLBA_flat(self):
+        params_true = {'A': .5, 'b': 1, 't': .3, 's': .5, 'v': [.5, .6, .7, .8]}
+        extended_params, merged_params = extend_params(params_true)
+
+        data, params_true = hddm.models.hlba_truncated.gen_rand_data(extended_params, size=100, subjs=1)
+        model = hddm.models.HLBA(data, depends_on={'v': 'condition'})
+        model.find_starting_values()
+        model.sample(self.iter, burn=self.burn)
+        model.gen_stats()
+        model.print_stats()
+        for param, true_val in merged_params.iteritems():
+            np.testing.assert_almost_equal(true_val, model.nodes_db.ix[param]['mean'])
+
+    @SkipTest
+    def test_HLBA_hierarchical(self):
+        params = hddm.models.hlba_truncated.gen_rand_params(cond_dict={'v': [.5, .6, .75, .8]})
+        data, params_true = hddm.models.hlba_truncated.gen_rand_data(params, size=100, subjs=10)
+        model = hddm.models.HLBA(data, depends_on={'v': 'condition'})
+        model.find_starting_values()
+        model.sample(self.iter, burn=self.burn)
+
+
+def extend_params(params):
+    # Find list
+    extend_param = [param for param, val in params.iteritems() if isinstance(val, (list, tuple))]
+    if len(extend_param) > 1:
+        raise ValueError('Only one parameter can be extended')
+    extend_param = extend_param[0]
+
+    fixed_params = [param for param, val in params.iteritems() if not isinstance(val, (list, tuple))]
+
+    out_extended = {}
+    out_merged = {k: params[k] for k in fixed_params}
+    for i_cond, extend_val in enumerate(params[extend_param]):
+         cond_params = {k: params[k] for k in fixed_params}
+         cond_params[extend_param] = extend_val
+         out_extended['cond%i' % i_cond] = cond_params
+
+         out_merged['%s(cond%i)' % (extend_param, i_cond)] = extend_val
+
+    return out_extended, out_merged
+
 if __name__=='__main__':
     print "Run nosetest.py"
