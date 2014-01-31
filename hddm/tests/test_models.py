@@ -193,7 +193,7 @@ class TestHDDMRegressor(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestHDDMRegressor, self).__init__(*args, **kwargs)
 
-        self.iter = 40
+        self.iter = 200
         self.burn = 10
 
     def runTest(self):
