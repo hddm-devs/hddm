@@ -51,7 +51,7 @@ class TestSingleBreakdown(unittest.TestCase):
         self.model_classes = [hddm.models.HDDMTruncated, hddm.models.HDDMTransformed,
                               hddm.models.HDDM]
 
-        self.iter = 40
+        self.iter = 200
         self.burn = 10
 
     def runTest(self):
