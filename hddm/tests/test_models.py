@@ -341,7 +341,7 @@ def test_posterior_plots_breakdown():
     params = hddm.generate.gen_rand_params()
     data, params_subj = hddm.generate.gen_rand_data(params=params, subjs=4)
     m = hddm.HDDM(data)
-    m.sample(100, burn=10)
+    m.sample(2000, burn=10)
     m.plot_posterior_predictive()
     m.plot_posterior_quantiles()
     m.plot_posteriors()

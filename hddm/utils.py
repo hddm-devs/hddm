@@ -475,7 +475,7 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 def pretty_tag(tag):
     return tag[0] if len(tag) == 1 else string.join(tag, ', ')
 
-def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, draw_lines=True):
+def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, draw_lines=True, ax=None):
     """
     qp plot
     Input:
@@ -531,6 +531,8 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
         p[i_key*2+1] = p_upper
 
     _points_to_qp_plot(points, p, ax, draw_lines)
+
+    return ax
 
     #create axes for subjects
     n_subjs = len(data.subj_idx.unique())
