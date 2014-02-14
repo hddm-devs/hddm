@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.5.2
+:Version: 0.5.3.dev
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=develop
 
@@ -78,59 +78,35 @@ please see the main `publication`_.
 Installation
 ============
 
-Windows
--------
-
+The easiest way to install HDDM is through Anaconda (available for
+Windows, Linux and OSX):
 
 1. Download and install `Anaconda`_.
-2. Go to Start->Programs->Anaconda->Anaconda command prompt.
-3. Enter easy_install pymc
-4. Enter easy_install kabuki
-5. Enter easy_install hddm
-
-
-Linux (Debian based, such as Ubuntu)
-------------------------------------
-
-Most of HDDM's dependencies are available from your repository, you can install them by typing
+2. In a shell (Windows: Go to Start->Programs->Anaconda->Anaconda command prompt) type:
 
 ::
 
-    apt-get install python python-dev python-numpy python-scipy python-matplotlib cython python-pip gfortran liblapack-dev
+    conda config --add channels https://conda.binstar.org/twiecki
+    conda config --add channels defaults
+    conda install hddm
 
-which requires sudo rights.
+Note that you only have to do this once. When a new HDDM version is
+available, `conda update` will automatically update `HDDM`.
 
-Optional dependencies for hddm_demo.py can be installed via
-
-::
-
-    apt-get install python-wxgtk2.8 python-traitsui
-
-Then install kabuki and HDDM:
+If you want to use pip instead of conda, type:
 
 ::
 
-    sudo pip install pandas
-    sudo pip install pymc
-    sudo pip install kabuki
-    sudo pip install hddm
+    pip install pandas
+    pip install pymc
+    pip install kabuki
+    pip install hddm
 
-OSX
----
+This might require super-user rights via sudo. Note that this
+installation method is discouraged as it leads to all kinds of
+problems on various platforms.
 
-We recommend installing the `SciPy Superpack`_ maintained by Chris Fonnesbeck.
-
-The Superpack requires you to install XCode which apparently does not bundle with gcc anymore (which is required by HDDM). This repository provides some appropriate installers:
-
-https://github.com/kennethreitz/osx-gcc-installer/downloads
-
-Then install kabuki and HDDM:
-
-::
-
-    sudo pip install kabuki
-    sudo pip install hddm
-
+If you are having installation problems please contact the `mailing list`_.
 
 How to cite
 ===========

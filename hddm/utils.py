@@ -28,11 +28,11 @@ def flip_errors(data):
         return data
 
     # Copy data
-    data = data.copy()
+    data = pd.DataFrame(data.copy())
 
     # Flip sign for lower boundary response
     idx = data['response'] == 0
-    data['rt'][idx] = -data['rt'][idx]
+    data.ix[idx, 'rt'] = -data.ix[idx, 'rt']
 
     return data
 
@@ -50,274 +50,6 @@ def check_params_valid(**params):
         return False
     else:
         return True
-
-def histogram(a, bins=10, range=None, normed=False, weights=None, density=None):
-    """
-    Compute the histogram of a set of data.
-
-    Parameters
-    ----------
-    a : array_like
-        Input data. The histogram is computed over the flattened array.
-    bins : int or sequence of scalars, optional
-        If `bins` is an int, it defines the number of equal-width
-        bins in the given range (10, by default). If `bins` is a sequence,
-        it defines the bin edges, including the rightmost edge, allowing
-        for non-uniform bin widths.
-    range : (float, float), optional
-        The lower and upper range of the bins.  If not provided, range
-        is simply ``(a.min(), a.max())``.  Values outside the range are
-        ignored.
-    normed : bool, optional
-        This keyword is deprecated in Numpy 1.6 due to confusing/buggy
-        behavior. It will be removed in Numpy 2.0. Use the density keyword
-        instead.
-        If False, the result will contain the number of samples
-        in each bin.  If True, the result is the value of the
-        probability *density* function at the bin, normalized such that
-        the *integral* over the range is 1. Note that this latter behavior is
-        known to be buggy with unequal bin widths; use `density` instead.
-    weights : array_like, optional
-        An array of weights, of the same shape as `a`.  Each value in `a`
-        only contributes its associated weight towards the bin count
-        (instead of 1).  If `normed` is True, the weights are normalized,
-        so that the integral of the density over the range remains 1
-    density : bool, optional
-        If False, the result will contain the number of samples
-        in each bin.  If True, the result is the value of the
-        probability *density* function at the bin, normalized such that
-        the *integral* over the range is 1. Note that the sum of the
-        histogram values will not be equal to 1 unless bins of unity
-        width are chosen; it is not a probability *mass* function.
-        Overrides the `normed` keyword if given.
-
-    Returns
-    -------
-    hist : array
-        The values of the histogram. See `normed` and `weights` for a
-        description of the possible semantics.
-    bin_edges : array of dtype float
-        Return the bin edges ``(length(hist)+1)``.
-
-
-    See Also
-    --------
-    histogramdd, bincount, searchsorted, digitize
-
-    Notes
-    -----
-    All but the last (righthand-most) bin is half-open.  In other words, if
-    `bins` is::
-
-      [1, 2, 3, 4]
-
-    then the first bin is ``[1, 2)`` (including 1, but excluding 2) and the
-    second ``[2, 3)``.  The last bin, however, is ``[3, 4]``, which *includes*
-    4.
-
-    Examples
-    --------
-    >>> np.histogram([1, 2, 1], bins=[0, 1, 2, 3])
-    (array([0, 2, 1]), array([0, 1, 2, 3]))
-    >>> np.histogram(np.arange(4), bins=np.arange(5), density=True)
-    (array([ 0.25,  0.25,  0.25,  0.25]), array([0, 1, 2, 3, 4]))
-    >>> np.histogram([[1, 2, 1], [1, 0, 1]], bins=[0,1,2,3])
-    (array([1, 4, 1]), array([0, 1, 2, 3]))
-
-    >>> a = np.arange(5)
-    >>> hist, bin_edges = np.histogram(a, density=True)
-    >>> hist
-    array([ 0.5,  0. ,  0.5,  0. ,  0. ,  0.5,  0. ,  0.5,  0. ,  0.5])
-    >>> hist.sum()
-    2.4999999999999996
-    >>> np.sum(hist*np.diff(bin_edges))
-    1.0
-
-    """
-
-    a = np.asarray(a)
-    if weights is not None:
-        weights = np.asarray(weights)
-        if np.any(weights.shape != a.shape):
-            raise ValueError(
-                    'weights should have the same shape as a.')
-        weights = weights.ravel()
-    a = a.ravel()
-
-    if (range is not None):
-        mn, mx = range
-        if (mn > mx):
-            raise AttributeError(
-                'max must be larger than min in range parameter.')
-
-    if not np.iterable(bins):
-        if np.isscalar(bins) and bins < 1:
-            raise ValueError("`bins` should be a positive integer.")
-        if range is None:
-            if a.size == 0:
-                # handle empty arrays. Can't determine range, so use 0-1.
-                range = (0, 1)
-            else:
-                range = (a.min(), a.max())
-        mn, mx = [mi + 0.0 for mi in range]
-        if mn == mx:
-            mn -= 0.5
-            mx += 0.5
-        bins = np.linspace(mn, mx, bins + 1, endpoint=True)
-    else:
-        bins = np.asarray(bins)
-        if (np.diff(bins) < 0).any():
-            raise AttributeError(
-                    'bins must increase monotonically.')
-
-    # Histogram is an integer or a float array depending on the weights.
-    if weights is None:
-        ntype = int
-    else:
-        ntype = weights.dtype
-    n = np.zeros(bins.shape, ntype)
-
-    block = 65536
-    if weights is None:
-        for i in np.arange(0, len(a), block):
-            sa = np.sort(a[i:i + block])
-            n += np.r_[sa.searchsorted(bins[:-1], 'left'), \
-                sa.searchsorted(bins[-1], 'right')]
-    else:
-        zero = np.array(0, dtype=ntype)
-        for i in np.arange(0, len(a), block):
-            tmp_a = a[i:i + block]
-            tmp_w = weights[i:i + block]
-            sorting_index = np.argsort(tmp_a)
-            sa = tmp_a[sorting_index]
-            sw = tmp_w[sorting_index]
-            cw = np.concatenate(([zero, ], sw.cumsum()))
-            bin_index = np.r_[sa.searchsorted(bins[:-1], 'left'), \
-                sa.searchsorted(bins[-1], 'right')]
-            n += cw[bin_index]
-
-    n = np.diff(n)
-
-    if density is not None:
-        if density:
-            db = np.array(np.diff(bins), float)
-            return n / db / n.sum(), bins
-        else:
-            return n, bins
-    else:
-        # deprecated, buggy behavior. Remove for Numpy 2.0
-        if normed:
-            db = np.array(np.diff(bins), float)
-            return n / (n * db).sum(), bins
-        else:
-            return n, bins
-
-
-def parse_config_file(fname, map=True, mcmc=False, data=None, samples=None, burn=None, thin=None, only_group_stats=False, plot=True, verbose=False):
-    import kabuki
-    import os.path
-
-    if not os.path.isfile(fname):
-        raise ValueError("%s could not be found." % fname)
-
-    import ConfigParser
-
-    config = ConfigParser.ConfigParser()
-    config.optionxform = str
-    config.read(fname)
-
-    #####################################################
-    # Parse config file
-    if data is not None:
-        data_fname = data
-    else:
-        try:
-            data_fname = config.get('model', 'data')
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            print "ERROR: No data file specified. Either provide data file as an argument to hddmfit or in the model specification"
-            sys.exit(-1)
-    if not os.path.exists(data_fname):
-        raise IOError("Data file %s not found." % data_fname)
-
-    data = np.recfromcsv(data_fname)
-
-    model_name = os.path.splitext(data_fname)[0]
-
-    try:
-        include = config.get('model', 'include')
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        include = ()
-
-    try:
-        is_group_model = config.getboolean('model', 'is_group_model')
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        is_group_model = None
-
-    try:
-        bias = config.getboolean('model', 'bias')
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        bias = False
-
-    try:
-        db = config.get('mcmc', 'db')
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        db = 'ram'
-
-    try:
-        dbname = config.get('mcmc', 'dbname')
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-        dbname = None
-
-    # MCMC values
-    if samples is None:
-        try:
-            samples = config.getint('mcmc', 'samples')
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            samples = 10000
-
-    if burn is None:
-        try:
-            burn = config.getint('mcmc', 'burn')
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            burn = 5000
-
-    if thin is None:
-        try:
-            thin = config.getint('mcmc', 'thin')
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            thin = 2
-
-    group_params = ['v', 'sv', 'a', 'z', 'sz', 't', 'st']
-
-    # Get depends
-    depends = {}
-    for param_name in group_params:
-        try:
-            # Multiple depends can be listed (separated by a comma)
-            depends[param_name] = config.get('depends', param_name).split(',')
-        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
-            pass
-
-    print "Creating model..."
-    m = hddm.HDDM(data, include=include, bias=bias, is_group_model=is_group_model, depends_on=depends)
-
-    if map:
-        print "Finding good initial values..."
-        m.map()
-
-    m.mcmc().sample(samples, burn=burn, thin=thin, verbose=verbose)
-
-    m.print_stats()
-    m.print_stats(fname='stats.txt')
-    print "logp: %f" % m.mc.logp
-    print "DIC: %f" % m.mc.dic
-
-    if plot:
-        m.plot_posteriors(save=True)
-        print "Plotting posterior predictive..."
-        m.plot_posterior_predictive(save=True)
-
-    return m
 
 
 def EZ_subjs(data):
@@ -743,7 +475,103 @@ def create_test_model(samples=5000, burn=1000, subjs=1, size=100):
 def pretty_tag(tag):
     return tag[0] if len(tag) == 1 else string.join(tag, ', ')
 
-def qp_plot(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
+def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, draw_lines=True, ax=None):
+    """
+    qp plot
+    Input:
+        x : either a HDDM model or data
+
+        grouby: <list>
+            a list of conditions to group the data. if x is a model then groupby is ignored.
+
+        quantiles : sequence
+            sequence of quantiles
+
+        ncols : int
+            number of columns in output figure
+
+        draw_lines: boolean (default: True)
+            draw lines to connect the same quantiles across conditions
+    """
+    # if x is a hddm model use _qp_plot_model
+    if isinstance(x, hddm.HDDMBase):
+        return _qp_plot_model(model=x, quantiles=quantiles, ncols=ncols)
+
+    # else x is a dataframe
+    data = x.copy()
+
+    # add subj_idx column if necessary
+    if 'subj_idx' not in data.columns:
+        data['subj_idx'] = 1
+    if groupby is None:
+        groupby = ['tmp_cond12331']
+        data[groupby[0]] = 1
+
+    # compute quantiles for each condition and subject
+    stats = {}
+    for i_subj, (subj, subj_data) in enumerate(data.groupby(['subj_idx'])):
+        for key, cond_data in subj_data.groupby(groupby):
+            if not stats.has_key(key):
+                stats[key] = {}
+            stats[key][subj] = data_quantiles(cond_data, quantiles=quantiles)
+
+    #plot group quantiles
+    fig, ax = plt.subplots(1,1)
+    ax.set_title('Group')
+    nq = len(quantiles)
+    points = np.zeros((nq, len(stats)*2))
+    p = np.zeros(len(stats)*2)
+    for i_key, (key, cond_data) in enumerate(stats.items()):
+        q_lower = np.mean([x[0] for x in cond_data.values()],0)
+        q_upper = np.mean([x[1] for x in cond_data.values()],0)
+        p_upper = np.mean([x[2] for x in cond_data.values()],0)
+        points[:,i_key*2] = q_lower
+        points[:,i_key*2+1] = q_upper
+        p[i_key*2] = 1 - p_upper
+        p[i_key*2+1] = p_upper
+
+    _points_to_qp_plot(points, p, ax, draw_lines)
+
+    return ax
+
+    #create axes for subjects
+    n_subjs = len(data.subj_idx.unique())
+    if ncols is None:
+        ncols = min(4, n_subjs)
+    nrows = int(np.ceil(n_subjs / ncols))
+    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
+
+    #plot single subject model
+    for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
+        points = np.zeros((nq, len(stats)*2))
+        p = np.zeros(len(stats)*2)
+        for i_key, (key, cond_data) in enumerate(stats.items()):
+            points[:,i_key*2] = cond_data[subj_idx][0]
+            points[:,i_key*2+1] = cond_data[subj_idx][1]
+            p[i_key*2] = 1 - cond_data[subj_idx][2]
+            p[i_key*2+1] = cond_data[subj_idx][2]
+
+        ax = axs.item(i_subj)
+        _points_to_qp_plot(points, p, ax, draw_lines)
+        ax.set_title(subj_idx)
+
+
+def _points_to_qp_plot(points, p, ax, draw_lines):
+    """
+    plot the points created by the qp_plot function
+    """
+    idx = p.argsort()
+    points = points[:, idx]
+    p = p[idx]
+    fmt = '-x' if draw_lines else 'x'
+    for i_q in range(points.shape[0]):
+        ax.plot(p, points[i_q,:], fmt, c='b')
+
+    ax.set_xlim(0, 1)
+
+
+
+def _qp_plot_model(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
     """
     qp plot
     Input:
