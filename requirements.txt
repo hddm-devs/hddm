@@ -3,7 +3,7 @@ Distutils2==1.0a4
 argparse==1.2.1
 numpy==1.6.2
 pandas==0.8.1
-pymc==2.2
+pymc==2.3
 python-dateutil==1.5
 pytz==2012d
 wsgiref==0.1.2

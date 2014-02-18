@@ -4,6 +4,14 @@
 Release Notes
 =============
 
+HDDM 0.5.3 (bugfix release)
+===========================
+
+* Compatibility with pandas > 0.13.
+* Fix problem that causes stats to not be generated when
+  loading model.
+* Update packages to work with anaconda 1.9.
+
 HDDM 0.5.2 (bugfix release)
 ===========================
 
