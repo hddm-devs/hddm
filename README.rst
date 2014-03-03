@@ -86,9 +86,7 @@ Windows, Linux and OSX):
 
 ::
 
-    conda config --add channels https://conda.binstar.org/twiecki
-    conda config --add channels defaults
-    conda install hddm
+    conda install -c twiecki hddm
 
 Note that you only have to do this once. When a new HDDM version is
 available, `conda update` will automatically update `HDDM`.
