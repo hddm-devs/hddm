@@ -13,12 +13,7 @@ requirements:     # (optional)
   build:
     - python
     - numpy
-    - pymc
-    - pandas
-    - matplotlib
-    - kabuki
     - cython
-    - patsy
   run:
     - python
     - numpy
