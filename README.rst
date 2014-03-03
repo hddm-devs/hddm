@@ -86,6 +86,7 @@ Windows, Linux and OSX):
 
 ::
 
+    conda install -c pymc pymc
     conda install -c twiecki hddm
 
 Note that you only have to do this once. When a new HDDM version is
