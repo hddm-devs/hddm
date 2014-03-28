@@ -386,7 +386,7 @@ jointly simulated data more easily.
     m_pooled = hddm.HDDM(data) # v does not depend on conditions
     m_pooled.sample(1000, burn=20)
 
-    ppc_data_pooled = hddm.utils.post_pred_gen(m, groupby=['condition'])
+    ppc_data_pooled = hddm.utils.post_pred_gen(m_pooled, groupby=['condition'])
 
 You could then compare ``ppc_data_pooled`` to ``ppc_data`` above (by
 passing them to ``post_pred_stats``) and find that the model with
