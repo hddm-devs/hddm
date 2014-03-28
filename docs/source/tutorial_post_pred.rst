@@ -358,6 +358,42 @@ You can also define your own summary statistics and pass them to
 Note that ``stats`` can also be a dictionary mapping the name of the
 summary statistic to its function.
 
+Using PPC for model comparison with the groupby argument
+--------------------------------------------------------
+
+One useful application of PPC is to perform model
+comparison. Specifically, you might estimate two models, one for which
+a certain parameter is split for a condition (say drift-rate ``v`` for
+hard and easy conditions to stay with our example above) and one in
+which those conditions are pooled and you only estimate one
+drift-rate.
+
+You then want to test which model explains the data better to assess
+whether the two conditions are really different. To do this, we can
+generate data from both models and see if the pooled model
+systematically misses aspects of the RT data of the two
+conditions. This is what the ``groupby`` keyword argument is
+for. Without it, if you ran ``post_pred_gen()`` on the pooled model
+you would get simulated RT data which was not split by
+conditions. Note that while the RT data will be split by condition,
+the exact same parameters are used to simulate data of the two
+conditions as the pooled model does not separate them. It simply
+allows us to match the two conditions present in the data to the
+jointly simulated data more easily.
+
+.. code:: python
+
+    m_pooled = hddm.HDDM(data) # v does not depend on conditions
+    m_pooled.sample(1000, burn=20)
+
+    ppc_data_pooled = hddm.utils.post_pred_gen(m, groupby=['condition'])
+
+You could then compare ``ppc_data_pooled`` to ``ppc_data`` above (by
+passing them to ``post_pred_stats``) and find that the model with
+separate drift-rates accounts for accuracy (``mean_ub``) in both
+conditions, while the pooled model can't account for accuracy in
+either condition (e.g. lower ``MSE``).
+
 Summary statistics relating to outside variables
 ------------------------------------------------
 
