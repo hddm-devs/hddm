@@ -113,7 +113,7 @@ probability for obtaining an outlier (e.g. 0.05 will assume 5% of the
 RTs are outliers) or estimate this from the data. In practice, the
 precise value of p_outlier does not matter.  Values greater than 0.001
 and less than 0.1 are sufficient to capture the outliers, and the
-effect on the recovered parameters is small (:cite: `SoferWieckiFrank`).
+effect on the recovered parameters is small.
 
 To instantiate a model with a fixed probability of getting
 an outlier run:
@@ -121,12 +121,6 @@ an outlier run:
 ::
 
     m = hddm.HDDM(data, p_outlier=0.05)
-
-To estimate p_outlier from the data, run:
-
-::
-
-    m = hddm.HDDM(data, include=('p_outlier',))
 
 HDDM assumes that outliers come from a uniform distribution
 with a fixed density :math:``w_{outlier}`` (as suggested by Ratcliff and Tuerlinckx, 2002).
@@ -138,8 +132,7 @@ The resulting likelihood is as follows:
 
 The default value of :math:``w_{outlier}`` is 0.1, which is equivalent to uniform distribution
 from 0 to 5 seconds. However, in practice, the outlier model is applied to all RTs, even
-those  larger than 5.
-
+those larger than 5.
 
 Assess model convergence
 ########################
