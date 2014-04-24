@@ -96,7 +96,7 @@ class DDM(HasTraits):
 
     @cached_property
     def _get_histo(self):
-        n, bins = hddm.utils.histogram(self.rts, bins=2 * self.bins, range=(-self.T, self.T))
+        n, bins = np.histogram(self.rts, bins=2 * self.bins, range=(-self.T, self.T))
         db = np.array(np.diff(bins), float)
         return n / db / (n.sum())
 
