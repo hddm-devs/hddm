@@ -265,13 +265,13 @@ the simplest model that does not allow parameters to vary by condition.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 2000 of 2000 complete in 134.5 sec
+     [-----------------100%-----------------] 2000 of 2000 complete in 129.7 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x60f53d0>
+    <pymc.MCMC.MCMC at 0x5538790>
 
 
 
@@ -307,36 +307,36 @@ using pandas selection functionality.
       <tbody>
         <tr>
           <th>a</th>
-          <td> 2.055947</td>
-          <td>  0.1051559</td>
-          <td> 1.850076</td>
-          <td> 1.989202</td>
-          <td> 2.054208</td>
-          <td>  2.12429</td>
-          <td>  2.26743</td>
-          <td> 0.002523161</td>
+          <td> 2.056997</td>
+          <td>  0.1018697</td>
+          <td>  1.85712</td>
+          <td> 1.990582</td>
+          <td> 2.054487</td>
+          <td> 2.124855</td>
+          <td> 2.257928</td>
+          <td> 0.002796209</td>
         </tr>
         <tr>
           <th>a_subj.0</th>
-          <td> 2.384444</td>
-          <td> 0.06202654</td>
-          <td> 2.266239</td>
-          <td> 2.342161</td>
-          <td> 2.383974</td>
-          <td> 2.424696</td>
-          <td>   2.5143</td>
-          <td> 0.001543226</td>
+          <td>  2.38217</td>
+          <td> 0.06067871</td>
+          <td> 2.266496</td>
+          <td> 2.340555</td>
+          <td> 2.381053</td>
+          <td> 2.424496</td>
+          <td> 2.498657</td>
+          <td> 0.001654167</td>
         </tr>
         <tr>
           <th>a_subj.1</th>
-          <td> 2.129638</td>
-          <td> 0.06284678</td>
-          <td> 2.015519</td>
-          <td>  2.08375</td>
-          <td>  2.12768</td>
-          <td> 2.169792</td>
-          <td> 2.262788</td>
-          <td> 0.002079862</td>
+          <td> 2.128823</td>
+          <td> 0.06421278</td>
+          <td> 2.011509</td>
+          <td>  2.08507</td>
+          <td> 2.126159</td>
+          <td> 2.170034</td>
+          <td> 2.264142</td>
+          <td> 0.002044841</td>
         </tr>
       </tbody>
     </table>
@@ -401,60 +401,60 @@ different runs of the same model.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 5000 of 5000 complete in 336.1 sec
+     [-----------------100%-----------------] 5000 of 5000 complete in 318.2 sec
 
 
 
 .. parsed-literal::
 
-    {'a': 1.0000425975668974,
-     'a_std': 1.0004030364241516,
-     'a_subj.0': 0.99992774228537373,
-     'a_subj.1': 0.99997927423039756,
-     'a_subj.10': 1.0003497512503727,
-     'a_subj.11': 0.99996172674995254,
-     'a_subj.12': 0.9998884575935264,
-     'a_subj.13': 1.0000585296782287,
-     'a_subj.2': 1.0001172904597397,
-     'a_subj.3': 0.99982427467372081,
-     'a_subj.4': 1.0002056047777186,
-     'a_subj.5': 1.000320401208632,
-     'a_subj.6': 1.0001763320952963,
-     'a_subj.7': 1.0009021450675399,
-     'a_subj.8': 1.0000008379607985,
-     'a_subj.9': 0.99999352457619028,
-     't': 0.99989460492178317,
-     't_std': 1.0002190702379394,
-     't_subj.0': 0.99988906867577554,
-     't_subj.1': 1.0001135719406589,
-     't_subj.10': 1.0000866511811699,
-     't_subj.11': 0.99998802510510854,
-     't_subj.12': 1.000667785440658,
-     't_subj.13': 1.0001775921332319,
-     't_subj.2': 1.0003756147442835,
-     't_subj.3': 1.0000195488353925,
-     't_subj.4': 1.0002601177794557,
-     't_subj.5': 1.0003027313080088,
-     't_subj.6': 1.0004121322668178,
-     't_subj.7': 1.000858308412365,
-     't_subj.8': 0.99996853243505535,
-     't_subj.9': 1.0000806638072404,
-     'v': 1.0002143592148593,
-     'v_std': 1.0001418189432012,
-     'v_subj.0': 0.99991711376122971,
-     'v_subj.1': 1.0000226038074187,
-     'v_subj.10': 1.0005711041386403,
-     'v_subj.11': 0.99994141552942273,
-     'v_subj.12': 1.0000678378391095,
-     'v_subj.13': 1.000100244018703,
-     'v_subj.2': 0.9998587431610868,
-     'v_subj.3': 1.0001521349760503,
-     'v_subj.4': 1.0000969211500812,
-     'v_subj.5': 0.99985953466395983,
-     'v_subj.6': 0.99985072695104404,
-     'v_subj.7': 1.0002192025475325,
-     'v_subj.8': 1.0001144098198056,
-     'v_subj.9': 0.9998237256675494}
+    {'a': 1.0000080128480544,
+     'a_std': 1.0009467760453914,
+     'a_subj.0': 1.0004396451505506,
+     'a_subj.1': 1.0001330175933805,
+     'a_subj.10': 1.0001511944700108,
+     'a_subj.11': 0.9998856557923288,
+     'a_subj.12': 1.0007936316446462,
+     'a_subj.13': 1.0002036423447691,
+     'a_subj.2': 0.99990790144253994,
+     'a_subj.3': 1.0002974057100809,
+     'a_subj.4': 1.0000590111492804,
+     'a_subj.5': 1.0001361020925508,
+     'a_subj.6': 1.000706866740166,
+     'a_subj.7': 1.0001620181116426,
+     'a_subj.8': 1.0003977674573985,
+     'a_subj.9': 1.0005012305837377,
+     't': 1.0001297910134617,
+     't_std': 1.0004994840657133,
+     't_subj.0': 1.0001673932481503,
+     't_subj.1': 1.00008335102978,
+     't_subj.10': 1.0001394476842671,
+     't_subj.11': 0.9999262010403448,
+     't_subj.12': 1.0009908725637222,
+     't_subj.13': 1.0001364350911122,
+     't_subj.2': 1.0000082613078143,
+     't_subj.3': 1.0000215773403842,
+     't_subj.4': 0.99995593175845232,
+     't_subj.5': 0.99996270632042883,
+     't_subj.6': 1.0003988360700178,
+     't_subj.7': 0.99997181238924004,
+     't_subj.8': 1.0003300021941475,
+     't_subj.9': 1.000380354451843,
+     'v': 1.0002120099356524,
+     'v_std': 1.0002853427735756,
+     'v_subj.0': 1.0001207593816404,
+     'v_subj.1': 1.000444686717175,
+     'v_subj.10': 1.0000652700655177,
+     'v_subj.11': 0.99997014053169753,
+     'v_subj.12': 0.99983596827629906,
+     'v_subj.13': 0.99988689766442396,
+     'v_subj.2': 1.0000545095546731,
+     'v_subj.3': 0.99985869729774846,
+     'v_subj.4': 0.99989515466199264,
+     'v_subj.5': 1.0000404527505373,
+     'v_subj.6': 1.000402902370225,
+     'v_subj.7': 1.0000107478186799,
+     'v_subj.8': 0.99994866154985163,
+     'v_subj.9': 0.99982713798783396}
 
 
 
@@ -499,13 +499,13 @@ conditions we want to split by.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 10000 of 10000 complete in 820.0 sec
+     [-----------------100%-----------------] 10001 of 10000 complete in 732.3 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x70835d0>
+    <pymc.MCMC.MCMC at 0x7bd98d0>
 
 
 
@@ -553,8 +553,8 @@ greater than WL should be near zero.
 
 .. parsed-literal::
 
-    P(WW > LL) =  0.363444444444
-    P(LL > WL) =  0.0
+    P(WW > LL) =  0.366222222222
+    P(LL > WL) =  0.000111111111111
 
 
                 Lets compare the two models using the deviance information criterion (DIC; lower is better). Note that the DIC measures the fit of the model to the data, penalizing for complexity in the addition of degrees of freedom (the model with three drift rates has more dF than the model with one). The DIC is known to be somewhat biased in selecting the model with greater complexity, although alternative forms exist (see Plummer 2008). One should use the DIC with caution, although other forms of model comparison such as the Bayes Factor (BF) have other problems, such as being overly sensitive to the prior parameter distributions of the models. Future versions of HDDM will include the partial Bayes Factor, which allows the BF to be computed based on informative priors taken from a subset of the data, and which we generally believe to provide a better measure of model fit. Nevertheless, DIC can be a useful metric with these caveats in mind.
@@ -566,8 +566,8 @@ greater than WL should be near zero.
 
 .. parsed-literal::
 
-    Lumped model DIC: 10961.278319
-    Stimulus model DIC: 10775.540244
+    Lumped model DIC: 10961.447384
+    Stimulus model DIC: 10775.096577
 
 
 Within-subject effects
@@ -643,18 +643,31 @@ the output of the linear model -- in this case ``v``.
 
 .. parsed-literal::
 
-     [-                 2%                  ] 133 of 5000 complete in 53.4 sec
+     [-----------------100%-----------------] 5000 of 5000 complete in 1404.5 sec
+
+
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0x79cca90>
+
+
 
 .. code:: python
 
-    v_WL, v_LL, v_WW = m_within_subj.nodes_db.node[["v", 
-                                                    "v_C(stim, Treatment('WL'))[T.LL]", 
-                                                    "v_C(stim, Treatment('WL'))[T.WW]"]]
+    v_WL, v_LL, v_WW = m_within_subj.nodes_db.ix[["v_Intercept", 
+                                                  "v_C(stim, Treatment('WL'))[T.LL]", 
+                                                  "v_C(stim, Treatment('WL'))[T.WW]"], 'node']
     hddm.analyze.plot_posterior_nodes([v_WL, v_LL, v_WW])
     plt.xlabel('drift-rate')
     plt.ylabel('Posterior probability')
     plt.title('Group mean posteriors of within-subject drift-rate effects.')
     plt.savefig('hddm_demo_fig_07.pdf')
+
+
+.. image:: hddm_demo_files/hddm_demo_41_0.png
+
+
 Note that in the above plot ``LL`` and ``WW`` are expressed relative to
 the ``WL`` condition (i.e. ``v_Intercept``). You can see that the
 overall drift rate intercept, here applying to WL condition, is positive
@@ -682,6 +695,13 @@ http://ski.clps.brown.edu/papers/Cavanagh\_DBSEEG.pdf
     m_reg = hddm.HDDMRegressor(data[data.dbs == 0], 
                                "a ~ theta:C(conf, Treatment('LC'))", 
                                depends_on={'v': 'stim'})
+
+.. parsed-literal::
+
+    Adding these covariates:
+    ['a_Intercept', "a_theta:C(conf, Treatment('LC'))[HC]", "a_theta:C(conf, Treatment('LC'))[LC]"]
+
+
 Instead of estimating one static threshold per subject across trials,
 this model assumes the threshold to vary on each trial according to the
 linear model specified above (as a function of their measured theta
@@ -700,12 +720,35 @@ increasing the decision threshold when cortical theta rises).
 .. code:: python
 
     m_reg.sample(5000, burn=200)
+
+.. parsed-literal::
+
+     [-----------------100%-----------------] 5000 of 5000 complete in 1932.1 sec
+
+
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0x79b6110>
+
+
+
 .. code:: python
 
     theta = m_reg.nodes_db.node["a_theta:C(conf, Treatment('LC'))[HC]"]
     hddm.analyze.plot_posterior_nodes([theta], bins=20)
     plt.xlabel('Theta coeffecient in ')
     print "P(a_theta < 0) = ", (theta.trace() < 0).mean()
+
+
+.. parsed-literal::
+
+    P(a_theta < 0) =  0.024375
+
+
+
+.. image:: hddm_demo_files/hddm_demo_48_1.png
+
 
 The above posterior shows that the effect of trial to trial variations
 in frontal theta are to increase the estimated decision threshold: the
@@ -728,14 +771,44 @@ vary when brain state is manipulated.
     m_reg_off = hddm.HDDMRegressor(data[data.dbs == 1], 
                                    "a ~ theta:C(conf, Treatment('LC'))", 
                                    depends_on={'v': 'stim'})
+
+.. parsed-literal::
+
+    Adding these covariates:
+    ['a_Intercept', "a_theta:C(conf, Treatment('LC'))[HC]", "a_theta:C(conf, Treatment('LC'))[LC]"]
+
+
 .. code:: python
 
     m_reg_off.sample(5000, burn=200)
+
+.. parsed-literal::
+
+     [-----------------100%-----------------] 5001 of 5000 complete in 1814.2 sec
+
+
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0x6655ed0>
+
+
+
 .. code:: python
 
     theta = m_reg_off.nodes_db.node["a_theta:C(conf, Treatment('LC'))[HC]"]
     hddm.analyze.plot_posterior_nodes([theta], bins=10)
     print "P(a_theta > 0) = ", (theta.trace() > 0).mean()
+
+.. parsed-literal::
+
+    P(a_theta > 0) =  0.0154166666667
+
+
+
+.. image:: hddm_demo_files/hddm_demo_52_1.png
+
+
 Dealing with outliers
 ---------------------
 
@@ -754,11 +827,25 @@ DDM model without taking outliers into account.
 
 .. code:: python
 
-    outlier_data, params = hddm.generate.gen_rand_data(params={'a': 2, 't': .4, 'v': .5}, size=200, n_fast_outliers=10)
+    outlier_data, params = hddm.generate.gen_rand_data(params={'a': 2, 't': .4, 'v': .5}, 
+                                                       size=200, n_fast_outliers=10)
 .. code:: python
 
     m_no_outlier = hddm.HDDM(outlier_data)
     m_no_outlier.sample(2000, burn=50)
+
+.. parsed-literal::
+
+     [-----------------100%-----------------] 2000 of 2000 complete in 6.3 sec
+
+
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0x79b9690>
+
+
+
 .. code:: python
 
     m_no_outlier.plot_posterior_predictive()
@@ -766,6 +853,11 @@ DDM model without taking outliers into account.
     plt.xlabel('RT')
     plt.ylabel('Probability density')
     plt.savefig('hddm_demo_fig_10.pdf')
+
+
+.. image:: hddm_demo_files/hddm_demo_57_0.png
+
+
 As you can see, the predictive likelihood does not fit the RT data very
 well. The model predicts far more RTs near the leading edge of the
 distribution than are actually observed. This is because non-decision
@@ -785,6 +877,19 @@ Here, we specify that we expect roughly 5% outliers in our data.
 
     m_outlier = hddm.HDDM(outlier_data, p_outlier=.05)
     m_outlier.sample(2000, burn=20)
+
+.. parsed-literal::
+
+     [-----------------100%-----------------] 2000 of 2000 complete in 6.2 sec
+
+
+
+.. parsed-literal::
+
+    <pymc.MCMC.MCMC at 0x49288d0>
+
+
+
 .. code:: python
 
     m_outlier.plot_posterior_predictive()
@@ -792,6 +897,11 @@ Here, we specify that we expect roughly 5% outliers in our data.
     plt.xlabel('RT')
     plt.ylabel('Probability density')
     plt.savefig('hddm_demo_fig_11.pdf')
+
+
+
+.. image:: hddm_demo_files/hddm_demo_60_0.png
+
 
 As you can see, the model provides a much better fit. The outlier RTs
 are having less of an effect because they get assigned to the uniform
