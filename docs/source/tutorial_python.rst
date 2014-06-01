@@ -221,7 +221,6 @@ We use the ``hddm.load_csv()`` function to load this file.
         </tr>
       </tbody>
     </table>
-    <p>10 rows × 7 columns</p>
     </div>
 
 
@@ -265,13 +264,13 @@ the simplest model that does not allow parameters to vary by condition.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 2000 of 2000 complete in 129.7 sec
+     [-----------------100%-----------------] 2000 of 2000 complete in 132.9 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x5538790>
+    <pymc.MCMC.MCMC at 0x63455d0>
 
 
 
@@ -283,7 +282,7 @@ using pandas selection functionality.
 .. code:: python
 
     stats = m.gen_stats()
-    stats[stats.index.isin(['a', 'a_var', 'a_subj.0', 'a_subj.1'])]
+    stats[stats.index.isin(['a', 'a_std', 'a_subj.0', 'a_subj.1'])]
 
 
 
@@ -307,46 +306,56 @@ using pandas selection functionality.
       <tbody>
         <tr>
           <th>a</th>
-          <td> 2.056997</td>
-          <td>  0.1018697</td>
-          <td>  1.85712</td>
-          <td> 1.990582</td>
-          <td> 2.054487</td>
-          <td> 2.124855</td>
-          <td> 2.257928</td>
-          <td> 0.002796209</td>
+          <td>   2.06164</td>
+          <td> 0.09584521</td>
+          <td>  1.885639</td>
+          <td>  1.995637</td>
+          <td>  2.056966</td>
+          <td>  2.123793</td>
+          <td>  2.252141</td>
+          <td> 0.002345797</td>
+        </tr>
+        <tr>
+          <th>a_std</th>
+          <td> 0.3774947</td>
+          <td>  0.0855874</td>
+          <td> 0.2473591</td>
+          <td> 0.3179562</td>
+          <td> 0.3635182</td>
+          <td> 0.4216091</td>
+          <td> 0.5746741</td>
+          <td> 0.002728459</td>
         </tr>
         <tr>
           <th>a_subj.0</th>
-          <td>  2.38217</td>
-          <td> 0.06067871</td>
-          <td> 2.266496</td>
-          <td> 2.340555</td>
-          <td> 2.381053</td>
-          <td> 2.424496</td>
-          <td> 2.498657</td>
-          <td> 0.001654167</td>
+          <td>  2.382019</td>
+          <td> 0.05949433</td>
+          <td>  2.271485</td>
+          <td>  2.342974</td>
+          <td>  2.380001</td>
+          <td>  2.418977</td>
+          <td>  2.506824</td>
+          <td> 0.001894819</td>
         </tr>
         <tr>
           <th>a_subj.1</th>
-          <td> 2.128823</td>
-          <td> 0.06421278</td>
-          <td> 2.011509</td>
-          <td>  2.08507</td>
-          <td> 2.126159</td>
-          <td> 2.170034</td>
-          <td> 2.264142</td>
-          <td> 0.002044841</td>
+          <td>   2.13155</td>
+          <td> 0.06310563</td>
+          <td>  2.018179</td>
+          <td>  2.088753</td>
+          <td>  2.127594</td>
+          <td>  2.173424</td>
+          <td>  2.259581</td>
+          <td> 0.001932201</td>
         </tr>
       </tbody>
     </table>
-    <p>3 rows × 8 columns</p>
     </div>
 
 
 
 As you can see, the model estimated the group mean parameter for
-threshold ``a``, group variability ``a_var`` and individual subject
+threshold ``a``, group variability ``a_std`` and individual subject
 parameters ``a_subj.0``. Other parameters are not shown here.
 
 The inference algorithm, MCMC, requires the chains of the model to have
@@ -360,11 +369,12 @@ examine all of them.
 
 .. code:: python
 
-    m.plot_posteriors(['a', 't', 'v', 'a_var'])
+    m.plot_posteriors(['a', 't', 'v', 'a_std'])
 
 .. parsed-literal::
 
     Plotting a
+    Plotting a_std
     Plotting v
     Plotting t
 
@@ -379,6 +389,10 @@ examine all of them.
 
 
 .. image:: hddm_demo_files/hddm_demo_20_3.png
+
+
+
+.. image:: hddm_demo_files/hddm_demo_20_4.png
 
 
 As you can see, there are no drifts or large jumps in the trace. The
@@ -401,60 +415,60 @@ different runs of the same model.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 5000 of 5000 complete in 318.2 sec
+     [-----------------100%-----------------] 5000 of 5000 complete in 316.2 sec
 
 
 
 .. parsed-literal::
 
-    {'a': 1.0000080128480544,
-     'a_std': 1.0009467760453914,
-     'a_subj.0': 1.0004396451505506,
-     'a_subj.1': 1.0001330175933805,
-     'a_subj.10': 1.0001511944700108,
-     'a_subj.11': 0.9998856557923288,
-     'a_subj.12': 1.0007936316446462,
-     'a_subj.13': 1.0002036423447691,
-     'a_subj.2': 0.99990790144253994,
-     'a_subj.3': 1.0002974057100809,
-     'a_subj.4': 1.0000590111492804,
-     'a_subj.5': 1.0001361020925508,
-     'a_subj.6': 1.000706866740166,
-     'a_subj.7': 1.0001620181116426,
-     'a_subj.8': 1.0003977674573985,
-     'a_subj.9': 1.0005012305837377,
-     't': 1.0001297910134617,
-     't_std': 1.0004994840657133,
-     't_subj.0': 1.0001673932481503,
-     't_subj.1': 1.00008335102978,
-     't_subj.10': 1.0001394476842671,
-     't_subj.11': 0.9999262010403448,
-     't_subj.12': 1.0009908725637222,
-     't_subj.13': 1.0001364350911122,
-     't_subj.2': 1.0000082613078143,
-     't_subj.3': 1.0000215773403842,
-     't_subj.4': 0.99995593175845232,
-     't_subj.5': 0.99996270632042883,
-     't_subj.6': 1.0003988360700178,
-     't_subj.7': 0.99997181238924004,
-     't_subj.8': 1.0003300021941475,
-     't_subj.9': 1.000380354451843,
-     'v': 1.0002120099356524,
-     'v_std': 1.0002853427735756,
-     'v_subj.0': 1.0001207593816404,
-     'v_subj.1': 1.000444686717175,
-     'v_subj.10': 1.0000652700655177,
-     'v_subj.11': 0.99997014053169753,
-     'v_subj.12': 0.99983596827629906,
-     'v_subj.13': 0.99988689766442396,
-     'v_subj.2': 1.0000545095546731,
-     'v_subj.3': 0.99985869729774846,
-     'v_subj.4': 0.99989515466199264,
-     'v_subj.5': 1.0000404527505373,
-     'v_subj.6': 1.000402902370225,
-     'v_subj.7': 1.0000107478186799,
-     'v_subj.8': 0.99994866154985163,
-     'v_subj.9': 0.99982713798783396}
+    {'a': 0.99986111768771579,
+     'a_std': 1.0004196099896612,
+     'a_subj.0': 0.99988274311195402,
+     'a_subj.1': 0.99987965313220728,
+     'a_subj.10': 0.99985357520291229,
+     'a_subj.11': 1.0005899502201789,
+     'a_subj.12': 0.99993678545304787,
+     'a_subj.13': 1.000461174627318,
+     'a_subj.2': 1.0002035092619752,
+     'a_subj.3': 1.0003262048143702,
+     'a_subj.4': 1.0005947420163532,
+     'a_subj.5': 0.99990445731401401,
+     'a_subj.6': 1.0001622164718598,
+     'a_subj.7': 0.99994557169043841,
+     'a_subj.8': 0.99994052775154385,
+     'a_subj.9': 0.99989195463691227,
+     't': 0.9999066460778635,
+     't_std': 0.99991507324567064,
+     't_subj.0': 1.000073590917147,
+     't_subj.1': 1.000057511405243,
+     't_subj.10': 0.9999291543784008,
+     't_subj.11': 1.0004279776213225,
+     't_subj.12': 1.0000997478798959,
+     't_subj.13': 1.0000684865636429,
+     't_subj.2': 1.000043538704473,
+     't_subj.3': 1.0007462032289922,
+     't_subj.4': 1.0002421010918123,
+     't_subj.5': 0.99991250131955678,
+     't_subj.6': 1.0001841340922351,
+     't_subj.7': 1.0001766144445334,
+     't_subj.8': 0.99995599640658817,
+     't_subj.9': 0.99989323480149928,
+     'v': 1.0000003467296055,
+     'v_std': 1.0006659255610744,
+     'v_subj.0': 1.0000443557902641,
+     'v_subj.1': 0.99996462251437535,
+     'v_subj.10': 1.0000527253445828,
+     'v_subj.11': 1.0000646148050987,
+     'v_subj.12': 0.99997817143162659,
+     'v_subj.13': 0.99998310938217094,
+     'v_subj.2': 0.99983001503178104,
+     'v_subj.3': 0.99991527650060885,
+     'v_subj.4': 1.0000620164315519,
+     'v_subj.5': 1.0000205893384675,
+     'v_subj.6': 0.99988826203280401,
+     'v_subj.7': 0.99986755400860694,
+     'v_subj.8': 0.99991341960306523,
+     'v_subj.9': 1.000209824432152}
 
 
 
@@ -499,13 +513,13 @@ conditions we want to split by.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 10001 of 10000 complete in 732.3 sec
+     [-----------------100%-----------------] 10000 of 10000 complete in 769.5 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x7bd98d0>
+    <pymc.MCMC.MCMC at 0x8e13d10>
 
 
 
@@ -553,7 +567,7 @@ greater than WL should be near zero.
 
 .. parsed-literal::
 
-    P(WW > LL) =  0.366222222222
+    P(WW > LL) =  0.368555555556
     P(LL > WL) =  0.000111111111111
 
 
@@ -566,8 +580,8 @@ greater than WL should be near zero.
 
 .. parsed-literal::
 
-    Lumped model DIC: 10961.447384
-    Stimulus model DIC: 10775.096577
+    Lumped model DIC: 10960.879362
+    Stimulus model DIC: 10774.754010
 
 
 Within-subject effects
@@ -643,13 +657,13 @@ the output of the linear model -- in this case ``v``.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 5000 of 5000 complete in 1404.5 sec
+     [-----------------100%-----------------] 5001 of 5000 complete in 1736.3 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x79cca90>
+    <pymc.MCMC.MCMC at 0x7e20590>
 
 
 
@@ -723,13 +737,13 @@ increasing the decision threshold when cortical theta rises).
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 5000 of 5000 complete in 1932.1 sec
+     [-----------------100%-----------------] 5000 of 5000 complete in 2382.3 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x79b6110>
+    <pymc.MCMC.MCMC at 0x710ee50>
 
 
 
@@ -743,7 +757,7 @@ increasing the decision threshold when cortical theta rises).
 
 .. parsed-literal::
 
-    P(a_theta < 0) =  0.024375
+    P(a_theta < 0) =  0.0304166666667
 
 
 
@@ -784,13 +798,13 @@ vary when brain state is manipulated.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 5001 of 5000 complete in 1814.2 sec
+     [-----------------100%-----------------] 5000 of 5000 complete in 2383.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x6655ed0>
+    <pymc.MCMC.MCMC at 0x855b210>
 
 
 
@@ -802,7 +816,7 @@ vary when brain state is manipulated.
 
 .. parsed-literal::
 
-    P(a_theta > 0) =  0.0154166666667
+    P(a_theta > 0) =  0.019375
 
 
 
@@ -836,13 +850,13 @@ DDM model without taking outliers into account.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 2000 of 2000 complete in 6.3 sec
+     [-----------------100%-----------------] 2000 of 2000 complete in 7.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x79b9690>
+    <pymc.MCMC.MCMC at 0x872d5d0>
 
 
 
@@ -880,13 +894,13 @@ Here, we specify that we expect roughly 5% outliers in our data.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 2000 of 2000 complete in 6.2 sec
+     [-----------------100%-----------------] 2000 of 2000 complete in 7.2 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x49288d0>
+    <pymc.MCMC.MCMC at 0x8ba56d0>
 
 
 
