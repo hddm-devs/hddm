@@ -112,6 +112,15 @@ If HDDM was used in your research, please cite the publication_:
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
+Published papers using HDDM
+===========================
+
+Cavanagh, J. F., Wiecki, T. V, Cohen, M. X., Figueroa, C. M., Samanta, J., Sherman, S. J., & Frank, M. J. (2011). Subthalamic nucleus stimulation reverses mediofrontal influence over decision threshold. Nature Neuroscience, 14(11), 1462–7. doi:10.1038/nn.2925
+Jahfari, S., Ridderinkhof, K. R., & Scholte, H. S. (2013). Spatial frequency information modulates response inhibition and decision-making processes. PloS One, 8(10), e76467. doi:10.1371/journal.pone.0076467
+Zhang, J., & Rowe, J. B. (2014). Dissociable mechanisms of speed-accuracy tradeoff during visual perceptual learning are revealed by a hierarchical drift-diffusion model. Frontiers in Neuroscience, 8, 69. doi:10.3389/fnins.2014.00069
+Cavanagh, J. F., Wiecki, T. V, Kochar, A., & Frank, M. J. (2014). Eye Tracking and Pupillometry Are Indicators of Dissociable Latent Decision Processes. Journal of Experimental Psychology. General. doi:10.1037/a0035813
+Dunovan, K. E., Tremel, J. J., & Wheeler, M. E. (2014). Prior probability and feature predictability interactively bias perceptual decisions. Neuropsychologia. doi:10.1016/j.neuropsychologia.2014.06.024
+
 Getting started
 ===============
 
