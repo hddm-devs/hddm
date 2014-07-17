@@ -125,6 +125,8 @@ Published papers using HDDM
 
 * Dunovan, K. E., Tremel, J. J., & Wheeler, M. E. (2014). Prior probability and feature predictability interactively bias perceptual decisions. Neuropsychologia. doi:10.1016/j.neuropsychologia.2014.06.024
 
+* Michmizos, K. P., & Krebs, H. I. (2014). Reaction time in ankle movements: a diffusion model analysis. Experimental Brain Research. doi:10.1007/s00221-014-4032-8
+
 Getting started
 ===============
 
