@@ -11,4 +11,3 @@ hddm/wfpt_gpu.py
 src/lba.pyx
 src/wfpt.pyx
 src/wfpt.c
-src/wfpt_full.c
