@@ -16,12 +16,6 @@ from kabuki import analyze
 import wfpt
 
 try:
-    import lba
-except ImportError:
-    pass
-
-
-try:
     import cdfdif_wrapper as cdfdif
 except ImportError:
     pass

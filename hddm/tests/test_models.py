@@ -57,13 +57,6 @@ class TestSingleBreakdown(unittest.TestCase):
     def runTest(self):
         return
 
-    def test_HLBA(self):
-        params = hddm.generate.gen_rand_params()
-        data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=10)
-        model = hddm.models.HLBA(data)
-        #model.find_starting_values()
-        model.sample(self.iter, burn=self.burn)
-
     def test_HDDM(self):
         for include, model_class in itertools.product(self.includes, self.model_classes):
             params = hddm.generate.gen_rand_params(include=include)
@@ -358,29 +351,6 @@ class TestRecovery(unittest.TestCase):
 
     def runTest(self):
         return
-
-    @SkipTest
-    def test_HLBA_flat(self):
-        params_true = {'A': .5, 'b': 1, 't': .3, 's': .5, 'v': [.5, .6, .7, .8]}
-        extended_params, merged_params = extend_params(params_true)
-
-        data, params_true = hddm.models.hlba_truncated.gen_rand_data(extended_params, size=100, subjs=1)
-        model = hddm.models.HLBA(data, depends_on={'v': 'condition'})
-        model.find_starting_values()
-        model.sample(self.iter, burn=self.burn)
-        model.gen_stats()
-        model.print_stats()
-        for param, true_val in merged_params.iteritems():
-            np.testing.assert_almost_equal(true_val, model.nodes_db.ix[param]['mean'])
-
-    @SkipTest
-    def test_HLBA_hierarchical(self):
-        params = hddm.models.hlba_truncated.gen_rand_params(cond_dict={'v': [.5, .6, .75, .8]})
-        data, params_true = hddm.models.hlba_truncated.gen_rand_data(params, size=100, subjs=10)
-        model = hddm.models.HLBA(data, depends_on={'v': 'condition'})
-        model.find_starting_values()
-        model.sample(self.iter, burn=self.burn)
-
 
 def extend_params(params):
     # Find list

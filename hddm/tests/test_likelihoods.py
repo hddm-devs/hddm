@@ -262,54 +262,5 @@ class TestWfptFull(unittest.TestCase):
             t = 0.2
             st = 0.1
 
-
-class TestLBA(unittest.TestCase):
-    def test_lba(self):
-        try:
-            import rpy2
-            import rpy2.robjects as robjects
-            from rpy2.robjects.packages import importr
-
-        except ImportError:
-            return
-        import hddm
-        import numpy as np
-
-        robjects.r("source('lba-math.r')")
-        for i in range(100):
-            x = np.random.randn() * 3
-            A = np.random.rand() * 2
-            b = A + np.random.rand() * 2
-            v1 = np.random.rand() * 2
-            v2 = np.random.rand() * 2
-            sv = np.random.rand() * 2 + .5
-            pdf = robjects.r("n1PDF") #t,x0max,chi,drift,sdI
-            if x > 0:
-                drifts = rpy2.robjects.vectors.FloatVector([v1, v2])
-            else:
-                drifts = rpy2.robjects.vectors.FloatVector([v2, v1])
-
-            r_result = pdf(abs(x), A, b, drifts, sv)
-            hddm_result = np.exp(hddm.lba.lba_like(np.array([x]), A, b, 0, sv, v1, v2))
-
-            np.testing.assert_almost_equal(r_result, hddm_result, 6,
-                                           "Parameters x=%f, A=%f, b=%f, v1=%f, v2=%f, sv=%f" %(x, A, b, v1, v2, sv))
-
-
-    @SkipTest
-    def test_pdf_integrate_to_one(self):
-        np.random.seed(123)
-        for tests in range(5):
-            x = np.random.randn() * 3
-            A = np.random.rand() * 2
-            b = A + np.random.rand() * 2
-            v1 = np.random.rand() * 2
-            v2 = np.random.rand() * 2
-            sv = np.random.rand() * 2 + .5
-            func = lambda x: np.exp(hddm.lba.lba_like(np.array([x]), A, b, 0, sv, v1, v2))
-            integ, error = sp.integrate.quad(func, a=-np.inf, b=np.inf)
-
-            np.testing.assert_almost_equal(integ, 1, 2)
-
 if __name__=='__main__':
     print "Run nosetest."
