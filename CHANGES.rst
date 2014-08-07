@@ -4,6 +4,12 @@
 Release Notes
 =============
 
+HDDM 0.5.5 (bugfix release)
+===========================
+
+* Upgrade dependency to pymc 2.3.3
+* Remove LBA model as likelihood seems broken
+
 HDDM 0.5.3 (bugfix release)
 ===========================
 
