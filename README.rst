@@ -86,8 +86,7 @@ Windows, Linux and OSX):
 
 ::
 
-    conda install -c pymc pymc
-    conda install -c twiecki hddm
+    conda install -c pymc hddm
 
 If you want to use pip instead of conda, type:
 
