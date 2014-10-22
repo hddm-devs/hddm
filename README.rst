@@ -126,6 +126,8 @@ Published papers using HDDM
 
 * Michmizos, K. P., & Krebs, H. I. (2014). Reaction time in ankle movements: a diffusion model analysis. Experimental Brain Research. doi:10.1007/s00221-014-4032-8
 
+* Wedel, M., & Pieters, R. (2014). The Buffer Effect: The Role of Color When Advertising Exposures Are Brief and Blurred. Marketing Science. doi:10.1287/mksc.2014.0882 
+
 Getting started
 ===============
 
