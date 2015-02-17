@@ -3,7 +3,7 @@ Introduction
 ************
 
 :Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
-:Contact: thomas_wiecki@brown.edu, imri_sofer@brown.edu, michael_frank@brown.edu
+:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, michael_frank@brown.edu
 :Web site: http://ski.clps.brown.edu/hddm_docs
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
@@ -11,7 +11,7 @@ Introduction
 :License: HDDM is released under the BSD 2 license.
 :Version: 0.5.5
 
-.. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=develop
+.. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
 Purpose
 =======
@@ -44,6 +44,13 @@ Features
 
 * Built-in Bayesian hypothesis testing and several convergence and
   goodness-of-fit diagnostics.
+
+Comparison to other packages
+============================
+
+A recent paper by Roger Ratcliff quantitatively compared DMAT, fast-dm, and EZ, and concluded: "We found that the hierarchical diffusion method [as implemented by HDDM] performed very well, and is the method of choice when the number of observations is small."
+
+Find the paper here: http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
 
 Quick-start
 ===========
@@ -127,6 +134,9 @@ Published papers using HDDM
 * Michmizos, K. P., & Krebs, H. I. (2014). Reaction time in ankle movements: a diffusion model analysis. Experimental Brain Research. doi:10.1007/s00221-014-4032-8
 
 * Wedel, M., & Pieters, R. (2014). The Buffer Effect: The Role of Color When Advertising Exposures Are Brief and Blurred. Marketing Science. doi:10.1287/mksc.2014.0882 
+
+* Ratcliff, R. & Childers, R. (2014). Individual Differences and Fitting Methods for the Two-Choice Diffusion
+Model of Decision Making. http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
 
 Getting started
 ===============
