@@ -135,8 +135,7 @@ Published papers using HDDM
 
 * Wedel, M., & Pieters, R. (2014). The Buffer Effect: The Role of Color When Advertising Exposures Are Brief and Blurred. Marketing Science. doi:10.1287/mksc.2014.0882 
 
-* Ratcliff, R. & Childers, R. (2014). Individual Differences and Fitting Methods for the Two-Choice Diffusion
-Model of Decision Making. http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
+* Ratcliff, R. & Childers, R. (2014). Individual Differences and Fitting Methods for the Two-Choice Diffusion Model of Decision Making. http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
 
 * Frank, M.J., Gagne, C., Nyhus, E., Masters, S., Wiecki, T.V., Cavanagh, J.F. & Badre, D. (2015). fMRI and EEG Predictors of Dynamic Decision Parameters during Human Reinforcement Learning. Journal of Neuroscience, 35, 484-494.
 
