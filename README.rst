@@ -139,6 +139,8 @@ Published papers using HDDM
 
 * Frank, M.J., Gagne, C., Nyhus, E., Masters, S., Wiecki, T.V., Cavanagh, J.F. & Badre, D. (2015). fMRI and EEG Predictors of Dynamic Decision Parameters during Human Reinforcement Learning. Journal of Neuroscience, 35, 484-494.
 
+* Tremel, J.J., & Wheeler M.E. (2015) Content-specific evidence accumulation in inferior temporal cortex during perceptual decision-making. NeuroImage, 109, 35-49
+
 Getting started
 ===============
 
