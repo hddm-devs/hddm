@@ -138,6 +138,8 @@ Published papers using HDDM
 * Ratcliff, R. & Childers, R. (2014). Individual Differences and Fitting Methods for the Two-Choice Diffusion
 Model of Decision Making. http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
 
+* Frank, M.J., Gagne, C., Nyhus, E., Masters, S., Wiecki, T.V., Cavanagh, J.F. & Badre, D. (2015). fMRI and EEG Predictors of Dynamic Decision Parameters during Human Reinforcement Learning. Journal of Neuroscience, 35, 484-494.
+
 Getting started
 ===============
 
