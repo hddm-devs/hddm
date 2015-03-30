@@ -92,7 +92,7 @@ Windows, Linux and OSX):
 2. In a shell (Windows: Go to Start->Programs->Anaconda->Anaconda command prompt) type:
 
 ::
-
+    conda install pymc
     conda install -c pymc hddm
 
 If you want to use pip instead of conda, type:
@@ -161,5 +161,5 @@ Join our low-traffic `mailing list`_.
 .. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
-.. _Anaconda: http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-1.8.0-Windows-x86.exe
+.. _Anaconda: http://docs.continuum.io/anaconda/install.html
 .. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
