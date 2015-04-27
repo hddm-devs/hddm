@@ -1,12 +1,12 @@
-Cython==0.16
+Cython>=0.16
 Distutils2==1.0a4
 argparse==1.2.1
-numpy==1.6.2
-pandas==0.8.1
-pymc==2.3
+numpy>=1.6.2
+pandas>=0.8.1
+pymc>=2.3.3
 python-dateutil==1.5
 pytz==2012d
 wsgiref==0.1.2
-matplotlib==1.1.0
+matplotlib>=1.1.0
 git+https://github.com/hddm-devs/kabuki.git@master
 patsy
