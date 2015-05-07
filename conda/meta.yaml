@@ -18,6 +18,7 @@ requirements:     # (optional)
     - matplotlib
     - kabuki
     - patsy
+    - cython
   run:
     - python
     - numpy
