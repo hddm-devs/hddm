@@ -15,12 +15,15 @@ cdef extern from "math.h" nogil:
     double log(double)
     double exp(double)
     double sqrt(double)
-    double fmax(double, double)
+#    double fmax(double, double)
     double pow(double, double)
     double ceil(double)
     double floor(double)
     double fabs(double)
     double M_PI
+
+cdef extern from "<algorithm>" namespace "std" nogil:
+    T max[T](T a, T b)
 
 cdef double ftt_01w(double tt, double w, double err) nogil:
     """Compute f(t|0,1,w) for the likelihood of the drift diffusion model using the method
@@ -32,14 +35,14 @@ cdef double ftt_01w(double tt, double w, double err) nogil:
     # calculate number of terms needed for large t
     if M_PI*tt*err<1: # if error threshold is set low enough
         kl=sqrt(-2*log(M_PI*tt*err)/(M_PI**2*tt)) # bound
-        kl=fmax(kl,1./(M_PI*sqrt(tt))) # ensure boundary conditions met
+        kl=max(kl,1./(M_PI*sqrt(tt))) # ensure boundary conditions met
     else: # if error threshold set too high
         kl=1./(M_PI*sqrt(tt)) # set to boundary condition
 
     # calculate number of terms needed for small t
     if 2*sqrt(2*M_PI*tt)*err<1: # if error threshold is set low enough
         ks=2+sqrt(-2*tt*log(2*sqrt(2*M_PI*tt)*err)) # bound
-        ks=fmax(ks,sqrt(tt)+1) # ensure boundary conditions are met
+        ks=max(ks,sqrt(tt)+1) # ensure boundary conditions are met
     else: # if error threshold was set too high
         ks=2 # minimal kappa for that case
 
