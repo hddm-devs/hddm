@@ -141,6 +141,8 @@ Published papers using HDDM
 
 * Tremel, J.J., & Wheeler M.E. (2015) Content-specific evidence accumulation in inferior temporal cortex during perceptual decision-making. NeuroImage, 109, 35-49
 
+* Assink, N., van der Lubbe, R.H.J., & Fox, J-P (2015) Does Time Pressure Induce Tunnel Vision? An examination with the Eriksen Flanker Task by applying the Hierarchical Drift Diffusion Model. New Developments in Computational Intelligence and Computer Science http://www.inase.org/library/2015/vienna/bypaper/APNE/APNE-04.pdf
+
 Getting started
 ===============
 
