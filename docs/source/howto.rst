@@ -542,6 +542,6 @@ There are some excellent books on Bayesian data analysis for cognitive science, 
 .. _PyMC documentation: http://pymc-devs.github.com/pymc/modelchecking.html#formal-methods
 .. _IPython Parallel Docs: http://ipython.org/ipython-doc/stable/parallel/index.html
 .. _Patsy: http://patsy.readthedocs.org/en/latest/
-.. _BEST: http://www.indiana.edu/~kruschke/BEST/BEST.pdf
+.. _BEST paper: http://www.indiana.edu/~kruschke/BEST/BEST.pdf
 .. _Lee & Wagenmakers: http://bayesmodels.com/
 .. _Kruschke: http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/
