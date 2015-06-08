@@ -504,9 +504,44 @@ started above is completed.
 
 ``HDDM`` uses the pickle module to save and load models.
 
+Compare parameters to other papers
+###################################
+
+A lot of people are very used to the parameters that come from Ratcliff's
+assumption, which is that the noise coefficient is 0.1, rather than 1. That
+noise parameter is a "scaling parameter", meaning that you just need to
+multiply HDDM's estimates of drift, starting point, and threshold (as well as
+variabilities in these parameters) by 0.1, and you get estimates that are
+commensurate with most of the parameter estimates in
+the literature.  Ratcliff et al. mention that you can scale all the DDM
+parameters in that way and you thereby get identical choice probabilities and
+RTs in several papers, such as Ratcliff & Tuerlinckx, 2002.
+
+Moreover, the `z` parameter in HDDM is relative to a (i.e. it ranges from `0`
+to `1`). Ratcliff usually reports `z` as an absolute value (i.e. it ranges from
+`0` to `a`). To transform HDDM `z` to Ratcliff's notation use `a*z`. 
+
+Hypothesis testing
+##################
+
+Since HDDM uses Bayesian estimation it is straight forward to analyze the posterior directly for hypothesis testing. You can directly work with the posterior and ask statistically meaningful questions. For example, assume you two conditions for drift-rate:
+
+::
+
+    v_Win, v_Neutral= m.nodes_db.node[['v(Win)', 'v(Neutral)']]
+    print "P_v(Win > Neutral) = ", (v_Win.trace() > v_Neutral.trace()).mean()
+
+Would give you the probability that the drift-rate in the Win condition is higher than in the Neutral condition.
+
+Note that it is wrong to just input the subject parameters of a hierarchical into a frequentist test like the T-test. The hierarchical model violates the independence assumption.
+
+There are some excellent books on Bayesian data analysis for cognitive science, e.g. `Lee & Wagenmakers`_ and `Kruschke`_, or see the `BEST paper`_ for a single journal article comparing Bayesian estimation to the t-test. 
 
 .. _PyMC docs: http://pymc-devs.github.com/pymc/database.html#saving-data-to-disk
 .. _DIC: http://www.mrc-bsu.cam.ac.uk/bugs/winbugs/dicpage.shtml
 .. _PyMC documentation: http://pymc-devs.github.com/pymc/modelchecking.html#formal-methods
 .. _IPython Parallel Docs: http://ipython.org/ipython-doc/stable/parallel/index.html
 .. _Patsy: http://patsy.readthedocs.org/en/latest/
+.. _BEST: http://www.indiana.edu/~kruschke/BEST/BEST.pdf
+.. _Lee & Wagenmakers: http://bayesmodels.com/
+.. _Kruschke: http://www.indiana.edu/~kruschke/DoingBayesianDataAnalysis/
