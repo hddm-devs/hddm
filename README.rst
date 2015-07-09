@@ -92,6 +92,7 @@ Windows, Linux and OSX):
 2. In a shell (Windows: Go to Start->Programs->Anaconda->Anaconda command prompt) type:
 
 ::
+
     conda install pymc
     conda install -c pymc hddm
 
