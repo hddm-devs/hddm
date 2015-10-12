@@ -1,4 +1,4 @@
-from __future__ import division
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
@@ -201,14 +201,14 @@ def hddm_parents_trace(model, obs_node, idx):
     """Return the parents' value of an wfpt node in index 'idx' (the
     function is used by ppd_test)
     """
-    model.params_include.keys()
+    list(model.params_include.keys())
     params = {'a': 0, 'v': 0, 't':0, 'z': 0.5, 'sz': 0, 'st': 0, 'sv': 0}
     if not np.isscalar(idx):
-        for (key, value) in params.iteritems():
+        for (key, value) in params.items():
             params[key] = np.ones(len(idx)) * value
     #example for local_name:  a,v,t,z....
     #example for parent_full_name: v(['cond1'])3
-    for local_name in model.params_include.keys():
+    for local_name in list(model.params_include.keys()):
         if local_name == 'wfpt':
             continue
 
@@ -511,7 +511,7 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
     stats = {}
     for i_subj, (subj, subj_data) in enumerate(data.groupby(['subj_idx'])):
         for key, cond_data in subj_data.groupby(groupby):
-            if not stats.has_key(key):
+            if key not in stats:
                 stats[key] = {}
             stats[key][subj] = data_quantiles(cond_data, quantiles=quantiles)
 
@@ -522,9 +522,9 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
     points = np.zeros((nq, len(stats)*2))
     p = np.zeros(len(stats)*2)
     for i_key, (key, cond_data) in enumerate(stats.items()):
-        q_lower = np.mean([x[0] for x in cond_data.values()],0)
-        q_upper = np.mean([x[1] for x in cond_data.values()],0)
-        p_upper = np.mean([x[2] for x in cond_data.values()],0)
+        q_lower = np.mean([x[0] for x in list(cond_data.values())],0)
+        q_upper = np.mean([x[1] for x in list(cond_data.values())],0)
+        p_upper = np.mean([x[2] for x in list(cond_data.values())],0)
         points[:,i_key*2] = q_lower
         points[:,i_key*2+1] = q_upper
         p[i_key*2] = 1 - p_upper

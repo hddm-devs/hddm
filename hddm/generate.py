@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 import kabuki
 import hddm
@@ -109,16 +109,16 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
 
     #create a merged set
     merged_params = org_params.copy()
-    for name in cond_dict.iterkeys():
+    for name in cond_dict.keys():
         del merged_params[name]
 
     cond_params = {};
-    n_conds = len(cond_dict.values()[0])
+    n_conds = len(list(cond_dict.values())[0])
     for i in range(n_conds):
         #create a set of parameters for condition i
         #put them in i_params, and in cond_params[c#i]
         i_params = org_params.copy()
-        for name in cond_dict.iterkeys():
+        for name in cond_dict.keys():
             i_params[name] = cond_dict[name][i]
             cond_params['c%d' %i] = i_params
 
@@ -163,8 +163,8 @@ def gen_rts(size=1000, range_=(-6, 6), dt=1e-3,
                 * 'drift': slow, simulates each complete drift process, dt should be 1e-4.
 
     """
-    if params.has_key('v_switch') and method != 'drift':
-        print "Warning: Only drift method supports changes in drift-rate. v_switch will be ignored."
+    if 'v_switch' in params and method != 'drift':
+        print("Warning: Only drift method supports changes in drift-rate. v_switch will be ignored.")
 
     # Set optional default values if they are not provided
     for var_param in ('sv', 'sz', 'st'):
@@ -193,7 +193,7 @@ def gen_rts(size=1000, range_=(-6, 6), dt=1e-3,
                                          params['sz'],params['t'],params['st'],
                                          size, range_[0], range_[1], dt)
     else:
-        raise TypeError, "Sampling method %s not found." % method
+        raise TypeError("Sampling method %s not found." % method)
     if not structured:
         return rts
     else:
@@ -231,7 +231,7 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
     a = params['a']
     v = params['v']
 
-    if params.has_key('v_switch'):
+    if 'v_switch' in params:
         switch = True
         t_switch = params['t_switch']/dt
         # Hack so that we will always step into a switch
@@ -240,14 +240,14 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
         switch = False
 
     #create delay
-    if params.has_key('st'):
+    if 'st' in params:
         start_delay = (uniform.rvs(loc=params['t'], scale=params['st'], size=samples) \
                        - params['st']/2.)
     else:
         start_delay = np.ones(samples)*params['t']
 
     #create starting_points
-    if params.has_key('sz'):
+    if 'sz' in params:
         starting_points = (uniform.rvs(loc=params['z'], scale=params['sz'], size=samples) \
                            - params['sz']/2.)*a
     else:
@@ -257,19 +257,19 @@ def _gen_rts_from_simulated_drift(params, samples=1000, dt = 1e-4, intra_sv=1.):
     step_size = np.sqrt(dt)*intra_sv
     drifts = []
 
-    for i_sample in xrange(samples):
+    for i_sample in range(samples):
         drift = np.array([])
         crossed = False
         iter = 0
         y_0 = starting_points[i_sample]
         # drifting...
-        if params.has_key('sv') and params['sv'] != 0:
+        if 'sv' in params and params['sv'] != 0:
             drift_rate = norm.rvs(v, params['sv'])
         else:
             drift_rate = v
 
-        if params.has_key('v_switch'):
-            if params.has_key('V_switch') and params['V_switch'] != 0:
+        if 'v_switch' in params:
+            if 'V_switch' in params and params['V_switch'] != 0:
                 drift_rate_switch = norm.rvs(params['v_switch'], params['V_switch'])
             else:
                 drift_rate_switch = params['v_switch']

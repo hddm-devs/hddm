@@ -4,13 +4,13 @@ __docformat__ = 'restructuredtext'
 
 __version__ = '0.5.5'
 
-import likelihoods
-import generate
-import utils
-import models
+from . import likelihoods
+from . import generate
+from . import utils
+from . import models
 import cdfdif_wrapper
 
-from models import *
+from .models import *
 from kabuki import analyze
 
 import wfpt
