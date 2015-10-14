@@ -9,7 +9,7 @@
 
 """
 
-from __future__ import division
+
 from collections import OrderedDict
 
 import numpy as np
@@ -41,7 +41,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
 
     def _create_an_average_model(self):
-        raise NotImplementedError, "This method has to be overloaded. See HDDMBase."
+        raise NotImplementedError("This method has to be overloaded. See HDDMBase.")
 
 
     def _quantiles_optimization(self, method, quantiles=(.1, .3, .5, .7, .9 ), n_runs=3):
@@ -147,7 +147,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             return results
 
         #init DataFrame to save results
-        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=self.values.keys())
+        res =  pd.DataFrame(np.zeros((n_bootstraps, len(self.values))), columns=list(self.values.keys()))
 
         #prepare view for parallelization
         if parallel_profile is not None: #create view
@@ -164,7 +164,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #resample data
             new_data = data.ix[np.random.randint(0, len(data), len(data))]
-            new_data = new_data.set_index(pd.Index(range(len(data))))
+            new_data = new_data.set_index(pd.Index(list(range(len(data)))))
             h = accumulator_class(new_data, **class_kwargs)
 
             #run optimization
@@ -173,7 +173,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             return pd.Series(h.values, dtype=np.float)
 
         #bootstrap iterations
-        for i_strap in xrange(n_bootstraps):
+        for i_strap in range(n_bootstraps):
             if view is None:
                 res.ix[i_strap] = single_bootstrap(self.data)
             else:
@@ -183,13 +183,13 @@ class AccumulatorModel(kabuki.Hierarchical):
         #get parallel results
         if view is not None:
             view.wait(runs_list)
-            for i_strap in xrange(n_bootstraps):
+            for i_strap in range(n_bootstraps):
                 res.ix[i_strap] = runs_list[i_strap].get()
 
         #get statistics
         stats = res.describe()
         for q in [2.5, 97.5]:
-            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[`q` + '%']).T)
+            stats = stats.append(pd.DataFrame(res.quantile(q/100.), columns=[repr(q) + '%']).T)
 
         self.bootstrap_stats = stats.sort_index()
         return results
@@ -200,7 +200,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         if method == 'ML':
             if self.is_group_model:
-                raise TypeError, "optimization method is not defined for group models"
+                raise TypeError("optimization method is not defined for group models")
             else:
                 results, _ = self._optimization_single(method, quantiles, n_runs=n_runs)
                 return results
@@ -271,13 +271,13 @@ class AccumulatorModel(kabuki.Hierarchical):
         all_results = []
         values = original_values.copy()
         inf_objective = False
-        for i_run in xrange(n_runs):
+        for i_run in range(n_runs):
             #initalize values to a random point
             values_iter = 0
             while inf_objective:
                 values_iter += 1
                 values = original_values + np.random.randn(len(values))*(2**-values_iter)
-                self.set_values(dict(zip(names, values)))
+                self.set_values(dict(list(zip(names, values))))
                 inf_objective = np.isinf(objective(values))
 
             #optimze
@@ -293,7 +293,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         #get best results
         best_idx = np.nanargmin([x[1] for x in all_results])
         best_values = all_results[best_idx][0]
-        self.set_values(dict(zip(names, best_values)))
+        self.set_values(dict(list(zip(names, best_values))))
         results = self.values
 
         #calc BIC for G^2
@@ -720,7 +720,7 @@ class HDDMBase(AccumulatorModel):
         knodes = self._create_stochastic_knodes(self.include)
         knodes['wfpt'] = self._create_wfpt_knode(knodes)
 
-        return knodes.values()
+        return list(knodes.values())
 
     def plot_posterior_predictive(self, *args, **kwargs):
         if 'value_range' not in kwargs:

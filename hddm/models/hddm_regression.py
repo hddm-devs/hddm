@@ -72,7 +72,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         # order parents according to user-supplied args
         args = []
         for arg in reg['params']:
-            for parent_name, parent in kwargs['parents'].iteritems():
+            for parent_name, parent in kwargs['parents'].items():
                 if parent_name == arg:
                     args.append(parent)
 
@@ -81,14 +81,14 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         # Make sure design matrix is kosher
         dm = dmatrix(reg['model'], data=data)
         if math.isnan(dm.sum()):
-            raise NotImplementedError, 'DesignMatrix contains NaNs.'
+            raise NotImplementedError('DesignMatrix contains NaNs.')
 
         def func(args, design_matrix=dmatrix(reg['model'], data=data), link_func=reg['link_func']):
             # convert parents to matrix
             params = np.matrix(args)
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
-                raise NotImplementedError, 'Missing columns in design matrix. You need data for all conditions for all subjects.'
+                raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
             predictor = link_func(pd.DataFrame((design_matrix * params).sum(axis=1), index=data.index))
 
             return pd.DataFrame(predictor, index=data.index)
@@ -157,7 +157,7 @@ class HDDMRegressor(HDDM):
 
         """
         self.keep_regressor_trace = keep_regressor_trace
-        if isinstance(models, (basestring, dict)):
+        if isinstance(models, (str, dict)):
             models = [models]
 
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
@@ -171,7 +171,7 @@ class HDDMRegressor(HDDM):
                     model_str = model['model']
                     link_func = model['link_func']
                 except KeyError:
-                    raise KeyError, "HDDMRegressor requires a model specification either like {'model': 'v ~ 1 + C(your_variable)', 'link_func' lambda x: np.exp(x)} or just a model string"
+                    raise KeyError("HDDMRegressor requires a model specification either like {'model': 'v ~ 1 + C(your_variable)', 'link_func' lambda x: np.exp(x)} or just a model string")
             else:
                 model_str = model
                 link_func = lambda x: x
@@ -190,8 +190,8 @@ class HDDMRegressor(HDDM):
             }
             self.model_descrs.append(model_descr)
 
-            print "Adding these covariates:"
-            print model_descr['params']
+            print("Adding these covariates:")
+            print(model_descr['params'])
             if group_only_regressors:
                 group_only_nodes += model_descr['params']
                 kwargs['group_only_nodes'] = group_only_nodes
@@ -212,13 +212,13 @@ class HDDMRegressor(HDDM):
         del d['wfpt_reg_class']
         for model in d['model_descrs']:
             if 'link_func' in model:
-                print "WARNING: Will not save custom link functions."
+                print("WARNING: Will not save custom link functions.")
                 del model['link_func']
         return d
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        print "WARNING: Custom link functions will not be loaded."
+        print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
         super(HDDMRegressor, self).__setstate__(d)
@@ -257,7 +257,7 @@ class HDDMRegressor(HDDM):
                     param_lookup = param[:param.find('_')]
                     reg_family = super(HDDMRegressor, self)._create_stochastic_knodes([param_lookup])
                     # Rename nodes to avoid collissions
-                    names = reg_family.keys()
+                    names = list(reg_family.keys())
                     for name in names:
                         knode = reg_family.pop(name)
                         knode.name = knode.name.replace(param_lookup, param, 1)

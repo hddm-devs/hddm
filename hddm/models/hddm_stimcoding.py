@@ -36,13 +36,13 @@ class HDDMStimCoding(HDDM):
 
         if self.split_param == 'z':
             assert not self.drift_criterion, "Setting drift_criterion requires split_param='v'."
-            print "Setting model to be non-informative"
+            print("Setting model to be non-informative")
             kwargs['informative'] = False
             if 'include' in kwargs and 'z' not in kwargs['include']:
                 kwargs['include'].append('z')
             else:
                 kwargs['include'] = ['z']
-            print "Adding z to includes."
+            print("Adding z to includes.")
 
         self.stims = np.asarray(np.sort(np.unique(args[0][self.stim_col])))
         assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col

@@ -1,4 +1,4 @@
-from __future__ import division
+
 from copy import copy
 import itertools
 import glob
@@ -60,8 +60,8 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
 
             #generate params for experiment with n_conds conditions
             cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
-            print "*** the true parameters ***"
-            print merged_params
+            print("*** the true parameters ***")
+            print(merged_params)
 
             #generate samples
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=10000)
@@ -86,7 +86,7 @@ def optimization_recovery_single_subject(repeats=10, seed=1, true_starting_point
             #compare results to true values
             index = ['true', 'estimated']
             df = pd.DataFrame([merged_params, recovered_params], index=index, dtype=np.float).dropna(1)
-            print df
+            print(df)
 
             #assert
             np.testing.assert_allclose(df.values[0], df.values[1], atol=0.1)
@@ -146,8 +146,8 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
         for i in range(repeats):
             #generate params for experiment with n_conds conditions
             cond_params, merged_params = hddm.generate.gen_rand_params(include=include, cond_dict={'v':v})
-            print "*** the true parameters ***"
-            print merged_params
+            print("*** the true parameters ***")
+            print(merged_params)
 
             #generate samples
             samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
@@ -173,7 +173,7 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
             #compare results to true values
             index = ['best_estimate', 'current_estimate']
             df = pd.DataFrame([best_params, recovered_params], index=index, dtype=np.float).dropna(1)
-            print df
+            print(df)
 
             #assert
             np.testing.assert_allclose(df.values[0], df.values[1], atol=0.15)

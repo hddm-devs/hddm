@@ -56,9 +56,9 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     #slow outliers
     outliers.rt[n_outliers//2:] = np.random.rand(n_outliers - n_outliers//2) * 2 + max(abs(data['rt']))
     outliers.response = np.random.randint(0,2,n_outliers)
-    print "generating %d outliers. %f of the dataset" % (n_outliers, float(n_outliers)/(n_outliers + len(data)))
-    print "%d outliers are fast" % sum(outliers.rt < min(data.rt))
-    print "%d outliers are slow" % sum(outliers.rt > max(data.rt))
+    print("generating %d outliers. %f of the dataset" % (n_outliers, float(n_outliers)/(n_outliers + len(data))))
+    print("%d outliers are fast" % sum(outliers.rt < min(data.rt)))
+    print("%d outliers are slow" % sum(outliers.rt > max(data.rt)))
 
     #Estimating the data without outliers. this is the best estimation we could get
     #from this data
@@ -67,8 +67,8 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     index = ['true', 'estimated']
     best_estimate = hm.values
     df = pd.DataFrame([params_true, hm.values], index=index, dtype=np.float).dropna(1)
-    print "benchmark: MAP of clean data. This is as good as we can get"
-    print df
+    print("benchmark: MAP of clean data. This is as good as we can get")
+    print(df)
 
     #combine data with outliers
     data = pd.concat((data, outliers), ignore_index=True)
@@ -78,8 +78,8 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     hm.map()
     index = ['best_estimate', 'this_estimate']
     df = pd.DataFrame([best_estimate, hm.values], index=index, dtype=np.float).dropna(1)
-    print "MAP with outliers: This is as bas as we can get"
-    print df
+    print("MAP with outliers: This is as bas as we can get")
+    print(df)
 
 
     #MAP with p_outlier as random variable
@@ -87,24 +87,24 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     hm.map()
     df = pd.DataFrame([best_estimate, hm.values], index=index, dtype=np.float)
     df.ix['best_estimate']['p_outlier'] = 0
-    print "MAP with random p_outlier (Estimated from the data)"
-    print df.dropna(1)
+    print("MAP with random p_outlier (Estimated from the data)")
+    print(df.dropna(1))
 
     #MAP with fixed p_outlier
     fixed_p_outlier = 0.1
     hm = hddm.HDDMTruncated(data, p_outlier=fixed_p_outlier)
     hm.map()
     df = pd.DataFrame([best_estimate, hm.values], index=index, dtype=np.float)
-    print "MAP with fixed p_outlier (%.3f) " % fixed_p_outlier
-    print df.dropna(1)
+    print("MAP with fixed p_outlier (%.3f) " % fixed_p_outlier)
+    print(df.dropna(1))
 
 
     #Chi-square
     hm = hddm.HDDMTruncated(data)
     hm.optimize(method='chisquare')
     df = pd.DataFrame([best_estimate, hm.values], index=index, dtype=np.float).dropna(1)
-    print "Chisquare method"
-    print df
+    print("Chisquare method")
+    print(df)
 
     return data
 

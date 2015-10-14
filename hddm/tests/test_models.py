@@ -1,4 +1,4 @@
-from __future__ import division
+
 from copy import copy
 import itertools
 import kabuki
@@ -354,12 +354,12 @@ class TestRecovery(unittest.TestCase):
 
 def extend_params(params):
     # Find list
-    extend_param = [param for param, val in params.iteritems() if isinstance(val, (list, tuple))]
+    extend_param = [param for param, val in params.items() if isinstance(val, (list, tuple))]
     if len(extend_param) > 1:
         raise ValueError('Only one parameter can be extended')
     extend_param = extend_param[0]
 
-    fixed_params = [param for param, val in params.iteritems() if not isinstance(val, (list, tuple))]
+    fixed_params = [param for param, val in params.items() if not isinstance(val, (list, tuple))]
 
     out_extended = {}
     out_merged = {k: params[k] for k in fixed_params}
@@ -373,4 +373,4 @@ def extend_params(params):
     return out_extended, out_merged
 
 if __name__=='__main__':
-    print "Run nosetest.py"
+    print("Run nosetest.py")

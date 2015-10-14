@@ -48,11 +48,11 @@ class TestWfpt(unittest.TestCase):
 
     def test_pdf_no_matlab(self):
         # Test if our wfpt pdf implementation yields the same results as the reference implementation by Navarro & Fuss 2009
-        from matlab_values import vals
+        from .matlab_values import vals
 
         for v, t, a, z, z_nonorm, rt, err, matlab_wfpt in vals:
             python_wfpt = hddm.wfpt.full_pdf(-rt, v, 0, a, z, 0, t, 0, err, 0)
-            print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
+            print(v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt)
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
     def test_pdf(self):
@@ -73,7 +73,7 @@ class TestWfpt(unittest.TestCase):
             # Test if equal up to the 9th decimal.
             matlab_wfpt = mlabwrap.mlab.wfpt(rt-t, v, a, z_nonorm, err)[0][0]
             python_wfpt = hddm.wfpt.pdf_array(np.asarray([-rt]), v, 0, a, z, 0, t, 0, err, 0)[0]
-            print v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt
+            print(v,t,a,z,z_nonorm,rt,err, matlab_wfpt, python_wfpt)
             np.testing.assert_array_almost_equal(matlab_wfpt, python_wfpt, 9)
 
     def test_summed_logp(self):
@@ -132,9 +132,9 @@ class TestWfptFull(unittest.TestCase):
             my_res = hddm.wfpt.full_pdf(rt,v=v,sv=0,a=a,z=z,sz=0,t=t, st=st,err=err, n_st=5, n_sz=5, use_adaptive=1)
             res = hddm.wfpt.full_pdf(rt,v=v,sv=0,a=a,z=z,sz=0,t=t, st=st,err=err, n_st=n_st, n_sz=n_sz, use_adaptive=0)
 
-            print "(%d) rt %f, v: %f, sv: %f, z: %f, sz: %f, t: %f, st: %f a: %f" % (i,rt,v,sv,z,sz,t,st,a)
-            print my_res
-            print res
+            print("(%d) rt %f, v: %f, sv: %f, z: %f, sz: %f, t: %f, st: %f a: %f" % (i,rt,v,sv,z,sz,t,st,a))
+            print(my_res)
+            print(res)
             if np.isinf(my_res):
                 my_res = 100
             if np.isinf(res):
@@ -212,9 +212,9 @@ class TestWfptFull(unittest.TestCase):
                     y_t[j_t] = simps(y_z, x=None, dx=hsz)
                     res[3+vvv*4] = simps(y_t, x=None, dx=hst)
 
-            print "(%d) rt %f, v: %f, sv: %f, z: %f, sz: %f, t: %f, st: %f a: %f" % (i,rt,v,sv,z,sz,t,st,a)
-            print my_res
-            print res
+            print("(%d) rt %f, v: %f, sv: %f, z: %f, sz: %f, t: %f, st: %f a: %f" % (i,rt,v,sv,z,sz,t,st,a))
+            print(my_res)
+            print(res)
             my_res[np.isinf(my_res)] = 100
             res[np.isinf(res)] = 100
             self.assertTrue(not any(np.isnan(my_res))), "Found NaN in the results"
@@ -263,4 +263,4 @@ class TestWfptFull(unittest.TestCase):
             st = 0.1
 
 if __name__=='__main__':
-    print "Run nosetest."
+    print("Run nosetest.")
