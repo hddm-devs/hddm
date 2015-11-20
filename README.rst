@@ -144,6 +144,7 @@ Published papers using HDDM
 
 * Assink, N., van der Lubbe, R.H.J., & Fox, J-P (2015) Does Time Pressure Induce Tunnel Vision? An examination with the Eriksen Flanker Task by applying the Hierarchical Drift Diffusion Model. New Developments in Computational Intelligence and Computer Science http://www.inase.org/library/2015/vienna/bypaper/APNE/APNE-04.pdf
 
+* Zhang, J., Rittman, T., Nombela, C., Fois, A., Coyle-Gilchrist, I., Barker, R. A., Hughes, L. E., Rowe, J. B, (2015) Different decision deficits impair response inhibition in progressive supranuclear palsy and Parkinson’s disease. Brain, 1-13. http://brain.oxfordjournals.org/content/brain/early/2015/11/17/brain.awv331.full.pdf
 Getting started
 ===============
 
