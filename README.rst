@@ -21,6 +21,8 @@ estimation of the Drift Diffusion Model (via PyMC). Drift Diffusion
 Models are used widely in psychology and cognitive neuroscience to
 study decision making.
 
+Check out the tutorial_ on how to get started. Further information can be found below as well as in the howto_ section and the documentation_.
+
 Features
 ========
 
@@ -145,6 +147,12 @@ Published papers using HDDM
 * Assink, N., van der Lubbe, R.H.J., & Fox, J-P (2015) Does Time Pressure Induce Tunnel Vision? An examination with the Eriksen Flanker Task by applying the Hierarchical Drift Diffusion Model. New Developments in Computational Intelligence and Computer Science http://www.inase.org/library/2015/vienna/bypaper/APNE/APNE-04.pdf
 
 * Zhang, J., Rittman, T., Nombela, C., Fois, A., Coyle-Gilchrist, I., Barker, R. A., Hughes, L. E., Rowe, J. B, (2015) Different decision deficits impair response inhibition in progressive supranuclear palsy and Parkinson’s disease. Brain, 1-13. http://brain.oxfordjournals.org/content/brain/early/2015/11/17/brain.awv331.full.pdf
+
+Testimonials
+============
+
+James Rowe (Cambridge University): "The HDDM modelling gave insights into the effects of disease that were simply not visible from a traditional analysis of RT/Accuracy. It provides a clue as to why many disorders including PD and PSP can give the paradoxical combination of akinesia and impulsivity. Perhaps of broader interest, the hierarchical drift diffusion model turned out to be very robust. In separate work, we have found that the HDDM gave accurate estimates of decision parameters with many fewer than 100 trials, in contrast to the hundreds or even thousands one might use for ‘traditional’ DDMs. This meant it was realistic to study patients who do not tolerate long testing sessions."
+
 Getting started
 ===============
 
