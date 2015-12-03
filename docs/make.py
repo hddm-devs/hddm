@@ -114,7 +114,7 @@ def auto_dev_build(debug=False):
         upload_dev_pdf()
         if not debug:
             sendmail(step)
-    except (Exception, SystemExit), inst:
+    except (Exception, SystemExit) as inst:
         msg = str(inst) + '\n'
         sendmail(step, '[ERROR] ' + msg)
 
@@ -204,7 +204,7 @@ if len(sys.argv)>1:
         func = funcd.get(arg)
         if func is None:
             raise SystemExit('Do not know how to handle %s; valid args are %s'%(
-                    arg, funcd.keys()))
+                    arg, list(funcd.keys())))
         func()
 else:
     small_docs = False
