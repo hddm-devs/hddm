@@ -1,12 +1,12 @@
 package:
   name: hddm     # lower case name of package, may contain '-' but no spaces
-  version: 0.5.5    # version of package
+  version: 0.6.0    # version of package
 
 source:
 # The source section specifies where the source code of the package is coming
 # from, it may be coming from a source tarball like:
-  fn: v0.5.5.zip
-  url: https://github.com/hddm-devs/hddm/archive/v0.5.5.zip
+  fn: v0.6.0.zip
+  url: https://github.com/hddm-devs/hddm/archive/v0.6.0.zip
 
 # the build and runtime requirements:
 requirements:     # (optional)
