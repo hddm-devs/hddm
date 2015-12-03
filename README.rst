@@ -87,6 +87,8 @@ please see the main `publication`_.
 Installation
 ============
 
+As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
+
 The easiest way to install HDDM is through Anaconda (available for
 Windows, Linux and OSX):
 
@@ -95,7 +97,6 @@ Windows, Linux and OSX):
 
 ::
 
-    conda install pymc
     conda install -c pymc hddm
 
 If you want to use pip instead of conda, type:
