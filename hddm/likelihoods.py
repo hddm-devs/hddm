@@ -51,7 +51,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
         if x['rt'].abs().max() < 998:
             return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
-        else:
+        else:  # for missing RTs. Currently undocumented.
             noresponse = x['rt'].abs() >= 999
             ## get sum of log p for trials with RTs as usual ##
             LLH_resp = hddm.wfpt.wiener_like(x.loc[-noresponse, 'rt'].values,
