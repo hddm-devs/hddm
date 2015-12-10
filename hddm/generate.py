@@ -428,11 +428,11 @@ def add_outliers(data, n_fast, n_slow, seed=None):
     outliers = data.ix[idx].copy()
 
     #fast outliers
-    outliers.rt[:n_fast] = np.random.rand(n_fast) * (min(abs(data['rt'])) - 0.1001)  + 0.1001
+    outliers[:n_fast]['rt'] = np.random.rand(n_fast) * (min(abs(data['rt'])) - 0.1001)  + 0.1001
 
     #slow outliers
-    outliers.rt[n_fast:] = np.random.rand(n_slow) * 2 + max(abs(data['rt']))
-    outliers.response = np.random.randint(0,2,n_outliers)
+    outliers[n_fast:]['rt'] = np.random.rand(n_slow) * 2 + max(abs(data['rt']))
+    outliers['response'] = np.random.randint(0,2,n_outliers)
 
     #combine data with outliers
     data = pd.concat((data, outliers), ignore_index=True)
