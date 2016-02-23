@@ -149,6 +149,8 @@ Published papers using HDDM
 
 * Zhang, J., Rittman, T., Nombela, C., Fois, A., Coyle-Gilchrist, I., Barker, R. A., Hughes, L. E., Rowe, J. B, (2015) Different decision deficits impair response inhibition in progressive supranuclear palsy and Parkinson’s disease. Brain, 1-13. http://brain.oxfordjournals.org/content/brain/early/2015/11/17/brain.awv331.full.pdf
 
+* Nie, Q., Maurer, M., Müller, H., & Conci, M., (2016) Inhibition drives configural superiority of illusory Gestalt: Combined behavioral and drift–diffusion model evidence. Cognition, 150, 150-162 http://www.sciencedirect.com/science/article/pii/S001002771630035X
+
 Testimonials
 ============
 
