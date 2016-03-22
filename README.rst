@@ -151,6 +151,8 @@ Published papers using HDDM
 
 * Nie, Q., Maurer, M., Müller, H., & Conci, M., (2016) Inhibition drives configural superiority of illusory Gestalt: Combined behavioral and drift–diffusion model evidence. Cognition, 150, 150-162 http://www.sciencedirect.com/science/article/pii/S001002771630035X
 
+* Herz, D. M., Zavala, B. A., Bogacz, R., Brown, P. (2016) Neural Correlates of Decision Thresholds in the Human Subthalamic Nucleus. Current Biology, http://www.cell.com/current-biology/fulltext/S0960-9822%2816%2900133-0
+
 Testimonials
 ============
 
