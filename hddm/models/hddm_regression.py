@@ -120,8 +120,8 @@ class HDDMRegressor(HDDM):
             * group_only_regressors : bool (default=True)
                 Do not estimate individual subject parameters for all regressors.
             * keep_regressor_trace : bool (default=False)
-                Whether to keep a trace of the regressor. This will use much more space
-                but if you need it if you want to run PPCs.
+                Whether to keep a trace of the regressor. This will use much more space,
+                but needed for posterior predictive checks.
             * Additional keyword args are passed on to HDDM.
 
         :Note:
