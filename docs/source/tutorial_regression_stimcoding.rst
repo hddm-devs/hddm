@@ -195,7 +195,7 @@ First we print the model stats
 
     m_reg.print_stats()
 
-Here is the relevent output for our purposes:
+Here is the relevant output for our purposes:
 .. parsed-literal::
 
     parameter			mean       std      2.5q       25q       50q       75q      97.5q
