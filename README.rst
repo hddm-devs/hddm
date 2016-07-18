@@ -52,7 +52,7 @@ Comparison to other packages
 
 A recent paper by Roger Ratcliff quantitatively compared DMAT, fast-dm, and EZ, and concluded: "We found that the hierarchical diffusion method [as implemented by HDDM] performed very well, and is the method of choice when the number of observations is small."
 
-Find the paper here: http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
+Find the paper here: http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4517692/
 
 Quick-start
 ===========
