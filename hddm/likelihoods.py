@@ -49,8 +49,45 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #create likelihood function
     def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
-        return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
+        if x['rt'].abs().max() < 998:
+            return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st,
+                                         p_outlier=p_outlier, **wp)
+        else:  # for missing RTs. Currently undocumented.
+            noresponse = x['rt'].abs() >= 999
+            ## get sum of log p for trials with RTs as usual ##
+            LLH_resp = hddm.wfpt.wiener_like(x.loc[-noresponse, 'rt'].values,
+                                             v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 
+            ## get sum of log p for no-response trials from p(upper_boundary|parameters) ##
+            # this function assumes following format for the RTs:
+            # - accuracy coding such that correct responses have a 1 and incorrect responses a 0
+            # - usage of HDDMStimCoding for z
+            # - missing RTs are coded as 999/-999
+            # - note that hddm will flip RTs, such that error trials have negative RTs
+            # so that the miss-trial in the go condition and comission error
+            # in the no-go condition will have negative RTs
+
+            # get number of no-response trials
+            n_noresponse = sum(noresponse)
+
+            # percentage correct according to probability to get to upper boundary
+            if v == 0:
+                p_correct = z
+            else:
+                p_correct = (np.exp(-2 * a * z * v) - 1) / (np.exp(-2 * a * v) - 1)
+
+            # calculate percent no-response trials from % correct
+            if sum(x.loc[noresponse, 'rt']) > 0:
+                p_noresponse = p_correct # when no-response trials have a positive RT
+                                         # we are looking at nogo Trials
+            else:
+                p_noresponse = 1 - p_correct # when no-response trials have a 
+                                             # negative RT we are looking at go Trials
+
+            # likelihood for no-response trials
+            LLH_noresp = np.log(p_noresponse)*n_noresponse
+
+            return LLH_resp + LLH_noresp
 
     #create random function
     def random(self):
