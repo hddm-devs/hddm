@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.6.0
+:Version: 0.6.1
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -152,6 +152,8 @@ Published papers using HDDM
 * Nie, Q., Maurer, M., Müller, H., & Conci, M., (2016) Inhibition drives configural superiority of illusory Gestalt: Combined behavioral and drift–diffusion model evidence. Cognition, 150, 150-162 http://www.sciencedirect.com/science/article/pii/S001002771630035X
 
 * Herz, D. M., Zavala, B. A., Bogacz, R., Brown, P. (2016) Neural Correlates of Decision Thresholds in the Human Subthalamic Nucleus. Current Biology, http://www.cell.com/current-biology/fulltext/S0960-9822%2816%2900133-0
+
+* Mathias SR., Knowles EE., Barrett J., Leach O., Buccheri S., Beetham T., Blangero J., Poldrack R.A., Glahn D.C. (2017) The Processing-Speed Impairment in Psychosis Is More Than Just Accelerated Aging.. Schizophr Bull. https://www.ncbi.nlm.nih.gov/pubmed/28062652
 
 Testimonials
 ============
