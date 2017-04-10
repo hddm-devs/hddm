@@ -155,6 +155,8 @@ Published papers using HDDM
 
 * Mathias SR., Knowles EE., Barrett J., Leach O., Buccheri S., Beetham T., Blangero J., Poldrack R.A., Glahn D.C. (2017) The Processing-Speed Impairment in Psychosis Is More Than Just Accelerated Aging.. Schizophr Bull. https://www.ncbi.nlm.nih.gov/pubmed/28062652
 
+* Steinweg, B., & Mast, F. W. (2017). Semantic incongruity influences response caution in audio-visual integration. Experimental brain research, 235(1), 349-363. 
+
 Testimonials
 ============
 
