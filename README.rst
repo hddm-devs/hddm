@@ -157,6 +157,8 @@ Published papers using HDDM
 
 * Steinweg, B., & Mast, F. W. (2017). Semantic incongruity influences response caution in audio-visual integration. Experimental brain research, 235(1), 349-363. 
 
+* de Gee JW, Colizoli O, Kloosterman NA, Knapen T, Nieuwenhuis S & Donner TH (2017). Dynamic modulation of decision biases by brainstem arousal systems. eLife. 2017 Apr 6;6. pii: e23232. doi: 10.7554/eLife.23232.
+
 Testimonials
 ============
 
