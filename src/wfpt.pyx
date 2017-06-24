@@ -58,13 +58,12 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
-    for i in prange(size, nogil=True, schedule='dynamic'):
+    for i in range(size):
         p = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         p = p * (1 - p_outlier) + wp_outlier
         if p == 0:
-            with gil:
-                return -np.inf
+            return -np.inf
 
         sum_logp += log(p)
 
