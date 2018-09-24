@@ -69,6 +69,52 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
 
     return sum_logp
 
+ def wiener_like_rlddm(np.ndarray[double, ndim=1] x, 
+                      np.ndarray[double, ndim=1] response,
+                      np.ndarray[double, ndim=2] rew, 
+                      np.ndarray[double, ndim=2] exp,
+                      double alpha, double dual_alpha=0, double v, double sv, double a, double z, double sz, double t,
+                      double st, double err, int n_st=2, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                      double p_outlier=0, double w_outlier=0):
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
+    cdef double p
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    cdef double alfalfa
+    #cdef double exp = np.array([[np.tile([0.5],size)],[np.tile([0.5],size)]])
+    #cdef double exp = exp[:,0,:]
+    #cdef double beta = 0.02
+
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
+
+    for i in range(1,size):
+
+        if i > 0:
+
+            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
+            if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
+                alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
+            else:
+                alfalfa = np.exp(alpha)/(1+np.exp(alpha))
+
+            #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
+            exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
+            exp[0,i] = (exp[0,i-1]*(response[i-1])) + ((1-response[i-1])*(exp[0,i-1]+(alfalfa*(rew[0,i-1]-exp[0,i-1]))))
+
+            #exp_up[i] = (exp_up[i-1]*(1-response[i-1])) + ((response[i-1])*(exp_up[i-1]+(alfalfa*(rew_up[i-1]-exp_up[i-1]))))
+            #exp_low[i] = (exp_low[i-1]*(response[i-1])) + ((1-response[i-1])*(exp_low[i-1]+(alfalfa*(rew_low[i-1]-exp_low[i-1]))))
+
+        p = full_pdf(x[i], (exp[1,i]-exp[0,i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+        # If one probability = 0, the log sum will be -Inf
+        p = p * (1 - p_outlier) + wp_outlier
+        if p == 0:
+            return -np.inf
+
+        sum_logp += log(p)
+
+    return sum_logp
 
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
                       int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
