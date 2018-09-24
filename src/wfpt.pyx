@@ -100,9 +100,6 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
             exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
             exp[0,i] = (exp[0,i-1]*(response[i-1])) + ((1-response[i-1])*(exp[0,i-1]+(alfalfa*(rew[0,i-1]-exp[0,i-1]))))
 
-            #exp_up[i] = (exp_up[i-1]*(1-response[i-1])) + ((response[i-1])*(exp_up[i-1]+(alfalfa*(rew_up[i-1]-exp_up[i-1]))))
-            #exp_low[i] = (exp_low[i-1]*(response[i-1])) + ((1-response[i-1])*(exp_low[i-1]+(alfalfa*(rew_low[i-1]-exp_low[i-1]))))
-
         p = full_pdf(x[i], (exp[1,i]-exp[0,i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         p = p * (1 - p_outlier) + wp_outlier
