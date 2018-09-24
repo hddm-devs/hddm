@@ -82,9 +82,6 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfalfa
-    #cdef double exp = np.array([[np.tile([0.5],size)],[np.tile([0.5],size)]])
-    #cdef double exp = exp[:,0,:]
-    #cdef double beta = 0.02
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
