@@ -44,7 +44,8 @@ class HDDMrl(HDDM):
                                                                     std_lower=1e-10,
                                                                     std_upper=10, 
                                                                     std_value=.1))
-            knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
+            #tried including here, didn't seem to work
+            #knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
