@@ -56,8 +56,8 @@ class HDDMrl(HDDM):
         return wfpt_parents
 
     #use own wfpt_class, defined in the init
-    def _create_wfpt_knode(self, knodes):
-        wfpt_parents = self._create_wfpt_parents_dict(knodes)
+    def _create_wfpt_knode(self, knodes, include):
+        wfpt_parents = self._create_wfpt_parents_dict(knodes,include)
         return Knode(self.wfpt_rl_class, 'wfpt',
                                    observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt'],
                                    **wfpt_parents)
