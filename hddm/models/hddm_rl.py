@@ -44,14 +44,14 @@ class HDDMrl(HDDM):
                                                                     std_lower=1e-10,
                                                                     std_upper=10, 
                                                                     std_value=.1))
+            knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
-        #if dual_alpha is not included this leads to failure.
-        #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] 
+        
         return wfpt_parents
 
     #use own wfpt_class, defined in the init
