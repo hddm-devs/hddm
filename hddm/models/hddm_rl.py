@@ -51,6 +51,7 @@ class HDDMrl(HDDM):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
+        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else self.default_intervars['dual_alpha']
         
         return wfpt_parents
 
