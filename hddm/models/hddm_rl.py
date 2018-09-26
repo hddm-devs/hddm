@@ -46,18 +46,17 @@ class HDDMrl(HDDM):
                                                                     std_value=.1))
         return knodes
 
-    def _create_wfpt_parents_dict(self, knodes,include):
+    def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         #if dual_alpha is not included this leads to failure.
-        if 'dual_alpha' in include:
-            wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] 
+        #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return wfpt_parents
 
     #use own wfpt_class, defined in the init
-    def _create_wfpt_knode(self, knodes, include):
-        wfpt_parents = self._create_wfpt_parents_dict(knodes,include)
+    def _create_wfpt_knode(self, knodes):
+        wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
                                    observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt'],
                                    **wfpt_parents)
