@@ -409,6 +409,63 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
+def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0,subjs=1,cond='null'):
+    all_data = []
+    for s in range(0,subjs):
+        n = size
+        exp_up = np.tile([0.5],n) # initialize exp
+        exp_low = np.tile([0.5],n) # initialize exp
+        response = np.tile([0.5],n)
+        feedback = np.tile([0.5],n)
+        rt = np.tile([0],n)
+        rew_up = np.random.binomial(1,p_upper,n)
+        rew_low = np.random.binomial(1,p_lower,n)
+        v = np.tile([0],n)
+        subj_idx = np.tile([s],n)
+        alfalfa = 0
+        d = {'exp_up': exp_up, 'exp_low': exp_low, 'v': v, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'cond': cond, 'trial': 0}
+        df = pd.DataFrame(data=d)
+        df = df[['exp_up','exp_low','v','rew_up','rew_low','response','rt','feedback','subj_idx','cond','trial']]
+
+        data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[0,'v'],'z': z},subjs=1,size=1)
+        if (data.response[0] == 1.0):
+            df.loc[0,'response'] = 1
+            df.loc[0,'feedback'] = df.loc[0,'rew_up']
+            df.loc[0,'rt'] = data.rt[0]
+        else:
+            df.loc[0,'response'] = 0
+            df.loc[0,'feedback'] = df.loc[0,'rew_low']
+            df.loc[0,'rt'] = 0-data.rt[0]
+            
+        if (df.loc[0,'feedback'] == 1.0):
+            alfalfa = alpha+dual_alpha
+        else:
+            alfalfa = alpha
+
+        for i in range(1,n):
+            df.loc[i,'trial'] = i
+            df.loc[i,'exp_up'] = (df.loc[i-1,'exp_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'exp_up']+(alfalfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'exp_up']))))
+            df.loc[i,'exp_low'] = (df.loc[i-1,'exp_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'exp_low']+(alfalfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'exp_low']))))
+            df.loc[i,'v'] = (df.loc[i,'exp_up']-df.loc[i,'exp_low'])*(scaler)
+            data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[i,'v'],'z': z},subjs=1,size=1)
+            if (data.response[0] == 1.0):
+                df.loc[i,'response'] = 1
+                df.loc[i,'feedback'] = df.loc[i,'rew_up']
+                df.loc[i,'rt'] = data.rt[0]
+            else:
+                df.loc[i,'response'] = 0
+                df.loc[i,'feedback'] = df.loc[i,'rew_low']
+                df.loc[i,'rt'] = 0-data.rt[0]
+            if (df.loc[i,'feedback'] == 1.0):
+                alfalfa = alpha+dual_alpha
+            else:
+                alfalfa = alpha
+        all_data.append(df)
+    all_data = pd.concat(all_data, axis=0)
+    all_data['absRT'] = np.absolute(all_data.rt) 
+    
+    return all_data
+
 def add_outliers(data, n_fast, n_slow, seed=None):
     """add outliers to data. outliers are distrbuted randomly across condition.
     Input:
