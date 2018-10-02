@@ -86,7 +86,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
-    for i in range(1,size):
+    for i in range(size):
 
         if i > 0:
 
