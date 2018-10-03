@@ -409,7 +409,7 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
-def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0,subjs=1,cond='null'):
+def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0,subjs=1,split_by='null'):
     all_data = []
     for s in range(0,subjs):
         n = size
@@ -423,9 +423,9 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0
         v = np.tile([0],n)
         subj_idx = np.tile([s],n)
         alfalfa = 0
-        d = {'exp_up': exp_up, 'exp_low': exp_low, 'v': v, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'cond': cond, 'trial': 0}
+        d = {'exp_up': exp_up, 'exp_low': exp_low, 'v': v, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'split_by': split_by, 'trial': 0}
         df = pd.DataFrame(data=d)
-        df = df[['exp_up','exp_low','v','rew_up','rew_low','response','rt','feedback','subj_idx','cond','trial']]
+        df = df[['exp_up','exp_low','v','rew_up','rew_low','response','rt','feedback','subj_idx','split_by','trial']]
 
         data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[0,'v'],'z': z},subjs=1,size=1)
         if (data.response[0] == 1.0):
