@@ -35,15 +35,15 @@ class HDDMrl(HDDM):
                                                                     std_upper=10, 
                                                                     std_value=.1))
             
-        if 'dual_alpha' in include:
-            # Add second learning rate parameter
-            knodes.update(self._create_family_normal('dual_alpha',
-                                                                    value=0,
-                                                                    g_mu=0.2,
-                                                                    g_tau=3**-2,
-                                                                    std_lower=1e-10,
-                                                                    std_upper=10, 
-                                                                    std_value=.1))
+        #if 'dual_alpha' in include:
+        #    # Add second learning rate parameter
+         #   knodes.update(self._create_family_normal('dual_alpha',
+         #                                                           value=0,
+         #                                                           g_mu=0.2,
+         #                                                           g_tau=3**-2,
+          #                                                          std_lower=1e-10,
+         #                                                           std_upper=10, 
+         #                                                           std_value=.1))
             #tried including here, didn't seem to work
             #knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return knodes
@@ -53,7 +53,7 @@ class HDDMrl(HDDM):
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         #fails if dual_alpha is not in include
-        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else self.default_intervars['dual_alpha']
+        #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else self.default_intervars['dual_alpha']
         
         return wfpt_parents
 
