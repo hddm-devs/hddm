@@ -134,6 +134,8 @@ class HDDM(HDDMBase):
             knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
         if 'z' in include:
             knodes.update(self._create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
+        if 'dual_alpha' in include:
+            knodes.update(self._create_family_normal('dual_alpha',value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10,std_upper=10,std_value=.1))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
 
