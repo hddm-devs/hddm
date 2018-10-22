@@ -18,8 +18,6 @@ class HDDMrl(HDDM):
     """
     def __init__(self, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
-        self.slice_widths = {'alpha':1.5, 'dual_alpha':1.5}
-        self.emcee_dispersions = {'alpha':1.5, 'dual_alpha': 1.5}
         #self.dual_alpha = kwargs.pop('dual_alpha', True)
         self.wfpt_rl_class = WienerRL
 
