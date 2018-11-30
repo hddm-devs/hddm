@@ -73,7 +73,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[double, ndim=1] response,
                       np.ndarray[double, ndim=2] rew, 
                       np.ndarray[double, ndim=2] exp,
-                      np.ndarray[double,ndim=1] split_positions,
+                      np.ndarray[long,ndim=1] split_positions,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=2, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
