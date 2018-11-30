@@ -73,6 +73,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[double, ndim=1] response,
                       np.ndarray[double, ndim=2] rew, 
                       np.ndarray[double, ndim=2] exp,
+                      np.ndarray[double,ndim=1] split_positions,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=2, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -88,7 +89,12 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 
     for i in range(size):
 
-        if i > 0:
+        #now it receives the entire dataset across split_by. what are the calculations we want to include, and how can they be most easily included?
+        # do not calculate first trial, just update. this should then be for all changes-trials, so could be: 
+        if i in split_positions:
+            exp[0,i] = exp[0,0]
+            exp[1,i] = exp[1,0]
+        else:
 
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
             if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
@@ -100,13 +106,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
             exp[0,i] = (exp[0,i-1]*(response[i-1])) + ((1-response[i-1])*(exp[0,i-1]+(alfalfa*(rew[0,i-1]-exp[0,i-1]))))
 
-        p = full_pdf(x[i], (exp[1,i]-exp[0,i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-        # If one probability = 0, the log sum will be -Inf
-        p = p * (1 - p_outlier) + wp_outlier
-        if p == 0:
-            return -np.inf
-
-        sum_logp += log(p)
+            p = full_pdf(x[i], (exp[1,i]-exp[0,i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            # If one probability = 0, the log sum will be -Inf
+            p = p * (1 - p_outlier) + wp_outlier
+            if p == 0:
+                return -np.inf
+                
+            sum_logp += log(p)
 
     return sum_logp
 
