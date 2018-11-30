@@ -78,7 +78,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     #x.sort_values(['split_by','trial'],inplace=True)
     #change = (x.split_by.ne(x.split_by.shift())).astype(int)
     #split_positions = np.flatnonzero(change == 1)
-    split_positions = (0,60,120)
+    split_positions = [0,60,120]
     rew = np.array([[x['rew_low']],[x['rew_up']]],np.float64)
     rew = rew[:,0,:]
     response = x['response'].values
