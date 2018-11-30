@@ -61,7 +61,7 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt'],
+                                   observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt','trial','exp_up','exp_low'],
                                    **wfpt_parents)
 
 def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
@@ -74,17 +74,14 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     #print("v = %.2f alpha = %.2f a = %.2f x = %.2f" % (v,alpha,a,x['rt'].values))
     sum_logp = 0
     wp = wiener_params
-    #print(wp)
-    splits = x['split_by'].unique()
-    for s in splits:
-        #print('new split')
-        y = x[x['split_by'] == s]
-        #print(y['split_by'])
-        rew = np.array([[y['rew_low']],[y['rew_up']]],np.float64)
-        rew = rew[:,0,:]
-        response = y['response'].values
-        exp = np.array([[np.tile([0.5],y.shape[0])],[np.tile([0.5],y.shape[0])]])
-        exp = exp[:,0,:]
-        sum_logp += wiener_like_rlddm(y['rt'].values, response,rew,exp,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
-    return sum_logp
+
+    x.sort_values(['split_by','trial'],inplace=True)
+    change = (x.split_by.ne(adhd1.split_by.shift())).astype(int)
+    split_positions = np.flatnonzero(change == 1)
+    rew = np.array([[x['rew_low']],[x['rew_up']]],np.float64)
+    rew = rew[:,0,:]
+    response = x['response'].values
+    exp = np.array([[x['exp_low']],[x['exp_up']]],np.float64)
+    exp = exp[:,0,:]
+    return wiener_like_rlddm(x['rt'].values, response,rew,exp,split_positions,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
