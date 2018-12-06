@@ -90,6 +90,5 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     rew_low = x['rew_low'].values
     #split_by = x['split_by'].values
     u, split_by = np.unique(x['split_by'].values, return_inverse=True)
-    split_by = split_by.values
     return wiener_like_rlddm(x['rt'].values, response,rew_up,rew_low,exp_up,exp_low,split_by,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
