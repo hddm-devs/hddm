@@ -96,8 +96,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     for s in range(unique):
         exp_ups = exp_up[split_by==s]
         exp_lows = exp_low[split_by==s]
-        rew_ups = rew_ups[split_by==s]
-        rew_lows = rew_lows[split_by==s]
+        rew_ups = rew_up[split_by==s]
+        rew_lows = rew_low[split_by==s]
         responses = response[split_by==s]
         xs = x[split_by==s]
     
