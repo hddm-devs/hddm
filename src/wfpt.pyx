@@ -85,7 +85,9 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfalfa = np.exp(alpha)/(1+np.exp(alpha))
-    cdef double u, cdef double indices = np.unique(split_by, return_inverse=True)
+    cdef double both = np.unique(split_by, return_inverse=True)
+    cdef double u = both[0]
+    cdef double indices = both[1]
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
