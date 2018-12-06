@@ -75,9 +75,9 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     sum_logp = 0
     wp = wiener_params
 
-    x.sort_values(['split_by','trial'],inplace=True)
-    #change = (x.split_by.ne(x.split_by.shift())).astype(int)
-    #split_positions = np.flatnonzero(change == 1)
+    #x.sort_values(['split_by','trial'],inplace=True)
+    change = (x.split_by.ne(x.split_by.shift())).astype(int)
+    split_positions = np.flatnonzero(change == 1)
     #split_positions = np.array([   0,  10,  12])
     #splits = x['split_by'].unique()
     #for s in splits:
