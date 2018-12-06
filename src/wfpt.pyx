@@ -81,7 +81,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfalfa
+    cdef double alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
@@ -94,7 +94,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             #if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
             #    alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
             #else:
-        alfalfa = np.exp(alpha)/(1+np.exp(alpha))
+        #alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
         exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
