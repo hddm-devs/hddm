@@ -125,7 +125,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 
             sum_logp += log(p)
             
-       sum_logp += sum_logp
+       #sum_logp += sum_logp
 
     return sum_logp
 
