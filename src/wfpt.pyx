@@ -76,6 +76,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[double, ndim=1] exp_up,
                       np.ndarray[double, ndim=1] exp_low, 
                       np.ndarray[long, ndim=1] split_by,
+                      long unique,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=2, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -85,20 +86,20 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfalfa = np.exp(alpha)/(1+np.exp(alpha))
-    cdef np.ndarray[double, ndim=2] both = np.unique(split_by, return_inverse=True)
-    cdef double u = both[0].shape[0]
-    cdef np.ndarray[double, ndim=1] indices = both[1]
+    #cdef np.ndarray[double, ndim=2] both = np.unique(split_by, return_inverse=True)
+    #cdef double u = both[0].shape[0]
+    #cdef np.ndarray[double, ndim=1] indices = both[1]
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
-    for s in range(u):
-        exp_ups = exp_up[indices==s]
-        exp_lows = exp_low[indices==s]
-        rew_ups = rew_ups[indices==s]
-        rew_lows = rew_lows[indices==s]
-        responses = response[indices==s]
-        xs = x[indices==s]
+    for s in range(unique):
+        exp_ups = exp_up[split_by==s]
+        exp_lows = exp_low[split_by==s]
+        rew_ups = rew_ups[split_by==s]
+        rew_lows = rew_lows[split_by==s]
+        responses = response[split_by==s]
+        xs = x[split_by==s]
     
         for i in range(1,size):
             #if i in split_positions:
