@@ -75,10 +75,14 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     sum_logp = 0
     wp = wiener_params
 
-    rew = np.array([[x['rew_low']],[x['rew_up']]],np.float64)
-    rew = rew[:,0,:]
+    #rew = np.array([[x['rew_low']],[x['rew_up']]],np.float64)
+    #rew = rew[:,0,:]
     response = x['response'].values
-    exp = np.array([[x['exp_low']],[x['exp_up']]],np.float64)
-    exp = exp[:,0,:]
-    return wiener_like_rlddm(x['rt'].values, response,rew,exp,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
+    exp_up = x['exp_up'].values
+    exp_low = x['exp_low'].values
+    rew_up = x['rew_up'].values
+    rew_low = x['rew_low'].values
+    #exp = np.array([[x['exp_low']],[x['exp_up']]],np.float64)
+    #exp = exp[:,0,:]
+    return wiener_like_rlddm(x['rt'].values, response,rew_up,rew_low,exp_up,exp_low,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
