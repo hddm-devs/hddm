@@ -94,13 +94,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         return -np.inf
     
     for s in range(unique):
-        cdef np.ndarray[double, ndim=1] exp_ups = exp_up[split_by==s]
-        cdef np.ndarray[double, ndim=1] exp_lows = exp_low[split_by==s]
-        cdef np.ndarray[double, ndim=1] rew_ups = rew_up[split_by==s]
-        cdef np.ndarray[double, ndim=1] rew_lows = rew_low[split_by==s]
-        cdef np.ndarray[double, ndim=1] responses = response[split_by==s]
-        cdef np.ndarray[double, ndim=1] xs = x[split_by==s]
-        cdef Py_ssize_t s_size = xs.shape[0]
+        exp_ups = exp_up[split_by==s]
+        exp_lows = exp_low[split_by==s]
+        rew_ups = rew_up[split_by==s]
+        rew_lows = rew_low[split_by==s]
+        responses = response[split_by==s]
+        xs = x[split_by==s]
+        s_size = xs.shape[0]
     
         for i in range(1,s_size):
             #if i in split_positions:
