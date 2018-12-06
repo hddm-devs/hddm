@@ -78,11 +78,16 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     #x.sort_values(['split_by','trial'],inplace=True)
     #change = (x.split_by.ne(x.split_by.shift())).astype(int)
     #split_positions = np.flatnonzero(change == 1)
-    split_positions = np.array([   0,  10,  12])
-    response = x['response'].values
-    exp_up = x['exp_up'].values
-    exp_low = x['exp_low'].values
-    rew_up = x['rew_up'].values
-    rew_low = x['rew_low'].values
-    return wiener_like_rlddm(x['rt'].values, response,rew_up,rew_low,exp_up,exp_low,split_positions,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
+    #split_positions = np.array([   0,  10,  12])
+    splits = x['split_by'].unique()
+    for s in splits:
+        #print('new split')
+        y = x[x['split_by'] == s]
+        response = y['response'].values
+        exp_up = y['exp_up'].values
+        exp_low = y['exp_low'].values
+        rew_up = y['rew_up'].values
+        rew_low = y['rew_low'].values
+        sum_logp += wiener_like_rlddm(y['rt'].values, response,rew_up,rew_low,exp_up,exp_low,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
+    return sum_logp
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
