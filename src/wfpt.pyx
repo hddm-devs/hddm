@@ -86,19 +86,19 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
-    for i in range(size):
+    for i in range(1,size):
 
-        if i > 0:
+        #if i > 0:
 
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
             #if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
             #    alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
             #else:
-            alfalfa = np.exp(alpha)/(1+np.exp(alpha))
+        alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
-            exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
-            exp[0,i] = (exp[0,i-1]*(response[i-1])) + ((1-response[i-1])*(exp[0,i-1]+(alfalfa*(rew[0,i-1]-exp[0,i-1]))))
+        exp[1,i] = (exp[1,i-1]*(1-response[i-1])) + ((response[i-1])*(exp[1,i-1]+(alfalfa*(rew[1,i-1]-exp[1,i-1]))))
+        exp[0,i] = (exp[0,i-1]*(response[i-1])) + ((1-response[i-1])*(exp[0,i-1]+(alfalfa*(rew[0,i-1]-exp[0,i-1]))))
 
         p = full_pdf(x[i], (exp[1,i]-exp[0,i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
