@@ -101,7 +101,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         responses = response[split_by==s]
         xs = x[split_by==s]
     
-        for i in range(1,size):
+        for i in range(1,xs.shape[0]):
             #if i in split_positions:
             #    exp_up[i] = exp_up[0]
             #    exp_low[i] = exp_low[0]
