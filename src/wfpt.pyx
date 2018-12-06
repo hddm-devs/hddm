@@ -75,7 +75,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[double, ndim=1] rew_low, 
                       np.ndarray[double, ndim=1] exp_up,
                       np.ndarray[double, ndim=1] exp_low, 
-                      np.ndarray[long,ndim=1] split_positions,
+                      #np.ndarray[long,ndim=1] split_positions,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=2, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -89,11 +89,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
-    for i in range(size):
-        if i in split_positions:
-            exp_up[i] = exp_up[0]
-            exp_low[i] = exp_low[0]
-        else:
+    for i in range(1,size):
+        #if i in split_positions:
+        #    exp_up[i] = exp_up[0]
+        #    exp_low[i] = exp_low[0]
+        #else:
         #if i > 0:
 
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
@@ -102,17 +102,17 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             #else:
         #alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
-            #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
-            exp_up[i] = (exp_up[i-1]*(1-response[i-1])) + ((response[i-1])*(exp_up[i-1]+(alfalfa*(rew_up[i-1]-exp_up[i-1]))))
-            exp_low[i] = (exp_low[i-1]*(response[i-1])) + ((1-response[i-1])*(exp_low[i-1]+(alfalfa*(rew_low[i-1]-exp_low[i-1]))))
+        #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
+        exp_up[i] = (exp_up[i-1]*(1-response[i-1])) + ((response[i-1])*(exp_up[i-1]+(alfalfa*(rew_up[i-1]-exp_up[i-1]))))
+        exp_low[i] = (exp_low[i-1]*(response[i-1])) + ((1-response[i-1])*(exp_low[i-1]+(alfalfa*(rew_low[i-1]-exp_low[i-1]))))
 
-            p = full_pdf(x[i], (exp_up[i]-exp_low[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-            # If one probability = 0, the log sum will be -Inf
-            p = p * (1 - p_outlier) + wp_outlier
-            if p == 0:
-                return -np.inf
+        p = full_pdf(x[i], (exp_up[i]-exp_low[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+        # If one probability = 0, the log sum will be -Inf
+        p = p * (1 - p_outlier) + wp_outlier
+        if p == 0:
+            return -np.inf
 
-            sum_logp += log(p)
+        sum_logp += log(p)
 
     return sum_logp
 
