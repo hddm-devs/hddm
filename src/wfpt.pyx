@@ -106,12 +106,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            #alternativ solution to updating learning rate, ideally without if
-            #if reward is higher than expected, use both, but don't want to do double if
-            #could put alphas into two-dim array. or could combine rew and exp here
-            
-            #simplest but potentially costly
-            
+            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
             if responses[i-1] == 0:
                 if rew_lows[i-1] > exp_lows[i-1]:
                     alfa = pos_alpha
@@ -122,12 +117,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
-              
-            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
-            #if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
-            #    alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
-            #else:
-            #    alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
