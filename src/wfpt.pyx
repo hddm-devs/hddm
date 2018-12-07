@@ -105,10 +105,10 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         for i in range(1,s_size):
 
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
-            if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
-                alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
-            else:
-                alfalfa = np.exp(alpha)/(1+np.exp(alpha))
+            #if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
+            #    alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
+            #else:
+            #    alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfalfa*(rew_ups[i-1]-exp_ups[i-1]))))
