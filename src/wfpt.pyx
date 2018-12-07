@@ -86,14 +86,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfalfa = np.exp(alpha)/(1+np.exp(alpha))
-    #cdef np.ndarray[double, ndim=2] both = np.unique(split_by, return_inverse=True)
-    #cdef double u = both[0].shape[0]
-    #cdef np.ndarray[double, ndim=1] indices = both[1]
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
+    # unique represent # of conditions
     for s in range(unique):
+        #select trials for current condition, identified by the split_by-array
         exp_ups = exp_up[split_by==s]
         exp_lows = exp_low[split_by==s]
         rew_ups = rew_up[split_by==s]
@@ -101,19 +100,15 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         responses = response[split_by==s]
         xs = x[split_by==s]
         s_size = xs.shape[0]
-    
+        
+        #loop through all trials in current condition
         for i in range(1,s_size):
-            #if i in split_positions:
-            #    exp_up[i] = exp_up[0]
-            #    exp_low[i] = exp_low[0]
-            #else:
-            #if i > 0:
 
-                # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
-                #if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
-                #    alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
-                #else:
-            #alfalfa = np.exp(alpha)/(1+np.exp(alpha))
+            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
+            if rew[response[i-1],i-1] > exp[response[i-1],i-1]:
+                alfalfa = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
+            else:
+                alfalfa = np.exp(alpha)/(1+np.exp(alpha))
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfalfa*(rew_ups[i-1]-exp_ups[i-1]))))
@@ -126,8 +121,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 return -np.inf
 
             sum_logp += log(p)
-            
-       #sum_logp += sum_logp
 
     return sum_logp
 
