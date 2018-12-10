@@ -35,16 +35,16 @@ class HDDMrl(HDDM):
                                                                     std_upper=10, 
                                                                     std_value=.1))
             
-        if 'dual_alpha':
+        #if 'dual_alpha':
         #    # Add second learning rate parameter
             #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
-            knodes.update(self._create_family_normal('dual_alpha',
-                                                                    value=0,
-                                                                    g_mu=0.2,
-                                                                    g_tau=3**-2,
-                                                                    std_lower=1e-10,
-                                                                    std_upper=10, 
-                                                                    std_value=.1))
+       #    knodes.update(self._create_family_normal('dual_alpha',
+        #                                                            value=0,
+        #                                                            g_mu=0.2,
+         #                                                           g_tau=3**-2,
+         #                                                           std_lower=1e-10,
+       #  #                                                           std_upper=10, 
+        #                                                            std_value=.1))
             #tried including here, didn't seem to work
             #knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return knodes
