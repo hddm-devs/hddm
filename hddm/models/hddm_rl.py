@@ -54,7 +54,7 @@ class HDDMrl(HDDM):
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         #fails if dual_alpha is not in include
-        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else self.default_intervars['dual_alpha']
+        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
         
         return wfpt_parents
 
