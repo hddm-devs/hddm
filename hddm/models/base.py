@@ -647,14 +647,14 @@ class HDDMBase(AccumulatorModel):
     def __init__(self, data, bias=False, include=(),
                  wiener_params=None, p_outlier=0., **kwargs):
 
-        self.default_intervars = kwargs.pop('default_intervars', {'sz': 0, 'st': 0, 'sv': 0,'dual_alpha':0})
+        self.default_intervars = kwargs.pop('default_intervars', {'sz': 0, 'st': 0, 'sv': 0})
 
         self._kwargs = kwargs
 
         self.include = set(['v', 'a', 't'])
         if include is not None:
             if include == 'all':
-                [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier','dual_alpha')]
+                [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier')]
             elif isinstance(include, str):
                 self.include.add(include)
             else:
@@ -708,7 +708,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
         wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
-        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else self.default_intervars['dual_alpha']
+        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
         wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
         return wfpt_parents
 
