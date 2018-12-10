@@ -708,7 +708,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
         wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
-        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
+        #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
         wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
         return wfpt_parents
 
