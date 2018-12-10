@@ -654,7 +654,7 @@ class HDDMBase(AccumulatorModel):
         self.include = set(['v', 'a', 't'])
         if include is not None:
             if include == 'all':
-                [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier')]
+                [self.include.add(param) for param in ('z', 'st','sv','sz', 'p_outlier','dual_alpha')]
             elif isinstance(include, str):
                 self.include.add(include)
             else:
