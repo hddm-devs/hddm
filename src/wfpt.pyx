@@ -82,6 +82,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
+    cdef int s
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
