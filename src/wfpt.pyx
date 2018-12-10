@@ -84,6 +84,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
+    cdef int exp_ups = 0.5
+    cdef int exp_lows = 0.5
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
@@ -103,8 +105,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     # unique represent # of conditions
     for s in range(unique):
         #select trials for current condition, identified by the split_by-array
-        exp_ups = exp_up[split_by==s]
-        exp_lows = exp_low[split_by==s]
+        #exp_ups = exp_up[split_by==s]
+        #exp_lows = exp_low[split_by==s]
         rew_ups = rew_up[split_by==s]
         rew_lows = rew_low[split_by==s]
         responses = response[split_by==s]
@@ -116,21 +118,21 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
             if responses[i-1] == 0:
-                if rew_lows[i-1] > exp_lows[i-1]:
+                if rew_lows[i-1] > exp_lows:
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
             else:
-                if rew_ups[i-1] > exp_ups[i-1]:
+                if rew_ups[i-1] > exp_ups:
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
 
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
-            exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
-            exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
+            exp_ups = (exp_ups*(1-responses[i-1])) + ((responses[i-1])*(exp_ups+(alfa*(rew_ups[i-1]-exp_ups))))
+            exp_lows = (exp_lows*(responses[i-1])) + ((1-responses[i-1])*(exp_lows+(alfa*(rew_lows[i-1]-exp_lows))))
 
-            p = full_pdf(xs[i], (exp_ups[i]-exp_lows[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            p = full_pdf(xs[i], (exp_ups-exp_lows)*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             p = p * (1 - p_outlier) + wp_outlier
             if p == 0:
