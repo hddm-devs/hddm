@@ -409,7 +409,7 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
-def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0,subjs=1,split_by='null'):
+def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0,subjs=1,split_by=0):
     all_data = []
     for s in range(0,subjs):
         n = size
@@ -418,8 +418,8 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0
         response = np.tile([0.5],n)
         feedback = np.tile([0.5],n)
         rt = np.tile([0],n)
-        rew_up = np.random.binomial(1,p_upper,n)
-        rew_low = np.random.binomial(1,p_lower,n)
+        rew_up = np.random.binomial(1,p_upper,n).astype(float)
+        rew_low = np.random.binomial(1,p_lower,n).astype(float)
         v = np.tile([0],n)
         subj_idx = np.tile([s],n)
         alfalfa = 0
