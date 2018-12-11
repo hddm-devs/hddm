@@ -125,11 +125,12 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
-            print(exp_ups[i])
+            
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
-
+            
+            print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f" % ((exp_ups[i]-exp_lows[i])*v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i]))
             p = full_pdf(xs[i], (exp_ups[i]-exp_lows[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             p = p * (1 - p_outlier) + wp_outlier
