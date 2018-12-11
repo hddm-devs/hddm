@@ -34,26 +34,12 @@ class HDDMrl(HDDM):
                                                                     std_lower=1e-10,
                                                                     std_upper=10, 
                                                                     std_value=.1))
-            
-        #if 'dual_alpha':
-        #    # Add second learning rate parameter
-            #wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
-       #    knodes.update(self._create_family_normal('dual_alpha',
-        #                                                            value=0,
-        #                                                            g_mu=0.2,
-         #                                                           g_tau=3**-2,
-         #                                                           std_lower=1e-10,
-       #  #                                                           std_upper=10, 
-        #                                                            std_value=.1))
-            #tried including here, didn't seem to work
-            #knodes['dual_alpha'] = knodes['dual_alpha_bottom'] 
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
 
         wfpt_parents['alpha'] = knodes['alpha_bottom']
-        #fails if dual_alpha is not in include
         wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
         
         return wfpt_parents
@@ -72,18 +58,9 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
                      'simps_err':1e-3,
                      'w_outlier': 0.1}
     
-    #print("v = %.2f alpha = %.2f a = %.2f x = %.2f" % (v,alpha,a,x['rt'].values))
     sum_logp = 0
     wp = wiener_params
 
-    #x.sort_values(['split_by','trial'],inplace=True)
-    #change = (x.split_by.ne(x.split_by.shift())).astype(int)
-    #split_positions = np.flatnonzero(change == 1)
-    #split_positions = np.array([   0,  10,  12])
-    #splits = x['split_by'].unique()
-    #for s in splits:
-        #print('new split')
-        #y = x[x['split_by'] == s]
     response = x['response'].values
     exp_up = x['exp_up'].values
     exp_low = x['exp_low'].values
@@ -91,6 +68,8 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     rew_low = x['rew_low'].values
     split_by = x['split_by'].values
     unique = np.unique(split_by).shape[0]
+    # could use something like the line below to avoid sending exp_up and exp_low as arrays. want to access the different values of 
+    # of by u (below), but not using for-loop.
     #u, split_by = np.unique(x['split_by'].values, return_inverse=True)
     return wiener_like_rlddm(x['rt'].values, response,rew_up,rew_low,exp_up,exp_low,split_by,unique,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
