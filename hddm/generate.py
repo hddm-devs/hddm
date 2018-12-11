@@ -427,7 +427,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0
         df = pd.DataFrame(data=d)
         df = df[['exp_up','exp_low','sim_drift','rew_up','rew_low','response','rt','feedback','subj_idx','split_by','trial']]
 
-        data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'sim_drift': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
+        data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
         if (data.response[0] == 1.0):
             df.loc[0,'response'] = 1
             df.loc[0,'feedback'] = df.loc[0,'rew_up']
@@ -447,7 +447,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,dual_alpha=0
             df.loc[i,'exp_up'] = (df.loc[i-1,'exp_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'exp_up']+(alfalfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'exp_up']))))
             df.loc[i,'exp_low'] = (df.loc[i-1,'exp_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'exp_low']+(alfalfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'exp_low']))))
             df.loc[i,'sim_drift'] = (df.loc[i,'exp_up']-df.loc[i,'exp_low'])*(scaler)
-            data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'sim_drift': df.loc[i,'sim_drift'],'z': z},subjs=1,size=1)
+            data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[i,'sim_drift'],'z': z},subjs=1,size=1)
             if (data.response[0] == 1.0):
                 df.loc[i,'response'] = 1
                 df.loc[i,'feedback'] = df.loc[i,'rew_up']
