@@ -84,8 +84,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
-    #cdef double exp_ups = 0.5
-    #cdef double exp_lows = 0.5
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
@@ -127,7 +125,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
-
+            print(exp_ups[i])
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
