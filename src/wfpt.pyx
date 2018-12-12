@@ -89,7 +89,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa = 0
     cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
-    cdef double pos_alpha = np.exp(alpha+dual_alpha)/(1+np.exp(alpha+dual_alpha))
+    cdef double pos_alpha = np.exp(dual_alpha)/(1+np.exp(dual_alpha))
     cdef np.ndarray exp_ups
     cdef np.ndarray exp_lows
     cdef np.ndarray rew_ups
