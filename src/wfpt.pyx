@@ -131,6 +131,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
             
             print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv))
+            # t is set to 0, which I don't understand. so for now I've set it to 0.3 to see if I can run without p_outlier
             p = full_pdf(xs[i], (exp_ups[i]-exp_lows[i])*v, sv, a, z, sz, 0.3, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             print('p: ',p)
