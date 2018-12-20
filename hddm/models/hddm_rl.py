@@ -52,12 +52,12 @@ class HDDMrl(HDDM):
                                    **wfpt_parents)
 
 def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
-    wiener_params = {'n_st':2,
-                     'n_sz':2,
-                     'use_adaptive':1,
-                     'simps_err':1e-3,
-                     'w_outlier': 0.1}
     
+    if wiener_params is None:
+        wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
+                         'use_adaptive':1,
+                         'simps_err':1e-3,
+                         'w_outlier': 0.1}
     sum_logp = 0
     wp = wiener_params
 
