@@ -59,7 +59,7 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
         return -np.inf
 
     for i in range(size):
-        print("rt = %.2f v = %.2f a = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (x[i],v,a,s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
+        print("rt = %.2f v = %.2f a = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (x[i],v,a,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
         p = full_pdf(x[i], v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         print('p: ',p)
