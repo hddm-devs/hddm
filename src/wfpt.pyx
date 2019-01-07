@@ -216,7 +216,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
               else:
                 p = 1-(np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
             # If one probability = 0, the log sum will be -Inf
-            print("p = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (p,(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
+            #print("p = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (p,(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
             #print('p: ',p)
             p = p * (1 - p_outlier) + wp_outlier
             #print('p after: ',p) 
