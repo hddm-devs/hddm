@@ -211,7 +211,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
             if drift == 0:
               p = 0.5
             else:
-              if response[i] == 1:
+              if responses[i] == 1:
                 p = (np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
               else:
                 p = 1-(np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
