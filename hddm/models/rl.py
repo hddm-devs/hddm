@@ -19,7 +19,7 @@ class Hrl(HDDM):
     def __init__(self, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
-        self.wfpt_rl_class = WienerRL
+        self.wfpt_rl_class = RL
 
         super(Hrl, self).__init__(*args, **kwargs)
 
