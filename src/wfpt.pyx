@@ -134,7 +134,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
             
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
-            # t is set to 0, which I don't understand. so for now I've set it to 0.3 to see if I can run without p_outlier
             p = full_pdf(xs[i], (exp_ups[i]-exp_lows[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             #print('p: ',p)
@@ -208,8 +207,6 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
             
-            #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
-            # t is set to 0, which I don't understand. so for now I've set it to 0.3 to see if I can run without p_outlier
             drift = (exp_ups[i]-exp_lows[i])*v
             if drift == 0:
               p = 0.5
@@ -219,6 +216,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
               else:
                 p = 1-(np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
             # If one probability = 0, the log sum will be -Inf
+            print("p = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (p,(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
             #print('p: ',p)
             p = p * (1 - p_outlier) + wp_outlier
             #print('p after: ',p) 
