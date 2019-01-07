@@ -19,7 +19,7 @@ class Hrl(HDDM):
     def __init__(self, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
-        self.wfpt_rl_class = RL
+        self.rl_class = RL
 
         super(Hrl, self).__init__(*args, **kwargs)
 
@@ -47,7 +47,7 @@ class Hrl(HDDM):
     #use own wfpt_class, defined in the init
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        return Knode(self.wfpt_rl_class, 'wfpt',
+        return Knode(self.rl_class, 'wfpt',
                                    observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt','exp_up','exp_low'],
                                    **wfpt_parents)
 
