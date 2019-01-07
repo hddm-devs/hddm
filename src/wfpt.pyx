@@ -146,6 +146,82 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             sum_logp += log(p)
 
     return sum_logp
+  
+def wiener_like_rl(np.ndarray[double, ndim=1] response,
+                      np.ndarray[double, ndim=1] rew_up, 
+                      np.ndarray[double, ndim=1] rew_low, 
+                      np.ndarray[double, ndim=1] exp_up,
+                      np.ndarray[double, ndim=1] exp_low, 
+                      np.ndarray[long, ndim=1] split_by,
+                      long unique,
+                      double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
+                      double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                      double p_outlier=0, double w_outlier=0):
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
+    cdef int s
+    cdef int s_size
+    cdef double p
+    cdef double drift
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    cdef double alfa = 0
+    cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
+    cdef double pos_alpha = np.exp(dual_alpha)/(1+np.exp(dual_alpha))
+    cdef np.ndarray exp_ups
+    cdef np.ndarray exp_lows
+    cdef np.ndarray rew_ups
+    cdef np.ndarray rew_lows
+    cdef np.ndarray responses
+    cdef np.ndarray xs
+    
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
+    
+    # unique represent # of conditions
+    for s in range(unique):
+        #select trials for current condition, identified by the split_by-array
+        exp_ups = exp_up[split_by==s]
+        exp_lows = exp_low[split_by==s]
+        rew_ups = rew_up[split_by==s]
+        rew_lows = rew_low[split_by==s]
+        responses = response[split_by==s]
+        xs = x[split_by==s]
+        s_size = xs.shape[0]
+        
+        #loop through all trials in current condition
+        for i in range(1,s_size):
+            
+            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
+            if responses[i-1] == 0:
+                if rew_lows[i-1] > exp_lows[i-1]:
+                    alfa = pos_alpha
+                else:
+                    alfa = neg_alpha
+            else:
+                if rew_ups[i-1] > exp_ups[i-1]:
+                    alfa = pos_alpha
+                else:
+                    alfa = neg_alpha
+            
+            #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
+            exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
+            exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
+            
+            #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
+            # t is set to 0, which I don't understand. so for now I've set it to 0.3 to see if I can run without p_outlier
+            drift = (exp_ups[i]-exp_lows[i])*v
+            p = (np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
+            # If one probability = 0, the log sum will be -Inf
+            #print('p: ',p)
+            p = p * (1 - p_outlier) + wp_outlier
+            #print('p after: ',p) 
+            if p == 0:
+                return -np.inf
+
+            sum_logp += log(p)
+
+    return sum_logp
 
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
                       int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
