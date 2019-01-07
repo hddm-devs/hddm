@@ -157,7 +157,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
-    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t size = response.shape[0]
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
@@ -173,7 +173,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
     cdef np.ndarray rew_ups
     cdef np.ndarray rew_lows
     cdef np.ndarray responses
-    cdef np.ndarray xs
+    #cdef np.ndarray xs
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
@@ -186,8 +186,8 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
         rew_ups = rew_up[split_by==s]
         rew_lows = rew_low[split_by==s]
         responses = response[split_by==s]
-        xs = x[split_by==s]
-        s_size = xs.shape[0]
+        #xs = x[split_by==s]
+        s_size = responses.shape[0]
         
         #loop through all trials in current condition
         for i in range(1,s_size):
