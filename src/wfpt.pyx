@@ -87,6 +87,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
+    cdef int sd
+    cdef int n_up = 0
+    cdef int n_low = 0
+    cdef int sd_up
+    cdef int sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
@@ -119,11 +124,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
             if responses[i-1] == 0:
+                n_low += 1
                 if rew_lows[i-1] > exp_lows[i-1]:
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
             else:
+                up_pos += 1
                 if rew_ups[i-1] > exp_ups[i-1]:
                     alfa = pos_alpha
                 else:
@@ -133,8 +140,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
             exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
             
+            #calculate uncertainty:
+            sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
+            sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
+            sd = sd_up + sd_low
+            
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
-            p = full_pdf(xs[i], (exp_ups[i]-exp_lows[i])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            p = full_pdf(xs[i], ((exp_ups[i]-exp_lows[i])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             #print('p: ',p)
             p = p * (1 - p_outlier) + wp_outlier
