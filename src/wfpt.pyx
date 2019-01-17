@@ -130,7 +130,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 else:
                     alfa = neg_alpha
             else:
-                n_pos += 1
+                n_up += 1
                 if rew_ups[i-1] > exp_ups[i-1]:
                     alfa = pos_alpha
                 else:
