@@ -144,7 +144,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
             sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
             sd = sd_up + sd_low
-            
+            print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f" % (n_up,n_low,sd_up,sd_low,sd))
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
             p = full_pdf(xs[i], ((exp_ups[i]-exp_lows[i])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
