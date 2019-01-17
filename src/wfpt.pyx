@@ -87,11 +87,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
-    cdef int sd
+    cdef double sd
     cdef int n_up = 0
     cdef int n_low = 0
-    cdef int sd_up
-    cdef int sd_low
+    cdef double sd_up
+    cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
