@@ -117,7 +117,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         xs = x[split_by==s]
         s_size = xs.shape[0]
         
-        # don't include first trial but still update q
+        # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
             alfa = pos_alpha
         else:
