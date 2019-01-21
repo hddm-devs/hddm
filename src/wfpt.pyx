@@ -102,7 +102,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     #cdef np.ndarray rew_lows
     cdef np.ndarray feedbacks
     cdef np.ndarray responses
-    cdef np.array q = np.array([0.5, 0.5])
     cdef np.ndarray xs
     
     if not p_outlier_in_range(p_outlier):
@@ -111,7 +110,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     # unique represent # of conditions
     for s in range(unique):
         #select trials for current condition, identified by the split_by-array
-        qs = q
+        cdef np.array qs = np.array([0.5, 0.5])
         feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
         xs = x[split_by==s]
