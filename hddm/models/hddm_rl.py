@@ -48,7 +48,7 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','rew_up', 'rew_low', 'response', 'rt','exp_up','exp_low'],
+                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','exp_up','exp_low'],
                                    **wfpt_parents)
 
 def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
@@ -61,14 +61,13 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, p_outlier=0.1):
     wp = wiener_params
 
     response = x['response'].values
-    exp_up = x['exp_up'].values
-    exp_low = x['exp_low'].values
-    rew_up = x['rew_up'].values
-    rew_low = x['rew_low'].values
+    exp_up = x.loc[0,'exp_up']
+    exp_low = x.loc[0,'exp_low']
+    feedback = x['feedback'].values
     split_by = x['split_by'].values
     unique = np.unique(split_by).shape[0]
     # could use something like the line below to avoid sending exp_up and exp_low as arrays. want to access the different values of 
     # of by u (below), but not using for-loop.
     #u, split_by = np.unique(x['split_by'].values, return_inverse=True)
-    return wiener_like_rlddm(x['rt'].values, response,rew_up,rew_low,exp_up,exp_low,split_by,unique,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
+    return wiener_like_rlddm(x['rt'].values, response,feedback,split_by,exp_up,exp_low,unique,alpha,dual_alpha,v,sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
