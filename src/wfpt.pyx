@@ -73,7 +73,7 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
     return sum_logp
 
 def wiener_like_rlddm(np.ndarray[double, ndim=1] x, 
-                      np.ndarray[double, ndim=1] response,
+                      np.ndarray[long, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[double, ndim=1] q,
                       np.ndarray[long, ndim=1] split_by,
