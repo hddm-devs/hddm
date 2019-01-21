@@ -74,12 +74,9 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
 
 def wiener_like_rlddm(np.ndarray[double, ndim=1] x, 
                       np.ndarray[double, ndim=1] response,
-                      np.ndarray[double, ndim=1] rew_up, 
-                      np.ndarray[double, ndim=1] rew_low, 
-                      np.ndarray[double, ndim=1] exp_up,
-                      np.ndarray[double, ndim=1] exp_low, 
+                      np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
-                      long unique,
+                      long unique, double exp_up, double exp_low,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -87,21 +84,22 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef int s
     cdef int s_size
-    cdef double sd
-    cdef int n_up = 0
-    cdef int n_low = 0
-    cdef double sd_up
-    cdef double sd_low
+    #cdef double sd
+    #cdef int n_up = 0
+    #cdef int n_low = 0
+    #cdef double sd_up
+    #cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa = 0
     cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
-    cdef double pos_alpha = np.exp(dual_alpha)/(1+np.exp(dual_alpha))
-    cdef np.ndarray exp_ups
-    cdef np.ndarray exp_lows
-    cdef np.ndarray rew_ups
-    cdef np.ndarray rew_lows
+    cdef double pos_alpha = np.exp(alpha + dual_alpha)/(1+np.exp(alpha + dual_alpha))
+    cdef double exp_ups
+    cdef double exp_lows
+    #cdef np.ndarray rew_ups
+    #cdef np.ndarray rew_lows
+    cdef np.ndarray feedbacks
     cdef np.ndarray responses
     cdef np.ndarray xs
     
@@ -111,50 +109,52 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     # unique represent # of conditions
     for s in range(unique):
         #select trials for current condition, identified by the split_by-array
-        exp_ups = exp_up[split_by==s]
-        exp_lows = exp_low[split_by==s]
-        rew_ups = rew_up[split_by==s]
-        rew_lows = rew_low[split_by==s]
+        exp_ups = exp_up
+        exp_lows = exp_low
+        #rew_ups = rew_up[split_by==s]
+        #rew_lows = rew_low[split_by==s]
+        feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
         xs = x[split_by==s]
         s_size = xs.shape[0]
         
         #loop through all trials in current condition
-        for i in range(1,s_size):
+        for i in range(0,s_size):
+            
+            if i != 0:
+                #calculate uncertainty:
+                #sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
+                #sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
+                #sd = sd_up + sd_low + 1
+                #exp_ups[i]-exp_lows[i])*v)/sd
+                #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f exp_up = %.2f exp_low = %.2f" % (n_up,n_low,sd_up,sd_low,sd,exp_ups[i],exp_lows[i]))
+                #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
+                p = full_pdf(xs[i], (exp_ups-exp_lows)*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+                # If one probability = 0, the log sum will be -Inf
+                #print('p: ',p)
+                p = p * (1 - p_outlier) + wp_outlier
+                #print('p after: ',p) 
+                if p == 0:
+                    return -np.inf
+                sum_logp += log(p)
             
             # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
-            if responses[i-1] == 0:
-                n_low += 1
-                if rew_lows[i-1] > exp_lows[i-1]:
+            if responses[i] == 0:
+                #n_low += 1
+                if feedbacks[i] > exp_lows:
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
             else:
-                n_up += 1
-                if rew_ups[i-1] > exp_ups[i-1]:
+                #n_up += 1
+                if feedbacks[i] > exp_ups:
                     alfa = pos_alpha
                 else:
                     alfa = neg_alpha
             
             #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
-            exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
-            exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
-            
-            #calculate uncertainty:
-            sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
-            sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
-            sd = sd_up + sd_low + 1
-            #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f exp_up = %.2f exp_low = %.2f" % (n_up,n_low,sd_up,sd_low,sd,exp_ups[i],exp_lows[i]))
-            #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
-            p = full_pdf(xs[i], ((exp_ups[i]-exp_lows[i])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-            # If one probability = 0, the log sum will be -Inf
-            #print('p: ',p)
-            p = p * (1 - p_outlier) + wp_outlier
-            #print('p after: ',p) 
-            if p == 0:
-                return -np.inf
-
-            sum_logp += log(p)
+            exp_ups = (exp_ups*(1-responses[i])) + ((responses[i])*(exp_ups+(alfa*(feedbacks[i]-exp_ups))))
+            exp_lows = (exp_lows*(responses[i])) + ((1-responses[i])*(exp_lows+(alfa*(feedbacks[i]-exp_lows))))
 
     return sum_logp
   
@@ -178,7 +178,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa = 0
     cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
-    cdef double pos_alpha = np.exp(dual_alpha)/(1+np.exp(dual_alpha))
+    cdef double pos_alpha = np.exp(alpha + dual_alpha)/(1+np.exp(alpha + dual_alpha))
     cdef np.ndarray exp_ups
     cdef np.ndarray exp_lows
     cdef np.ndarray rew_ups
