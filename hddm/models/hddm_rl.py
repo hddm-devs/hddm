@@ -16,11 +16,12 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self,uncertainty=False, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
         self.wfpt_rl_class = WienerRL
-
+        
+        print(uncertainty)
         super(HDDMrl, self).__init__(*args, **kwargs)
 
     def _create_stochastic_knodes(self, include):
