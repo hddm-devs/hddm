@@ -779,7 +779,7 @@ class HDDMBase(AccumulatorModel):
         #this code only check that the arguments are as expected, i.e. the constructor was not change
         #since we wrote this function
         init_args = set(inspect.getargspec(self.__init__).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data','uncertainty','q_up','q_low', 'p_outlier'])
         assert known_args.issuperset(init_args), "Arguments of the constructor are not as expected"
 
         #create the avg model
