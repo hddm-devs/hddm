@@ -85,7 +85,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef Py_ssize_t s_size
     cdef int s
-    #cdef double sd
+    cdef double sd = 1
     #cdef int n_up = 0
     #cdef int n_low = 0
     #cdef double sd_up
@@ -129,14 +129,15 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            #calculate uncertainty:
-            #sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
-            #sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
-            #sd = sd_up + sd_low + 1
-            #exp_ups[i]-exp_lows[i])*v)/sd
+            if uncertainty == 1:
+              #calculate uncertainty:
+              #sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
+              #sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
+              #sd = sd_up + sd_low + 1
+              #exp_ups[i]-exp_lows[i])*v)/sd
             #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f exp_up = %.2f exp_low = %.2f" % (n_up,n_low,sd_up,sd_low,sd,exp_ups[i],exp_lows[i]))
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks,responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
-            p = full_pdf(xs[i], (qs[1]-qs[0])*v, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            p = full_pdf(xs[i], ((qs[1]-qs[0])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
             # If one probability = 0, the log sum will be -Inf
             #print('p: ',p)
             p = p * (1 - p_outlier) + wp_outlier
