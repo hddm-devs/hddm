@@ -47,7 +47,7 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, doubl
 cdef inline bint p_outlier_in_range(double p_outlier): return (p_outlier >= 0) & (p_outlier <= 1)
 
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
-                double st, bint uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                 double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
