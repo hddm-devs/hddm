@@ -24,7 +24,7 @@ class HDDMrl(HDDM):
         self.uncertainty = uncertainty
         self.wfpt_rl_class = WienerRL
         
-        super(HDDMrl, self).__init__(uncertainty,q_up,q_low,*args, **kwargs)
+        super(HDDMrl, self).__init__(*args, **kwargs)
 
     def _create_stochastic_knodes(self, include):
         knodes = super(HDDMrl, self)._create_stochastic_knodes(include)
