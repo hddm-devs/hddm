@@ -19,6 +19,9 @@ class HDDMrl(HDDM):
     def __init__(self,uncertainty=True,q_up=0.5,q_low=0.5, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
+        self.q_up = q_up
+        self.q_low = q_low
+        self.uncertainty = uncertainty
         self.wfpt_rl_class = WienerRL
         
         super(HDDMrl, self).__init__(uncertainty,q_up,q_low,*args, **kwargs)
