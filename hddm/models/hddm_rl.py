@@ -16,7 +16,7 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self,uncertainty=False,q_up=0.5,q_low=0.5, *args, **kwargs):
+    def __init__(self,uncertainty=True,q_up=0.5,q_low=0.5, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
         self.wfpt_rl_class = WienerRL
