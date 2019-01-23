@@ -16,12 +16,9 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self,uncertainty=True,q_up=0.5,q_low=0.5, *args, **kwargs):
+    def __init__(self,*args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
-        self.q_up = q_up
-        self.q_low = q_low
-        self.uncertainty = uncertainty
         self.wfpt_rl_class = WienerRL
         
         super(HDDMrl, self).__init__(*args, **kwargs)
@@ -51,10 +48,10 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','feedback', 'response', 'rt'],
+                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, uncertainty,q_up,q_low,p_outlier=0.1):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,p_outlier=0.1):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
@@ -62,16 +59,12 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, uncertainty,q_up,
                          'w_outlier': 0.1}
     sum_logp = 0
     wp = wiener_params
-
+    uncertainty = False
     response = x['response'].values.astype(int)
-    q = np.array([q_up,q_low])
+    q = np.array([x['q'].iloc[0],x['q'].iloc[0]])
     feedback = x['feedback'].values
     split_by = x['split_by'].values
     unique = np.unique(split_by).shape[0]
-    # could use something like the line below to avoid sending exp_up and exp_low as arrays. want to access the different values of 
-    # of by u (below), but not using for-loop.
-    #u, split_by = np.unique(x['split_by'].values, return_inverse=True)
-    print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f unique = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" 
-          % (v,alpha,dual_alpha,a,q[1],q[0],unique,uncertainty,t,z,sv,st, p_outlier))
+    #print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f unique = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (v,alpha,dual_alpha,a,q[1],q[0],unique,uncertainty,t,z,sv,st, p_outlier))
     return wiener_like_rlddm(x['rt'].values, response,feedback,q,split_by,unique,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
