@@ -68,7 +68,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st, uncertainty=False
     # could use something like the line below to avoid sending exp_up and exp_low as arrays. want to access the different values of 
     # of by u (below), but not using for-loop.
     #u, split_by = np.unique(x['split_by'].values, return_inverse=True)
-    print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f unique = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f w = %.2f" 
-          % (v,alpha,dual_alpha,a,q[1],q[0],unique,t,z,sv,st, p_outlier,**wp))
+    print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f unique = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" 
+          % (v,alpha,dual_alpha,a,q[1],q[0],unique,t,z,sv,st, p_outlier))
     return wiener_like_rlddm(x['rt'].values, response,feedback,q,split_by,unique,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
