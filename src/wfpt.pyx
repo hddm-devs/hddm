@@ -121,13 +121,15 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             
         #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
         qs[responses[0]] = qs[responses[0]]+alfa*(feedbacks[0]-qs[responses[0]])
+        n_up = responses[0]
+        n_low = 1-responses[0]
         
         #loop through all trials in current condition
         for i in range(1,s_size):
             
             if uncertainty == 1:
-              n_up = i#np.sum(responses[0:i])
-              n_low = i#i-np.sum(responses[0:i])
+              n_up += responses[i]
+              n_low += 1-responses[i]
               #calculate uncertainty:
               sd_up = ((qs[1]*(1-qs[1]))/(n_up+1))**(1/2)
               sd_low = ((qs[0]*(1-qs[0]))/(n_low+1))**(1/2)
