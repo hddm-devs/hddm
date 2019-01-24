@@ -93,7 +93,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa = 0
+    cdef double alfa = alpha
     cdef double neg_alpha = (2.718281828459**alpha)/(1+2.718281828459**alpha)
     cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha)/(1+2.718281828459**(alpha + dual_alpha))
     cdef np.ndarray feedbacks
@@ -114,10 +114,10 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         s_size = xs.shape[0]
         
         # don't calculate pdf for first trial but still update q
-        if feedbacks[0] > qs[responses[0]]:
-            alfa = pos_alpha
-        else:
-            alfa = neg_alpha
+        #if feedbacks[0] > qs[responses[0]]:
+        #    alfa = pos_alpha
+        #else:
+        #    alfa = neg_alpha
             
         #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
         qs[responses[0]] = qs[responses[0]]+alfa*(feedbacks[0]-qs[responses[0]])
@@ -127,13 +127,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            if uncertainty == 1:
-              n_up += responses[i]
-              n_low += 1-responses[i]
-              #calculate uncertainty:
-              sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
-              sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))#**(1/2)
-              sd = sd_up + sd_low + 1
+            #if uncertainty == 1:
+            #  n_up += responses[i]
+            #  n_low += 1-responses[i]
+            #  #calculate uncertainty:
+            #  sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
+            #  sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))#**(1/2)
+            #  sd = sd_up + sd_low + 1
               #exp_ups[i]-exp_lows[i])*v)/sd
             #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f qup = %.2f qlow = %.2f" % (n_up,n_low,sd_up,sd_low,sd,qs[1],qs[0]))
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
@@ -148,10 +148,10 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             sum_logp += log(p)
             
             # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
-            if feedbacks[i] > qs[responses[i]]:
-                alfa = pos_alpha
-            else:
-                alfa = neg_alpha
+            #if feedbacks[i] > qs[responses[i]]:
+            #    alfa = pos_alpha
+            #else:
+            #    alfa = neg_alpha
             
             #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
             qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
