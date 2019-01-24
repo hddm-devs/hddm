@@ -126,8 +126,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         for i in range(1,s_size):
             
             if uncertainty == 1:
-              n_up = np.sum(responses[0:i])
-              n_low = i-np.sum(responses[0:i])
+              n_up = i#np.sum(responses[0:i])
+              n_low = i#i-np.sum(responses[0:i])
               #calculate uncertainty:
               sd_up = ((qs[1]*(1-qs[1]))/(n_up+1))**(1/2)
               sd_low = ((qs[0]*(1-qs[0]))/(n_low+1))**(1/2)
