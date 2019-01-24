@@ -85,17 +85,17 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t i
     cdef Py_ssize_t s_size
     cdef int s
-    cdef double sd = 1
-    cdef int n_up = 0
-    cdef int n_low = 0
-    cdef double sd_up
-    cdef double sd_low
+    #cdef double sd = 1
+    #cdef int n_up = 0
+    #cdef int n_low = 0
+    #cdef double sd_up
+    #cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa = alpha
-    cdef double neg_alpha = (2.718281828459**alpha)/(1+2.718281828459**alpha)
-    cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha)/(1+2.718281828459**(alpha + dual_alpha))
+    cdef double alfa = (2.718281828459**alpha)/(1+2.718281828459**alpha)
+    #cdef double neg_alpha = (2.718281828459**alpha)/(1+2.718281828459**alpha)
+    #cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha)/(1+2.718281828459**(alpha + dual_alpha))
     cdef np.ndarray feedbacks
     cdef np.ndarray responses
     cdef np.ndarray xs
@@ -121,8 +121,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             
         #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
         qs[responses[0]] = qs[responses[0]]+alfa*(feedbacks[0]-qs[responses[0]])
-        n_up = responses[0]
-        n_low = 1-responses[0]
+        #n_up = responses[0]
+        #n_low = 1-responses[0]
         
         #loop through all trials in current condition
         for i in range(1,s_size):
