@@ -129,12 +129,13 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            #if uncertainty == 1:
+            if uncertainty == 1:
+              n_up = np.sum(f[0:i])
+              n_low = i-np.sum(f[0:i])
               #calculate uncertainty:
-              #sd = 1
-              #sd_up = np.sqrt((exp_ups[i]*(1-exp_ups[i]))/(n_up+1))
-              #sd_low = np.sqrt((exp_lows[i]*(1-exp_lows[i]))/(n_low+1))
-              #sd = sd_up + sd_low + 1
+              sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))
+              sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))
+              sd = sd_up + sd_low + 1
               #exp_ups[i]-exp_lows[i])*v)/sd
             #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f exp_up = %.2f exp_low = %.2f" % (n_up,n_low,sd_up,sd_low,sd,exp_ups[i],exp_lows[i]))
             #print("rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
@@ -148,7 +149,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 return -np.inf
             sum_logp += log(p)
             
-            # calculate learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
+            # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
             if feedbacks[i] > qs[responses[i]]:
                 alfa = pos_alpha
             else:
