@@ -86,8 +86,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t s_size
     cdef int s
     cdef double sd = 1
-    cdef int n_up = 0
-    cdef int n_low = 0
+    cdef double n_up = 0
+    cdef double n_low = 0
     cdef double sd_up
     cdef double sd_low
     cdef double p
