@@ -86,20 +86,16 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef Py_ssize_t s_size
     cdef int s
     cdef double sd = 1
-    #cdef int n_up = 0
-    #cdef int n_low = 0
-    #cdef double sd_up
-    #cdef double sd_low
+    cdef int n_up = 0
+    cdef int n_low = 0
+    cdef double sd_up
+    cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa = 0
     cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
     cdef double pos_alpha = np.exp(alpha + dual_alpha)/(1+np.exp(alpha + dual_alpha))
-    #cdef double exp_ups
-    #cdef double exp_lows
-    #cdef np.ndarray rew_ups
-    #cdef np.ndarray rew_lows
     cdef np.ndarray feedbacks
     cdef np.ndarray responses
     cdef np.ndarray xs
