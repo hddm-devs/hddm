@@ -21,7 +21,7 @@ class HDDMrl(HDDM):
         self.dual_alpha = kwargs.pop('dual_alpha', False)
         self.wfpt_rl_class = WienerRL
         
-        super(HDDMrl, self).__init__(q_up=0.5,*args, **kwargs)
+        super(HDDMrl, self).__init__(*args, **kwargs)
 
     def _create_stochastic_knodes(self, include):
         knodes = super(HDDMrl, self)._create_stochastic_knodes(include)
