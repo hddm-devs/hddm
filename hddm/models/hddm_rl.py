@@ -38,9 +38,9 @@ class HDDMrl(HDDM):
                                                                     std_upper=10, 
                                                                     std_value=.1))
         if self.uncertainty:
-            knodes.update('uncertainty')
+            knodes.update(self.uncertainty)
         if self.q:
-            knodes.update('q')
+            knodes.update(self.q)
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
