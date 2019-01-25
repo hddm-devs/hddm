@@ -102,10 +102,10 @@ class HDDM(HDDMBase):
     def __init__(self, *args, **kwargs):
         self.slice_widths = {'a':1, 't':0.01, 'a_std': 1, 't_std': 0.15, 'sz': 1.1, 'v': 1.5,
                              'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
-                             'p_outlier':1., 'v_std': 1,'alpha':2.5,'dual_alpha':2.5}
+                             'p_outlier':1., 'v_std': 1,'alpha':2.5,'dual_alpha':2.5,'uncertainty':2.5}
         self.emcee_dispersions = {'a':1, 't': 0.1, 'a_std': 1, 't_std': 0.15, 'sz': 1.1, 'v': 1.5,
                                   'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
-                                  'p_outlier':1., 'v_std': 1,'alpha':2.5,'dual_alpha':2.5}
+                                  'p_outlier':1., 'v_std': 1,'alpha':2.5,'dual_alpha':2.5,'uncertainty':2.5}
 
 
         self.is_informative = kwargs.pop('informative', True)
@@ -136,6 +136,8 @@ class HDDM(HDDMBase):
             knodes.update(self._create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
         if 'dual_alpha' in include:
             knodes.update(self._create_family_normal('dual_alpha',value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10,std_upper=10,std_value=.1))
+        if 'uncertainty' in include:
+            knodes.update(self._create_family_normal('uncertainty',value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10,std_upper=10,std_value=.1))
         if 'p_outlier' in include:
             knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
 
