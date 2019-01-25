@@ -16,8 +16,9 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self,*args, **kwargs):
-        self.uncertainty = kwargs.pop('uncertainty', False)
+    def __init__(self,uncertainty=False,*args, **kwargs):
+        #self.uncertainty = kwargs.pop('uncertainty', False)
+        self.uncertainty = uncertainty
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
         self.wfpt_rl_class = WienerRL
@@ -40,7 +41,7 @@ class HDDMrl(HDDM):
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
         
-        wfpt_parents['uncertainty'] = self.uncertainty
+        #wfpt_parents['uncertainty'] = self.uncertainty
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
         
@@ -53,7 +54,7 @@ class HDDMrl(HDDM):
                                    observed=True, col_name=['split_by','feedback', 'response', 'rt','q'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, uncertainty ,sv, a, z, sz, t, st,p_outlier=0):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,uncertainty=False,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
