@@ -61,6 +61,8 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,uncertainty=False,
                          'simps_err':1e-3,
                          'w_outlier': 0.1}
     sum_logp = 0
+    print(uncertainty)
+    print(p_outlier)
     wp = wiener_params
     #uncertainty = x['uncertainty'].iloc[0]
     response = x['response'].values.astype(int)
