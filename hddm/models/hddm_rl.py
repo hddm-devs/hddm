@@ -16,7 +16,7 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self,q=0.5,uncertainty=False,*args, **kwargs):
+    def __init__(self,q=0.5,uncertainty=0,*args, **kwargs):
         #self.uncertainty = kwargs.pop('uncertainty', False)
         self.uncertainty = uncertainty
         self.q = q
@@ -75,7 +75,7 @@ class HDDMrl(HDDM):
                                    observed=True, col_name=['split_by','feedback', 'response', 'rt'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=False,p_outlier=0):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=0,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
