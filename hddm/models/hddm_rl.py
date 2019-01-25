@@ -36,6 +36,15 @@ class HDDMrl(HDDM):
                                                                     std_lower=1e-10,
                                                                     std_upper=10, 
                                                                     std_value=.1))
+        if self.uncertainty:
+            # Add learning rate parameter
+            knodes.update(self._create_family_normal('uncertainty',
+                                                                    value=0,
+                                                                    g_mu=0.2,
+                                                                    g_tau=3**-2,
+                                                                    std_lower=1e-10,
+                                                                    std_upper=10, 
+                                                                    std_value=.1))
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
@@ -44,6 +53,7 @@ class HDDMrl(HDDM):
         #wfpt_parents['uncertainty'] = self.uncertainty
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
+        wfpt_parents['uncertainty'] = knodes['uncertainty_bottom'] if 'dual_alpha' in self.include else self.uncertainty
         
         return wfpt_parents
 
