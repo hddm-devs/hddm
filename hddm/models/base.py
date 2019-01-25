@@ -663,7 +663,7 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
-        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier','dual_alpha')
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier','dual_alpha','uncertainty')
         assert self.include.issubset(possible_parameters), """Received and invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
@@ -779,7 +779,7 @@ class HDDMBase(AccumulatorModel):
         #this code only check that the arguments are as expected, i.e. the constructor was not change
         #since we wrote this function
         init_args = set(inspect.getargspec(self.__init__).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data','p_outlier'])
+        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data','p_outlier','uncertainty'])
         assert known_args.issuperset(init_args), "Arguments of the constructor are not as expected"
 
         #create the avg model
