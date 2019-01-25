@@ -38,23 +38,9 @@ class HDDMrl(HDDM):
                                                                     std_upper=10, 
                                                                     std_value=.1))
         if self.uncertainty:
-            # Add learning rate parameter
-            knodes.update(self._create_family_normal('uncertainty',
-                                                                    value=0,
-                                                                    g_mu=0.2,
-                                                                    g_tau=3**-2,
-                                                                    std_lower=1e-10,
-                                                                    std_upper=10, 
-                                                                    std_value=.1))
+            knodes.update('uncertainty')
         if self.q:
-            # Add learning rate parameter
-            knodes.update(self._create_family_normal('q',
-                                                                    value=0,
-                                                                    g_mu=0.2,
-                                                                    g_tau=3**-2,
-                                                                    std_lower=1e-10,
-                                                                    std_upper=10, 
-                                                                    std_value=.1))
+            knodes.update('q')
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
