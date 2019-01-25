@@ -101,6 +101,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef np.ndarray xs
     cdef np.ndarray qs
     
+    print(uncertainty)
+    
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
