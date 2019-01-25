@@ -51,7 +51,7 @@ class HDDMrl(HDDM):
                                    observed=True, col_name=['split_by','feedback', 'response', 'rt','q','uncertainty'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,p_outlier=0.1):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
