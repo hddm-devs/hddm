@@ -79,7 +79,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[long, ndim=1] split_by,
                       long unique,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
-                      double st, bint uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                      double st, long uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
