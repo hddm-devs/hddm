@@ -16,8 +16,8 @@ class HDDMrl(HDDM):
     """HDDM model that can be used for two-armed bandit tasks.
 
     """
-    def __init__(self,uncertainty=False,*args, **kwargs):
-        self.uncertainty = uncertainty
+    def __init__(self,*args, **kwargs):
+        self.uncertainty = kwargs.pop('uncertainty', False)
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
         self.wfpt_rl_class = WienerRL
@@ -50,10 +50,10 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q','uncertainty'],
+                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,p_outlier=0):
+def wienerRL_like(x, v, alpha,dual_alpha, uncertainty ,sv, a, z, sz, t, st,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
@@ -61,7 +61,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,p_outlier=0):
                          'w_outlier': 0.1}
     sum_logp = 0
     wp = wiener_params
-    uncertainty = x['uncertainty'].iloc[0]
+    #uncertainty = x['uncertainty'].iloc[0]
     response = x['response'].values.astype(int)
     q = np.array([x['q'].iloc[0],x['q'].iloc[0]])
     feedback = x['feedback'].values
