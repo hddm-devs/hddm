@@ -77,7 +77,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[double, ndim=1] q,
                       np.ndarray[long, ndim=1] split_by,
-                      long unique,
+                      np.ndarray[long, ndim=1] unique,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, long uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -105,7 +105,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         return -np.inf
     
     # unique represent # of conditions
-    for s in range(unique):
+    for s in unique:
         #select trials for current condition, identified by the split_by-array
         qs = q
         feedbacks = feedback[split_by==s]
