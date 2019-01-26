@@ -411,7 +411,17 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
 def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,q=0.5,dual_alpha=0,subjs=1,split_by=0,uncertainty=False):
     all_data = []
+    tg = t
+    ag = a
+    alphag = alpha
+    dual_alphag = dual_alpha 
+    scalerg = scaler
     for s in range(0,subjs):
+        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.05,size=1))
+        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.3,size=1))
+        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.05,size=1))
+        scaler = np.random.normal(loc=scalerg,scale=0.3,size=1)
+        dual_alpha = np.random.normal(loc=dual_alphag,scale=0.05,size=1) if dual_alpha != 0 else 0
         n_up = 0
         n_low = 0
         sd = 1
