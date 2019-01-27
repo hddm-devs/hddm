@@ -108,7 +108,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
      # unique represent # of conditions
     for s in unique:
         #select trials for current condition, identified by the split_by-array
-        qs = np.array([0.5,0.5])
+        qs = np.array([q,q])
         feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
         xs = x[split_by==s]
