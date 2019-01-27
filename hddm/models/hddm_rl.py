@@ -95,7 +95,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=
         #print(y)
         #unique = np.array([np.unique(split_by)])
         #print("s = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (s,v,alpha,dual_alpha,a,q[1],q[0],uncertainty,t,z,sv,st, p_outlier))
-        sum_logp += wiener_like_rlddm(y['rt'].values, response,feedback,q,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp))
+        sum_logp += wiener_like_rlddm(y['rt'].values, response,feedback,q,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
     
     return sum_logp
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
