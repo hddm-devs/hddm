@@ -156,7 +156,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             
             #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
             qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
-
+        sum_logp += sum_logp
     return sum_logp
   
 def wiener_like_rl(np.ndarray[double, ndim=1] response,
