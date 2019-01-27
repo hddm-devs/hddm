@@ -76,6 +76,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[long, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[double, ndim=1] q,
+                      np.ndarray[long, ndim=1] split_by,
+                      #np.ndarray[long, ndim=2] unique,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, long uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -94,66 +96,66 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double alfa 
     cdef double neg_alpha = (2.718281828459**alpha)/(1+2.718281828459**alpha)
     cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha)/(1+2.718281828459**(alpha + dual_alpha))
-    #cdef np.ndarray feedbacks
-    #cdef np.ndarray responses
-    #cdef np.ndarray xs
-    #cdef np.ndarray qs
-    #cdef np.ndarray unique = np.unique(split_by)
+    cdef np.ndarray feedbacks
+    cdef np.ndarray responses
+    cdef np.ndarray xs
+    cdef np.ndarray qs
+    cdef np.ndarray unique = np.unique(split_by)
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
-    # unique represent # of conditions
-    #for s in unique:
+     # unique represent # of conditions
+    for s in unique:
         #select trials for current condition, identified by the split_by-array
-        #qs = q
-        #feedbacks = feedback[split_by==s]
-        #responses = response[split_by==s]
-        #xs = x[split_by==s]
-        #s_size = xs.shape[0]
+        qs = q
+        feedbacks = feedback[split_by==s]
+        responses = response[split_by==s]
+        xs = x[split_by==s]
+        s_size = xs.shape[0]
         
-    # don't calculate pdf for first trial but still update q
-    if feedback[0] > q[response[0]]:
-        alfa = pos_alpha
-    else:
-        alfa = neg_alpha
-
-    #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
-    q[response[0]] = q[response[0]]+alfa*(feedback[0]-q[response[0]])
-    n_up = response[0]
-    n_low = 1-response[0]
-
-    #loop through all trials in current condition
-    for i in range(1,s_size):
-
-        if uncertainty == 1:
-          n_up += response[i]
-          n_low += 1-response[i]
-          #calculate uncertainty:
-          sd_up = np.sqrt((q[1]*(1-q[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
-          sd_low = np.sqrt((q[0]*(1-q[0]))/(n_low+1))#**(1/2)
-          sd = sd_up + sd_low + 1
-          #exp_ups[i]-exp_lows[i])*v)/sd
-        #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f qup = %.2f qlow = %.2f" % (n_up,n_low,sd_up,sd_low,sd,qs[1],qs[0]))
-        #print("s = %.2f rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (s,xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
-
-        p = full_pdf(x[i], ((q[1]-q[0])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-        # If one probability = 0, the log sum will be -Inf
-        #print('p: ',p)
-        p = p * (1 - p_outlier) + wp_outlier
-        #print('p after: ',p) 
-        if p == 0:
-            return -np.inf
-        sum_logp += log(p)
-
-        # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
-        if feedback[i] > q[response[i]]:
+        # don't calculate pdf for first trial but still update q
+        if feedbacks[0] > qs[responses[0]]:
             alfa = pos_alpha
         else:
             alfa = neg_alpha
-
+            
         #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
-        q[response[i]] = q[response[i]]+alfa*(feedback[i]-q[response[i]])
+        qs[responses[0]] = qs[responses[0]]+alfa*(feedbacks[0]-qs[responses[0]])
+        n_up = responses[0]
+        n_low = 1-responses[0]
+        
+        #loop through all trials in current condition
+        for i in range(1,s_size):
+            
+            if uncertainty == 1:
+              n_up += responses[i]
+              n_low += 1-responses[i]
+              #calculate uncertainty:
+              sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
+              sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))#**(1/2)
+              sd = sd_up + sd_low + 1
+              #exp_ups[i]-exp_lows[i])*v)/sd
+            #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f qup = %.2f qlow = %.2f" % (n_up,n_low,sd_up,sd_low,sd,qs[1],qs[0]))
+            #print("s = %.2f rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (s,xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
+            
+            p = full_pdf(xs[i], ((qs[1]-qs[0])*v)/sd, sv, a, z, sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            # If one probability = 0, the log sum will be -Inf
+            #print('p: ',p)
+            p = p * (1 - p_outlier) + wp_outlier
+            #print('p after: ',p) 
+            if p == 0:
+                return -np.inf
+            sum_logp += log(p)
+
+        # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
+            if feedbacks[i] > qs[responses[i]]:
+                alfa = pos_alpha
+            else:
+                alfa = neg_alpha
+            
+            #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
+            qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
 
     return sum_logp
   
