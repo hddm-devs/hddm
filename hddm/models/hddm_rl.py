@@ -69,28 +69,21 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','feedback', 'response', 'rt'],
+                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=0,p_outlier=0):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,uncertainty=0,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
                          'simps_err':1e-3,
                          'w_outlier': 0.1}
     sum_logp = 0
-    #print(uncertainty)
-    #print(p_outlier)
-    #print(q)
     wp = wiener_params
-    #uncertainty = x['uncertainty'].iloc[0]
     response = x['response'].values.astype(int)
-    #q = np.array([q,q])
-    #print(q)
+    q = x['q'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
-    #print(split_by)
-    #unique = np.array([np.unique(split_by)])
     #print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (v,alpha,dual_alpha,a,q[1],q[0],uncertainty,t,z,sv,st, p_outlier))
     return wiener_like_rlddm(x['rt'].values, response,feedback,split_by,q,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
