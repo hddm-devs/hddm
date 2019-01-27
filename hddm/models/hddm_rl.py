@@ -85,7 +85,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=
     wp = wiener_params
     #uncertainty = x['uncertainty'].iloc[0]
     response = x['response'].values.astype(int)
-    q = np.array([q,q])
+    #q = np.array([q,q])
     #print(q)
     feedback = x['feedback'].values
     split_by = x['split_by'].values
