@@ -83,14 +83,17 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=
     #print(p_outlier)
     #print(q)
     wp = wiener_params
-    #uncertainty = x['uncertainty'].iloc[0]
-    response = x['response'].values.astype(int)
-    q = np.array([q,q])
-    #print(q)
-    feedback = x['feedback'].values
-    split_by = x['split_by'].values
-    print(split_by)
-    #unique = np.array([np.unique(split_by)])
-    print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (v,alpha,dual_alpha,a,q[1],q[0],uncertainty,t,z,sv,st, p_outlier))
-    return wiener_like_rlddm(x['rt'].values, response,feedback,q,split_by,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
+    for s in np.unique(split_by):
+        #uncertainty = x['uncertainty'].iloc[0]
+        y = x[x['split_by'==s]]
+        response = y['response'].values.astype(int)
+        q = np.array([q,q])
+        #print(q)
+        feedback = y['feedback'].values
+        split_by = y['split_by'].values
+        print(split_by)
+        #unique = np.array([np.unique(split_by)])
+        print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (v,alpha,dual_alpha,a,q[1],q[0],uncertainty,t,z,sv,st, p_outlier))
+        sum_logp += return wiener_like_rlddm(x['rt'].values, response,feedback,q,split_by,alpha,dual_alpha,v,sv, a, z, sz, t, st,uncertainty, p_outlier=p_outlier, **wp)
+
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)
