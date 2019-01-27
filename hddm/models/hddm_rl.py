@@ -83,7 +83,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,q=0.5,uncertainty=
     #print(p_outlier)
     #print(q)
     wp = wiener_params
-    for s in np.unique(split_by):
+    for s in np.unique(x['split_by']):
         #uncertainty = x['uncertainty'].iloc[0]
         y = x[x['split_by']==s]
         response = y['response'].values.astype(int)
