@@ -69,10 +69,10 @@ class HDDMrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q'],
+                                   observed=True, col_name=['split_by','feedback', 'response', 'rt','q','uncertainty'],
                                    **wfpt_parents)
 
-def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,uncertainty=0,p_outlier=0):
+def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st ,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
@@ -81,6 +81,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st,uncertainty=0,p_ou
     sum_logp = 0
     wp = wiener_params
     response = x['response'].values.astype(int)
+    uncertainty = x['uncertainty'].iloc[0]
     q = x['q'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
