@@ -409,7 +409,7 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
-def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,q=0.5,dual_alpha=0,subjs=1,split_by=0,uncertainty=False):
+def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,dual_alpha=0,subjs=1,split_by=0,mu_upper = 1, mu_lower = 0, sd_upper = 0.1, sd_lower = 0.1,binary_outcome = True,uncertainty=False):
     all_data = []
     tg = t
     ag = a
@@ -433,8 +433,12 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,q=0.5,dual_a
         response = np.tile([0.5],n)
         feedback = np.tile([0.5],n)
         rt = np.tile([0],n)
-        rew_up = np.random.binomial(1,p_upper,n).astype(float)
-        rew_low = np.random.binomial(1,p_lower,n).astype(float)
+        if binary_outcome:
+            rew_up = np.random.binomial(1,p_upper,n).astype(float)
+            rew_low = np.random.binomial(1,p_lower,n).astype(float)
+        else:
+            rew_up = np.random.normal(mu_upper,sd_upper,n)
+            rew_low = np.random.normal(mu_lower,sd_lower,n)            
         sim_drift = np.tile([0],n)
         subj_idx = np.tile([s],n)
         alfalfa = 0
@@ -452,16 +456,20 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,q=0.5,dual_a
             df.loc[0,'feedback'] = df.loc[0,'rew_up']
             df.loc[0,'rt'] = data.rt[0]
             n_up = 1
+            if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
+                alfa = alpha+dual_alpha
+            else:
+                alfa = alpha
         else:
             df.loc[0,'response'] = 0
             df.loc[0,'feedback'] = df.loc[0,'rew_low']
-            df.loc[0,'rt'] = 0-data.rt[0]
+            df.loc[0,'rt'] = data.rt[0]
             n_low = 1
+            if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
+                alfa = alpha+dual_alpha
+            else:
+                alfa = alpha
             
-        if (df.loc[0,'feedback'] == 1.0):
-            alfa = alpha+dual_alpha
-        else:
-            alfa = alpha
 
         for i in range(1,n):
             df.loc[i,'trial'] = i
@@ -478,20 +486,79 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size,p_upper,p_lower,z=0.5,q=0.5,dual_a
                 df.loc[i,'feedback'] = df.loc[i,'rew_up']
                 df.loc[i,'rt'] = data.rt[0]
                 n_up += 1
+                if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
             else:
                 df.loc[i,'response'] = 0
                 df.loc[i,'feedback'] = df.loc[i,'rew_low']
-                df.loc[i,'rt'] = 0-data.rt[0]
+                df.loc[i,'rt'] = data.rt[0]
                 n_low += 1
-            if (df.loc[i,'feedback'] == 1.0):
-                alfa = alpha+dual_alpha
-            else:
-                alfa = alpha
+                if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
+
         all_data.append(df)
     all_data = pd.concat(all_data, axis=0)
     all_data = all_data[['q_up','q_low','sim_drift','response','rt','feedback','subj_idx','split_by','trial']]
     
     return all_data
+
+#function that takes the data as input to simulate the exact same trials that the subject received
+#the only difference from the simulation fit is that you update q-values not on the simulated choices but on the observed. but you still use the simulated rt and choices 
+#to look at ability to recreate choice patterns. 
+def gen_rand_rlddm_absolute_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
+    asub = a#max(np.random.normal(a,0.2),0.1) 
+    tsub = t#max(np.random.normal(t,0.1),0.1) 
+    alfalfa = 0
+    df = data.reset_index()
+    n = df.shape[0]
+    df['sim_drift'] = 0
+    df['sim_response'] = 0
+    df['sim_rt'] = 0
+    df['q_up'] = df['q']
+    df['q_low'] = df['q']
+    df['rew_up'] = df['feedback']
+    df['rew_low'] = df['feedback']
+    sdata, params = hddm.generate.gen_rand_data({'a': asub,'t': tsub,'v': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
+    if (sdata.response[0] == 1.0):
+        df.loc[0,'sim_response'] = 1
+        df.loc[0,'sim_rt'] = sdata.rt[0]
+        if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
+            alfalfa = alpha+dual_alpha
+        else:
+            alfalfa = alpha
+    else:
+        df.loc[0,'sim_response'] = 0
+        df.loc[0,'sim_rt'] = sdata.rt[0]
+        if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
+            alfalfa = alpha+dual_alpha
+        else:
+            alfalfa = alpha
+
+    for i in range(1,n):
+        df.loc[i,'trial'] = i
+        df.loc[i,'q_up'] = (df.loc[i-1,'q_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'q_up']+(alfalfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'q_up']))))
+        df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfalfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
+        df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
+        sdata, params = hddm.generate.gen_rand_data({'a': asub,'t': tsub,'v': df.loc[i,'sim_drift'],'z': z},subjs=1,size=1)
+        if (sdata.response[0] == 1.0):
+            df.loc[i,'sim_response'] = 1
+            df.loc[i,'sim_rt'] = sdata.rt[0]
+            if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
+                alfalfa = alpha+dual_alpha
+            else:
+                alfalfa = alpha
+        else:
+            df.loc[i,'sim_response'] = 0
+            df.loc[i,'sim_rt'] = sdata.rt[0]
+            if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
+                alfalfa = alpha+dual_alpha
+            else:
+                alfalfa = alpha
+    return df
 
 def add_outliers(data, n_fast, n_slow, seed=None):
     """add outliers to data. outliers are distrbuted randomly across condition.
