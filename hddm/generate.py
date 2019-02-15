@@ -505,7 +505,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
 #function that takes the data as input to simulate the exact same trials that the subject received
 #the only difference from the simulation fit is that you update q-values not on the simulated choices but on the observed. but you still use the simulated rt and choices 
 #to look at ability to recreate choice patterns. 
-def gen_rand_rlddm_absolute_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
+def gen_rand_rlddm_onestep_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
     asub = a#max(np.random.normal(a,0.2),0.1) 
     tsub = t#max(np.random.normal(t,0.1),0.1) 
     alfalfa = 0
