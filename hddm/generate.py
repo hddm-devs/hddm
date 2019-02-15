@@ -418,9 +418,9 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
     scalerg = scaler
     for s in range(0,subjs):
         t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.05,size=1))
-        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.3,size=1))
+        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.2,size=1))
         alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.05,size=1))
-        scaler = np.random.normal(loc=scalerg,scale=0.3,size=1)
+        scaler = np.random.normal(loc=scalerg,scale=0.2,size=1)
         dual_alpha = np.random.normal(loc=dual_alphag,scale=0.05,size=1) if dual_alpha != 0 else 0
         n_up = 0
         n_low = 0
@@ -451,19 +451,17 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
             sd_low = np.sqrt((df.loc[0,'q_low']*(1-df.loc[0,'q_low']))/(n_low+1))
             sd = sd_up + sd_low + 1
         data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[0,'sim_drift']/sd,'z': z},subjs=1,size=1)
+        df.loc[0,'response'] = data.response[0]
+        df.loc[0,'rt'] = data.rt[0]
         if (data.response[0] == 1.0):
-            df.loc[0,'response'] = 1
             df.loc[0,'feedback'] = df.loc[0,'rew_up']
-            df.loc[0,'rt'] = data.rt[0]
             n_up = 1
             if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
                 alfa = alpha+dual_alpha
             else:
                 alfa = alpha
         else:
-            df.loc[0,'response'] = 0
             df.loc[0,'feedback'] = df.loc[0,'rew_low']
-            df.loc[0,'rt'] = data.rt[0]
             n_low = 1
             if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
                 alfa = alpha+dual_alpha
@@ -481,19 +479,17 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
                 sd = sd_up + sd_low + 1
             df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
             data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[i,'sim_drift']/sd,'z': z},subjs=1,size=1)
+            df.loc[i,'response'] = data.response[0]
+            df.loc[i,'rt'] = data.rt[0]
             if (data.response[0] == 1.0):
-                df.loc[i,'response'] = 1
                 df.loc[i,'feedback'] = df.loc[i,'rew_up']
-                df.loc[i,'rt'] = data.rt[0]
                 n_up += 1
                 if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
                     alfa = alpha+dual_alpha
                 else:
                     alfa = alpha
             else:
-                df.loc[i,'response'] = 0
                 df.loc[i,'feedback'] = df.loc[i,'rew_low']
-                df.loc[i,'rt'] = data.rt[0]
                 n_low += 1
                 if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
                     alfa = alpha+dual_alpha
@@ -523,20 +519,18 @@ def gen_rand_rlddm_absolute_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
     df['rew_up'] = df['feedback']
     df['rew_low'] = df['feedback']
     sdata, params = hddm.generate.gen_rand_data({'a': asub,'t': tsub,'v': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
-    if (sdata.response[0] == 1.0):
-        df.loc[0,'sim_response'] = 1
-        df.loc[0,'sim_rt'] = sdata.rt[0]
+    df.loc[0,'sim_response'] = sdata.response[0]
+    if (df.response[0] == 1):
         if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
             alfalfa = alpha+dual_alpha
         else:
             alfalfa = alpha
     else:
-        df.loc[0,'sim_response'] = 0
-        df.loc[0,'sim_rt'] = sdata.rt[0]
         if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
             alfalfa = alpha+dual_alpha
         else:
             alfalfa = alpha
+    df.loc[0,'sim_rt'] = sdata.rt[0]
 
     for i in range(1,n):
         df.loc[i,'trial'] = i
@@ -544,16 +538,14 @@ def gen_rand_rlddm_absolute_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
         df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfalfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
         df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
         sdata, params = hddm.generate.gen_rand_data({'a': asub,'t': tsub,'v': df.loc[i,'sim_drift'],'z': z},subjs=1,size=1)
-        if (sdata.response[0] == 1.0):
-            df.loc[i,'sim_response'] = 1
-            df.loc[i,'sim_rt'] = sdata.rt[0]
+        df.loc[i,'sim_response'] = sdata.response[0]
+        df.loc[i,'sim_rt'] = sdata.rt[0]
+        if (df.response[i] == 1.0):
             if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
                 alfalfa = alpha+dual_alpha
             else:
                 alfalfa = alpha
         else:
-            df.loc[i,'sim_response'] = 0
-            df.loc[i,'sim_rt'] = sdata.rt[0]
             if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
                 alfalfa = alpha+dual_alpha
             else:
