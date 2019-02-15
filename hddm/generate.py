@@ -417,11 +417,11 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
     dual_alphag = dual_alpha 
     scalerg = scaler
     for s in range(0,subjs):
-        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.05,size=1))
-        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.2,size=1))
-        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.05,size=1))
-        scaler = np.random.normal(loc=scalerg,scale=0.2,size=1)
-        dual_alpha = np.random.normal(loc=dual_alphag,scale=0.05,size=1) if dual_alpha != 0 else 0
+        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.2*tg,size=1))
+        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.2*ag,size=1))
+        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.5*alphag,size=1))
+        scaler = np.random.normal(loc=scalerg,scale=0.2*scalerg,size=1)
+        dual_alpha = np.random.normal(loc=dual_alphag,scale=0.2*dual_alphag,size=1) if dual_alpha != 0 else 0
         n_up = 0
         n_low = 0
         sd = 1
@@ -501,6 +501,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
     all_data = all_data[['q_up','q_low','sim_drift','response','rt','feedback','subj_idx','split_by','trial']]
     
     return all_data
+
 
 #function that takes the data as input to simulate the exact same trials that the subject received
 #the only difference from the simulation fit is that you update q-values not on the simulated choices but on the observed. but you still use the simulated rt and choices 
