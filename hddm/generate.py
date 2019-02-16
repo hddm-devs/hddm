@@ -409,7 +409,7 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
-def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,dual_alpha=0,subjs=1,split_by=0,mu_upper = 1, mu_lower = 0, sd_upper = 0.1, sd_lower = 0.1,binary_outcome = True,uncertainty=False):
+def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init=0.5,dual_alpha=0,subjs=1,split_by=0,mu_upper = 1, mu_lower = 0, sd_upper = 0.1, sd_lower = 0.1,binary_outcome = True,uncertainty=False):
     all_data = []
     tg = t
     ag = a
@@ -428,8 +428,8 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q=0.5,
         sd_up = 0
         sd_low = 0
         n = size
-        q_up = np.tile([q],n) # initialize q
-        q_low = np.tile([q],n) # initialize q
+        q_up = np.tile([q_init],n) # initialize q
+        q_low = np.tile([q_init],n) # initialize q
         response = np.tile([0.5],n)
         feedback = np.tile([0.5],n)
         rt = np.tile([0],n)
@@ -515,8 +515,8 @@ def gen_rand_rlddm_onestep_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
     df['sim_drift'] = 0
     df['sim_response'] = 0
     df['sim_rt'] = 0
-    df['q_up'] = df['q']
-    df['q_low'] = df['q']
+    df['q_up'] = df['q_init']
+    df['q_low'] = df['q_init']
     df['rew_up'] = df['feedback']
     df['rew_low'] = df['feedback']
     sdata, params = hddm.generate.gen_rand_data({'a': asub,'t': tsub,'v': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
