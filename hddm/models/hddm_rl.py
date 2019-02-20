@@ -82,7 +82,7 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st ,p_outlier=0):
     wp = wiener_params
     response = x['response'].values.astype(int)
     uncertainty = 0 #x['uncertainty'].iloc[0]
-    q = x['q'].iloc[0]
+    q = x['q_init'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
     #print("v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f uncertainty = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f p_outlier = %.2f" % (v,alpha,dual_alpha,a,q[1],q[0],uncertainty,t,z,sv,st, p_outlier))
