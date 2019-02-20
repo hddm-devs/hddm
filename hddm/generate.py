@@ -442,7 +442,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init
         sim_drift = np.tile([0],n)
         subj_idx = np.tile([s],n)
         alfalfa = 0
-        d = {'q_up': q_up, 'q_low': q_low, 'sim_drift': sim_drift, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'split_by': split_by, 'trial': 0}
+        d = {'q_up': q_up, 'q_low': q_low, 'sim_drift': sim_drift, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'split_by': split_by, 'trial': 1}
         df = pd.DataFrame(data=d)
         df = df[['q_up','q_low','sim_drift','rew_up','rew_low','response','rt','feedback','subj_idx','split_by','trial']]
         
@@ -470,7 +470,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init
             
 
         for i in range(1,n):
-            df.loc[i,'trial'] = i
+            df.loc[i,'trial'] = i+1
             df.loc[i,'q_up'] = (df.loc[i-1,'q_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'q_up']+(alfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'q_up']))))
             df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
             if (uncertainty == True):
@@ -534,7 +534,7 @@ def gen_rand_rlddm_onestep_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
     df.loc[0,'sim_rt'] = sdata.rt[0]
 
     for i in range(1,n):
-        df.loc[i,'trial'] = i
+        df.loc[i,'trial'] = i+1
         df.loc[i,'q_up'] = (df.loc[i-1,'q_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'q_up']+(alfalfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'q_up']))))
         df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfalfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
         df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
