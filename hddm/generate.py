@@ -422,7 +422,7 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init
         alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.2*alphag,size=1)) if subjs > 1 else alphag
         scaler = np.random.normal(loc=scalerg,scale=0.2*scalerg,size=1) if subjs > 1 else scalerg
         if dual_alpha != 0:
-            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.2*dual_alphag,size=1) if dual_alpha if subjs > 1 else dual_alphag
+            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.2*dual_alphag,size=1) if subjs > 1 else dual_alphag
         n_up = 0
         n_low = 0
         sd = 1
