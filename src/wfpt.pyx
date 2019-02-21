@@ -162,60 +162,70 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
                       double q,
-                      double alpha, double dual_alpha, double scaler,double z, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                      double alpha, double dual_alpha, double scaler,double z, long uncertainty,
+                      int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
-    cdef Py_ssize_t size = response.shape[0]
+    cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
+    cdef Py_ssize_t s_size
     cdef int s
-    cdef int s_size
-    cdef double p
+    cdef double sd = 1
     cdef double drift
+    cdef int n_up = 0
+    cdef int n_low = 0
+    cdef double sd_up
+    cdef double sd_low
+    cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa = 0
-    cdef double neg_alpha = np.exp(alpha)/(1+np.exp(alpha))
-    cdef double pos_alpha = np.exp(alpha + dual_alpha)/(1+np.exp(alpha + dual_alpha))
-    cdef np.ndarray exp_ups
-    cdef np.ndarray exp_lows
-    cdef np.ndarray rew_ups
-    cdef np.ndarray rew_lows
+    cdef double alfa 
+    cdef double neg_alpha = (2.718281828459**alpha)/(1+2.718281828459**alpha)
+    cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha)/(1+2.718281828459**(alpha + dual_alpha))
+    cdef np.ndarray feedbacks
     cdef np.ndarray responses
-    #cdef np.ndarray xs
+    cdef np.ndarray xs
+    cdef np.ndarray qs
+    cdef np.ndarray unique = np.unique(split_by)
     
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
-    # unique represent # of conditions
-    for s in range(unique):
+     # unique represent # of conditions
+    for s in unique:
         #select trials for current condition, identified by the split_by-array
-        exp_ups = exp_up[split_by==s]
-        exp_lows = exp_low[split_by==s]
-        rew_ups = rew_up[split_by==s]
-        rew_lows = rew_low[split_by==s]
+        qs = np.array([q,q])
+        feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
-        #xs = x[split_by==s]
-        s_size = responses.shape[0]
+        xs = x[split_by==s]
+        s_size = xs.shape[0]
+        
+        # don't calculate pdf for first trial but still update q
+        if feedbacks[0] > qs[responses[0]]:
+            alfa = pos_alpha
+        else:
+            alfa = neg_alpha
+            
+        #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
+        qs[responses[0]] = qs[responses[0]]+alfa*(feedbacks[0]-qs[responses[0]])
+        n_up = responses[0]
+        n_low = 1-responses[0]
         
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            # calculate learning rate for current trial. if dual_alpha is not in include it will be 0 so can still use this calculation:
-            if responses[i-1] == 0:
-                if rew_lows[i-1] > exp_lows[i-1]:
-                    alfa = pos_alpha
-                else:
-                    alfa = neg_alpha
-            else:
-                if rew_ups[i-1] > exp_ups[i-1]:
-                    alfa = pos_alpha
-                else:
-                    alfa = neg_alpha
+            if uncertainty == 1:
+              n_up += responses[i]
+              n_low += 1-responses[i]
+              #calculate uncertainty:
+              sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
+              sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))#**(1/2)
+              sd = sd_up + sd_low + 1
+              #exp_ups[i]-exp_lows[i])*v)/sd
+            #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f qup = %.2f qlow = %.2f" % (n_up,n_low,sd_up,sd_low,sd,qs[1],qs[0]))
+            #print("s = %.2f rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (s,xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
             
-            #exp[1,x] is upper bound, exp[0,x] is lower bound. same for rew.
-            exp_ups[i] = (exp_ups[i-1]*(1-responses[i-1])) + ((responses[i-1])*(exp_ups[i-1]+(alfa*(rew_ups[i-1]-exp_ups[i-1]))))
-            exp_lows[i] = (exp_lows[i-1]*(responses[i-1])) + ((1-responses[i-1])*(exp_lows[i-1]+(alfa*(rew_lows[i-1]-exp_lows[i-1]))))
-            
-            drift = (exp_ups[i]-exp_lows[i])*scaler
+            drift = (qs[1]-qs[0])*scaler
+
             if drift == 0:
               p = 0.5
             else:
@@ -224,15 +234,21 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
               else:
                 p = 1-(np.exp(-2*z*drift)-1)/(np.exp(-2*drift)-1)
             # If one probability = 0, the log sum will be -Inf
-            #print("p = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f exp_up = %.2f exp_low = %.2f rew_up = %.2f rew_low = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f" % (p,(exp_ups[i]-exp_lows[i])*v,v,alpha,dual_alpha,a,exp_ups[i],exp_lows[i],rew_ups[i],rew_lows[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier))
             #print('p: ',p)
             p = p * (1 - p_outlier) + wp_outlier
             #print('p after: ',p) 
             if p == 0:
                 return -np.inf
-
             sum_logp += log(p)
 
+        # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
+            if feedbacks[i] > qs[responses[i]]:
+                alfa = pos_alpha
+            else:
+                alfa = neg_alpha
+            
+            #qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward received on current trial.
+            qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
     return sum_logp
 
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
