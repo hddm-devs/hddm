@@ -158,7 +158,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
     return sum_logp
   
-def wiener_like_rl(np.ndarray[double, ndim=1] response,
+def wiener_like_rl(np.ndarray[double, ndim=1] x, np.ndarray[double, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
                       double q,
