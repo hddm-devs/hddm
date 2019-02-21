@@ -58,7 +58,7 @@ class Hrl(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.rl_class, 'wfpt',
-                                   observed=True, col_name=['split_by','feedback', 'response','q_init'],
+                                   observed=True, col_name=['split_by','feedback', 'response','rt','q_init'],
                                    **wfpt_parents)
 
 def RL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st ,p_outlier=0):
