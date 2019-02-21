@@ -158,14 +158,14 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             qs[responses[i]] = qs[responses[i]]+alfa*(feedbacks[i]-qs[responses[i]])
     return sum_logp
   
-def wiener_like_rl(np.ndarray[double, ndim=1] x, np.ndarray[double, ndim=1] response,
+def wiener_like_rl(np.ndarray[double, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
                       double q,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
                       double st, long uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
-    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t size = response.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t s_size
     cdef int s
@@ -196,8 +196,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] x, np.ndarray[double, ndim=1] resp
         qs = np.array([q,q])
         feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
-        xs = x[split_by==s]
-        s_size = xs.shape[0]
+        s_size = reponses.shape[0]
         
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
