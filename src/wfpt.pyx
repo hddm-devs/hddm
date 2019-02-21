@@ -196,7 +196,7 @@ def wiener_like_rl(np.ndarray[double, ndim=1] response,
         qs = np.array([q,q])
         feedbacks = feedback[split_by==s]
         responses = response[split_by==s]
-        s_size = reponses.shape[0]
+        s_size = rseponses.shape[0]
         
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
