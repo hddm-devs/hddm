@@ -78,6 +78,6 @@ def RL_like(x, scaler, alpha,dual_alpha, p_outlier=0):
     # could use something like the line below to avoid sending exp_up and exp_low as arrays. want to access the different values of 
     # of by u (below), but not using for-loop.
     #u, split_by = np.unique(x['split_by'].values, return_inverse=True)
-    return wiener_like_rl(response,feedback,split_by,q,alpha,dual_alpha,scaler,z, p_outlier=p_outlier, **wp)
+    return wiener_like_rl(response,feedback,split_by,q,alpha,dual_alpha,scaler,z,uncertainty, p_outlier=p_outlier, **wp)
 RL = stochastic_from_dist('RL', RL_like)
 
