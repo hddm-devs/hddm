@@ -163,18 +163,15 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
                       np.ndarray[long, ndim=1] split_by,
                       double q,
                       double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
-                      double st, long uncertainty, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+                      double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = response.shape[0]
     cdef Py_ssize_t i
     cdef Py_ssize_t s_size
     cdef int s
-    cdef double sd = 1
     cdef double drift
     cdef int n_up = 0
     cdef int n_low = 0
-    cdef double sd_up
-    cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
@@ -212,17 +209,6 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
         #loop through all trials in current condition
         for i in range(1,s_size):
             
-            if uncertainty == 1:
-              n_up += responses[i]
-              n_low += 1-responses[i]
-              #calculate uncertainty:
-              sd_up = np.sqrt((qs[1]*(1-qs[1]))/(n_up+1))#**(1/2) did not work with actual calculation so using (slower) numpy sqrt 
-              sd_low = np.sqrt((qs[0]*(1-qs[0]))/(n_low+1))#**(1/2)
-              sd = sd_up + sd_low + 1
-              #exp_ups[i]-exp_lows[i])*v)/sd
-            #print("n_up = %.2f n_low = %.2f sd_up = %.2f sd_low = %.2f sd = %.2f qup = %.2f qlow = %.2f" % (n_up,n_low,sd_up,sd_low,sd,qs[1],qs[0]))
-            #print("s = %.2f rt = %.2f drift = %.2f v = %.2f alpha = %.2f dual_alpha = %.2f a = %.2f qup = %.2f qlow = %.2f feedback = %.2f responses = %.2f split = %.2f t = %.2f z = %.2f sv = %.2f st = %.2f err = %.2f n_st = %.2f n_sz = %.2f use_adaptive = %.2f simps_err = %.2f p_outlier = %.2f w_outlier = %.2f  uncertainty = %.2f" % (s,xs[i],(qs[1]-qs[0])*v,v,alpha,dual_alpha,a,qs[1],qs[0],feedbacks[i],responses[i],s,t,z,sv,st, err, n_st, n_sz, use_adaptive, simps_err,p_outlier,w_outlier,uncertainty))
-            
             drift = (qs[1]-qs[0])*v
 
             if drift == 0:
@@ -240,7 +226,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
                 return -np.inf
             sum_logp += log(p)
 
-        # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
+            # get learning rate for current trial. if dual_alpha is not in include it will be same as alpha so can still use this calculation:
             if feedbacks[i] > qs[responses[i]]:
                 alfa = pos_alpha
             else:
