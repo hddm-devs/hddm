@@ -25,6 +25,8 @@ class Hrl(HDDM):
         super(Hrl, self).__init__(*args, **kwargs)
 
     def _create_stochastic_knodes(self, include):
+        print(include)
+        #self.include = set(['alpha', 'v'])
         knodes = super(Hrl, self)._create_stochastic_knodes(include)
         if self.alpha:
             # Add learning rate parameter
