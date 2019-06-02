@@ -78,7 +78,8 @@ def wienerRL_like(x, v, alpha,dual_alpha, sv, a, z, sz, t, st ,p_outlier=0):
                          'use_adaptive':1,
                          'simps_err':1e-3,
                          'w_outlier': 0.1}
-    sum_logp = 0
+    print(x)
+    #sum_logp = 0
     wp = wiener_params
     response = x['response'].values.astype(int)
     uncertainty = 0 #x['uncertainty'].iloc[0]
