@@ -409,6 +409,84 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     return data, subj_params
 
+def gen_rand_rlddm_pst_data(a,t,scaler,alpha,size=1,z=0.5,q_init=0.5,dual_alpha=0,subjs=1):
+    all_data = []
+    tg = t
+    ag = a
+    alphag = alpha
+    dual_alphag = dual_alpha 
+    scalerg = scaler
+    for s in range(0,subjs):
+        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.02,size=1)) if subjs > 1 else tg
+        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.1,size=1)) if subjs > 1 else ag
+        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.1,size=1)) if subjs > 1 else alphag
+        scaler = np.random.normal(loc=scalerg,scale=0.1,size=1) if subjs > 1 else scalerg
+        if dual_alpha != 0:
+            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.15,size=1) if subjs > 1 else dual_alphag
+        n = size
+        q_up = np.tile([q_init],n) # initialize q
+        q_low = np.tile([q_init],n) # initialize q
+        response = np.tile([0.5],n)
+        feedback = np.tile([0.5],n)
+        rt = np.tile([0],n)
+        sim_drift = np.tile([0],n)
+        subj_idx = np.tile([s],n)
+        p_upper = np.array([0.8,0.7,0.6])
+        p_lower = np.array([0.2,0.3,0.4])
+        alfalfa = 0
+        
+        for split in range(0,3):
+            rew_up = np.random.binomial(1,p_upper[split],n).astype(float)
+            rew_low = np.random.binomial(1,p_lower[split],n).astype(float)   
+            d = {'q_up': q_up, 'q_low': q_low, 'sim_drift': sim_drift, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'rt': rt,'feedback':feedback, 'subj_idx': subj_idx, 'split_by': split, 'trial': 1}
+            df = pd.DataFrame(data=d)
+            df = df[['q_up','q_low','sim_drift','rew_up','rew_low','response','rt','feedback','subj_idx','split_by','trial']]
+
+            data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[0,'sim_drift'],'z': z},subjs=1,size=1)
+            df.loc[0,'response'] = data.response[0]
+            df.loc[0,'rt'] = data.rt[0]
+            if (data.response[0] == 1.0):
+                df.loc[0,'feedback'] = df.loc[0,'rew_up']
+                n_up = 1
+                if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
+            else:
+                df.loc[0,'feedback'] = df.loc[0,'rew_low']
+                n_low = 1
+                if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
+
+
+            for i in range(1,n):
+                df.loc[i,'trial'] = i+1
+                df.loc[i,'q_up'] = (df.loc[i-1,'q_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'q_up']+(alfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'q_up']))))
+                df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
+                df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
+                data, params = hddm.generate.gen_rand_data({'a': a,'t': t,'v': df.loc[i,'sim_drift'],'z': z},subjs=1,size=1)
+                df.loc[i,'response'] = data.response[0]
+                df.loc[i,'rt'] = data.rt[0]
+                if (data.response[0] == 1.0):
+                    df.loc[i,'feedback'] = df.loc[i,'rew_up']
+                    if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
+                        alfa = alpha+dual_alpha
+                    else:
+                        alfa = alpha
+                else:
+                    df.loc[i,'feedback'] = df.loc[i,'rew_low']
+                    if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
+                        alfa = alpha+dual_alpha
+                    else:
+                        alfa = alpha
+            all_data.append(df)
+    all_data = pd.concat(all_data, axis=0)
+    all_data = all_data[['q_up','q_low','sim_drift','response','rt','feedback','subj_idx','split_by','trial']]
+    
+    return all_data
+
 def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init=0.5,dual_alpha=0,subjs=1,split_by=0,mu_upper = 1, mu_lower = 0, sd_upper = 0.1, sd_lower = 0.1,binary_outcome = True,uncertainty=False):
     all_data = []
     tg = t
@@ -417,12 +495,12 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init
     dual_alphag = dual_alpha 
     scalerg = scaler
     for s in range(0,subjs):
-        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.2*tg,size=1)) if subjs > 1 else tg
-        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.2*ag,size=1)) if subjs > 1 else ag
-        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.2*alphag,size=1)) if subjs > 1 else alphag
-        scaler = np.random.normal(loc=scalerg,scale=0.2*scalerg,size=1) if subjs > 1 else scalerg
+        t = np.maximum(0.05,np.random.normal(loc=tg,scale=0.02,size=1)) if subjs > 1 else tg
+        a = np.maximum(0.05,np.random.normal(loc=ag,scale=0.1,size=1)) if subjs > 1 else ag
+        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.1,size=1)) if subjs > 1 else alphag
+        scaler = np.random.normal(loc=scalerg,scale=0.2,size=1) if subjs > 1 else scalerg
         if dual_alpha != 0:
-            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.2*dual_alphag,size=1) if subjs > 1 else dual_alphag
+            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.15,size=1) if subjs > 1 else dual_alphag
         n_up = 0
         n_low = 0
         sd = 1
@@ -503,8 +581,85 @@ def gen_rand_rlddm_data(a,t,scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init
     
     return all_data
 
+def gen_rand_rl_data(scaler,alpha,size=1,p_upper=1,p_lower=0,z=0.5,q_init=0.5,dual_alpha=0,subjs=1,split_by=0,mu_upper = 1, mu_lower = 0, sd_upper = 0.1, sd_lower = 0.1,binary_outcome = True):
+    all_data = []
+    alphag = alpha
+    dual_alphag = dual_alpha 
+    scalerg = scaler
+    for s in range(0,subjs):
+        alpha = np.maximum(0.001,np.random.normal(loc=alphag,scale=0.1,size=1)) if subjs > 1 else alphag
+        scaler = np.random.normal(loc=scalerg,scale=0.2,size=1) if subjs > 1 else scalerg
+        if dual_alpha != 0:
+            dual_alpha = np.random.normal(loc=dual_alphag,scale=0.1,size=1) if subjs > 1 else dual_alphag
+        n = size
+        q_up = np.tile([q_init],n) # initialize q
+        q_low = np.tile([q_init],n) # initialize q
+        response = np.tile([0.5],n)
+        feedback = np.tile([0.5],n)
+        rt = np.tile([0],n)
+        if binary_outcome:
+            rew_up = np.random.binomial(1,p_upper,n).astype(float)
+            rew_low = np.random.binomial(1,p_lower,n).astype(float)
+        else:
+            rew_up = np.random.normal(mu_upper,sd_upper,n)
+            rew_low = np.random.normal(mu_lower,sd_lower,n)            
+        sim_drift = np.tile([0],n)
+        p = np.tile([0.5],n)
+        subj_idx = np.tile([s],n)
+        alfalfa = 0
+        d = {'q_up': q_up, 'q_low': q_low,'p': p, 'sim_drift': sim_drift, 'rew_up': rew_up, 'rew_low': rew_low,'response': response,'feedback':feedback, 'subj_idx': subj_idx, 'split_by': split_by, 'trial': 1}
+        df = pd.DataFrame(data=d)
+        df = df[['q_up','q_low','p','sim_drift','rew_up','rew_low','response','feedback','subj_idx','split_by','trial']]
+        if df.loc[0,'sim_drift']==0:
+            df.loc[0,'p']=0.5
+        else:
+            df.loc[0,'p']=(np.exp(-2*z*df.loc[0,'sim_drift'])-1)/(np.exp(-2*df.loc[0,'sim_drift'])-1)
+        df.loc[0,'response'] = np.random.binomial(1,df.loc[0,'p'],1)
+        if (df.loc[0,'response'] == 1.0):
+            df.loc[0,'feedback'] = df.loc[0,'rew_up']
+            if (df.loc[0,'feedback'] > df.loc[0,'q_up']):
+                alfa = alpha+dual_alpha
+            else:
+                alfa = alpha
+        else:
+            df.loc[0,'feedback'] = df.loc[0,'rew_low']
+            if (df.loc[0,'feedback'] > df.loc[0,'q_low']):
+                alfa = alpha+dual_alpha
+            else:
+                alfa = alpha
+            
 
-#function that takes the data as input to simulate the exact same trials that the subject received
+        for i in range(1,n):
+            df.loc[i,'trial'] = i+1
+            df.loc[i,'q_up'] = (df.loc[i-1,'q_up']*(1-df.loc[i-1,'response'])) + ((df.loc[i-1,'response'])*(df.loc[i-1,'q_up']+(alfa*(df.loc[i-1,'rew_up']-df.loc[i-1,'q_up']))))
+            df.loc[i,'q_low'] = (df.loc[i-1,'q_low']*(df.loc[i-1,'response'])) + ((1-df.loc[i-1,'response'])*(df.loc[i-1,'q_low']+(alfa*(df.loc[i-1,'rew_low']-df.loc[i-1,'q_low']))))
+            df.loc[i,'sim_drift'] = (df.loc[i,'q_up']-df.loc[i,'q_low'])*(scaler)
+            if df.loc[i,'sim_drift']==0:
+                df.loc[i,'p']=0.5
+            else:
+                df.loc[i,'p']=(np.exp(-2*z*df.loc[i,'sim_drift'])-1)/(np.exp(-2*df.loc[i,'sim_drift'])-1)
+            df.loc[i,'response'] = np.random.binomial(1,df.loc[i,'p'],1)
+            if (df.loc[i,'response'] == 1.0):
+                df.loc[i,'feedback'] = df.loc[i,'rew_up']
+                if (df.loc[i,'feedback'] > df.loc[i,'q_up']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
+            else:
+                df.loc[i,'feedback'] = df.loc[i,'rew_low']
+                if (df.loc[i,'feedback'] > df.loc[i,'q_low']):
+                    alfa = alpha+dual_alpha
+                else:
+                    alfa = alpha
+
+        all_data.append(df)
+    all_data = pd.concat(all_data, axis=0)
+    all_data = all_data[['q_up','q_low','p','sim_drift','response','feedback','subj_idx','split_by','trial']]
+    
+    return all_data
+
+
+#function that takes the data as input to simulate the same trials that the subject received
 #the only difference from the simulation fit is that you update q-values not on the simulated choices but on the observed. but you still use the simulated rt and choices 
 #to look at ability to recreate choice patterns. 
 def gen_rand_rlddm_onestep_data(a,t,scaler,alpha,data,z=0.5,dual_alpha=0):
