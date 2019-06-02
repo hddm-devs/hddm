@@ -1,5 +1,4 @@
 
-
 """
 """
 
@@ -21,15 +20,21 @@ class Hrl(HDDM):
     def __init__(self, *args, **kwargs):
         self.alpha = kwargs.pop('alpha', True)
         self.dual_alpha = kwargs.pop('dual_alpha', False)
+        self.z = kwargs.pop('z', False)
         self.rl_class = RL
 
         super(Hrl, self).__init__(*args, **kwargs)
 
     def _create_stochastic_knodes(self, include):
+        params = ['v']    
         if 'dual_alpha' in self.include:
-            include = set(['v','dual_alpha'])
-        else:
-            include = set(['v'])
+            params.append('dual_alpha')
+        if 'p_outlier' in self.include:
+            params.append('p_outlier')
+        if 'z' in self.include:
+            params.append('z')
+        include = set(params)
+
         knodes = super(Hrl, self)._create_stochastic_knodes(include)
         if self.alpha:
             # Add learning rate parameter
@@ -48,6 +53,7 @@ class Hrl(HDDM):
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
+        wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
         
         return wfpt_parents
 
@@ -58,7 +64,7 @@ class Hrl(HDDM):
                                    observed=True, col_name=['split_by','feedback', 'response','q_init'],
                                    **wfpt_parents)
 
-def RL_like(x, v, alpha,dual_alpha,p_outlier=0):
+def RL_like(x, v, alpha,dual_alpha,z=0.5,p_outlier=0):
     
     wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
@@ -71,6 +77,5 @@ def RL_like(x, v, alpha,dual_alpha,p_outlier=0):
     q = x['q_init'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
-    return wiener_like_rl(response,feedback,split_by,q,alpha,dual_alpha,v,0, 0, 0.5, 0, 0, 0,p_outlier=p_outlier, **wp)
+    return wiener_like_rl(response,feedback,split_by,q,alpha,dual_alpha,v, z, p_outlier=p_outlier, **wp)
 RL = stochastic_from_dist('RL', RL_like)
-
