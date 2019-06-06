@@ -406,6 +406,46 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return knodes
 
+    def _create_family_normal_non_centered(self, name, value=0, g_mu=None,
+                             g_tau=15**-2, std_lower=1e-10,
+                             std_upper=100, std_value=.1):
+        """Similar to _create_family_normal() but using a non-centered 
+        approach to estimating individual differences.
+
+        See _create_family_normal() help for more information.
+
+        """
+        if g_mu is None:
+            g_mu = value
+
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+            g = Knode(pm.Normal, '%s' % name, mu=g_mu, tau=g_tau,
+                      value=value, depends=self.depends[name])
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(pm.Uniform, '%s_std' % name, lower=std_lower,
+                        upper=std_upper, value=std_value, depends=depends_std)
+            offset_subj = Knode(pm.Normal, '%s_offset_subj' % name, mu=0, tau=5**-2,
+                                value=0, depends=('subj_idx',),
+                                subj=True, hidden=True, plot=False)
+            subj = Knode(pm.Deterministic, '%s_subj'%name, eval=lambda x,y,z: x+y*z,
+                         x=g,y=offset_subj,z=std,
+                         depends=('subj_idx',), plot=self.plot_subjs,
+                         trace=True, hidden=False, subj=True)
+            knodes['%s'%name] = g
+            knodes['%s_std'%name] = std
+            knodes['%s_offset_subj'%name] = offset_subj
+            knodes['%s_bottom'%name] = subj
+
+        else:
+            subj = Knode(pm.Normal, name, mu=g_mu, tau=g_tau,
+                         value=value, depends=self.depends[name])
+
+            knodes['%s_bottom'%name] = subj
+
+        return knodes
+        
     def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
                                std_std=0.2, std_value=.1):
         """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
