@@ -59,8 +59,7 @@ class Hrl(HDDM):
         wfpt_parents = OrderedDict()
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['alpha'] = knodes['alpha_bottom']
-        wfpt_parents['dual_alpha'] = knodes[
-            'dual_alpha_bottom'] if 'dual_alpha' in self.include else 0
+        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if self.dual else 0
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
 
         return wfpt_parents
