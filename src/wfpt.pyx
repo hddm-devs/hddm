@@ -79,8 +79,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[long, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
-                      double q,
-                      double alpha, double dual_alpha, double v, double sv, double a, double z, double sz, double t,
+                      double q, double alpha, double dual_alpha, double v, 
+                      double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
@@ -93,11 +93,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double alfa
     cdef double neg_alpha = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
     cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
-    cdef np.ndarray[double] feedbacks
-    cdef np.ndarray[long] responses
-    cdef np.ndarray[double] xs
-    cdef np.ndarray[double] qs
-    cdef np.ndarray unique = np.unique(split_by)
+    cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
+    cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
+    cdef np.ndarray[double, ndim=1] xs = np.empty(0, dtype=np.double)
+    cdef np.ndarray[double, ndim=1] qs = np.empty(0, dtype=np.double)
+    cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
@@ -166,14 +166,13 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa
+    cdef double alfa = 0
     cdef double neg_alpha = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
     cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
-    cdef np.ndarray[double] feedbacks
-    cdef np.ndarray[long] responses
-    cdef np.ndarray[double] xs
-    cdef np.ndarray[double] qs
-    cdef np.ndarray unique = np.unique(split_by)
+    cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
+    cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
+    cdef np.ndarray[double, ndim=1] qs = np.empty(0, dtype=np.double)
+    cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
