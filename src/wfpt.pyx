@@ -84,7 +84,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
-    cdef Py_ssize_t i
+    cdef Py_ssize_t i, j
     cdef Py_ssize_t s_size
     cdef int s
     cdef double p
@@ -101,7 +101,8 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         return -np.inf
 
     # unique represent # of conditions
-    for s in unique:
+    for j in range(unique.shape[0]):
+        s = unique[j]
         # select trials for current condition, identified by the split_by-array
         feedbacks = feedback[split_by == s]
         responses = response[split_by == s]
@@ -151,7 +152,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
                    double err=1e-4, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                    double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = response.shape[0]
-    cdef Py_ssize_t i
+    cdef Py_ssize_t i, j
     cdef Py_ssize_t s_size
     cdef int s
     cdef double drift
@@ -168,7 +169,8 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
         return -np.inf
 
      # unique represent # of conditions
-    for s in unique:
+    for j in range(unique.shape[0]):
+        s = unique[j]
         # select trials for current condition, identified by the split_by-array
         feedbacks = feedback[split_by == s]
         responses = response[split_by == s]
