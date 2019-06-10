@@ -92,9 +92,9 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
-    cdef np.ndarray[double, ndim=1] xs = np.empty(0, dtype=np.double)
-    cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
-    cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
+    cdef np.ndarray[double, ndim=1] xs
+    cdef np.ndarray[double, ndim=1] feedbacks
+    cdef np.ndarray[long, ndim=1] responses
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
@@ -160,8 +160,8 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa 
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
-    cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
-    cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
+    cdef np.ndarray[double, ndim=1] feedbacks
+    cdef np.ndarray[long, ndim=1] responses
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
