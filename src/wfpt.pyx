@@ -91,12 +91,10 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa
-    cdef double neg_alpha = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
-    cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+    cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
+    cdef np.ndarray[double, ndim=1] xs = np.empty(0, dtype=np.double)
     cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
     cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
-    cdef np.ndarray[double, ndim=1] xs = np.empty(0, dtype=np.double)
-    cdef np.ndarray[double, ndim=1] qs = np.empty(0, dtype=np.double)
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
@@ -105,7 +103,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     # unique represent # of conditions
     for s in unique:
         # select trials for current condition, identified by the split_by-array
-        qs = np.array([q, q])
         feedbacks = feedback[split_by == s]
         responses = response[split_by == s]
         xs = x[split_by == s]
@@ -113,9 +110,9 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
-            alfa = pos_alpha
+            alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
         else:
-            alfa = neg_alpha
+            alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
         # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
         # received on current trial.
@@ -136,9 +133,9 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
             # include it will be same as alpha so can still use this
             # calculation:
             if feedbacks[i] > qs[responses[i]]:
-                alfa = pos_alpha
+                alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
             else:
-                alfa = neg_alpha
+                alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
             # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
             # received on current trial.
@@ -157,21 +154,14 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     cdef Py_ssize_t i
     cdef Py_ssize_t s_size
     cdef int s
-    cdef double sd = 1
     cdef double drift
-    cdef int n_up = 0
-    cdef int n_low = 0
-    cdef double sd_up
-    cdef double sd_low
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa = 0
-    cdef double neg_alpha = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
-    cdef double pos_alpha = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+    cdef double alfa 
+    cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
     cdef np.ndarray[double, ndim=1] feedbacks = np.empty(0, dtype=np.double)
     cdef np.ndarray[long, ndim=1] responses = np.empty(0, dtype=np.long)
-    cdef np.ndarray[double, ndim=1] qs = np.empty(0, dtype=np.double)
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
 
     if not p_outlier_in_range(p_outlier):
@@ -180,23 +170,20 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
      # unique represent # of conditions
     for s in unique:
         # select trials for current condition, identified by the split_by-array
-        qs = np.array([q, q])
         feedbacks = feedback[split_by == s]
         responses = response[split_by == s]
         s_size = responses.shape[0]
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
-            alfa = pos_alpha
+            alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
         else:
-            alfa = neg_alpha
+            alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
         # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
         # received on current trial.
         qs[responses[0]] = qs[responses[0]] + \
             alfa * (feedbacks[0] - qs[responses[0]])
-        n_up = responses[0]
-        n_low = 1 - responses[0]
 
         # loop through all trials in current condition
         for i in range(1, s_size):
@@ -224,9 +211,9 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
             # include it will be same as alpha so can still use this
             # calculation:
             if feedbacks[i] > qs[responses[i]]:
-                alfa = pos_alpha
+                alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
             else:
-                alfa = neg_alpha
+                alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
             # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
             # received on current trial.
