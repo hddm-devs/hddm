@@ -168,7 +168,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
-     # unique represent # of conditions
+    # unique represent # of conditions
     for j in range(unique.shape[0]):
         s = unique[j]
         # select trials for current condition, identified by the split_by-array
