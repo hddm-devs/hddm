@@ -35,22 +35,22 @@ class HDDMrl(HDDM):
                     'alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
             if self.dual:
                 knodes.update(self._create_family_normal_non_centered(
-                    'dual_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
+                    'pos_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
         else:
             if self.alpha:
                 knodes.update(self._create_family_normal(
                     'alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
             if self.dual:
                 knodes.update(self._create_family_normal(
-                    'dual_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
+                    'pos_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
 
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMrl, self)._create_wfpt_parents_dict(knodes)
         wfpt_parents['alpha'] = knodes['alpha_bottom']
-        wfpt_parents['dual_alpha'] = knodes[
-            'dual_alpha_bottom'] if self.dual else 0
+        wfpt_parents['pos_alpha'] = knodes[
+            'pos_alpha_bottom'] if self.dual else 100.00
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
@@ -58,7 +58,7 @@ class HDDMrl(HDDM):
         return Knode(self.wfpt_rl_class, 'wfpt', observed=True, col_name=['split_by', 'feedback', 'response', 'rt', 'q_init'], **wfpt_parents)
 
 
-def wienerRL_like(x, v, alpha, dual_alpha, sv, a, z, sz, t, st, p_outlier=0):
+def wienerRL_like(x, v, alpha, pos_alpha, sv, a, z, sz, t, st, p_outlier=0):
 
     wiener_params = {'err': 1e-4, 'n_st': 2, 'n_sz': 2,
                      'use_adaptive': 1,
@@ -69,5 +69,5 @@ def wienerRL_like(x, v, alpha, dual_alpha, sv, a, z, sz, t, st, p_outlier=0):
     q = x['q_init'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
-    return wiener_like_rlddm(x['rt'].values, response, feedback, split_by, q, alpha, dual_alpha, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
+    return wiener_like_rlddm(x['rt'].values, response, feedback, split_by, q, alpha, pos_alpha, v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 WienerRL = stochastic_from_dist('wienerRL', wienerRL_like)

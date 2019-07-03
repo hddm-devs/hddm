@@ -38,20 +38,20 @@ class Hrl(HDDM):
 
         knodes = super(Hrl, self)._create_stochastic_knodes(include)
         if self.non_centered:
-            print('setting learning rate(s) parameter to be non-centered')
+            print('setting learning rate parameter(s) to be non-centered')
             if self.alpha:
                 knodes.update(self._create_family_normal_non_centered(
                     'alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
             if self.dual:
                 knodes.update(self._create_family_normal_non_centered(
-                    'dual_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
+                    'pos_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
         else:
             if self.alpha:
                 knodes.update(self._create_family_normal(
                     'alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
             if self.dual:
                 knodes.update(self._create_family_normal(
-                    'dual_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
+                    'pos_alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
 
         return knodes
 
@@ -59,7 +59,7 @@ class Hrl(HDDM):
         wfpt_parents = OrderedDict()
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['alpha'] = knodes['alpha_bottom']
-        wfpt_parents['dual_alpha'] = knodes['dual_alpha_bottom'] if self.dual else 0
+        wfpt_parents['pos_alpha'] = knodes['pos_alpha_bottom'] if self.dual else 100.00
         wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
 
         return wfpt_parents
@@ -69,7 +69,7 @@ class Hrl(HDDM):
         return Knode(self.rl_class, 'wfpt', observed=True, col_name=['split_by', 'feedback', 'response', 'q_init'], **wfpt_parents)
 
 
-def RL_like(x, v, alpha, dual_alpha, z=0.5, p_outlier=0):
+def RL_like(x, v, alpha, pos_alpha, z=0.5, p_outlier=0):
 
     wiener_params = {'err': 1e-4, 'n_st': 2, 'n_sz': 2,
                      'use_adaptive': 1,
@@ -81,5 +81,5 @@ def RL_like(x, v, alpha, dual_alpha, z=0.5, p_outlier=0):
     q = x['q_init'].iloc[0]
     feedback = x['feedback'].values
     split_by = x['split_by'].values
-    return wiener_like_rl(response, feedback, split_by, q, alpha, dual_alpha, v, z, p_outlier=p_outlier, **wp)
+    return wiener_like_rl(response, feedback, split_by, q, alpha, pos_alpha, v, z, p_outlier=p_outlier, **wp)
 RL = stochastic_from_dist('RL', RL_like)

@@ -79,7 +79,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                       np.ndarray[long, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
-                      double q, double alpha, double dual_alpha, double v, 
+                      double q, double alpha, double pos_alpha, double v, 
                       double sv, double a, double z, double sz, double t,
                       double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                       double p_outlier=0, double w_outlier=0):
@@ -91,6 +91,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef double alfa
+    cdef double pos_alfa
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
     cdef np.ndarray[double, ndim=1] xs
     cdef np.ndarray[double, ndim=1] feedbacks
@@ -99,6 +100,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
+
+    if pos_alpha==100.00:
+        pos_alfa = alpha
+    else:
+        pos_alfa = pos_alpha
 
     # unique represent # of conditions
     for j in range(unique.shape[0]):
@@ -111,7 +117,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
-            alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+            alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
         else:
             alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
@@ -130,11 +136,11 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 return -np.inf
             sum_logp += log(p)
 
-            # get learning rate for current trial. if dual_alpha is not in
+            # get learning rate for current trial. if pos_alpha is not in
             # include it will be same as alpha so can still use this
             # calculation:
             if feedbacks[i] > qs[responses[i]]:
-                alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+                alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
             else:
                 alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
@@ -148,7 +154,7 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
 def wiener_like_rl(np.ndarray[long, ndim=1] response,
                    np.ndarray[double, ndim=1] feedback,
                    np.ndarray[long, ndim=1] split_by,
-                   double q, double alpha, double dual_alpha, double v, double z,
+                   double q, double alpha, double pos_alpha, double v, double z,
                    double err=1e-4, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
                    double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = response.shape[0]
@@ -159,7 +165,8 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa 
+    cdef double alfa
+    cdef double pos_alfa
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
     cdef np.ndarray[double, ndim=1] feedbacks
     cdef np.ndarray[long, ndim=1] responses
@@ -168,6 +175,11 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     if not p_outlier_in_range(p_outlier):
         return -np.inf
 
+    if pos_alpha==100.00:
+        pos_alfa = alpha
+    else:
+        pos_alfa = pos_alpha
+        
     # unique represent # of conditions
     for j in range(unique.shape[0]):
         s = unique[j]
@@ -178,7 +190,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
-            alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+            alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
         else:
             alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
@@ -209,11 +221,11 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
 
             sum_logp += log(p)
 
-            # get learning rate for current trial. if dual_alpha is not in
+            # get learning rate for current trial. if pos_alpha is not in
             # include it will be same as alpha so can still use this
             # calculation:
             if feedbacks[i] > qs[responses[i]]:
-                alfa = 2.718281828459**(alpha + dual_alpha) / (1 + 2.718281828459**(alpha + dual_alpha))
+                alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
             else:
                 alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
 
