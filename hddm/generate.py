@@ -439,7 +439,7 @@ def gen_rand_rlddm_data(a, t, scaler, alpha, size=1, p_upper=1, p_lower=0, z=0.5
             loc=tg, scale=0.05, size=1)) if subjs > 1 else tg
         a = np.maximum(0.05, np.random.normal(
             loc=ag, scale=0.15, size=1)) if subjs > 1 else ag
-        alpha = np.minimum(np.minimum(np.maximum(0.001, np.random.normal(loc=alphag, scale=0.05, size=1)),alphag+alphag),1) if subjs > 1 else alphag
+        alpha = np.minimum(np.minimum(np.maximum(0.001, np.random.normal(loc=alphag, scale=0.05, size=1)), alphag+alphag),1) if subjs > 1 else alphag
         scaler = np.random.normal(
             loc=scalerg, scale=0.25, size=1) if subjs > 1 else scalerg
         if np.isnan(pos_alpha):
@@ -516,19 +516,19 @@ def gen_rand_rlddm_data(a, t, scaler, alpha, size=1, p_upper=1, p_lower=0, z=0.5
     return all_data
 
 
-def gen_rand_rl_data(scaler, alpha, size=1, p_upper=1, p_lower=0, z=0.5, q_init=0.5,pos_alpha=float('nan'), subjs=1, split_by=0, mu_upper=1, mu_lower=0, sd_upper=0.1, sd_lower=0.1, binary_outcome=True):
+def gen_rand_rl_data(scaler, alpha, size=1, p_upper=1, p_lower=0, z=0.5, q_init=0.5, pos_alpha=float('nan'), subjs=1, split_by=0, mu_upper=1, mu_lower=0, sd_upper=0.1, sd_lower=0.1, binary_outcome=True):
     all_data = []
     alphag = alpha
     pos_alphag = pos_alpha
     scalerg = scaler
     for s in range(0, subjs):
-        alpha = np.minimum(np.minimum(np.maximum(0.001, np.random.normal(loc=alphag, scale=0.05, size=1)),alphag+alphag),1) if subjs > 1 else alphag
+        alpha = np.minimum(np.minimum(np.maximum(0.001, np.random.normal(loc=alphag, scale=0.05, size=1)), alphag+alphag),1) if subjs > 1 else alphag
         scaler = np.random.normal(
             loc=scalerg, scale=0.25, size=1) if subjs > 1 else scalerg
         if np.isnan(pos_alpha):
             pos_alfa = alpha
         else:
-            pos_alfa = np.maximum(0.001,np.random.normal(loc=pos_alphag, scale=0.05, size=1)) if subjs > 1 else pos_alphag
+            pos_alfa = np.maximum(0.001, np.random.normal(loc=pos_alphag, scale=0.05, size=1)) if subjs > 1 else pos_alphag
         n = size
         q_up = np.tile([q_init], n)  # initialize q
         q_low = np.tile([q_init], n)  # initialize q

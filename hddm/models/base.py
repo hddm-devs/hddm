@@ -282,9 +282,9 @@ class AccumulatorModel(kabuki.Hierarchical):
 
             #optimze
             try:
-                res_tuple = fmin_powell(objective, values, full_output=True)
+                res_tuple = fmin_powell(objective, values, full_output=True, maxiter=100, maxfun=50000)
             except Exception:
-                res_tuple = fmin(objective, values, full_output=True)
+                res_tuple = fmin(objective, values, full_output=True, maxiter=100, maxfun=50000)
             all_results.append(res_tuple)
 
             #reset inf_objective so values be resampled

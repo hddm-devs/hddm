@@ -148,26 +148,49 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         self._quantiles_edges = np.asarray(quantiles)
 
         data = self.value
+        
+        if np.all(~np.isnan(data['rt'])):
+            
+            #get proportion of data fall between the quantiles
+            quantiles = np.array(quantiles)
+            pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
+            neg_proportion = pos_proportion[::-1]
+            proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
+            self._n_samples = len(data)
 
-        #get proportion of data fall between the quantiles
-        quantiles = np.array(quantiles)
-        pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
-        neg_proportion = pos_proportion[::-1]
-        proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
-        self._n_samples = len(data)
+            # extract empirical RT at the quantiles
+            self._empirical_quantiles = hddm.utils.data_quantiles(data, quantiles)
+            ub_emp_rt = self._empirical_quantiles[1]
+            lb_emp_rt = -self._empirical_quantiles[0]
+            self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
 
-        # extract empirical RT at the quantiles
-        self._empirical_quantiles = hddm.utils.data_quantiles(data, quantiles)
-        ub_emp_rt = self._empirical_quantiles[1]
-        lb_emp_rt = -self._empirical_quantiles[0]
-        self._emp_rt = np.concatenate((lb_emp_rt[::-1], np.array([0.]), ub_emp_rt))
-
-        #get frequency of observed values
-        freq_obs = np.zeros(len(proportion))
-        freq_obs[:len(quantiles)+1] = sum(data.rt<0) * neg_proportion
-        freq_obs[len(quantiles)+1:] = sum(data.rt>0) * pos_proportion
-        self._freq_obs = freq_obs
-
+            #get frequency of observed values
+            freq_obs = np.zeros(len(proportion))
+            freq_obs[:len(quantiles)+1] = sum(data.rt<0) * neg_proportion
+            freq_obs[len(quantiles)+1:] = sum(data.rt>0) * pos_proportion
+            self._freq_obs = freq_obs
+        
+        else:
+            
+            #get proportion of data fall between the quantiles
+            quantiles = np.array(quantiles)
+            pos_proportion = np.diff(np.concatenate((np.array([0.]), quantiles, np.array([1.]))))
+            neg_proportion = np.array([1])
+            proportion = np.concatenate((neg_proportion[::-1],  pos_proportion))
+            self._n_samples = len(data)
+            
+            # extract empirical RT at the quantiles
+            self._empirical_quantiles = hddm.utils.data_quantiles(data, quantiles)
+            ub_emp_rt = self._empirical_quantiles[1]
+            lb_emp_rt = -self._empirical_quantiles[0]
+            self._emp_rt = np.concatenate((np.array([0.]), ub_emp_rt))
+            
+            #get frequency of observed values
+            freq_obs = np.zeros(len(proportion))
+            freq_obs[0] = sum(np.isnan(data.rt)) * neg_proportion
+            freq_obs[1:] = sum(data.rt>0) * pos_proportion
+            self._freq_obs = freq_obs
+        
     def set_quantiles_stats(self, quantiles, n_samples, emp_rt, freq_obs, p_upper):
         """
         set quantiles statistics (used when one do not to compute the statistics from the stochastic's value)

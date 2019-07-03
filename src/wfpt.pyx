@@ -165,7 +165,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
     cdef double p
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    cdef double alfa 
+    cdef double alfa
     cdef double pos_alfa
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
     cdef np.ndarray[double, ndim=1] feedbacks
@@ -179,7 +179,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
         pos_alfa = alpha
     else:
         pos_alfa = pos_alpha
-
+        
     # unique represent # of conditions
     for j in range(unique.shape[0]):
         s = unique[j]
