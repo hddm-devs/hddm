@@ -49,11 +49,11 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
 
     #create likelihood function
     def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
-        if np.all(~np.isnan(x['rt'])):
+        if x['rt'].abs().max() < 998:
             return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st,
                                          p_outlier=p_outlier, **wp)
         else:  # for missing RTs. Currently undocumented.
-            noresponse = np.isnan(x['rt'])
+            noresponse = x['rt'].abs() >= 999
             ## get sum of log p for trials with RTs as usual ##
             LLH_resp = hddm.wfpt.wiener_like(x.loc[-noresponse, 'rt'].values,
                                              v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
@@ -81,7 +81,7 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
                 p_noresponse = p_correct # when no-response trials have a positive RT
                                          # we are looking at nogo Trials
             else:
-                p_noresponse = 1 - p_correct # when no-response trials have a
+                p_noresponse = 1 - p_correct # when no-response trials have a 
                                              # negative RT we are looking at go Trials
 
             # likelihood for no-response trials
