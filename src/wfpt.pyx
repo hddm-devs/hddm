@@ -2,6 +2,7 @@
 # cython: cdivision=True
 # cython: wraparound=False
 # cython: boundscheck=False
+# distutils: language = c++
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
