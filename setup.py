@@ -9,7 +9,7 @@ try:
 
 except ImportError:
     ext_modules = [Extension('wfpt', ['src/wfpt.cpp'], language='c++'),
-                   Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.cpp'])
+                   Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
     ]
 
 import numpy as np
