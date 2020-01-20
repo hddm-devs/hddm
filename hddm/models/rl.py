@@ -77,7 +77,7 @@ def RL_like(x, v, alpha, pos_alpha, z=0.5, p_outlier=0):
                      'w_outlier': 0.1}
     sum_logp = 0
     wp = wiener_params
-    response = x['response'].values
+    response = x['response'].values.astype(int)
     q = x['q_init'].iloc[0]
     feedback = x['feedback'].values.astype(float)
     split_by = x['split_by'].values.astype(int)
