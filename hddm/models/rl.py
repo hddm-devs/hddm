@@ -77,9 +77,9 @@ def RL_like(x, v, alpha, pos_alpha, z=0.5, p_outlier=0):
                      'w_outlier': 0.1}
     sum_logp = 0
     wp = wiener_params
-    response = x['response'].values.astype(int)
+    response = x['response'].values
     q = x['q_init'].iloc[0]
-    feedback = x['feedback'].values
-    split_by = x['split_by'].values
+    feedback = x['feedback'].values.astype(float)
+    split_by = x['split_by'].values.astype(int)
     return wiener_like_rl(response, feedback, split_by, q, alpha, pos_alpha, v, z, p_outlier=p_outlier, **wp)
 RL = stochastic_from_dist('RL', RL_like)
