@@ -2,6 +2,7 @@
 # cython: cdivision=True
 # cython: wraparound=False
 # cython: boundscheck=False
+# distutils: language = c++
 #
 # Cython version of the Navarro & Fuss, 2009 DDM PDF. Based on the following code by Navarro & Fuss:
 # http://www.psychocmath.logy.adelaide.edu.au/personalpages/staff/danielnavarro/resources/wfpt.m
@@ -116,7 +117,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         s_size = xs.shape[0]
         qs[0] = q
         qs[1] = q
-        
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
