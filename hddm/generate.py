@@ -677,7 +677,7 @@ def add_outliers(data, n_fast, n_slow, seed=None):
 
     # init outliers DataFrame
     idx = np.random.permutation(len(data))[:n_outliers]
-    outliers = data.ix[idx].copy()
+    outliers = data.iloc[idx, :].copy()
 
     # fast outliers
     outliers.loc[:n_fast, 'rt'] = np.random.rand(
