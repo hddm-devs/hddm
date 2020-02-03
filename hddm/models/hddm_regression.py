@@ -26,7 +26,7 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
         """Log-likelihood for the full DDM using the interpolation method"""
         params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st}
         for reg_outcome in reg_outcomes:
-            params[reg_outcome] = params[reg_outcome].ix[value['rt'].index].values
+            params[reg_outcome] = params[reg_outcome].loc[value['rt'].index].values
         return hddm.wfpt.wiener_like_multi(value['rt'].values,
                                            params['v'], params['sv'], params['a'], params['z'],
                                            params['sz'], params['t'], params['st'], 1e-4,
@@ -42,12 +42,12 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
         for i in self.value.index:
             #get current params
             for p in self.parents['reg_outcomes']:
-                param_dict[p] = np.asscalar(self.parents.value[p].ix[i])
+                param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
             #sample
             samples = hddm.generate.gen_rts(method=sampling_method,
                                             size=1, dt=sampling_dt, **param_dict)
 
-            sampled_rts.ix[i]['rt'] = hddm.utils.flip_errors(samples).rt
+            sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt
 
         return sampled_rts
 
