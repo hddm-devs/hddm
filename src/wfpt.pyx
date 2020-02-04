@@ -117,10 +117,6 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
         s_size = xs.shape[0]
         qs[0] = q
         qs[1] = q
-<<<<<<< HEAD
-        
-=======
->>>>>>> 531c3bef2309bfbd2c1d221aa7e3c711835412ce
 
         # don't calculate pdf for first trial but still update q
         if feedbacks[0] > qs[responses[0]]:
