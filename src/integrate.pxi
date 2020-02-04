@@ -1,5 +1,7 @@
-#cython: embedsignature=True cython: cdivision=True cython:
-#wraparound=False cython: boundscheck=False
+#cython: embedsignature=True
+#cython: cdivision=True
+#cython: wraparound=False
+#cython: boundscheck=False
 
 import numpy as np
 cimport numpy as np

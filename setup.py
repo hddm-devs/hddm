@@ -3,12 +3,12 @@ from setuptools import Extension
 
 try:
     from Cython.Build import cythonize
-    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'], language='c++'),
-                             Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.pyx', 'src/cdfdif.c']),
+    ext_modules = cythonize([Extension('wfpt', ['src/wfpt.pyx'], language='c++'), # uncomment for OSX: , extra_compile_args=['-stdlib=libc++'], extra_link_args=['-stdlib=libc++', "-mmacosx-version-min=10.9"]),
+                             Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.pyx', 'src/cdfdif.c'])
     ])
 
 except ImportError:
-    ext_modules = [Extension('wfpt', ['src/wfpt.c'], language='c++'),
+    ext_modules = [Extension('wfpt', ['src/wfpt.cpp'], language='c++'),
                    Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.c'])
     ]
 
@@ -16,8 +16,8 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.7.1',
-    author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank',
+    version='0.7.4',
+    author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank, Mads Lund Pedersen',
     author_email='thomas.wiecki@gmail.com',
     url='http://github.com/hddm-devs/hddm',
     packages=['hddm', 'hddm.tests', 'hddm.models', 'hddm.examples'],

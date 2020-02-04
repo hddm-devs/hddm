@@ -106,7 +106,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             #set average quantiles  to have the same statitics
             obs_knode = [x for x in self.knodes if x.name == 'wfpt'][0]
             node_name = obs_knode.create_node_name(tag) #get node name
-            average_node = average_model.nodes_db.ix[node_name]['node'] #get the average node
+            average_node = average_model.nodes_db.loc[node_name]['node'] #get the average node
             average_node.set_quantiles_stats(quantiles, n_samples, emp_rt, freq_obs, p_upper) #set the quantiles
 
         return average_model
@@ -163,7 +163,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                              method=method, quantiles=quantiles, n_runs=n_runs):
 
             #resample data
-            new_data = data.ix[np.random.randint(0, len(data), len(data))]
+            new_data = data.iloc[np.random.randint(0, len(data), len(data))]
             new_data = new_data.set_index(pd.Index(list(range(len(data)))))
             h = accumulator_class(new_data, **class_kwargs)
 
@@ -175,7 +175,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         #bootstrap iterations
         for i_strap in range(n_bootstraps):
             if view is None:
-                res.ix[i_strap] = single_bootstrap(self.data)
+                res.iloc[i_strap] = single_bootstrap(self.data)
             else:
                 # append to job queue
                 runs_list[i_strap] = view.apply_async(single_bootstrap, self.data)
@@ -184,7 +184,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         if view is not None:
             view.wait(runs_list)
             for i_strap in range(n_bootstraps):
-                res.ix[i_strap] = runs_list[i_strap].get()
+                res.iloc[i_strap] = runs_list[i_strap].get()
 
         #get statistics
         stats = res.describe()
@@ -685,7 +685,7 @@ class HDDMBase(AccumulatorModel):
     """
 
     def __init__(self, data, bias=False, include=(),
-                 wiener_params=None, p_outlier=0., **kwargs):
+                 wiener_params=None, p_outlier=0.05, **kwargs):
 
         self.default_intervars = kwargs.pop('default_intervars', {'sz': 0, 'st': 0, 'sv': 0})
 

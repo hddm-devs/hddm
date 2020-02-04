@@ -122,37 +122,37 @@ class TestSingleBreakdown(unittest.TestCase):
         data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params, size=10)
         m = hddm.HDDMTruncated(data)
         m.sample(self.iter, burn=self.burn)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.TruncatedNormal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['mu'], pm.Uniform)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['tau'].parents['x'], pm.Uniform)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.TruncatedNormal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['tau'].parents['x'], pm.Uniform)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.Uniform)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'], pm.TruncatedNormal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['mu'], pm.Uniform)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['tau'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['tau'].parents['x'], pm.Uniform)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'], pm.TruncatedNormal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['tau'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['tau'].parents['x'], pm.Uniform)
 
     def test_HDDM_distributions(self):
         params = hddm.generate.gen_rand_params()
         data, params_subj = hddm.generate.gen_rand_data(subjs=4, params=params, size=10)
         m = hddm.HDDM(data)
         m.sample(self.iter, burn=self.burn)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.HalfNormal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['alpha'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['alpha'].parents['x'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['beta'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['beta'].parents['y'], pm.HalfNormal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['alpha'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['alpha'].parents['x'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['beta'], pm.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt.0']['node'].parents['t'].parents['beta'].parents['y'], pm.HalfNormal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['mu'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['tau'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['tau'].parents['x'], pm.HalfNormal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['alpha'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['alpha'].parents['x'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['beta'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['beta'].parents['y'], pm.HalfNormal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['alpha'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['alpha'].parents['x'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['beta'], pm.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt.0']['node'].parents['t'].parents['beta'].parents['y'], pm.HalfNormal)
 
 
     def test_HDDMStimCoding(self):
@@ -160,26 +160,26 @@ class TestSingleBreakdown(unittest.TestCase):
         data, params_subj = hddm.generate.gen_rand_data(params=params_full, size=10)
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v')
         m.sample(self.iter, burn=self.burn)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['self'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c1)']['node'].parents['v'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'].parents['self'], pm.Normal)
 
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='z')
         m.sample(self.iter, burn=self.burn)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'], pm.PyMCObjects.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['a'], int)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c1)']['node'].parents['z'], pm.CommonDeterministics.InvLogit)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['z'], pm.PyMCObjects.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['z'].parents['a'], int)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['z'].parents['b'], pm.CommonDeterministics.InvLogit)
 
         m = hddm.HDDMStimCoding(data, stim_col='condition', split_param='v', drift_criterion=True)
         m.sample(self.iter, burn=self.burn)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
-        self.assertEqual(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['a'].__name__, 'v')
-        self.assertEqual(m.nodes_db.ix['wfpt(c1)']['node'].parents['v'].parents['b'].__name__, 'dc')
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['a'], pm.PyMCObjects.Deterministic)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['b'], pm.Normal)
-        self.assertIsInstance(m.nodes_db.ix['wfpt(c0)']['node'].parents['v'].parents['a'].parents['self'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c1)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        self.assertEqual(m.nodes_db.loc['wfpt(c1)']['node'].parents['v'].parents['a'].__name__, 'v')
+        self.assertEqual(m.nodes_db.loc['wfpt(c1)']['node'].parents['v'].parents['b'].__name__, 'dc')
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'], pm.PyMCObjects.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'].parents['a'], pm.PyMCObjects.Deterministic)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'].parents['b'], pm.Normal)
+        self.assertIsInstance(m.nodes_db.loc['wfpt(c0)']['node'].parents['v'].parents['a'].parents['self'], pm.Normal)
 
 
 class TestHDDMRegressor(unittest.TestCase):
@@ -200,11 +200,11 @@ class TestHDDMRegressor(unittest.TestCase):
         m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_link_func_on_z(self):
         params = hddm.generate.gen_rand_params()
@@ -218,12 +218,12 @@ class TestHDDMRegressor(unittest.TestCase):
 
         self.assertIn('z', m.include)
         self.assertIn('z_Intercept', m.nodes_db.knode_name)
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].parents['ltheta'],
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['z'].parents['args'][0].parents['ltheta'],
                                    pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][0].__name__, 'z_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['z'].parents['args'][1].__name__, 'z_cov_subj.0')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['z'].value)), 1)
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['z'].parents['args'][0].__name__, 'z_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['z'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['z'].parents['args'][1].__name__, 'z_cov_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt.0']['node'].parents['z'].value)), 1)
         self.assertEqual(m.model_descrs[0]['link_func'](2), link_func(2))
 
     def test_no_group(self):
@@ -234,11 +234,11 @@ class TestHDDMRegressor(unittest.TestCase):
         m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt']['node'].parents['v'].value)), 1)
 
     def test_two_covariates(self):
         params = hddm.generate.gen_rand_params()
@@ -249,12 +249,12 @@ class TestHDDMRegressor(unittest.TestCase):
         m = hddm.HDDMRegressor(data, 'v ~ cov1 + cov2', group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][2].__name__, 'v_cov2_subj.0')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][2].__name__, 'v_cov2_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_two_regressors(self):
         params = hddm.generate.gen_rand_params()
@@ -265,14 +265,14 @@ class TestHDDMRegressor(unittest.TestCase):
         m = hddm.HDDMRegressor(data, ['v ~ cov1', 'a ~ cov2'], group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0], pm.Gamma))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][0].__name__, 'a_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['a'].parents['args'][1].__name__, 'a_cov2_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['args'][0], pm.Gamma))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['args'][0].__name__, 'a_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov1_subj.0')
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['a'].parents['args'][1].__name__, 'a_cov2_subj.0')
 
     def test_group_only(self):
         params = hddm.generate.gen_rand_params()
@@ -282,11 +282,11 @@ class TestHDDMRegressor(unittest.TestCase):
         m = hddm.HDDMRegressor(data, 'v ~ cov', group_only_regressors=True)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt.0']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt.0']['node'].parents['v'].parents['args'][1].__name__, 'v_cov')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt.0']['node'].parents['v'].value)), 1)
 
     def test_group_only_depends(self):
         params = hddm.generate.gen_rand_params(cond_dict={'v': [1, 2, 3]})
@@ -295,7 +295,7 @@ class TestHDDMRegressor(unittest.TestCase):
         data['cov'] = 1.
         # Create one merged column
         data['condition2'] = 'merged'
-        data.ix[data.condition == 'c1', 'condition2'] = 'single'
+        data.loc[data.condition == 'c1', 'condition2'] = 'single'
         self.assertRaises(AssertionError, hddm.HDDMRegressor, data, 'v ~ cov', depends_on={'v_Intercept': 'condition2'}, group_only_regressors=True)
 
     def test_contrast_coding(self):
@@ -308,11 +308,11 @@ class TestHDDMRegressor(unittest.TestCase):
                                group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
-        self.assertTrue(isinstance(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1], pm.Normal))
-        self.assertEqual(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].parents['args'][1].__name__, 'v_C(condition)[T.c1]_subj.0')
-        self.assertEqual(len(np.unique(m.nodes_db.ix['wfpt(c1).0']['node'].parents['v'].value)), 1)
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt(c1).0']['node'].parents['v'].parents['args'][0], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt(c1).0']['node'].parents['v'].parents['args'][0].__name__, 'v_Intercept_subj.0')
+        self.assertTrue(isinstance(m.nodes_db.loc['wfpt(c1).0']['node'].parents['v'].parents['args'][1], pm.Normal))
+        self.assertEqual(m.nodes_db.loc['wfpt(c1).0']['node'].parents['v'].parents['args'][1].__name__, 'v_C(condition)[T.c1]_subj.0')
+        self.assertEqual(len(np.unique(m.nodes_db.loc['wfpt(c1).0']['node'].parents['v'].value)), 1)
 
     def test_categorical_wo_intercept(self):
         params = hddm.generate.gen_rand_params(cond_dict={'a': [1, 2, 3]})
@@ -323,12 +323,12 @@ class TestHDDMRegressor(unittest.TestCase):
                                group_only_regressors=False)
         m.sample(self.iter, burn=self.burn)
 
-        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c0]_subj.0']['node'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c1]_subj.0']['node'], pm.Gamma)
-        self.assertIsInstance(m.nodes_db.ix['a_C(condition)[c2]_subj.0']['node'], pm.Gamma)
-        self.assertNotIsInstance(m.nodes_db.ix['a_C(condition)[T.c1]:cov_subj.0']['node'], pm.Gamma)
-        self.assertNotIsInstance(m.nodes_db.ix['a_C(condition)[T.c2]:cov_subj.0']['node'], pm.Gamma)
-        self.assertNotIsInstance(m.nodes_db.ix['a_cov_subj.0']['node'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['a_C(condition)[c0]_subj.0']['node'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['a_C(condition)[c1]_subj.0']['node'], pm.Gamma)
+        self.assertIsInstance(m.nodes_db.loc['a_C(condition)[c2]_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.loc['a_C(condition)[T.c1]:cov_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.loc['a_C(condition)[T.c2]:cov_subj.0']['node'], pm.Gamma)
+        self.assertNotIsInstance(m.nodes_db.loc['a_cov_subj.0']['node'], pm.Gamma)
 
 def test_posterior_plots_breakdown():
     params = hddm.generate.gen_rand_params()
