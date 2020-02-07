@@ -86,7 +86,7 @@ def check_outlier_model(seed=None, p_outlier=0.05):
     hm = hddm.HDDMTruncated(data,include='p_outlier')
     hm.map()
     df = pd.DataFrame([best_estimate, hm.values], index=index, dtype=np.float)
-    df.ix['best_estimate']['p_outlier'] = 0
+    df.loc['best_estimate', 'p_outlier'] = 0
     print("MAP with random p_outlier (Estimated from the data)")
     print(df.dropna(1))
 
