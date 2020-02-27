@@ -67,9 +67,9 @@ cdef double ftt_01w(double tt, double w, double err) nogil:
 cdef inline double prob_ub(double v, double a, double z) nogil:
     """Probability of hitting upper boundary."""
     if v == 0:
-        return 0
+        return z
     else:
-        return (exp(-2*a*z*v) - 1) / (exp(-2*a*v) - 1)
+        return (exp(-2 * a * z * v) - 1) / (exp(-2 * a * v) - 1)
 
 cdef double pdf(double x, double v, double a, double w, double err) nogil:
     """Compute the likelihood of the drift diffusion model f(t|v,a,z) using the method
