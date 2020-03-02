@@ -240,8 +240,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
                 alfa * (feedbacks[i] - qs[responses[i]])
     return sum_logp
 
-
-def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
+def wiener_like_rlddm_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
                       int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
@@ -249,6 +248,36 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
     cdef double p = 0
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
+
+    if multi is None:
+        return full_pdf(x, v, sv, a, z, sz, t, st, err)
+    else:
+        params = {'v': v, 'z': z, 't': t, 'a': a, 'sv': sv, 'sz': sz, 'st': st}
+        params_iter = copy(params)
+        for i in range(size):
+            for param in multi:
+                params_iter[param] = params[param][i]
+
+            p = full_pdf(x[i], params_iter['v'],
+                         params_iter['sv'], params_iter['a'], params_iter['z'],
+                         params_iter['sz'], params_iter[
+                             't'], params_iter['st'],
+                         err, n_st, n_sz, use_adaptive, simps_err)
+            p = p * (1 - p_outlier) + wp_outlier
+            sum_logp += log(p)
+
+        return sum_logp
+
+
+def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, alpha, double err, multi=None,
+                      int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
+                      double p_outlier=0, double w_outlier=0):
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i
+    cdef double p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    print(alpha)
 
     if multi is None:
         return full_pdf(x, v, sv, a, z, sz, t, st, err)

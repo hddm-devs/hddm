@@ -703,8 +703,8 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
-        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier','dual_alpha')
-        assert self.include.issubset(possible_parameters), """Received and invalid parameter using the 'include' keyword.
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier','alpha')
+        assert self.include.issubset(possible_parameters), """Received an invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
 
@@ -743,6 +743,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['a'] = knodes['a_bottom']
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['t'] = knodes['t_bottom']
+        wfpt_parents['alpha'] = knodes['alpha_bottom'] if 'alpha' in self.include else 0
 
         wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
