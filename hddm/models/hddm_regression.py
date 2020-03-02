@@ -24,12 +24,16 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
 
     def wiener_multi_like(value, v, sv, a, z, sz, t, st, alpha, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
+        response = value['response'].values.astype(int)
+        q = value['q_init'].iloc[0]
+        feedback = value['feedback'].values.astype(float)
+        split_by = value['split_by'].values.astype(int)
         params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st, 'alpha': alpha}
         for reg_outcome in reg_outcomes:
             params[reg_outcome] = params[reg_outcome].loc[value['rt'].index].values
-        return hddm.wfpt.wiener_like_multi(value['rt'].values,
+        return hddm.wfpt.wiener_like_multi(value['rt'].values, response, q, feedback, split_by,
                                            params['v'], params['sv'], params['a'], params['z'],
-                                           params['sz'], params['t'], params['st'],params['alpha'], 1e-4,
+                                           params['sz'], params['t'], params['st'],params['alpha'] 1e-4,
                                            reg_outcomes,
                                            p_outlier=p_outlier)
 
@@ -226,7 +230,7 @@ class HDDMRegressor(HDDM):
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
-                     col_name=['rt'],
+                     col_name=['split_by', 'feedback', 'response', 'rt', 'q_init'],
                      reg_outcomes=self.reg_outcomes, **wfpt_parents)
 
     def _create_stochastic_knodes(self, include):

@@ -269,7 +269,11 @@ def wiener_like_rlddm_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st
         return sum_logp
 
 
-def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, alpha, double err, multi=None,
+def wiener_like_multi(np.ndarray[double, ndim=1] x, 
+                      np.ndarray[long, ndim=1] response,
+                      np.ndarray[double, ndim=1] feedback,
+                      np.ndarray[long, ndim=1] split_by,
+                      double q, v, sv, a, z, sz, t, st, alpha, double err, multi=None,
                       int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
                       double p_outlier=0, double w_outlier=0):
     cdef Py_ssize_t size = x.shape[0]
@@ -277,7 +281,7 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, alph
     cdef double p = 0
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
-    print(alpha)
+    #print(alpha)
 
     if multi is None:
         return full_pdf(x, v, sv, a, z, sz, t, st, err)
