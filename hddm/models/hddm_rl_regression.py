@@ -12,7 +12,7 @@ from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
 import kabuki.step_methods as steps
 
-def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
+def generate_wfpt_rl_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
     #set wiener_params
     if wiener_params is None:
@@ -22,14 +22,18 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
                          'w_outlier': 0.1}
     wp = wiener_params
 
-    def wiener_multi_like(value, v, sv, a, z, sz, t, st, alpha, reg_outcomes, p_outlier=0):
+    def wienerRL_multi_like(value, v, sv, a, z, sz, t, st, alpha, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
-        params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st}
+        response = value['response'].values.astype(int)
+        q = value['q_init'].iloc[0]
+        feedback = value['feedback'].values.astype(float)
+        split_by = value['split_by'].values.astype(int)
+        params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st, 'alpha': alpha}
         for reg_outcome in reg_outcomes:
             params[reg_outcome] = params[reg_outcome].loc[value['rt'].index].values
-        return hddm.wfpt.wiener_like_multi(value['rt'].values,
+        return hddm.wfpt.wiener_like_multi_rlddm(value['rt'].values, response, feedback, split_by, q,
                                            params['v'], params['sv'], params['a'], params['z'],
-                                           params['sz'], params['t'], params['st'], 1e-4,
+                                           params['sz'], params['t'], params['st'],params['alpha'], 1e-4,
                                            reg_outcomes,
                                            p_outlier=p_outlier)
 
@@ -51,13 +55,13 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
 
         return sampled_rts
 
-    stoch = stochastic_from_dist('wfpt_reg', wiener_multi_like)
+    stoch = stochastic_from_dist('wfpt_reg', wienerRL_multi_like)
     stoch.random = random
 
     return stoch
 
 
-wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
+wfpt_reg_like = generate_wfpt_rl_reg_stochastic_class(sampling_method='drift')
 
 
 ################################################################################################
@@ -95,15 +99,17 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=self.keep_regressor_trace)
 
-class HDDMRegressor(HDDM):
-    """HDDMRegressor allows estimation of the DDM where parameter
+class HDDMrlRegressor(HDDM):
+    """HDDMrlRegressor allows estimation of the DDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
     """
 
     def __init__(self, data, models, group_only_regressors=True, keep_regressor_trace=False, **kwargs):
         """Instantiate a regression model.
+
         :Arguments:
+
             * data : pandas.DataFrame
                 data containing 'rt' and 'response' column and any
                 covariates you might want to use.
@@ -112,38 +118,47 @@ class HDDMRegressor(HDDM):
                 E.g. 'v ~ cov'
                 You can include multiple linear models that influence
                 separate DDM parameters.
+
         :Optional:
+
             * group_only_regressors : bool (default=True)
                 Do not estimate individual subject parameters for all regressors.
             * keep_regressor_trace : bool (default=False)
                 Whether to keep a trace of the regressor. This will use much more space,
                 but needed for posterior predictive checks.
             * Additional keyword args are passed on to HDDM.
+
         :Note:
-            Internally, HDDMRegressor uses patsy which allows for
+
+            Internally, HDDMrlRegressor uses patsy which allows for
             simple yet powerful model specification. For more information see:
             http://patsy.readthedocs.org/en/latest/overview.html
+
         :Example:
+
             Consider you have a trial-by-trial brain measure
             (e.g. fMRI) as an extra column called 'BOLD' in your data
             frame. You want to estimate whether BOLD has an effect on
             drift-rate. The corresponding model might look like
             this:
                 ```python
-                HDDMRegressor(data, 'v ~ BOLD')
+                HDDMrlRegressor(data, 'v ~ BOLD')
                 ```
+
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
             positive it means that there is a positive correlation
             between BOLD and drift-rate on a trial-by-trial basis.
+
             This type of mechanism also allows within-subject
             effects. If you have two conditions, 'cond1' and 'cond2'
             in the 'conditions' column of your data you may
             specify:
                 ```python
-                HDDMRegressor(data, 'v ~ C(condition)')
+                HDDMrlRegressor(data, 'v ~ C(condition)')
                 ```
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1+cond2.
+
         """
         self.keep_regressor_trace = keep_regressor_trace
         if isinstance(models, (str, dict)):
@@ -160,7 +175,7 @@ class HDDMRegressor(HDDM):
                     model_str = model['model']
                     link_func = model['link_func']
                 except KeyError:
-                    raise KeyError("HDDMRegressor requires a model specification either like {'model': 'v ~ 1 + C(your_variable)', 'link_func' lambda x: np.exp(x)} or just a model string")
+                    raise KeyError("HDDMrlRegressor requires a model specification either like {'model': 'v ~ 1 + C(your_variable)', 'link_func' lambda x: np.exp(x)} or just a model string")
             else:
                 model_str = model
                 link_func = lambda x: x
@@ -189,7 +204,7 @@ class HDDMRegressor(HDDM):
         #set wfpt_reg
         self.wfpt_reg_class = deepcopy(wfpt_reg_like)
 
-        super(HDDMRegressor, self).__init__(data, **kwargs)
+        super(HDDMrlRegressor, self).__init__(data, **kwargs)
 
         # Sanity checks
         for model_descr in self.model_descrs:
@@ -197,7 +212,7 @@ class HDDMRegressor(HDDM):
                 assert len(self.depends[param]) == 0, "When using patsy, you can not use any model parameter in depends_on."
 
     def __getstate__(self):
-        d = super(HDDMRegressor, self).__getstate__()
+        d = super(HDDMrlRegressor, self).__getstate__()
         del d['wfpt_reg_class']
         for model in d['model_descrs']:
             if 'link_func' in model:
@@ -210,18 +225,18 @@ class HDDMRegressor(HDDM):
         print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
-        super(HDDMRegressor, self).__setstate__(d)
+        super(HDDMrlRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
-                     col_name=['rt'],
+                     col_name=['split_by', 'feedback', 'response', 'rt', 'q_init'],
                      reg_outcomes=self.reg_outcomes, **wfpt_parents)
 
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
+        knodes = super(HDDMrlRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
@@ -244,7 +259,7 @@ class HDDMRegressor(HDDM):
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[:param.find('_')]
-                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes([param_lookup])
+                    reg_family = super(HDDMrlRegressor, self)._create_stochastic_knodes([param_lookup])
                     # Rename nodes to avoid collissions
                     names = list(reg_family.keys())
                     for name in names:
