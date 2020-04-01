@@ -7,7 +7,7 @@ from patsy import dmatrix
 
 import hddm
 from hddm.models import HDDM
-from hddm.model import HDDMrl
+from hddm.models import HDDMrl
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
