@@ -126,8 +126,6 @@ class HDDM(HDDMBase):
             knodes.update(self._create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
         if 't' in include:
             knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, std_value=0.2))
-        #if 'alpha' in include:
-        #    knodes.update(self._create_family_normal_normal_hnormal('alpha', value=0, g_tau=50**-2, std_std=10))
         if 'sv' in include:
             knodes['sv_bottom'] = Knode(pm.HalfNormal, 'sv', tau=2**-2, value=1, depends=self.depends['sv'])
         if 'sz' in include:
@@ -149,8 +147,6 @@ class HDDM(HDDMBase):
             knodes.update(self._create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
         if 't' in include:
             knodes.update(self._create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
-        if 'alpha' in include:
-            knodes.update(self._create_family_normal_normal_hnormal('alpha', value=0, g_tau=50**-2, std_std=10))
         if 'sv' in include:
             knodes['sv_bottom'] = Knode(pm.Uniform, 'sv', lower=1e-6, upper=1e3, value=1, depends=self.depends['sv'])
         if 'sz' in include:

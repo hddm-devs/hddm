@@ -22,7 +22,7 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
                          'w_outlier': 0.1}
     wp = wiener_params
 
-    def wiener_multi_like(value, v, sv, a, z, sz, t, st, alpha, reg_outcomes, p_outlier=0):
+    def wiener_multi_like(value, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
         """Log-likelihood for the full DDM using the interpolation method"""
         params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st}
         for reg_outcome in reg_outcomes:
