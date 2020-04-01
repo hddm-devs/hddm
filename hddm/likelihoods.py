@@ -19,7 +19,7 @@ WienerContaminant = stochastic_from_dist(name="Wiener Simple Diffusion Process",
                                          logp=wiener_like_contaminant)
 
 def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3):
-    _like = lambda  value, cont_x, v, sv, a, z, sz, t, st,  t_min, t_max, err=err, n_st=n_st, n_sz=n_sz, \
+    _like = lambda  value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max, err=err, n_st=n_st, n_sz=n_sz, \
     use_adaptive=use_adaptive, simps_err=simps_err: \
     wiener_like_contaminant(value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max,\
                             err=err, n_st=n_st, n_sz=n_sz, use_adaptive=use_adaptive, simps_err=simps_err)
@@ -49,15 +49,15 @@ def generate_wfpt_stochastic_class(wiener_params=None, sampling_method='cdf', cd
     wp = wiener_params
 
     #create likelihood function
-    def wfpt_like(x, v, sv, a, z, sz, t, st, alpha, p_outlier=0):
+    def wfpt_like(x, v, sv, a, z, sz, t, st, p_outlier=0):
         if x['rt'].abs().max() < 998:
-            return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st, alpha,
+            return hddm.wfpt.wiener_like(x['rt'].values, v, sv, a, z, sz, t, st,
                                          p_outlier=p_outlier, **wp)
         else:  # for missing RTs. Currently undocumented.
             noresponse = x['rt'].abs() >= 999
             ## get sum of log p for trials with RTs as usual ##
             logp_resp = hddm.wfpt.wiener_like(x.loc[~noresponse, 'rt'].values,
-                                             v, sv, a, z, sz, t, st, alpha, p_outlier=p_outlier, **wp)
+                                             v, sv, a, z, sz, t, st, p_outlier=p_outlier, **wp)
 
             # get number of no-response trials
             n_noresponse = sum(noresponse)
