@@ -743,7 +743,7 @@ class HDDMBase(AccumulatorModel):
         wfpt_parents['a'] = knodes['a_bottom']
         wfpt_parents['v'] = knodes['v_bottom']
         wfpt_parents['t'] = knodes['t_bottom']
-        wfpt_parents['alpha'] = knodes['alpha_bottom'] if 'alpha' in self.include else 0
+        #wfpt_parents['alpha'] = knodes['alpha_bottom'] if 'alpha' in self.include else 0
 
         wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
         wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']

@@ -7,6 +7,7 @@ from patsy import dmatrix
 
 import hddm
 from hddm.models import HDDM
+from hddm.model import HDDMrl
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
@@ -99,7 +100,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=self.keep_regressor_trace)
 
-class HDDMrlRegressor(HDDM):
+class HDDMrlRegressor(HDDMrl):
     """HDDMrlRegressor allows estimation of the DDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
@@ -229,6 +230,7 @@ class HDDMrlRegressor(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+        #wfpt_parents['alpha'] = knodes['alpha_bottom']
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
                      col_name=['split_by', 'feedback', 'response', 'rt', 'q_init'],
                      reg_outcomes=self.reg_outcomes, **wfpt_parents)
@@ -238,6 +240,8 @@ class HDDMrlRegressor(HDDM):
         # with regressors.
         knodes = super(HDDMrlRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
 
+        #knodes.update(self._create_family_normal(
+        #        'alpha', value=0, g_mu=0.2, g_tau=3**-2, std_lower=1e-10, std_upper=10, std_value=.1))
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
         # we want to use the original parameters' prior. Also for categoricals that do not
