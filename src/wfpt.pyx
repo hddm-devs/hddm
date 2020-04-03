@@ -240,6 +240,7 @@ def wiener_like_rl(np.ndarray[long, ndim=1] response,
                 alfa * (feedbacks[i] - qs[responses[i]])
     return sum_logp
 
+
 def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, double err, multi=None,
                       int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
                       double p_outlier=0, double w_outlier=0):
@@ -268,6 +269,7 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
 
         return sum_logp
 
+
 def wiener_like_multi_rlddm(np.ndarray[double, ndim=1] x, 
                       np.ndarray[long, ndim=1] response,
                       np.ndarray[double, ndim=1] feedback,
@@ -282,8 +284,6 @@ def wiener_like_multi_rlddm(np.ndarray[double, ndim=1] x,
     cdef double sum_logp = 0
     cdef double wp_outlier = w_outlier * p_outlier
     cdef int s
-    #cdef double alfa
-    #cdef double pos_alfa
     cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
 
     if multi is None:
@@ -313,9 +313,8 @@ def wiener_like_multi_rlddm(np.ndarray[double, ndim=1] x,
             alfa = (2.718281828459**params_iter['alpha']) / (1 + 2.718281828459**params_iter['alpha'])   
             qs[response[i]] = qs[response[i]] + alfa * (feedback[i] - qs[response[i]])
 
-            #print('v: : ', params_iter['v'], ' q_up: ', qs[1], ' q_low: ', qs[0], 'alpha : ', alfa, ' a: ', params_iter['a'], ' response : ', response[i], ' feedback: ', feedback[i], ' split_by : ', split_by[i])
-
         return sum_logp
+
 
 def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double t,
                      double st, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):

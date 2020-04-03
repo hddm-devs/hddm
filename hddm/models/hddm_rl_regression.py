@@ -111,7 +111,7 @@ class HDDMrlRegressor(HDDM):
         :Arguments:
 
             * data : pandas.DataFrame
-                data containing 'rt' and 'response' column and any
+                data containing 'rt', 'response','feedback','split_by' and 'q_init' column and any
                 covariates you might want to use.
             * models : str or list of str
                 Patsy linear model specifier.
@@ -228,8 +228,14 @@ class HDDMrlRegressor(HDDM):
             model['link_func'] = lambda x: x
         super(HDDMrlRegressor, self).__setstate__(d)
 
+    def _create_stochastic_knodes_rl(self, include):
+        knodes = super(HDDMrlRegressor, self)._create_stochastic_knodes(include)
+        if 'alpha' in include:            
+            knodes.update(self._create_family_normal_normal_hnormal('alpha', value=0, g_tau=50**-2, std_std=10))
+        return knodes
+
     def _create_wfpt_knode(self, knodes):
-        wfpt_parents = self._create_wfpt_parents_dict(knodes)
+        wfpt_parents = super(HDDMrlRegressor, self)._create_wfpt_parents_dict(knodes)
         wfpt_parents['alpha'] = knodes['alpha_bottom']
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
                      col_name=['split_by', 'feedback', 'response', 'rt', 'q_init'],
@@ -238,8 +244,8 @@ class HDDMrlRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        knodes = super(HDDMrlRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
-
+        knodes = self._create_stochastic_knodes_rl(include.difference(self.reg_outcomes))
+        
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
         # we want to use the original parameters' prior. Also for categoricals that do not
@@ -261,7 +267,7 @@ class HDDMrlRegressor(HDDM):
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[:param.find('_')]
-                    reg_family = super(HDDMrlRegressor, self)._create_stochastic_knodes([param_lookup])
+                    reg_family = self._create_stochastic_knodes_rl([param_lookup])
                     # Rename nodes to avoid collissions
                     names = list(reg_family.keys())
                     for name in names:

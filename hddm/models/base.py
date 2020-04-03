@@ -703,7 +703,7 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
-        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier','alpha')
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 'alpha')
         assert self.include.issubset(possible_parameters), """Received an invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
