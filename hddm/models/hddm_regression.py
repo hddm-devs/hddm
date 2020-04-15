@@ -103,7 +103,9 @@ class HDDMRegressor(HDDM):
 
     def __init__(self, data, models, group_only_regressors=True, keep_regressor_trace=False, **kwargs):
         """Instantiate a regression model.
+
         :Arguments:
+
             * data : pandas.DataFrame
                 data containing 'rt' and 'response' column and any
                 covariates you might want to use.
@@ -112,18 +114,24 @@ class HDDMRegressor(HDDM):
                 E.g. 'v ~ cov'
                 You can include multiple linear models that influence
                 separate DDM parameters.
+
         :Optional:
+
             * group_only_regressors : bool (default=True)
                 Do not estimate individual subject parameters for all regressors.
             * keep_regressor_trace : bool (default=False)
                 Whether to keep a trace of the regressor. This will use much more space,
                 but needed for posterior predictive checks.
             * Additional keyword args are passed on to HDDM.
+
         :Note:
+
             Internally, HDDMRegressor uses patsy which allows for
             simple yet powerful model specification. For more information see:
             http://patsy.readthedocs.org/en/latest/overview.html
+
         :Example:
+
             Consider you have a trial-by-trial brain measure
             (e.g. fMRI) as an extra column called 'BOLD' in your data
             frame. You want to estimate whether BOLD has an effect on
@@ -132,9 +140,11 @@ class HDDMRegressor(HDDM):
                 ```python
                 HDDMRegressor(data, 'v ~ BOLD')
                 ```
+
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
             positive it means that there is a positive correlation
             between BOLD and drift-rate on a trial-by-trial basis.
+
             This type of mechanism also allows within-subject
             effects. If you have two conditions, 'cond1' and 'cond2'
             in the 'conditions' column of your data you may
@@ -142,8 +152,10 @@ class HDDMRegressor(HDDM):
                 ```python
                 HDDMRegressor(data, 'v ~ C(condition)')
                 ```
+
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1+cond2.
+            
         """
         self.keep_regressor_trace = keep_regressor_trace
         if isinstance(models, (str, dict)):
