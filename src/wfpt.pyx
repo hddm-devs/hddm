@@ -270,6 +270,52 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
         return sum_logp
 
 
+def wiener_like_multi_rlddm(np.ndarray[double, ndim=1] x, 
+                      np.ndarray[long, ndim=1] response,
+                      np.ndarray[double, ndim=1] feedback,
+                      np.ndarray[long, ndim=1] split_by,
+                      double q, v, sv, a, z, sz, t, st, alpha, double err, multi=None,
+                      int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-3,
+                      double p_outlier=0, double w_outlier=0):
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t ij
+    cdef Py_ssize_t s_size
+    cdef double p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    cdef int s
+    cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
+
+    if multi is None:
+        return full_pdf(x, v, sv, a, z, sz, t, st, err)
+    else:
+        params = {'v': v, 'z': z, 't': t, 'a': a, 'sv': sv, 'sz': sz, 'st': st, 'alpha':alpha}
+        params_iter = copy(params)
+        qs[0] = q
+        qs[1] = q
+        for i in range(size):
+            for param in multi:
+                params_iter[param] = params[param][i]
+
+            if (i != 0):
+                if (split_by[i] != split_by[i-1]):
+                    qs[0] = q
+                    qs[1] = q
+
+            p = full_pdf(x[i], params_iter['v'] * (qs[1] - qs[0]),
+                         params_iter['sv'], params_iter['a'], params_iter['z'],
+                         params_iter['sz'], params_iter[
+                             't'], params_iter['st'],
+                         err, n_st, n_sz, use_adaptive, simps_err)
+            p = p * (1 - p_outlier) + wp_outlier
+            sum_logp += log(p)
+
+            alfa = (2.718281828459**params_iter['alpha']) / (1 + 2.718281828459**params_iter['alpha'])   
+            qs[response[i]] = qs[response[i]] + alfa * (feedback[i] - qs[response[i]])
+
+        return sum_logp
+
+
 def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double t,
                      double st, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
 
