@@ -47,6 +47,10 @@ Features
 * Built-in Bayesian hypothesis testing and several convergence and
   goodness-of-fit diagnostics.
 
+* As of version 0.7.1 HDDM includes modules for analyzing reinforcement learning data with the reinforcement learning drift diffusion   
+  model (RLDDM), including a module for estimating the impact of continuous regressors onto RLDDM parameters, and a reinforcement learning 
+  (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/RLHDDMtutorial.ipynb
+
 Comparison to other packages
 ============================
 
