@@ -49,7 +49,7 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
             samples = hddm.generate.gen_rts(method=sampling_method,
                                             size=1, dt=sampling_dt, **param_dict)
 
-            sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt
+            sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt.iloc[0]
 
         return sampled_rts
 
@@ -81,20 +81,25 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         parents = {'args': args}
 
         # Make sure design matrix is kosher
-        dm = dmatrix(reg['model'], data=self.data)
-        if math.isnan(dm.sum()):
-            raise NotImplementedError('DesignMatrix contains NaNs.')
+        #dm = dmatrix(reg['model'], data=self.data)
+        #import pdb; pdb.set_trace()
+        #if math.isnan(dm.sum()):
+        #    raise NotImplementedError('DesignMatrix contains NaNs.')
 
-        def func(args, design_matrix=dmatrix(reg['model'], data=self.data, return_type='dataframe'), link_func=reg['link_func'], knode_data=data):
+        def func(args, 
+                 design_matrix=dmatrix(reg['model'], data=self.data, return_type='dataframe', NA_action='raise'), 
+                 link_func=reg['link_func'], 
+                 knode_data=data):
             # convert parents to matrix
             params = np.matrix(args)
+            #import pdb; pdb.set_trace()
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
-            predictor = link_func(design_matrix.dot(params.T)[0]) #pd.DataFrame((design_matrix * params).sum(axis=1), index=data.index))
-            #import pdb; pdb.set_trace()
-            return predictor #pd.DataFrame(predictor, index=data.index)
+            predictor = link_func(design_matrix.dot(params.T)[0])
+
+            return predictor
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=self.keep_regressor_trace)
 
