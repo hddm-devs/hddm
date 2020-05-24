@@ -19,10 +19,11 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
         wiener_params = {'err': 1e-4, 'n_st':2, 'n_sz':2,
                          'use_adaptive':1,
                          'simps_err':1e-3,
-                         'w_outlier': 0.1}
+                         'w_outlier': 0.1,
+                         }
     wp = wiener_params
 
-    def wiener_multi_like(value, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0):
+    def wiener_multi_like(value, v, sv, a, z, sz, t, st, reg_outcomes, p_outlier=0.05):
         """Log-likelihood for the full DDM using the interpolation method"""
         params = {'v': v, 'sv': sv, 'a': a, 'z': z, 'sz': sz, 't': t, 'st': st}
         for reg_outcome in reg_outcomes:
@@ -31,6 +32,7 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
                                            params['v'], params['sv'], params['a'], params['z'],
                                            params['sz'], params['t'], params['st'], 1e-4,
                                            reg_outcomes,
+                                           w_outlier=wp['w_outlier'],
                                            p_outlier=p_outlier)
 
 
@@ -47,7 +49,7 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
             samples = hddm.generate.gen_rts(method=sampling_method,
                                             size=1, dt=sampling_dt, **param_dict)
 
-            sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt
+            sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt.iloc[0]
 
         return sampled_rts
 
@@ -79,19 +81,25 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         parents = {'args': args}
 
         # Make sure design matrix is kosher
-        dm = dmatrix(reg['model'], data=data)
-        if math.isnan(dm.sum()):
-            raise NotImplementedError('DesignMatrix contains NaNs.')
+        #dm = dmatrix(reg['model'], data=self.data)
+        #import pdb; pdb.set_trace()
+        #if math.isnan(dm.sum()):
+        #    raise NotImplementedError('DesignMatrix contains NaNs.')
 
-        def func(args, design_matrix=dmatrix(reg['model'], data=data), link_func=reg['link_func']):
+        def func(args, 
+                 design_matrix=dmatrix(reg['model'], data=self.data, return_type='dataframe', NA_action='raise'), 
+                 link_func=reg['link_func'], 
+                 knode_data=data):
             # convert parents to matrix
             params = np.matrix(args)
+            #import pdb; pdb.set_trace()
+            design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
-            predictor = link_func(pd.DataFrame((design_matrix * params).sum(axis=1), index=data.index))
+            predictor = link_func(design_matrix.dot(params.T)[0])
 
-            return pd.DataFrame(predictor, index=data.index)
+            return predictor
 
         return self.pymc_node(func, kwargs['doc'], name, parents=parents, trace=self.keep_regressor_trace)
 

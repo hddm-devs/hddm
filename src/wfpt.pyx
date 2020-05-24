@@ -53,7 +53,7 @@ cdef inline bint p_outlier_in_range(double p_outlier):
 
 def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
                 double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
-                double p_outlier=0, double w_outlier=0):
+                double p_outlier=0, double w_outlier=0.1):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
     cdef double p
@@ -258,13 +258,17 @@ def wiener_like_multi(np.ndarray[double, ndim=1] x, v, sv, a, z, sz, t, st, doub
         for i in range(size):
             for param in multi:
                 params_iter[param] = params[param][i]
+            if abs(x[i]) != 999.:
+                p = full_pdf(x[i], params_iter['v'],
+                             params_iter['sv'], params_iter['a'], params_iter['z'],
+                             params_iter['sz'], params_iter['t'], params_iter['st'],
+                             err, n_st, n_sz, use_adaptive, simps_err)
+                p = p * (1 - p_outlier) + wp_outlier
+            elif x[i] == 999.:
+                p = prob_ub(params_iter['v'], params_iter['a'], params_iter['z'])
+            else: # x[i] == -999.
+                p = 1 - prob_ub(params_iter['v'], params_iter['a'], params_iter['z'])
 
-            p = full_pdf(x[i], params_iter['v'],
-                         params_iter['sv'], params_iter['a'], params_iter['z'],
-                         params_iter['sz'], params_iter[
-                             't'], params_iter['st'],
-                         err, n_st, n_sz, use_adaptive, simps_err)
-            p = p * (1 - p_outlier) + wp_outlier
             sum_logp += log(p)
 
         return sum_logp
