@@ -129,39 +129,7 @@ Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 Published papers using HDDM
 ===========================
 
-* Cavanagh, J. F., Wiecki, T. V, Cohen, M. X., Figueroa, C. M., Samanta, J., Sherman, S. J., & Frank, M. J. (2011). Subthalamic nucleus stimulation reverses mediofrontal influence over decision threshold. Nature Neuroscience, 14(11), 1462–7. doi:10.1038/nn.2925
-
-* Jahfari, S., Ridderinkhof, K. R., & Scholte, H. S. (2013). Spatial frequency information modulates response inhibition and decision-making processes. PloS One, 8(10), e76467. doi:10.1371/journal.pone.0076467
-
-* Zhang, J., & Rowe, J. B. (2014). Dissociable mechanisms of speed-accuracy tradeoff during visual perceptual learning are revealed by a hierarchical drift-diffusion model. Frontiers in Neuroscience, 8, 69. doi:10.3389/fnins.2014.00069
-
-* Cavanagh, J. F., Wiecki, T. V, Kochar, A., & Frank, M. J. (2014). Eye Tracking and Pupillometry Are Indicators of Dissociable Latent Decision Processes. Journal of Experimental Psychology. General. doi:10.1037/a0035813
-
-* Dunovan, K. E., Tremel, J. J., & Wheeler, M. E. (2014). Prior probability and feature predictability interactively bias perceptual decisions. Neuropsychologia. doi:10.1016/j.neuropsychologia.2014.06.024
-
-* Michmizos, K. P., & Krebs, H. I. (2014). Reaction time in ankle movements: a diffusion model analysis. Experimental Brain Research. doi:10.1007/s00221-014-4032-8
-
-* Wedel, M., & Pieters, R. (2014). The Buffer Effect: The Role of Color When Advertising Exposures Are Brief and Blurred. Marketing Science. doi:10.1287/mksc.2014.0882 
-
-* Ratcliff, R. & Childers, R. (2014). Individual Differences and Fitting Methods for the Two-Choice Diffusion Model of Decision Making. http://star.psy.ohio-state.edu/coglab/People/roger/pdf/lownfinaldec14.pdf
-
-* Frank, M.J., Gagne, C., Nyhus, E., Masters, S., Wiecki, T.V., Cavanagh, J.F. & Badre, D. (2015). fMRI and EEG Predictors of Dynamic Decision Parameters during Human Reinforcement Learning. Journal of Neuroscience, 35, 484-494.
-
-* Tremel, J.J., & Wheeler M.E. (2015) Content-specific evidence accumulation in inferior temporal cortex during perceptual decision-making. NeuroImage, 109, 35-49
-
-* Assink, N., van der Lubbe, R.H.J., & Fox, J-P (2015) Does Time Pressure Induce Tunnel Vision? An examination with the Eriksen Flanker Task by applying the Hierarchical Drift Diffusion Model. New Developments in Computational Intelligence and Computer Science http://www.inase.org/library/2015/vienna/bypaper/APNE/APNE-04.pdf
-
-* Zhang, J., Rittman, T., Nombela, C., Fois, A., Coyle-Gilchrist, I., Barker, R. A., Hughes, L. E., Rowe, J. B, (2015) Different decision deficits impair response inhibition in progressive supranuclear palsy and Parkinson’s disease. Brain, 1-13. http://brain.oxfordjournals.org/content/brain/early/2015/11/17/brain.awv331.full.pdf
-
-* Nie, Q., Maurer, M., Müller, H., & Conci, M., (2016) Inhibition drives configural superiority of illusory Gestalt: Combined behavioral and drift–diffusion model evidence. Cognition, 150, 150-162 http://www.sciencedirect.com/science/article/pii/S001002771630035X
-
-* Herz, D. M., Zavala, B. A., Bogacz, R., Brown, P. (2016) Neural Correlates of Decision Thresholds in the Human Subthalamic Nucleus. Current Biology, http://www.cell.com/current-biology/fulltext/S0960-9822%2816%2900133-0
-
-* Mathias SR., Knowles EE., Barrett J., Leach O., Buccheri S., Beetham T., Blangero J., Poldrack R.A., Glahn D.C. (2017) The Processing-Speed Impairment in Psychosis Is More Than Just Accelerated Aging.. Schizophr Bull. https://www.ncbi.nlm.nih.gov/pubmed/28062652
-
-* Steinweg, B., & Mast, F. W. (2017). Semantic incongruity influences response caution in audio-visual integration. Experimental brain research, 235(1), 349-363. 
-
-* de Gee JW, Colizoli O, Kloosterman NA, Knapen T, Nieuwenhuis S & Donner TH (2017). Dynamic modulation of decision biases by brainstem arousal systems. eLife. 2017 Apr 6;6. pii: e23232. doi: 10.7554/eLife.23232.
+HDDM has been used in over 400 `published papers`_.
 
 Testimonials
 ============
@@ -186,8 +154,8 @@ Join our low-traffic `mailing list`_.
 .. _howto: http://ski.clps.brown.edu/hddm_docs/howto.html
 .. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
-.. _Enthought Python Distribution: http://www.enthought.com/products/edudownload.php
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
 .. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
+.. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
