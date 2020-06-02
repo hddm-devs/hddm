@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.7.7
+:Version: 0.7.8
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -118,6 +118,9 @@ problems on various platforms.
 
 If you are having installation problems please contact the `mailing list`_.
 
+And if you're a mac user, check out this `thread`_ for advice on installation.
+
+
 How to cite
 ===========
 
@@ -159,3 +162,4 @@ Join our low-traffic `mailing list`_.
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
 .. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
+.. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs
