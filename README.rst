@@ -2,8 +2,8 @@
 Introduction
 ************
 
-:Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank
-:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, michael_frank@brown.edu
+:Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Michael J. Frank
+:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, michael_frank@brown.edu
 :Web site: http://ski.clps.brown.edu/hddm_docs
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
