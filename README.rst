@@ -49,7 +49,9 @@ Features
 
 * As of version 0.7.1 HDDM includes modules for analyzing reinforcement learning data with the reinforcement learning drift diffusion   
   model (RLDDM), including a module for estimating the impact of continuous regressors onto RLDDM parameters, and a reinforcement learning 
-  (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/RLHDDMtutorial.ipynb
+  (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/RLHDDMtutorial.ipynb and in the paper here: https://rdcu.be/b4q6Z
+  
+* NEW: HDDM extension to fitting arbitrary sequential sampling models beyond the DDM, using neural networks. Includes all the features of regular HDDM including regression etc, and more. For methods on how to use this extension, see tutorial https://github.com/lnccbrown/lans/tree/master/hddmnn_tutorial and in the paper here: https://elifesciences.org/articles/65074.
 
 Comparison to other packages
 ============================
