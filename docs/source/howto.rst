@@ -35,8 +35,8 @@ which stimulus was correct and instantiate the model like this:
     model = hddm.HDDMStimCoding(data, include='z', stim_col='stim', split_param='v')
 
 This model expects data to have a column named stim with two distinct
-identifiers. For identifier 1, drift-rate ``v`` will be used while for
-identifier 2, ``-v`` will be used. So ultimately you only estimate one
+identifiers. For identifier **1**, drift-rate ``v`` will be used while for
+identifier **0**, ``-v`` will be used. So ultimately you only estimate one
 drift-rate. Alternatively you can use bias ``z`` and ``1-z`` if you set
 ``split_param='z'``. See the HDDMStimCoding help doc for more information.
 
