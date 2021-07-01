@@ -129,8 +129,13 @@ class HDDM(HDDMBase):
                                   'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
                                   'p_outlier':1., 'v_std': 1, 'alpha': 1.5, 'pos_alpha': 1.5}
 
-
-        self.is_informative = kwargs.pop('informative', True)
+        
+        if hasattr(self, 'is_informative'):
+            pass
+        else:
+            self.is_informative = kwargs.pop('informative', True)
+        
+        #self.is_informative = kwargs.pop('informative', True)
 
         super(HDDM, self).__init__(*args, **kwargs)
 
