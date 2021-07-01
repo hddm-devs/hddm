@@ -34,7 +34,16 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
-        data = hddm.utils.flip_errors(data)
+        # AF ADDED --------------------------------------------------------
+        self.nn = kwargs.pop('nn', False)
+        if self.nn:
+            print('Recognized HDDMnn')
+            data = hddm.utils.flip_errors_nn(data, self.network_type)
+        else:
+            data = hddm.utils.flip_errors(data)
+        # -----------------------------------------------------------------
+        
+        #data = hddm.utils.flip_errors(data)
         self.std_depends = kwargs.pop('std_depends', False)
 
         super(AccumulatorModel, self).__init__(data, **kwargs)
@@ -446,55 +455,168 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         return knodes
         
-    def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
-                               std_std=0.2, std_value=.1):
+    # def _create_family_invlogit(self, name, value, g_mu=None, g_tau=15**-2,
+    #                            std_std=0.2, std_value=.1):
+    #     """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
+    #     transform knode to the subject and group mean nodes. This is useful
+    #     when the parameter space is restricted from [0, 1].
+
+    #     See _create_family_normal_normal_hnormal() help for more information.
+
+    #     """
+
+    #     if g_mu is None:
+    #         g_mu = value
+
+    #     # logit transform values
+    #     value_trans = np.log(value) - np.log(1-value)
+    #     g_mu_trans = np.log(g_mu) - np.log(1-g_mu)
+
+    #     knodes = OrderedDict()
+
+    #     if self.is_group_model and name not in self.group_only_nodes:
+    #         g_trans = Knode(pm.Normal,
+    #                         '%s_trans'%name,
+    #                         mu=g_mu_trans,
+    #                         tau=g_tau,
+    #                         value=value_trans,
+    #                         depends=self.depends[name],
+    #                         plot=False,
+    #                         hidden=True
+    #         )
+
+    #         g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
+    #                   trace=True)
+
+    #         depends_std = self.depends[name] if self.std_depends else ()
+    #         std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2,
+    #                     value=std_value, depends=depends_std)
+
+    #         tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
+    #                     % name, eval=lambda x: x**-2, x=std,
+    #                     plot=False, trace=False, hidden=True)
+
+    #         subj_trans = Knode(pm.Normal, '%s_subj_trans'%name,
+    #                            mu=g_trans, tau=tau, value=value_trans,
+    #                            depends=('subj_idx',), subj=True,
+    #                            plot=False, hidden=True)
+
+    #         subj = Knode(pm.InvLogit, '%s_subj'%name,
+    #                      ltheta=subj_trans, depends=('subj_idx',),
+    #                      plot=self.plot_subjs, trace=True, subj=True)
+
+    #         knodes['%s_trans'%name]      = g_trans
+    #         knodes['%s'%name]            = g
+    #         knodes['%s_std'%name]        = std
+    #         knodes['%s_tau'%name]        = tau
+
+    #         knodes['%s_subj_trans'%name] = subj_trans
+    #         knodes['%s_bottom'%name]     = subj
+
+    #     else:
+    #         g_trans = Knode(pm.Normal, '%s_trans'%name, mu=g_mu_trans,
+    #                         tau=g_tau, value=value_trans,
+    #                         depends=self.depends[name], plot=False, hidden=True)
+
+    #         g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
+    #                   trace=True )
+
+    #         knodes['%s_trans'%name] = g_trans
+    #         knodes['%s_bottom'%name] = g
+
+    #     return knodes
+
+    def _create_family_invlogit(self, 
+                            name, 
+                            value, 
+                            g_mu = None, 
+                            g_tau = 15**-2,
+                            std_std = 0.2, 
+                            std_value = .1,
+                            lower = 0.0,
+                            upper = 1.0):
+
         """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, 1].
-
+        
         See _create_family_normal_normal_hnormal() help for more information.
-
         """
 
         if g_mu is None:
             g_mu = value
 
         # logit transform values
-        value_trans = np.log(value) - np.log(1-value)
-        g_mu_trans = np.log(g_mu) - np.log(1-g_mu)
+        tmp_val = (value - lower) / (upper - lower)
+        tmp_g_mu = (g_mu - lower) / (upper - lower)
+        
+        # logit transform values
+        value_trans = np.log(tmp_val) - np.log(1 - tmp_val)
+        g_mu_trans = np.log(tmp_g_mu) - np.log(1 - tmp_g_mu)
 
         knodes = OrderedDict()
 
         if self.is_group_model and name not in self.group_only_nodes:
             g_trans = Knode(pm.Normal,
                             '%s_trans'%name,
-                            mu=g_mu_trans,
-                            tau=g_tau,
-                            value=value_trans,
-                            depends=self.depends[name],
-                            plot=False,
-                            hidden=True
+                            mu = g_mu_trans,
+                            tau = g_tau,
+                            value = value_trans,
+                            depends = self.depends[name],
+                            plot = False,
+                            hidden = True
             )
+            
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
+            # g = Knode(pm.InvLogit,
+            #           name,
+            #           ltheta = g_trans,
+            #           plot = True,
+            #           trace = True
+            #           )
 
-            g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True,
-                      trace=True)
+            # Using pm.deterministic here, better would be something like pm.InvLogitGeneral
+            g = Knode(pm.Deterministic, name, 
+                        eval = lambda x:  lower + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                        x = g_trans, plot = True, trace = True)
+
 
             depends_std = self.depends[name] if self.std_depends else ()
-            std = Knode(pm.HalfNormal, '%s_std' % name, tau=std_std**-2,
+            
+            std = Knode(pm.HalfNormal,
+                        '%s_std' % name, tau=std_std**-2,
                         value=std_value, depends=depends_std)
 
-            tau = Knode(pm.Deterministic, '%s_tau'%name, doc='%s_tau'
+            tau = Knode(pm.Deterministic,
+                        '%s_tau'%name, doc='%s_tau'
                         % name, eval=lambda x: x**-2, x=std,
                         plot=False, trace=False, hidden=True)
 
             subj_trans = Knode(pm.Normal, '%s_subj_trans'%name,
-                               mu=g_trans, tau=tau, value=value_trans,
-                               depends=('subj_idx',), subj=True,
-                               plot=False, hidden=True)
+                                mu=g_trans, tau=tau, value=value_trans,
+                                depends=('subj_idx',), subj=True,
+                                plot=False, hidden=True)
 
-            subj = Knode(pm.InvLogit, '%s_subj'%name,
-                         ltheta=subj_trans, depends=('subj_idx',),
-                         plot=self.plot_subjs, trace=True, subj=True)
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
+            # subj = Knode(pm.InvLogit, 
+            #              '%s_subj'%name,
+            #              ltheta=subj_trans, 
+            #              depends=('subj_idx',),
+            #              plot=self.plot_subjs, 
+            #              trace=True, 
+            #              subj=True)
+
+            subj = Knode(pm.Deterministic,
+                            '%s_subj'%name,
+                            eval = lambda x: lower + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                            x = subj_trans,
+                            plot = self.plot_subjs,
+                            trace = True,
+                            subj = True)
+
+            # Again using pm.deterministic because we don't have the option to use pm.InvLogitGeneral
 
             knodes['%s_trans'%name]      = g_trans
             knodes['%s'%name]            = g
@@ -505,17 +627,29 @@ class AccumulatorModel(kabuki.Hierarchical):
             knodes['%s_bottom'%name]     = subj
 
         else:
-            g_trans = Knode(pm.Normal, '%s_trans'%name, mu=g_mu_trans,
-                            tau=g_tau, value=value_trans,
-                            depends=self.depends[name], plot=False, hidden=True)
+            g_trans = Knode(pm.Normal, '%s_trans'%name, mu = g_mu_trans,
+                            tau = g_tau, value = value_trans,
+                            depends=self.depends[name], plot = False, hidden = True)
 
-            g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
-                      trace=True )
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
+            
+            # Here my manual version
+            g = Knode(pm.Deterministic, '%s'%name, 
+                        eval = lambda x:  lower + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                        x = g_trans, plot = True, trace = True)
+
+            #print('passed through invlog node generation with deterministic invlogit')
+
+            # Original version
+            # g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
+            #           trace=True )
 
             knodes['%s_trans'%name] = g_trans
             knodes['%s_bottom'%name] = g
 
         return knodes
+
 
     def _create_family_exp(self, name, value=0, g_mu=None,
                            g_tau=15**-2, std_lower=1e-10, std_upper=100, std_value=.1):
@@ -703,7 +837,7 @@ class HDDMBase(AccumulatorModel):
         if bias:
             self.include.add('z')
 
-        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 'alpha')
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 'dual_alpha', 'theta', 'alpha', 'beta', 'g', 'alpha_diff')
         assert self.include.issubset(possible_parameters), """Received an invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
@@ -740,16 +874,73 @@ class HDDMBase(AccumulatorModel):
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = OrderedDict()
-        wfpt_parents['a'] = knodes['a_bottom']
-        wfpt_parents['v'] = knodes['v_bottom']
-        wfpt_parents['t'] = knodes['t_bottom']
+        #print('printing from create_wfpt_parents_dict')
+        #print(self.model)
+        
+        if self.nn:
+            # Define parents for HDDMnn across included models
+            #print('printing knodes')
+            #print(knodes)
+            wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+            wfpt_parents['w_outlier'] = self.w_outlier # likelihood of an outlier point
 
-        wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
-        wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
-        wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
-        wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
-        wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+            # AF-TODO: Set defaults for all parameters and make the 'include' statement completely explicit ?
+            wfpt_parents['a'] = knodes['a_bottom']
+            wfpt_parents['v'] = knodes['v_bottom']
+            wfpt_parents['t'] = knodes['t_bottom']
+            wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
+            
+            # MODEL SPECIFIC PARAMETERS
+            if self.model == 'weibull' or self.model == 'weibull_cdf' or self.model == 'weibull_cdf_concave':
+                wfpt_parents['alpha'] = knodes['alpha_bottom'] if 'alpha' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('alpha')]
+                wfpt_parents['beta'] = knodes['beta_bottom'] if 'beta' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('beta')]
+            
+            if self.model == 'ornstein':
+                wfpt_parents['g'] = knodes['g_bottom'] if 'g' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('g')]
+            
+            if self.model == 'levy':
+                wfpt_parents['alpha'] = knodes['alpha_bottom'] if 'alpha' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('alpha')]
+            
+            if self.model == 'angle':
+                wfpt_parents['theta'] = knodes['theta_bottom'] if 'theta' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('theta')]
+
+            if self.model == 'full_ddm' or self.model =='full_ddm2':
+                wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('sv')] #self.default_intervars['sv']
+                wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('sz')] #self.default_intervars['sz']
+                wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('st')] #self.default_intervars['st']
+
+            #print('wfpt parents: ')
+            #print(wfpt_parents)
+
+        else:
+            #print('printing knodes')
+            #print(knodes)
+            # This defines parents for basic hddm
+            wfpt_parents['a'] = knodes['a_bottom']
+            wfpt_parents['v'] = knodes['v_bottom']
+            wfpt_parents['t'] = knodes['t_bottom']
+
+            wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
+            wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
+            wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
+            wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
+            wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+            #wfpt_parents['w_outlier'] = self.w_outlier # likelihood of an outlier point
+
         return wfpt_parents
+
+    # def _create_wfpt_parents_dict(self, knodes):
+    #     wfpt_parents = OrderedDict()
+    #     wfpt_parents['a'] = knodes['a_bottom']
+    #     wfpt_parents['v'] = knodes['v_bottom']
+    #     wfpt_parents['t'] = knodes['t_bottom']
+
+    #     wfpt_parents['sv'] = knodes['sv_bottom'] if 'sv' in self.include else self.default_intervars['sv']
+    #     wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else self.default_intervars['sz']
+    #     wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else self.default_intervars['st']
+    #     wfpt_parents['z'] = knodes['z_bottom'] if 'z' in self.include else 0.5
+    #     wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
+    #     return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)

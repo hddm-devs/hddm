@@ -36,6 +36,51 @@ def flip_errors(data):
 
     return data
 
+def flip_errors_nn(data, network_type = 'cnn'):
+    """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
+
+        :Arguments:
+            data : numpy.recarray
+                Input array with at least one column named 'RT' and one named 'response'
+        :Returns:
+            data : numpy.recarray
+                Input array with RTs sign flipped where 'response' < 0
+
+    """
+    if network_type == 'cnn':
+        return data
+    if network_type == 'mlp':
+        data = pd.DataFrame(data.copy()) # .values.astype(np.float32)
+        
+        data['response'] = data['response'].values.astype(np.float32)
+        data['rt'] = data['rt'].values.astype(np.float32)
+
+        if np.any(data['response'] != 1.0):
+            #print('passed through ')
+            idx = data['response'] < 1.0
+            data.loc[idx, 'response'] = -1.0
+        
+        # Check if data is already flipped
+        # if np.any(data['rt'] < 0) != False:
+        #     return data
+
+        # Copy data
+        #data = pd.DataFrame(data.copy())
+
+        # Flip sign for lower boundary response
+        idx = data['rt'] < 0.0
+        data.loc[idx, 'rt'] = - data.loc[idx, 'rt']
+        #data = data.values.astype(np.float32).copy()
+
+        print('RT')
+        print(np.min(data['rt'].values))
+        print(np.max(data['rt'].values))
+
+        print('Response')
+        print(np.unique(data['response']))
+        return data
+
+
 def check_params_valid(**params):
     a = params.get('a')
     v = params.get('v')
@@ -50,7 +95,6 @@ def check_params_valid(**params):
         return False
     else:
         return True
-
 
 def EZ_subjs(data):
     params = {}
@@ -534,26 +578,27 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
 
     return ax
 
+    # AF-Q: UNUSED?
     #create axes for subjects
-    n_subjs = len(data.subj_idx.unique())
-    if ncols is None:
-        ncols = min(4, n_subjs)
-    nrows = int(np.ceil(n_subjs / ncols))
-    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
+    # n_subjs = len(data.subj_idx.unique())
+    # if ncols is None:
+    #     ncols = min(4, n_subjs)
+    # nrows = int(np.ceil(n_subjs / ncols))
+    # fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
 
-    #plot single subject model
-    for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
-        points = np.zeros((nq, len(stats)*2))
-        p = np.zeros(len(stats)*2)
-        for i_key, (key, cond_data) in enumerate(stats.items()):
-            points[:,i_key*2] = cond_data[subj_idx][0]
-            points[:,i_key*2+1] = cond_data[subj_idx][1]
-            p[i_key*2] = 1 - cond_data[subj_idx][2]
-            p[i_key*2+1] = cond_data[subj_idx][2]
+    # #plot single subject model
+    # for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
+    #     points = np.zeros((nq, len(stats)*2))
+    #     p = np.zeros(len(stats)*2)
+    #     for i_key, (key, cond_data) in enumerate(stats.items()):
+    #         points[:,i_key*2] = cond_data[subj_idx][0]
+    #         points[:,i_key*2+1] = cond_data[subj_idx][1]
+    #         p[i_key*2] = 1 - cond_data[subj_idx][2]
+    #         p[i_key*2+1] = cond_data[subj_idx][2]
 
-        ax = axs.item(i_subj)
-        _points_to_qp_plot(points, p, ax, draw_lines)
-        ax.set_title(subj_idx)
+    #     ax = axs.item(i_subj)
+    #     _points_to_qp_plot(points, p, ax, draw_lines)
+    #     ax.set_title(subj_idx)
 
 
 def _points_to_qp_plot(points, p, ax, draw_lines):

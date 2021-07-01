@@ -8,6 +8,10 @@ from .hddm_rl_regression import HDDMrlRegressor
 from .hddm_rl import HDDMrl
 from .rl import Hrl
 
+from .hddm_nn import HDDMnn
+from .hddm_nn_regression import HDDMnnRegressor
+from .hddm_stimcoding_nn import HDDMnnStimCoding
+
 __all__ = ['AccumulatorModel',
            'HDDMBase',
            'HDDM',
@@ -18,4 +22,7 @@ __all__ = ['AccumulatorModel',
            'HDDMTransformed',
            'HDDMrl',
            'Hrl',
+           'HDDMnn',
+           'HDDMnnRegressor',
+           'HDDMnnStimCoding'
 ]
