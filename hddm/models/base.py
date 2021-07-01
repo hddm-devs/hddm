@@ -9,6 +9,8 @@
 
 """
 
+#AF - New:
+from hddm.simulators import *
 
 from collections import OrderedDict
 
