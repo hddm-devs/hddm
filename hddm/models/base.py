@@ -887,6 +887,10 @@ class HDDMBase(AccumulatorModel):
             wfpt_parents['w_outlier'] = self.w_outlier # likelihood of an outlier point
 
             # AF-TODO: Set defaults for all parameters and make the 'include' statement completely explicit ?
+            print('printing wfpt_parents from _create_wfpt_parents_dict')
+            print(wfpt_parents)
+            print('printing knodes from _create_wfpt_parents_dict')
+            print(knodes)
             wfpt_parents['a'] = knodes['a_bottom']
             wfpt_parents['v'] = knodes['v_bottom']
             wfpt_parents['t'] = knodes['t_bottom']
