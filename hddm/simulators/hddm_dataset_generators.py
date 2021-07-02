@@ -1096,6 +1096,20 @@ def simulator_h_c(n_subjects = 10,
         full_data_cols += model_config[model]['params']
         full_data = full_data[full_data_cols]
         full_data.reset_index(drop = True, inplace = True)
+
+        # If n_subjects is 1 --> we overwrite the group parameters with the subj.0 parameters
+        if n_subjects == 1:
+            new_param_dict = {}
+            for key, value in full_parameter_dict.items():
+                if 'subj' in key:
+                    new_key = key
+                    new_key = new_key.replace('_subj', '')
+                    new_key = new_key[:new_key.find('.')]
+                    new_param_dict[new_key] = value
+                else:
+                    new_param_dict[key] = value
+            full_parameter_dict = new_param_dict
+
         return full_data, full_parameter_dict
 
     def make_group_level_params(conditions_df,
@@ -1194,7 +1208,7 @@ def simulator_h_c(n_subjects = 10,
 
         return group_level_parameter_dict
 
-    # MAIN PART OF THE FUNCTION
+    # MAIN PART OF THE FUNCTION -----------------------------------------------------------------
 
     # Some checks
     if group_only is None:
