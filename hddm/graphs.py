@@ -356,7 +356,7 @@ def filter_subject_condition_traces(hddm_model,
     
     # Scenario 2: Single condition single subject model (or data collapsed across subjects)
     else:
-        traces = untransform_traces(hddm_model.get_traces(), model = model) #untransform_traces(hddm_model.get_traces())
+        traces = untransform_traces(hddm_model.get_traces(), model = model, is_nn = hddm_model.nn) #untransform_traces(hddm_model.get_traces())
         
         if not hddm_model.nn:
             traces = _convert_params(traces)
@@ -1478,7 +1478,7 @@ def caterpillar_plot(hddm_model = None,
                                is_nn = hddm_model.nn)
     
     if not hddm_model.nn:
-        traces = _convert_params(traces)
+        trace = _convert_params(traces)
 
     # TODO: Probably have to add parameter adjustments to account for LAN/no LAN case
     if keep_key is None:
