@@ -25,41 +25,42 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 class Infer:
     def __init__(self, config):
-	self.cfg = config
-	#self.target = pickle.load(open(self.cfg.inference_dataset,'rb'))[0][0].reshape((-1,))
-	self.target = []
-	self.inp = tf.placeholder(tf.float32, self.cfg.test_param_dims)
-	self.initialized = False
-	with tf.device('/gpu:0'):
-	    with tf.variable_scope("model", reuse=tf.AUTO_REUSE) as scope:
-		self.model = cnn_model_struct()
-		self.model.build(self.inp, self.cfg.test_param_dims[1:], self.cfg.output_hist_dims[1:], train_mode=False, verbose=False)
-	    self.gpuconfig = tf.ConfigProto()
-	    self.gpuconfig.gpu_options.allow_growth = True
-	    self.gpuconfig.allow_soft_placement = True
-	    self.saver = tf.train.Saver()
+        self.cfg = config
+        #self.target = pickle.load(open(self.cfg.inference_dataset,'rb'))[0][0].reshape((-1,))
+        self.target = []
+        self.inp = tf.placeholder(tf.float32, self.cfg.test_param_dims)
+        self.initialized = False
+        with tf.device('/gpu:0'):
+            with tf.variable_scope("model", reuse=tf.AUTO_REUSE) as scope:
+                self.model = cnn_model_struct()
+                self.model.build(self.inp, self.cfg.test_param_dims[1:], self.cfg.output_hist_dims[1:], train_mode=False, verbose=False)
+                self.gpuconfig = tf.ConfigProto()
+                self.gpuconfig.gpu_options.allow_growth = True
+                self.gpuconfig.allow_soft_placement = True
+                self.saver = tf.train.Saver()
 
     def __getitem__(self, item):
-	return getattr(self, item)
+	    return getattr(self, item)
 
     def __contains__(self, item):
-	return hasattr(self, item)
+	    return hasattr(self, item)
 
     def klDivergence(self, x, y, eps1=1e-7, eps2=1e-30):
-	return np.sum(x * np.log(eps2 + x/(y+eps1)))
+	    return np.sum(x * np.log(eps2 + x/(y+eps1)))
 
     def likelihood(self, x, y, eps=1e-7):
-	return np.sum(-np.log(x+eps)*y)
+	    return np.sum(-np.log(x+eps)*y)
 
     def objectivefn(self, params):
-	if self.initialized == False:
-	    self.sess = tf.Session(config=self.gpuconfig)
-	    ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
-	    self.saver.restore(self.sess, ckpts)
-	    self.initialized = True
-	pred_hist = self.sess.run(self.model.output, feed_dict={self.inp:params.reshape(self.cfg.test_param_dims)})
-	#return self.klDivergence(pred_hist, self.target)
-	return self.likelihood(pred_hist, self.target)
+        if self.initialized == False:
+            self.sess = tf.Session(config=self.gpuconfig)
+            ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
+            self.saver.restore(self.sess, ckpts)
+            self.initialized = True
+        
+        pred_hist = self.sess.run(self.model.output, feed_dict={self.inp:params.reshape(self.cfg.test_param_dims)})
+        #return self.klDivergence(pred_hist, self.target)
+        return self.likelihood(pred_hist, self.target)
 
 def model_inference(args):
     simdata = args['data']

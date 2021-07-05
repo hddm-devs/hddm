@@ -17,7 +17,7 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.9.0',
+    version='0.9.2',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank, Mads Lund Pedersen, Alexander Fengler, Lakshmi Govindarajan',
     author_email='thomas.wiecki@gmail.com',
     url='http://github.com/hddm-devs/hddm',
@@ -25,8 +25,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf', 'keras_models/*.h5', 'cnn_models/*/*', 'simulators/*']},
     scripts=['scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.6.0', 'PyMC>=2.3.3', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tensorflow >= 1.15'],
-    setup_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.6.0', 'PyMC>=2.3.3', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tensorflow >= 1.15'],
+    install_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tensorflow == 1.15', 'h5py == 2.10.0', 'tqdm >= 4.1.0'],
+    setup_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tensorflow == 1.15', 'h5py == 2.10.0', 'tqdm >= 4.1.0'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
