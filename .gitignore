@@ -5,3 +5,6 @@
 build/
 dist/
 docs/build
+.eggs/
+.egg-info/
+

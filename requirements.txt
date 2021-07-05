@@ -1,12 +1,16 @@
 Cython>=0.16
 Distutils2==1.0a4
 argparse==1.2.1
-numpy>=1.6.2
-pandas>=0.8.1
-pymc>=2.3.3
+numpy>=1.20.1
+scipy>=1.6.1
+pandas>=1.0.0
+pymc>=2.3.8
 python-dateutil==1.5
 pytz==2012d
 wsgiref==0.1.2
 matplotlib>=1.1.0
 git+https://github.com/hddm-devs/kabuki.git@master
-patsy
+seaborn >= 0.11.0 
+statsmodels >= 0.12.0
+tensorflow >= 1.15
+patsy>=0.5.1
