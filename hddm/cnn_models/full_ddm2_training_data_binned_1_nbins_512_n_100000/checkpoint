@@ -1,0 +1,2 @@
+model_checkpoint_path: "/media/data_cifs/lakshmi/projectABC/models/full_ddm2_training_data_binned_1_nbins_512_n_100000/full_ddm2_516000.ckpt-516000"
+all_model_checkpoint_paths: "/media/data_cifs/lakshmi/projectABC/models/full_ddm2_training_data_binned_1_nbins_512_n_100000/full_ddm2_516000.ckpt-516000"

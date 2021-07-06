@@ -2,7 +2,7 @@
 
 __docformat__ = 'restructuredtext'
 
-__version__ = '0.9.2.dev0'
+__version__ = '0.9.0'
 
 from . import likelihoods
 from . import likelihoods_mlp

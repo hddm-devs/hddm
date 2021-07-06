@@ -1,0 +1,2 @@
+model_checkpoint_path: "/media/data_cifs/projects/prj_approx-bayes/projectABC/models/levy_training_data_binned_1_nbins_512_n_100000/levy_531000.ckpt-531000"
+all_model_checkpoint_paths: "/media/data_cifs/projects/prj_approx-bayes/projectABC/models/levy_training_data_binned_1_nbins_512_n_100000/levy_531000.ckpt-531000"
