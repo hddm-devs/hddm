@@ -8,4 +8,5 @@ dist/
 docs/build
 .eggs/
 .egg-info/
+HDDM.egg-info/
 
