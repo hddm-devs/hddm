@@ -710,6 +710,10 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
 
     return q_lower, q_upper, p_upper
 
+def posterior_predictive_dataprocessor_nn(x):
+    print(x)
+    return x[:, 1] * x[:, 0]
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

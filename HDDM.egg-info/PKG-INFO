@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: HDDM
+Version: 0.9.2.dev0
+Summary: HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.
+Home-page: http://github.com/hddm-devs/hddm
+Author: Thomas V. Wiecki, Imri Sofer, Michael J. Frank, Mads Lund Pedersen, Alexander Fengler, Lakshmi Govindarajan
+Author-email: thomas.wiecki@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Topic :: Scientific/Engineering
