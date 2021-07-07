@@ -150,7 +150,6 @@ class HDDMnnRegressor(HDDM):
         
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
         self.reg_outcomes = set() # holds all the parameters that are going to be modeled as outcomes
-        #self.model = deepcopy(model)
         self.model = kwargs.pop('model', 'ddm')
 
         # Initialize data-structure that contains model descriptors
@@ -281,17 +280,10 @@ class HDDMnnRegressor(HDDM):
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[:param.find('_')]
-                    #print('param_lookup passed to _create stochastic_knodes')
-                    #print(param_lookup)
-                    #print([param_lookup])
-                    #reg_family = self._create_stochastic_knodes_basic([param_lookup])
-                    #reg_family = self._create_stochastic_knodes([param_lookup])
                     reg_family = super(HDDMnnRegressor, self)._create_stochastic_knodes([param_lookup])
                     # Rename nodes to avoid collissions
-                    #print(reg_family)
-                    #type(reg_family)
                     names = list(reg_family.keys())
-                    #print(names)
+                    
                     for name in names:
                         print('name: ', name)
                         print('names: ', names)
@@ -301,7 +293,6 @@ class HDDMnnRegressor(HDDM):
                     param_lookup = param
 
                 else:
-                    # param_lookup = param[:param.find('_')]
                     # This potentially needs change, we should cleverly constrain the covariate betas here
                     # right now the solution is to return  -np.inf in the likelihood if the betas are too big / small
                     # but this is sort of an expensive brute force procedure !

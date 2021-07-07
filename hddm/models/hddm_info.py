@@ -140,7 +140,6 @@ class HDDM(HDDMBase):
         super(HDDM, self).__init__(*args, **kwargs)
 
         # AF ADDED ----------------------------------------------------------------------------
-        print('Is Neural Net? ', self.nn)
         if not self.nn:
             if ('sv' in self.include) or ('st' in self.include) or ('sz' in self.include):
                 self.model = 'full_ddm'
@@ -179,9 +178,6 @@ class HDDM(HDDMBase):
             param_bnd_str = 'param_bounds_cnn'
 
         # PARAMETERS COMMON TO ALL MODELS
-        #print('printing include: ')
-        #print(include)
-
         if 'p_outlier' in include:
             knodes.update(self._create_family_invlogit('p_outlier',
                                                         value = 0.2,
@@ -508,10 +504,7 @@ class HDDM(HDDMBase):
                                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
                                                                std_upper = 1.0
                                                                ))
-                                                               # should have lower = 0.1, upper = 0.9
                       
-        #print('knodes')
-        #print(knodes)
         return knodes
 
     def _create_stochastic_knodes_info(self, include):

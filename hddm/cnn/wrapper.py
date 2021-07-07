@@ -4,8 +4,8 @@ from .config import *
 import tensorflow as tf
 import tqdm, gzip, cProfile, time, argparse, pickle, os
 # just to prevent tensorflow from printing logs
-os.environ['TF_CPP_MIN_LOG_LEVEL']="2"
-tf.logging.set_verbosity(tf.logging.ERROR)
+# os.environ['TF_CPP_MIN_LOG_LEVEL']="2"
+# tf.logging.set_verbosity(tf.logging.ERROR)
 
 class Infer:
 	def __init__(self, config):
@@ -31,7 +31,7 @@ class Infer:
 			#	self.gpuconfig.allow_soft_placement = True
 		self.saver = tf.train.Saver()
 		self.sess = tf.Session()
-		print(self.cfg.model_output)
+		# print(self.cfg.model_output)
 		ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
 		self.saver.restore(self.sess, ckpts)
 
@@ -53,9 +53,10 @@ class Infer:
 def load_cnn(model, nbin):
 	cfg = Config(model = model, bins = nbin)
 	inference_class = Infer(config = cfg)
-	#return inference_class.forward
 	return inference_class.forward_flex
 
+
+# EXAMPLE ------------------------------------------------
 
 # if __name__ == '__main__':
 # 	parser = argparse.ArgumentParser()

@@ -450,16 +450,6 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
 
-        # for i in self.value.index:
-        #     #get current params
-        #     for p in self.parents['reg_outcomes']:
-        #         param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
-        #     #sample
-        #     samples = hddm.generate.gen_rts(method=sampling_method,
-        #                                     size=1, dt=sampling_dt, **param_dict)
-
-        #     sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt
-
         sim_out = simulator(theta = param_data, # n_trials = size,
                             model = model,
                             n_samples = 1,
@@ -496,7 +486,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                     data[:, cnt] = params[tmp_str]
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_ddm(data,
                                                       p_outlier = p_outlier,
                                                       w_outlier = w_outlier,
@@ -573,7 +563,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_full_ddm(data,
                                                         p_outlier = p_outlier,
                                                         w_outlier = w_outlier,
@@ -613,7 +603,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_angle(data,
                                                         p_outlier = p_outlier,
                                                         w_outlier = w_outlier,
@@ -652,7 +642,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_levy(data,
                                                     p_outlier = p_outlier,
                                                     w_outlier = w_outlier,
@@ -692,7 +682,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_ornstein(data,
                                                         p_outlier = p_outlier,
                                                         w_outlier = w_outlier,
@@ -731,7 +721,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_multi_nn_weibull(data,
                                                         p_outlier = p_outlier,
                                                         w_outlier = w_outlier,

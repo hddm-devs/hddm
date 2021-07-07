@@ -25,17 +25,6 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
     """
 
     def random(self):
-        # print(self.parents)
-        # print('printing the dir of self.parents directly')
-        # print(dir(self.parents))
-        # print('printing dir of the v variable')
-        # print(dir(self.parents['v']))
-        # print(self.parents['v'].value)
-        # print(self.parents.value)
-        # print('trying to print the value part of parents')
-        # print(dict(self.parents.value))
-        # print('tying to pring the values part of parents')
-        # print(self.parents.values)
 
         # this can be simplified so that we pass parameters directly to the simulator ...
         theta = np.array(model_config[model]['default_params'], dtype = np.float32)
@@ -47,43 +36,17 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
             cnt += 1
         
-        #print('print theta from random function in wfpt_nn')
-        #print(theta)
-
-        #new_func = partial(simulator, model = model, n_samples = self.shape, max_t = 20) # This may still be buggy !
-        #print('self shape: ')
-        #print(self.shape)
         sim_out = simulator(theta = theta, model = model, n_samples = self.shape[0], max_t = 20.0)
         return hddm_preprocess(sim_out)
 
     def pdf(self, x):
-        #print('type of x')
-        #print(type(x))
-        #print(x)
-        #print(self.parents)
-        #print(**self.parents)
-        #print(self.parents['a'])
-        #print(dir(self.parents['a']))
-        #print(self.parents['a'].value)
-        #print(kwargs)
-        #print(self.parents['a'].value)
-        # Note as per kabuki it seems that x tends to come in as a 'value_range', which is essetially a 1d ndarray
-        # We could change this ...
-
-        #rt = np.array()
-        #print('rt')
         rt = np.array(x, dtype = np.int_)
-        #print(rt)
         response = rt.copy()
         response[rt < 0] = 0
         response[rt > 0] = 1
         response = response.astype(np.int_)
         rt = np.abs(rt)
-        #print(rt)
-        #print(response)
-        #response = rt / np.abs(rt)
-        #rt = np.abs(rt)
-        
+
         # this can be simplified so that we pass parameters directly to the simulator ...
         theta = np.array(model_config[model]['default_params'], dtype = np.float32)
         keys_tmp = self.parents.value.keys()
@@ -94,14 +57,6 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
             cnt += 1
 
-        #print(rt)
-        #print(response)
-        #print(response.shape)
-        #print(rt.shape)
-        # response = 
-        #pdf_fun = hddm.wfpt.wiener_like_nn_ddm_pdf
-        # model_config[] # TODO FILL THIS IN SO THAT WE CREATE THE APPROPRIATE ARRAY AS INPUT TO THE SIMULATOR
-        #out = pdf_multiplier * hddm.wfpt.wiener_pdf_cnn_2(x = rt, response = response, network = kwargs['network'], parameters = theta)# **kwargs) # This may still be buggy !
         out = hddm.wfpt.wiener_pdf_cnn_2(x = rt, response = response, network = kwargs['network'], parameters = theta)# **kwargs) # This may still be buggy !
         return out
 
@@ -293,12 +248,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
     # Need to rewrite these random parts !
     def random(self):
         param_dict = deepcopy(self.parents.value)
-        #print('param dict')
-        #print(param_dict)
         del param_dict['reg_outcomes']
         sampled_rts = self.value.copy()
-        #print('sampled rts')
-        #print(sampled_rts)
 
         size = sampled_rts.shape[0]
         n_params = model_config[model]['n_params']
@@ -307,28 +258,12 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
         cnt = 0
         for tmp_str in model_config[model]['params']: #['v', 'a', 'z', 't']:
             if tmp_str in self.parents['reg_outcomes']:
-                #print('param dict values')
-                #print(param_dict[tmp_str].values[:, 0])
                 param_data[:, cnt] = param_dict[tmp_str].values[:, 0]
             else:
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
 
-        # for i in self.value.index:
-        #     #get current params
-        #     for p in self.parents['reg_outcomes']:
-        #         param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
-        #     #sample
-        #     samples = hddm.generate.gen_rts(method=sampling_method,
-        #                                     size=1, dt=sampling_dt, **param_dict)
-
-        #     sampled_rts.loc[i, 'rt'] = hddm.utils.flip_errors(samples).rt
-
         sim_out = simulator(theta = param_data, n_trials = size, model = model, n_samples = 1, max_t = 20)
-        # sim_out_copy = []
-        # sim_out_copy.append(np.squeeze(sim_out[0], axis = 0))
-        # sim_out_copy.append(np.squeeze(sim_out[1], axis = 0))
-        # sim_out_copy.append(sim_out[2])
         return hddm_preprocess(sim_out, keep_negative_responses = True)
 
     if model == 'ddm':
@@ -343,12 +278,12 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                                      **kwargs): #theta
 
             params = {'v': v, 'a': a, 'z': z, 't': t}
-            n_params = 4 #model_config[model]['n_params']
+            n_params = 4
             size = int(value.shape[0])
             data = np.zeros((size, n_params), dtype = np.float32)
 
             cnt = 0
-            for tmp_str in ['v', 'a', 'z', 't']: # model_config[model]['params']:
+            for tmp_str in ['v', 'a', 'z', 't']:
 
                 if tmp_str in reg_outcomes:
                     data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
@@ -360,7 +295,6 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            #print(value['rt'].values.astype(np.int_))
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 
@@ -397,7 +331,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 
@@ -435,8 +369,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 
@@ -472,7 +405,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 
@@ -508,7 +441,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 
@@ -544,7 +477,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            # THIS IS NOT YET FINISHED !
+            # Has optimization potential --> AF-TODO: For next version!
             return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
                                                    value['response'].values.astype(np.int_), 
                                                    data, 

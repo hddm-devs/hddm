@@ -217,7 +217,6 @@ class logkde():
         # sorting the which list in ascending order 
         # this implies that we return the kde_samples array so that the
         # indices reflect 'choice-labels' as provided in 'which' in ascending order
-        #kde_samples = []
         
         rts = np.zeros((n_samples, 1))
         choices = np.zeros((n_samples, 1))
@@ -309,26 +308,11 @@ def kde_vs_lan_likelihoods(#ax_titles = [],
         empty     
     """
     
-    # Get prediction from navarro if traindatanalytic = 1
-    # if traindatanalytic:
-    #     ll_out_gt = cdw.batch_fptd(plot_data[:, 0] * plot_data[:, 1], 
-    #                            v = parameter_matrix[i, 0],
-    #                            a = parameter_matrix[i, 1],
-    #                            w = parameter_matrix[i, 2],
-    #                            ndt = parameter_matrix[i, 3])
-
-    #     sns.lineplot(plot_data[:, 0] * plot_data[:, 1], 
-    #              ll_out_gt,
-    #              color = 'black',
-    #              alpha = 0.5,
-    #              label = 'TRUE',
-    #              ax = ax[row_tmp, col_tmp])
-    
     # Get predictions from simulations /kde
     
-    mpl.rcParams['text.usetex'] = True
-    #matplotlib.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams['svg.fonttype'] = 'none'
+    # mpl.rcParams['text.usetex'] = True
+    # matplotlib.rcParams['pdf.fonttype'] = 42
+    # mpl.rcParams['svg.fonttype'] = 'none'
     
     # Initialize rows and graph parameters
     rows = int(np.ceil(parameter_df.shape[0] / cols))
@@ -352,7 +336,6 @@ def kde_vs_lan_likelihoods(#ax_titles = [],
     
     # Load Keras model and initialize batch container
     keras_model = get_mlp(model = model)
-    #keras_model = keras.models.load_model(network_dir + 'model_final.h5')
     keras_input_batch = np.zeros((4000, parameter_df.shape[1] + 2))
     keras_input_batch[:, parameter_df.shape[1]:] = plot_data
 
@@ -499,11 +482,6 @@ def lan_manifold(parameter_df = None,
         
     if type(parameter_df) == pd.core.frame.DataFrame:
         parameters = np.squeeze(parameters[model_config[model]['params']].values.astype(np.float32))
-        #print('parameters')
-        #print(parameters)
-        #print(parameters.shape)
-        #print('parameters[0, :]')
-        #print(parameters[0,:])
     else:
         parameters = parameter_df
 
@@ -516,9 +494,6 @@ def lan_manifold(parameter_df = None,
     plot_data = np.zeros((n_rt_steps * 2, 2))
     plot_data[:, 0] = np.concatenate(([(i * (max_rt / n_rt_steps)) for i in range(n_rt_steps, 0, -1)], [(i * (max_rt / n_rt_steps)) for i in range(1, n_rt_steps + 1, 1)]))
     plot_data[:, 1] = np.concatenate((np.repeat(-1, n_rt_steps), np.repeat(1, n_rt_steps)))
-
-    #print('plot_data')
-    #print(plot_data)
 
     n_params = model_config[model]['n_params']
     n_levels = vary_dict[list(vary_dict.keys())[0]].shape[0]

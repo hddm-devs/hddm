@@ -181,35 +181,4 @@ class HDDMnn(HDDM):
 
         d['wfpt_nn'] = stochastic_from_dist('Wienernn' + '_' + d['model'],
                                             partial(likelihood_, **network_dict))
-        super(HDDMnn, self).__setstate__(d)
-
-
-# net_out = self.network(np.zeros((10, 1, 4, 1), dtype = np.float32))
-
-# print('net out 1: ')
-# print(net_out)
-# print(net_out.shape)
-
-# #net_out = self.network(np.tile([0, 1, 0.5, 1], (100, 1)))
-# net_out = self.network(np.zeros((112, 1, 4, 1), dtype = np.float32))
-
-# print('net out 2: ')
-# print(net_out)
-# print(net_out.shape)
-
-# net_out = self.network(np.zeros(4, dtype = np.float32))
-
-# print('net out 3: ')
-# print(net_out)
-# print(net_out.shape)
-
-
-# net_out = self.network(np.zeros((100, 4), dtype = np.float32))
-
-# print('net out 4: ')
-# print(net_out)
-# print(net_out.shape)
-# Make model specific likelihood
-# self.wfpt_nn = stochastic_from_dist('Wienernn' + '_' + self.model,
-#                                    partial(likelihood_, **network_dict))
-        
+        super(HDDMnn, self).__setstate__(d)   

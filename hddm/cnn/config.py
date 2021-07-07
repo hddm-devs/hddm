@@ -2,32 +2,11 @@ import os
 import numpy as np
 import glob
 import hddm
-
-# model_checkpoint_path: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_210500.ckpt-210500"
-# all_model_checkpoint_paths: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_209500.ckpt-209500"
-# all_model_checkpoint_paths: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_209750.ckpt-209750"
-# all_model_checkpoint_paths: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_210000.ckpt-210000"
-# all_model_checkpoint_paths: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_210250.ckpt-210250"
-# all_model_checkpoint_paths: "/Users/afengler/OneDrive/git_repos/hddm/hddm/cnn_models/ddm_training_data_binned_1_nbins_512_n_100000/ddm_210500.ckpt-210500"
-
-# model_checkpoint_path: "./ddm_210500.ckpt-210500"
-# all_model_checkpoint_paths: "./ddm_209500.ckpt-209500"
-# all_model_checkpoint_paths: "./ddm_209750.ckpt-209750"
-# all_model_checkpoint_paths: "./ddm_210000.ckpt-210000"
-# all_model_checkpoint_paths: "./ddm_210250.ckpt-210250"
-# all_model_checkpoint_paths: "./ddm_210500.ckpt-210500"
-
-
-# ddm_rel_checkpoint_dict = dict('model_checkpoint_path:': "/ddm_210500.ckpt-210500")
-
-# for key, val in ddm_rel_checkpoint_dict:
-#     ddm_rel_checkpint_dict[key] = hddm.__path__[0] + ddm_rel_checkpint_dict[val]
-
 class Config(object):
 
     def __init__(self, model=None, bins=None, N=None):
         # Directory setup
-        self.base_dir = hddm.__path__[0]  #+ '/Users/afengler/OneDrive/git_repos/hddm/hddm/'
+        self.base_dir = hddm.__path__[0]
         self.data_dir = 'data'
         self.tfrecord_dir = 'tfrecords'
         self.summary_dir = 'summaries'
@@ -73,33 +52,31 @@ class Config(object):
         self.val_tfrecords = self.refname+'_val.tfrecords'
         self.test_tfrecords = self.refname+'_test.tfrecords'
 
-        """
-        Specify whether or not to treat gaussian errors as isotropic
-        This only matters for the "reverse" model
-        """
+        # Specify whether or not to treat gaussian errors as isotropic
+        # This only matters for the "reverse" model
+
         self.full_cov_matrix = False
         self.model_suffix = 'full_cov' if self.full_cov_matrix else 'isotropic'
 
         # Data configuration
-        self.results_dir = '/media/data_cifs/projects/prj_approx-bayes/projectABC/results/'
         self.model_output = os.path.join(self.base_dir,
                                         'cnn_models',
                                          self.refname)
         
-        print(self.model_output)
+        # print(self.model_output)
         
         with open(os.path.join(self.model_output, 'checkpoint'), 'r') as f:
             ckpt_meta = f.readlines()
-        
+
+
+        # Checkpoint folder
         ckpt_meta = [x.strip().split(':')[0] + ': "' + os.path.join(hddm.__path__[0],'cnn_models', self.refname, x.strip().split(':')[-1].split('/')[-1]) + "\n" for x in ckpt_meta]
         
         # For simple local check in dev environ
-        # ckpt_meta = [x.strip().split(':')[0] + ': "' + os.path.join('hddm/','cnn_models', 'ddm_training_data_binned_1_nbins_512_n_100000/', x.strip().split(':')[-1].split('/')[-1]) + "\n" for x in ckpt_meta]
-
         with open(os.path.join(self.model_output, 'checkpoint'), 'w') as f:
             f.writelines(ckpt_meta)
         
-        self.data_prop = {'train':0.9, 'val':0.05, 'test':0.05}
+        self.data_prop = {'train': 0.9, 'val': 0.05, 'test': 0.05}
         self.min_param_values = np.array([x[0] for x in self.bounds])
         self.param_range = np.array([x[1] - x[0] for x in self.bounds])
 
