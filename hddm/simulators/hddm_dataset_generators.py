@@ -329,7 +329,7 @@ def simulator_stimcoding(model = 'angle',
     gt = {}
 
     for i in range(2):
-        
+        # AF-TODO: Change this to fit with KnodeStimCoding original !
         if i == 0:
 #             param_base[i, id_tmp] = np.random.uniform(low = model_config[model]['param_bounds'][0][id_tmp], 
 #                                                       high = model_config[model]['param_bounds'][1][id_tmp])

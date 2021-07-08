@@ -12,7 +12,7 @@ from .hddm_nn import HDDMnn
 from .hddm_nn_regression import HDDMnnRegressor
 from .hddm_stimcoding_nn import HDDMnnStimCoding
 from .hddm_nn_regression_inherit import HDDMnnRegressorInherit
-from .hddm_stimcoding_nn_inherit import HDDMnnStimCoding
+from .hddm_stimcoding_nn_inherit import HDDMnnStimCodingInherit
 
 __all__ = ['AccumulatorModel',
            'HDDMBase',
@@ -26,7 +26,7 @@ __all__ = ['AccumulatorModel',
            'Hrl',
            'HDDMnn',
            'HDDMnnRegressor',
-           'HDDMnnStimCoding'
-           'HDDMnnRegresorInherit',
-           'HDDMnnStimCoding'
+           'HDDMnnStimCoding',
+           'HDDMnnRegressorInherit',
+           'HDDMnnStimCodingInherit'
 ]

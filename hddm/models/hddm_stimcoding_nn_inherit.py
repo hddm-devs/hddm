@@ -13,7 +13,7 @@ import hddm
 import wfpt
 from functools import partial
 
-class HDDMnnStimCoding(HDDMStimCoding):
+class HDDMnnStimCodingInherit(HDDMStimCoding):
     """HDDMnn model that can be used when stimulus coding and estimation
     of bias (i.e. displacement of starting point z) is required.
 
