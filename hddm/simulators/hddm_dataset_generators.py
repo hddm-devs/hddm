@@ -366,7 +366,7 @@ def simulator_stimcoding(model = 'angle',
                                 max_rt_outlier = max_rt_outlier)
         
 
-        dataframes.append(hddm_preprocess(simulator_data = sim_out, subj_id = i + 1), keep_model_parameters = True)
+        dataframes.append(hddm_preprocess(simulator_data = sim_out, subj_id = i + 1, keep_model_parameters = True))
     
     data_out = pd.concat(dataframes)
     data_out = data_out.rename(columns = {'subj_idx': "stim"})
