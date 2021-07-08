@@ -326,7 +326,10 @@ def simulator_stimcoding(model = 'angle',
     else:
         print('Can not recognize data-type of argument: split_by, provided neither a list nor a string')
         return
+
     gt = {}
+    for i in range(len(model_config[model]['params'])):
+        gt[model_config[model]['params'][i]] = param_base[0, i]
 
     for i in range(2):
         # AF-TODO: Change this to fit with KnodeStimCoding original !
