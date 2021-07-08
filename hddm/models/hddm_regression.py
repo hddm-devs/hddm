@@ -66,11 +66,14 @@ wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
 
 class KnodeRegress(kabuki.hierarchical.Knode):
     def __init__(self, *args, **kwargs):
+        # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop('keep_regressor_trace', False)
+        # Initialize kabuki.hierarchical.Knode
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
         reg = kwargs['regressor']
+        
         # order parents according to user-supplied args
         args = []
         for arg in reg['params']:

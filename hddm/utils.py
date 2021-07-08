@@ -578,29 +578,6 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
 
     return ax
 
-    # AF-Q: UNUSED?
-    #create axes for subjects
-    # n_subjs = len(data.subj_idx.unique())
-    # if ncols is None:
-    #     ncols = min(4, n_subjs)
-    # nrows = int(np.ceil(n_subjs / ncols))
-    # fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
-
-    # #plot single subject model
-    # for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
-    #     points = np.zeros((nq, len(stats)*2))
-    #     p = np.zeros(len(stats)*2)
-    #     for i_key, (key, cond_data) in enumerate(stats.items()):
-    #         points[:,i_key*2] = cond_data[subj_idx][0]
-    #         points[:,i_key*2+1] = cond_data[subj_idx][1]
-    #         p[i_key*2] = 1 - cond_data[subj_idx][2]
-    #         p[i_key*2+1] = cond_data[subj_idx][2]
-
-    #     ax = axs.item(i_subj)
-    #     _points_to_qp_plot(points, p, ax, draw_lines)
-    #     ax.set_title(subj_idx)
-
-
 def _points_to_qp_plot(points, p, ax, draw_lines):
     """
     plot the points created by the qp_plot function
@@ -613,8 +590,6 @@ def _points_to_qp_plot(points, p, ax, draw_lines):
         ax.plot(p, points[i_q,:], fmt, c='b')
 
     ax.set_xlim(0, 1)
-
-
 
 def _qp_plot_model(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
     """

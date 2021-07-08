@@ -7,7 +7,7 @@ import sys
 import tempfile
 import os, pickle
 import tensorflow as tf
-from train_detector import cnn_model_struct 
+from train_detector import CNNModelStruct #cnn_model_struct 
 import config
 from scipy.optimize import differential_evolution
 import numpy as np
@@ -32,7 +32,7 @@ class Infer:
         self.initialized = False
         with tf.device('/gpu:0'):
             with tf.variable_scope("model", reuse=tf.AUTO_REUSE) as scope:
-                self.model = cnn_model_struct()
+                self.model = CNNModelStruct() # cnn_model_struct()
                 self.model.build(self.inp, self.cfg.test_param_dims[1:], self.cfg.output_hist_dims[1:], train_mode=False, verbose=False)
                 self.gpuconfig = tf.ConfigProto()
                 self.gpuconfig.gpu_options.allow_growth = True

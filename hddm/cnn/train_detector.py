@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import math
 from textwrap import wrap
 
-class cnn_model_struct:
+class CNNModelStruct:
     def __init__(self, trainable=True):
         self.trainable = trainable
         self.data_dict = None

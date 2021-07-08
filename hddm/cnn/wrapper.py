@@ -1,5 +1,5 @@
 import numpy as np
-from .train_detector import cnn_model_struct
+from .train_detector import CNNModelStruct # cnn_model_struct
 from .config import *
 import tensorflow as tf
 import tqdm, gzip, cProfile, time, argparse, pickle, os
@@ -21,7 +21,7 @@ class Infer:
 
 		#with tf.device('/gpu:0'):
 		with tf.variable_scope("model", reuse=tf.AUTO_REUSE) as scope:
-			self.model = cnn_model_struct()
+			self.model = CNNModelStruct() # cnn_model_struct()
 			# self.model.build(self.inp, self.cfg.test_param_dims[1:], self.cfg.output_hist_dims[1:], train_mode=False, verbose=False)
 			# AF: ADD changed self.inp --> self.inp_flex
 			self.model.build(self.inp_flex, self.cfg.test_param_dims[1:], self.cfg.output_hist_dims[1:], train_mode=False, verbose=False)

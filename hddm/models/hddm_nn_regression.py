@@ -18,13 +18,14 @@ import kabuki.step_methods as steps
 from functools import partial
 import wfpt
 
+
 class KnodeRegress(kabuki.hierarchical.Knode):
     def __init__(self, *args, **kwargs):
         
         # Whether or not to keep the regressor trace
         self.keep_regressor_trace = kwargs.pop('keep_regressor_trace', False)
         
-        # Initialize kabuke.hierarchical.Knode
+        # Initialize kabuki.hierarchical.Knode
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
@@ -132,17 +133,32 @@ class HDDMnnRegressor(HDDM):
         """
         # Signify as neural net class for later super() inits
         kwargs['nn'] = True
-
+        self.model = kwargs.pop('model', 'ddm')
         self.w_outlier = kwargs.pop('w_outlier', 0.1)
         self.network_type = kwargs.pop('network_type', 'mlp')
         self.network = None
         self.nbin = kwargs.pop('nbin', 512)
+        self.is_informative = kwargs.pop('informative', False)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
         elif self.nbin == 256:
             self.cnn_pdf_multiplier = 25.6
 
+        # Load Network
+        if self.network_type == 'mlp':
+            self.network = load_mlp(model = self.model)
+            network_dict = {'network': self.network}
+            # Make likelihood function
+            self.wfpt_nn_reg_class = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
+
+        if self.network_type == 'cnn':
+            self.network = load_cnn(model = self.model, nbin = self.nbin)
+            network_dict = {'network': self.network}
+            # Make likelihood function
+            self.wfpt_nn_reg_class = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
+            
+        # OLD
         self.keep_regressor_trace = keep_regressor_trace
         
         if isinstance(models, (str, dict)):
@@ -150,8 +166,7 @@ class HDDMnnRegressor(HDDM):
         
         group_only_nodes = list(kwargs.get('group_only_nodes', ()))
         self.reg_outcomes = set() # holds all the parameters that are going to be modeled as outcomes
-        self.model = kwargs.pop('model', 'ddm')
-
+        
         # Initialize data-structure that contains model descriptors
         self.model_descrs = []
 
@@ -174,7 +189,6 @@ class HDDMnnRegressor(HDDM):
             model_stripped = model_str[(separator + 1):]
             covariates = dmatrix(model_stripped, data).design_info.column_names # this uses Patsy to get a data matrix back
 
-            print('outcomes: ', outcome)
             # Build model descriptor
             model_descr = {'outcome': outcome,
                            'model': model_stripped,
@@ -186,25 +200,11 @@ class HDDMnnRegressor(HDDM):
 
             print("Adding these covariates:")
             print(model_descr['params'])
-
             if group_only_regressors:
                 group_only_nodes += model_descr['params']
                 kwargs['group_only_nodes'] = group_only_nodes
             self.reg_outcomes.add(outcome)
 
-        # Load Network
-        if self.network_type == 'mlp':
-            self.network = load_mlp(model = self.model)
-            network_dict = {'network': self.network}
-
-            # Make likelihood function
-            self.wfpt_nn_reg_class = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
-
-        if self.network_type == 'cnn':
-            self.network = load_cnn(model = self.model, nbin = self.nbin)
-            network_dict = {'network': self.network}
-            self.wfpt_nn_reg_class = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
-            
         # Initialize Base class 
         super(HDDMnnRegressor, self).__init__(data, **kwargs)
 
@@ -244,17 +244,17 @@ class HDDMnnRegressor(HDDM):
         # with regressors. '.difference' makes that happen
         #knodes = self._create_stochastic_knodes_nn(include.difference(self.reg_outcomes))
 
-        print('Printing reg outcome:')
-        print(self.reg_outcomes)
+        #print('Printing reg outcome:')
+        #print(self.reg_outcomes)
         #include = set(include) # TD: Check why here include is not coming in as a set // This worked in hddm_nn.py
         includes_remainder = set(include).difference(self.reg_outcomes)
-        print(includes_remainder)
+        #print(includes_remainder)
         # knodes = self._create_stochastic_knodes_basic(includes_remainder)
         # knodes = self._create_stochastic_knodes(includes_remainder)
         knodes = super(HDDMnnRegressor, self)._create_stochastic_knodes(includes_remainder)
 
-        print('knodes')
-        print(knodes)
+        #print('knodes')
+        #print(knodes)
         
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
