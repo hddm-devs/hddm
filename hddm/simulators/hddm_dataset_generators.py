@@ -339,7 +339,7 @@ def simulator_stimcoding(model = 'angle',
             if 'v' in split_by:
                 id_tmp = model_config[model]['params'].index('v')
                 param_base[i, id_tmp] = drift_criterion - param_base[i, id_tmp]
-                gt['v'] = param_base[i, id_tmp]
+                #gt['v'] = param_base[i, id_tmp]
                 gt['dc'] = drift_criterion
    
         if i == 1:
