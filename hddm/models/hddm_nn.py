@@ -5,9 +5,9 @@ import hddm
 from collections import OrderedDict
 from copy import copy
 import numpy as np
-import pymc
-import wfpt
-import pickle
+#import pymc
+#import wfpt
+#import pickle
 #import hickle
 from functools import partial
 
@@ -145,8 +145,7 @@ class HDDMnn(HDDM):
         
         # Initialize super class
         super(HDDMnn, self).__init__(*args, **kwargs)
-        # print(self.p_outlier)
-    
+
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
@@ -180,4 +179,4 @@ class HDDMnn(HDDM):
 
         d['wfpt_nn'] = stochastic_from_dist('Wienernn' + '_' + d['model'],
                                             partial(likelihood_, **network_dict))
-        super(HDDMnn, self).__setstate__(d)   
+        super(HDDMnn, self).__setstate__(d) 
