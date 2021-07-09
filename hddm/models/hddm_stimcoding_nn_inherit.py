@@ -6,6 +6,7 @@ from kabuki.hierarchical import Knode
 from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
 from hddm.models import HDDMStimCoding
+from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
 import hddm
@@ -144,40 +145,40 @@ class HDDMnnStimCodingInherit(HDDMStimCoding):
                                    stim_col = self.stim_col,
                                    **wfpt_parents)
 
-class KnodeWfptStimCoding(Knode):
-    def __init__(self, *args, **kwargs):
-        self.split_param = kwargs.pop('split_param')
-        self.stims = kwargs.pop('stims')
-        self.stim_col = kwargs.pop('stim_col')
+# class KnodeWfptStimCoding(Knode):
+#     def __init__(self, *args, **kwargs):
+#         self.split_param = kwargs.pop('split_param')
+#         self.stims = kwargs.pop('stims')
+#         self.stim_col = kwargs.pop('stim_col')
 
-        super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
+#         super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
 
-    def create_node(self, name, kwargs, data):
+#     def create_node(self, name, kwargs, data):
         
-        # the addition of "depends=['stim']" in the call of
-        # KnodeWfptInvZ in HDDMStimCoding makes that data are
-        # submitted splitted by the values of the variable stim the
-        # following lines check if the variable stim is equal to the
-        # value of stim for which z' = 1-z and transforms z if this is
-        # the case (similar to v)
+#         # the addition of "depends=['stim']" in the call of
+#         # KnodeWfptInvZ in HDDMStimCoding makes that data are
+#         # submitted splitted by the values of the variable stim the
+#         # following lines check if the variable stim is equal to the
+#         # value of stim for which z' = 1-z and transforms z if this is
+#         # the case (similar to v)
 
-        dc = kwargs.pop('dc', None)
+#         dc = kwargs.pop('dc', None)
         
-        # Data supplied here is split so that stim_col has only one value !
-        if all(data[self.stim_col] == self.stims[1]): # AF NOTE: Reversed this, previously self.stims[0], compare what is expected as data to my simulator...
-            # 
-            if self.split_param == 'z':
-                kwargs['z'] = 1 - kwargs['z']
-            elif self.split_param == 'v' and dc is None:
-                kwargs['v'] = - kwargs['v']
-            elif self.split_param == 'v' and dc != 0:
-                kwargs['v'] = - kwargs['v'] + dc # 
-            else:
-                raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
+#         # Data supplied here is split so that stim_col has only one value !
+#         if all(data[self.stim_col] == self.stims[1]): # AF NOTE: Reversed this, previously self.stims[0], compare what is expected as data to my simulator...
+#             # 
+#             if self.split_param == 'z':
+#                 kwargs['z'] = 1 - kwargs['z']
+#             elif self.split_param == 'v' and dc is None:
+#                 kwargs['v'] = - kwargs['v']
+#             elif self.split_param == 'v' and dc != 0:
+#                 kwargs['v'] = - kwargs['v'] + dc # 
+#             else:
+#                 raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
 
-            return self.pymc_node(name, **kwargs)
-        else:
-            if dc is not None:
-                kwargs['v'] = kwargs['v'] + dc
+#             return self.pymc_node(name, **kwargs)
+#         else:
+#             if dc is not None:
+#                 kwargs['v'] = kwargs['v'] + dc
 
-            return self.pymc_node(name, **kwargs)
+#             return self.pymc_node(name, **kwargs)

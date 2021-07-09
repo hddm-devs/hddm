@@ -12,7 +12,7 @@ from hddm.models import HDDM
 from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
-from hddm.models.hddm_regression import KnodeRegress
+#from hddm.models.hddm_regression import KnodeRegress
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
