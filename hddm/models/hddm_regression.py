@@ -101,9 +101,9 @@ class KnodeRegress(kabuki.hierarchical.Knode):
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
             
-            print('printing shape of design matrix dot params')
-            print(design_matrix.dot(params.T).shape)
-            print(design_matrix.dot(params.T)[0].shape)
+            #print('printing shape of design matrix dot params')
+            #print(design_matrix.dot(params.T).shape)
+            #print(design_matrix.dot(params.T)[0].shape)
             predictor = link_func(design_matrix.dot(params.T)[0])
 
             return predictor
