@@ -107,7 +107,7 @@ class HDDMnnStimCodingInherit(HDDMStimCoding):
         # # Get unique stimulus values for the stimcoding relevant column (has to be of length 2!)
         # self.stims = np.asarray(np.sort(np.unique(args[0][self.stim_col])))
         # assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
-        super(HDDMnnStimCoding, self).__init__(*args, **kwargs)
+        super(HDDMnnStimCodingInherit, self).__init__(*args, **kwargs)
         #print(self.p_outlier)
 
     # def _create_stochastic_knodes(self, include):
