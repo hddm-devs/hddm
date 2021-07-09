@@ -1,18 +1,20 @@
-from copy import copy
-import numpy as np
-from collections import OrderedDict
+from copy import deepcopy
+#import numpy as np
+#from collections import OrderedDict
 
-from kabuki.hierarchical import Knode
-from kabuki.utils import stochastic_from_dist
-from hddm.models import HDDM
+#from kabuki.hierarchical import Knode
+#from kabuki.utils import stochastic_from_dist
+#from hddm.models import HDDM
+from hddm.models import HDDMStimCoding
+from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
 import hddm
 
-import wfpt
-from functools import partial
+#import wfpt
+#from functools import partial
 
-class HDDMnnStimCoding(HDDM):
+class HDDMnnStimCoding(HDDMStimCoding):
     """HDDMnn model that can be used when stimulus coding and estimation
     of bias (i.e. displacement of starting point z) is required.
 
@@ -61,17 +63,12 @@ class HDDMnnStimCoding(HDDM):
         kwargs['nn'] = True
         self.network_type = kwargs.pop('network_type', 'mlp')
         self.network = None
-        self.stim_col = kwargs.pop('stim_col', 'stim')
-        self.split_param = kwargs.pop('split_param', 'z')
-        self.drift_criterion = kwargs.pop('drift_criterion', False)
         self.model = kwargs.pop('model', 'ddm')
         self.w_outlier = kwargs.pop('w_outlier', 0.1)
-
-        # AF-TODO: MAYBE NOT NECESSARY ?
         self.is_informative = kwargs.pop('informative', False)
 
-        self.nbin = kwargs.pop('nbin', 512)
 
+        self.nbin = kwargs.pop('nbin', 512)
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
         elif self.nbin == 256:
@@ -88,47 +85,7 @@ class HDDMnnStimCoding(HDDM):
             network_dict = {'network': self.network}
             self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(model = self.model, pdf_multiplier = self.cnn_pdf_multiplier, **network_dict)
         
-        if self.split_param == 'z':
-            assert not self.drift_criterion, "Setting drift_criterion requires split_param='v'."
-            kwargs['informative'] = False
-
-            # Add z if it is split parameter but not included in 'include'
-            if 'include' in kwargs and 'z' not in kwargs['include']:
-                kwargs['include'].append('z')
-            else:
-                #print('passing through here...')
-                if 'include' not in kwargs:
-                    kwargs['include'] = ['z']
-                else:
-                    pass
-
-            #print("Adding z to includes.")
-
-        # Get unique stimulus values for the stimcoding relevant column (has to be of length 2!)
-        self.stims = np.asarray(np.sort(np.unique(args[0][self.stim_col])))
-        assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
-
-        super(HDDMnnStimCoding, self).__init__(*args, **kwargs)
-        #print(self.p_outlier)
-
-    def _create_stochastic_knodes(self, include):
-        knodes = super(HDDMnnStimCoding, self)._create_stochastic_knodes(include)
-        if self.drift_criterion:
-            knodes.update(self._create_family_normal_normal_hnormal('dc',
-                                                                     value = 0,
-                                                                     g_mu = 0,
-                                                                     g_tau = 3**-2,
-                                                                     std_std = 2))
-        return knodes
-
-    def _create_wfpt_parents_dict(self, knodes):
-        wfpt_parents = super(HDDMnnStimCoding, self)._create_wfpt_parents_dict(knodes)
-        
-        # SPECIFIC TO STIMCODING
-        if self.drift_criterion: 
-            wfpt_parents['dc'] = knodes['dc_bottom']
-
-        return wfpt_parents
+        super(HDDMnnStimCodingInherit, self).__init__(*args, **kwargs)
 
     def _create_wfpt_knode(self, knodes):
         
@@ -145,40 +102,3 @@ class HDDMnnStimCoding(HDDM):
                                    stims = self.stims,
                                    stim_col = self.stim_col,
                                    **wfpt_parents)
-class KnodeWfptStimCoding(Knode):
-    def __init__(self, *args, **kwargs):
-        self.split_param = kwargs.pop('split_param')
-        self.stims = kwargs.pop('stims')
-        self.stim_col = kwargs.pop('stim_col')
-
-        super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
-
-    def create_node(self, name, kwargs, data):
-        
-        # the addition of "depends=['stim']" in the call of
-        # KnodeWfptInvZ in HDDMStimCoding makes that data are
-        # submitted splitted by the values of the variable stim the
-        # following lines check if the variable stim is equal to the
-        # value of stim for which z' = 1-z and transforms z if this is
-        # the case (similar to v)
-
-        dc = kwargs.pop('dc', None)
-        
-        # Data supplied here is split so that stim_col has only one value !
-        if all(data[self.stim_col] == self.stims[0]): # AF NOTE reversed reversed rn --> back to 0# AF NOTE: Reversed this, previously self.stims[0], compare what is expected as data to my simulator...
-            # 
-            if self.split_param == 'z':
-                kwargs['z'] = 1 - kwargs['z']
-            elif self.split_param == 'v' and dc is None:
-                kwargs['v'] = - kwargs['v']
-            elif self.split_param == 'v' and dc != 0:
-                kwargs['v'] = - kwargs['v'] + dc # 
-            else:
-                raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
-
-            return self.pymc_node(name, **kwargs)
-        else:
-            if dc is not None:
-                kwargs['v'] = kwargs['v'] + dc
-
-            return self.pymc_node(name, **kwargs)

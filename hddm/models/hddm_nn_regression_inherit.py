@@ -19,7 +19,7 @@ from kabuki.utils import stochastic_from_dist
 import kabuki.step_methods as steps
 from functools import partial
 #import wfpt
-class HDDMnnRegressorInherit(HDDMRegressor):
+class HDDMnnRegressor(HDDMRegressor):
     """HDDMnnRegressor allows estimation of the NNDDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
