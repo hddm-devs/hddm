@@ -243,7 +243,9 @@ class HDDMRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
+        includes_remainder = set(include).difference(self.reg_outcomes)
+        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
+        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept

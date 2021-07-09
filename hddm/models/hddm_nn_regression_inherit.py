@@ -234,6 +234,7 @@ class HDDMnnRegressorInherit(HDDMRegressor):
         super(HDDMnnRegressorInherit, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
+        print('passed through highest class version of _create_wfpt_knode')
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
         return Knode(self.wfpt_nn_reg_class,
