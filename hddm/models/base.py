@@ -792,7 +792,6 @@ class HDDMBase(AccumulatorModel):
     def __getstate__(self):
         d = super(HDDMBase, self).__getstate__()
         del d['wfpt_class']
-
         return d
 
     def __setstate__(self, d):
@@ -806,16 +805,10 @@ class HDDMBase(AccumulatorModel):
         
         if self.nn:
             # Define parents for HDDMnn across included models
-            #print('printing knodes')
-            #print(knodes)
             wfpt_parents['p_outlier'] = knodes['p_outlier_bottom'] if 'p_outlier' in self.include else self.p_outlier
             wfpt_parents['w_outlier'] = self.w_outlier # likelihood of an outlier point
 
             # AF-TODO: Set defaults for all parameters and make the 'include' statement completely explicit ?
-            print('printing wfpt_parents from _create_wfpt_parents_dict')
-            print(wfpt_parents)
-            print('printing knodes from _create_wfpt_parents_dict')
-            print(knodes)
             wfpt_parents['a'] = knodes['a_bottom']
             wfpt_parents['v'] = knodes['v_bottom']
             wfpt_parents['t'] = knodes['t_bottom']
@@ -840,12 +833,7 @@ class HDDMBase(AccumulatorModel):
                 wfpt_parents['sz'] = knodes['sz_bottom'] if 'sz' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('sz')] #self.default_intervars['sz']
                 wfpt_parents['st'] = knodes['st_bottom'] if 'st' in self.include else  model_config[self.model]['default_params'][model_config[self.model]['params'].index('st')] #self.default_intervars['st']
 
-            #print('wfpt parents: ')
-            #print(wfpt_parents)
-
         else:
-            #print('printing knodes')
-            #print(knodes)
             # This defines parents for basic hddm
             wfpt_parents['a'] = knodes['a_bottom']
             wfpt_parents['v'] = knodes['v_bottom']
