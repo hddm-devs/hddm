@@ -109,12 +109,15 @@ class HDDMnnRegressor(HDDMRegressor):
             # Make likelihood function
             self.wfpt_nn_reg_class = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
         
-        super(HDDMnnRegressorInherit, self).__init__(data, models, group_only_regressors, keep_regressor_trace, **kwargs)
+        super(HDDMnnRegressor, self).__init__(data, models, group_only_regressors, keep_regressor_trace, **kwargs)
         
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
-        d = super(HDDMnnRegressorInherit, self).__getstate__()
+        d = super(HDDMnnRegressor, self).__getstate__()
         del d['wfpt_reg_class']
+        del d['network']
+        del d['wfpt_nn_reg_class']
+
         for model in d['model_descrs']:
             if 'link_func' in model:
                 print("WARNING: Will not save custom link functions.")
@@ -126,8 +129,46 @@ class HDDMnnRegressor(HDDMRegressor):
         print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
-        super(HDDMnnRegressorInherit, self).__setstate__(d)
 
+        if d['network_type'] == 'cnn':
+            d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
+            network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
+           
+        if d['network_type'] == 'mlp':
+            d['network'] = load_mlp(model = d['model'])
+            network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+
+        super(HDDMnnRegressor, self).__setstate__(d)
+
+
+    # def __getstate__(self):
+    #     d = super(HDDMnn, self).__getstate__()
+    #     del d['network']
+    #     del d['wfpt_nn']
+    #     #del d['wfpt_class']
+    #     #del d['wfpt_reg_class']
+    #     # for model in d['model_descrs']:
+    #     #     if 'link_func' in model:
+    #     #         print("WARNING: Will not save custom link functions.")
+    #     #         del model['link_func']
+    #     return d
+
+    # def __setstate__(self, d):
+    #     if d['network_type'] == 'cnn':
+    #         d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
+    #         network_dict = {'network': d['network']}
+    #         d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
+           
+    #     if d['network_type'] == 'mlp':
+    #         d['network'] = load_mlp(model = d['model'])
+    #         network_dict = {'network': d['network']}
+    #         d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+
+    #     super(HDDMnn, self).__setstate__(d) 
+
+    
     def _create_wfpt_knode(self, knodes):
         print('passed through highest class version of _create_wfpt_knode')
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
