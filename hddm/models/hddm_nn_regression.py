@@ -114,21 +114,21 @@ class HDDMnnRegressor(HDDMRegressor):
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
         d = super(HDDMnnRegressor, self).__getstate__()
-        del d['wfpt_reg_class']
+        #del d['wfpt_reg_class']
         del d['network']
         del d['wfpt_nn_reg_class']
 
-        for model in d['model_descrs']:
-            if 'link_func' in model:
-                print("WARNING: Will not save custom link functions.")
-                del model['link_func']
+        # for model in d['model_descrs']:
+        #     if 'link_func' in model:
+        #         print("WARNING: Will not save custom link functions.")
+        #         del model['link_func']
         return d
 
     def __setstate__(self, d):
-        d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        print("WARNING: Custom link functions will not be loaded.")
-        for model in d['model_descrs']:
-            model['link_func'] = lambda x: x
+        #d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
+        # print("WARNING: Custom link functions will not be loaded.")
+        # for model in d['model_descrs']:
+        #     model['link_func'] = lambda x: x
 
         if d['network_type'] == 'cnn':
             d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
