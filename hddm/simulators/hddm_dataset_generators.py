@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-from copy import deepcopy
+#from copy import deepcopy
 #import re
-import argparse
-import sys
-import pickle
-from statsmodels.distributions.empirical_distribution import ECDF
+#import argparse
+#import sys
+#import pickle
+#from statsmodels.distributions.empirical_distribution import ECDF
 from scipy.stats import truncnorm
 from patsy import dmatrix
 from collections import OrderedDict
@@ -164,7 +164,7 @@ def make_parameter_vectors_nn(model = 'angle',
     return pd.DataFrame(parameter_data, columns = model_config[model]['params'])
 
 # Dataset generators
-def simulator_single_subject(parameters = [0, 0, 0],
+def simulator_single_subject(parameters = (0, 0, 0),
                              p_outlier = 0.0,
                              max_rt_outlier = 10.0,
                              model = 'angle',
@@ -332,10 +332,7 @@ def simulator_stimcoding(model = 'angle',
         gt[model_config[model]['params'][i]] = param_base[0, i]
 
     for i in range(2):
-        # AF-TODO: Change this to fit with KnodeStimCoding original !
         if i == 0:
-#             param_base[i, id_tmp] = np.random.uniform(low = model_config[model]['param_bounds'][0][id_tmp], 
-#                                                       high = model_config[model]['param_bounds'][1][id_tmp])
             if 'v' in split_by:
                 id_tmp = model_config[model]['params'].index('v')
                 param_base[i, id_tmp] = drift_criterion - param_base[i, id_tmp]
@@ -343,7 +340,6 @@ def simulator_stimcoding(model = 'angle',
                 gt['dc'] = drift_criterion
    
         if i == 1:
-            
             if 'v' in split_by:
                 id_tmp = model_config[model]['params'].index('v')
                 param_base[i, id_tmp] = drift_criterion + param_base[i, id_tmp]
@@ -351,7 +347,6 @@ def simulator_stimcoding(model = 'angle',
                 id_tmp = model_config[model]['params'].index('z')
                 param_base[i, id_tmp] = 1 - param_base[i, id_tmp]
             
-    #print(param_base)
     dataframes = []
     for i in range(2):
         
@@ -518,11 +513,11 @@ def simulator_condition_effects(n_conditions = 4,
 
     return (data_out, gt)
 
-def simulator_covariate(dependent_params = ['v'],
+def simulator_covariate(dependent_params = ('v', ),
                         model = 'angle',
                         n_samples = 1000,
-                        betas = {'v': 0.1},
-                        covariate_magnitudes = {'v': 1.0},
+                        betas = None,
+                        covariate_magnitudes = None,
                         prespecified_params = None,
                         p_outlier = 0.0,
                         max_rt_outlier = 10.0,
@@ -552,7 +547,7 @@ def simulator_covariate(dependent_params = ['v'],
             Current options include, 'angle', 'ornstein', 'levy', 'weibull', 'full_ddm'
         betas: dict <default={'v': 0.1}>
             Ground truth regression betas for the parameters which are functions of covariates.
-        covariates_magnitudes: dict <default={'v': 1.0}>
+        covariates_magnitudes: dict <default=None>
             A dict which holds magnitudes of the covariate vectors (value), by for each parameters (key).
         subj_id: str <default='none'>
             Hddm expects a subject column in the dataset. This supplies a specific label if so desired.
@@ -572,6 +567,14 @@ def simulator_covariate(dependent_params = ['v'],
       tuple (pandas.DataFrame, dictionary): The DataFrame holds 'reaction time', 'response', 'BOLD' (the covariate) columns as well as trial by trial parameters. Ready to be fit with hddm.
        The dictionary holds the ground truth parameters with names as one expects from hddm model traces.
     """
+    # Initialize defaults for None supplies
+    if covariate_magnitudes == None:
+        print('Using default covariance magnitudes, v set to 1')
+        covariate_magnitudes = {'v': 1.0}
+    if betas == None:
+        print('Using default betas, v_beta set to 0.1')
+        betas = {'v': 0.1}
+
 
     # Sanity checks
     assert p_outlier >= 0 and p_outlier <= 1, 'p_outlier is not between 0 and 1'
