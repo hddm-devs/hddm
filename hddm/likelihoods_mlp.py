@@ -6,7 +6,7 @@ from hddm.simulators import *
 #import data_simulators
 from copy import deepcopy
 
-def make_mlp_likelihood_complete(model,
+def make_mlp_likelihood(model,
                                  **kwargs):
     """Defines the likelihoods for the MLP networks.
 

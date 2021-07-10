@@ -1,4 +1,5 @@
 from hddm.simulators import *
+from hddm.simulators.basic_simulator import *
 from collections import OrderedDict
 import inspect
 import numpy as np
@@ -6,9 +7,6 @@ import pymc as pm
 import kabuki.step_methods as steps
 from hddm.models import HDDMBase
 from kabuki.hierarchical import Knode
-
-# AF - COMMENT: Import the simulators (mostly for benefit of having the model_config --> maybe this should be moved to a separate place)
-from hddm.simulators.basic_simulator import *
 class HDDM(HDDMBase):
     """Create hierarchical drift-diffusion model in which each subject
     has a set of parameters that are constrained by a group distribution.

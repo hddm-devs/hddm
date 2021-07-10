@@ -78,7 +78,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
         if self.network_type == 'mlp':
             self.network = load_mlp(model = self.model)
             network_dict = {'network': self.network}
-            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood_complete(model = self.model, **network_dict)
+            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(model = self.model, **network_dict)
     
         if self.network_type == 'cnn':
             self.network = load_cnn(model = self.model, nbin=self.nbin)

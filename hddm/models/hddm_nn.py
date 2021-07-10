@@ -136,7 +136,7 @@ class HDDMnn(HDDM):
         if self.network_type == 'mlp':
             self.network = load_mlp(model = self.model)
             network_dict = {'network': self.network}
-            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood_complete(model = self.model, **network_dict)
+            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(model = self.model, **network_dict)
 
         if self.network_type == 'cnn':
             self.network = load_cnn(model = self.model, nbin=self.nbin)
@@ -170,13 +170,12 @@ class HDDMnn(HDDM):
     def __setstate__(self, d):
         if d['network_type'] == 'cnn':
             d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
-            likelihood_ = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'])
             network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
+           
         if d['network_type'] == 'mlp':
             d['network'] = load_mlp(model = d['model'])
-            likelihood_ = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'])
             network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
 
-        d['wfpt_nn'] = stochastic_from_dist('Wienernn' + '_' + d['model'],
-                                            partial(likelihood_, **network_dict))
         super(HDDMnn, self).__setstate__(d) 
