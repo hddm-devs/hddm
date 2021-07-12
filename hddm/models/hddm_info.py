@@ -139,6 +139,7 @@ class HDDM(HDDMBase):
 
         # AF ADDED ----------------------------------------------------------------------------
         if not self.nn:
+            print('passed though hddm init code --> no NN')
             if ('sv' in self.include) or ('st' in self.include) or ('sz' in self.include):
                 self.model = 'full_ddm'
             else:
