@@ -227,12 +227,14 @@ class HDDMRegressor(HDDM):
         del d['wfpt_reg_class']
         for model in d['model_descrs']:
             if 'link_func' in model:
+                print('From __get_state__ print:')
                 print("WARNING: Will not save custom link functions.")
                 del model['link_func']
         return d
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
+        print('From __get_state__ print: ')
         print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
@@ -240,6 +242,7 @@ class HDDMRegressor(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+        print('passed through HDDMRegressors version of _create_wfpt_knode')
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
                      col_name=['rt'],
                      reg_outcomes=self.reg_outcomes, **wfpt_parents)

@@ -110,6 +110,17 @@ class HDDMnnRegressor(HDDMRegressor):
             self.wfpt_nn_reg_class = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
         
         super(HDDMnnRegressor, self).__init__(data, models, group_only_regressors, keep_regressor_trace, **kwargs)
+
+    def _create_wfpt_knode(self, knodes):
+        print('passed through highest class version of _create_wfpt_knode')
+        wfpt_parents = self._create_wfpt_parents_dict(knodes)
+
+        return Knode(self.wfpt_nn_reg_class,
+                     'wfpt',
+                     observed = True,
+                     col_name = ['response', 'rt'],
+                     reg_outcomes = self.reg_outcomes,
+                     **wfpt_parents)
         
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
@@ -138,7 +149,7 @@ class HDDMnnRegressor(HDDMRegressor):
         if d['network_type'] == 'mlp':
             d['network'] = load_mlp(model = d['model'])
             network_dict = {'network': d['network']}
-            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'], pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
 
         super(HDDMnnRegressor, self).__setstate__(d)
 
@@ -167,15 +178,3 @@ class HDDMnnRegressor(HDDMRegressor):
     #         d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
 
     #     super(HDDMnn, self).__setstate__(d) 
-
-    
-    def _create_wfpt_knode(self, knodes):
-        print('passed through highest class version of _create_wfpt_knode')
-        wfpt_parents = self._create_wfpt_parents_dict(knodes)
-
-        return Knode(self.wfpt_nn_reg_class,
-                     'wfpt',
-                     observed = True,
-                     col_name = ['response', 'rt'],
-                     reg_outcomes = self.reg_outcomes,
-                     **wfpt_parents)
