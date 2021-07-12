@@ -4,29 +4,29 @@ import numpy as np
 
 #plotting
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-from mpl_toolkits.mplot3d import Axes3D
+#import matplotlib as mpl 
+#from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 from matplotlib import cm
 
-import pymc as pm
+#import pymc as pm
 import hddm
 #import sys
-import kabuki
+#import kabuki
 import pandas as pd
 import seaborn as sns
 #import string
 #import argparse
-from kabuki.analyze import post_pred_gen, post_pred_compare_stats
+#from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
-from statsmodels.distributions.empirical_distribution import ECDF
-from scipy.stats import truncnorm
-from scipy.stats import scoreatpercentile
-from scipy.stats.mstats import mquantiles
-from copy import deepcopy
+#from statsmodels.distributions.empirical_distribution import ECDF
+#from scipy.stats import truncnorm
+#from scipy.stats import scoreatpercentile
+#from scipy.stats.mstats import mquantiles
+#from copy import deepcopy
 from hddm.simulators.basic_simulator import *
-import scipy as scp
+#import scipy as scp
 from sklearn.neighbors import KernelDensity
 import os
 
@@ -156,7 +156,6 @@ class logkde():
                     if bandwidth_tmp > 0:
                         self.bandwidths.append(bandwidth_tmp)
                     else:
-                        #print(self.data['rts'][i])
                         self.bandwidths.append('no_base_data')
 
     # Function to generate basic kdes
@@ -175,7 +174,6 @@ class logkde():
         for i in range(0, len(self.data['choices']), 1):
             if self.bandwidths[i] == 'no_base_data':
                 self.base_kdes.append('no_base_data')
-                #print('no_base_data reported')
             else: 
                 self.base_kdes.append(KernelDensity(kernel = 'gaussian',
                                                     bandwidth = self.bandwidths[i]).fit(np.log(self.data['rts'][i])))
@@ -233,16 +231,12 @@ class logkde():
             n_by_choice[np.argmax(n_by_choice)] -= 1
         elif sum(n_by_choice) < n_samples:
             n_by_choice[np.argmax(n_by_choice)] += 1
-            #print('rounding error catched')
             choices[n_samples - 1, 0] = np.random.choice(self.data['choices'])
-            #print('resolution: ', choices[n_samples - 1, 0])
-            #print('choices allowed: ', self.data['choices'])
             
         # Get samples
         cnt_low = 0
         for i in range(0, len(self.data['choices']), 1):
             if n_by_choice[i] > 0:
-                #print('sum of n_by_choice:', sum(n_by_choice))
                 cnt_high = cnt_low + n_by_choice[i]
                 
                 if self.base_kdes[i] != 'no_base_data':

@@ -81,8 +81,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                     args.append(parent)
 
         parents = {'args': args}
-        print('passed through create_node from KnodeRegress, printing parents')
-        print(parents)
+        
         # Make sure design matrix is kosher
         #dm = dmatrix(reg['model'], data=self.data)
         #import pdb; pdb.set_trace()
@@ -95,15 +94,11 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                  knode_data=data):
             # convert parents to matrix
             params = np.matrix(args)
-            #import pdb; pdb.set_trace()
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
             
-            #print('printing shape of design matrix dot params')
-            #print(design_matrix.dot(params.T).shape)
-            #print(design_matrix.dot(params.T)[0].shape)
             predictor = link_func(design_matrix.dot(params.T)[0])
 
             return predictor
@@ -234,7 +229,6 @@ class HDDMRegressor(HDDM):
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        print('passer through HDDMRegressor and from __setstate__ print: ')
         print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
@@ -242,7 +236,6 @@ class HDDMRegressor(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        print('passed through HDDMRegressors version of _create_wfpt_knode')
         return Knode(self.wfpt_reg_class, 'wfpt', observed=True,
                      col_name=['rt'],
                      reg_outcomes=self.reg_outcomes, **wfpt_parents)
@@ -250,7 +243,7 @@ class HDDMRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        print('passed through _create_stochastic_knodes')
+
         # includes_remainder = set(include).difference(self.reg_outcomes)
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
         # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)

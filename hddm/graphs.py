@@ -66,10 +66,8 @@ def subset_data(data, row_tmp):
     """
     # note row_tmp is expected as a pandas series (shape (n,) DataFrame)
     data_subset = data
-    #print(row_tmp)
     for key in row_tmp.keys():
         data_subset = data_subset.loc[data_subset[key] == row_tmp[key], :]
-        #print(data_subset)
     return data_subset
 
 def make_trace_plotready_h_c(trace_dict = None,
@@ -117,8 +115,6 @@ def make_trace_plotready_h_c(trace_dict = None,
 
             # If the data contain the ground truth parameters for the fitted model, but no ground truth model was specified
             # we can savely assume that the ground truth model was the fitted model.
-            print('test_passed')
-            print(test_passed)
             if test_passed and (model_ground_truth is None):
                 model_ground_truth = model
                 
@@ -461,10 +457,6 @@ def _make_plot_sub_data(data = None, plot_n = None, multi_subject = None, multi_
     if not multi_subject and not multi_condition:
         # Condition four
         sub_data = data[0]
-        #print('sub_data')
-        #print(sub_data)
-        #print('sub_data[i][traces]')
-        #print(sub_data[list(sub_data.keys())[0]]['traces'])
     return sub_data
 
 def _convert_params(data = None):
@@ -750,8 +742,6 @@ def model_plot(hddm_model = None,
                                                  bins = np.linspace(0, max_t, nbins),
                                                  density = True)
                 
-                #print(sub_data[i]['data'].loc[(sub_data[i]['data']['response'] == - 1.0) + (sub_data[i]['data']['response'] == 0.0), :]['rt'].values)
-                
                 counts_2_down, _ = np.histogram(np.abs(sub_data[i]['data'].loc[(sub_data[i]['data']['response'] == - 1.0) | (sub_data[i]['data']['response'] == 0.0), :]['rt'].values),
                                                 bins = np.linspace(0, max_t, nbins),
                                                 density = True)
@@ -1030,8 +1020,6 @@ def posterior_predictive_plot(hddm_model = None,
                                                model_ground_truth = model_ground_truth)
         multi_condition, multi_subject, n_plots = extract_multi_cond_subj_plot_n(data = data)
     
-    # print('data prep finished')
-
     # Taking care of special case with 1 plot
     if (not multi_condition and not multi_subject) or (grouped):
         cols = 1
@@ -1091,8 +1079,6 @@ def posterior_predictive_plot(hddm_model = None,
         gt_dict = {}
         post_dict = {}
         for i in sub_data.keys():
-            # print('sub_data_key')
-            # print(i)
             idx = np.random.choice(sub_data[i]['traces'].shape[0],
                                    size = n_posterior_parameters, 
                                    replace = False)
@@ -1103,13 +1089,9 @@ def posterior_predictive_plot(hddm_model = None,
                             bin_dim = None)
             
             post_dict[i] = np.stack([out[0].flatten(), out[1].flatten()], axis = 1)
-            # print(post_dict[i])
-            # print(post_dict[i].shape)
             gt_dict[i] = (sub_data[i]['data'][['rt', 'response']].values)
             # Make sure that zero responses are turned negative
             gt_dict[i][:, 1][gt_dict[i][:, 1] == 0] = -1
-            print('gt_dict[i]')
-            print(gt_dict[i])
             
             subplot_cnt += 1
 
@@ -1122,7 +1104,6 @@ def posterior_predictive_plot(hddm_model = None,
             # to set the styling. 
             if grouped and (subplot_cnt > 0):
                 break
-            # print('n subplots to plot')
 
             row_tmp = int(np.floor(subplot_cnt / cols))
             col_tmp = subplot_cnt - (cols * row_tmp)

@@ -117,7 +117,6 @@ class HDDMnn(HDDM):
 
     def __init__(self, *args, **kwargs):
 
-        # print(kwargs)
         kwargs['nn'] = True
         self.network_type = kwargs.pop('network_type', 'mlp')
         self.network = None #LAX
@@ -159,12 +158,6 @@ class HDDMnn(HDDM):
         d = super(HDDMnn, self).__getstate__()
         del d['network']
         del d['wfpt_nn']
-        #del d['wfpt_class']
-        #del d['wfpt_reg_class']
-        # for model in d['model_descrs']:
-        #     if 'link_func' in model:
-        #         print("WARNING: Will not save custom link functions.")
-        #         del model['link_func']
         return d
 
     def __setstate__(self, d):

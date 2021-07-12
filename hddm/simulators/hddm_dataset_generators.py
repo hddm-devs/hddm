@@ -12,8 +12,9 @@ from collections import OrderedDict
 from hddm.simulators.basic_simulator import *
 
 # Helper
-def hddm_preprocess(simulator_data = None, subj_id = 'none', keep_negative_responses = False, add_model_parameters = False, keep_subj_idx = True):
-    #print(simulator_data)
+def hddm_preprocess(simulator_data = None, subj_id = 'none', 
+                    keep_negative_responses = False, add_model_parameters = False, 
+                    keep_subj_idx = True):
     # Define dataframe if simulator output is normal (comes out as list tuple [rts, choices, metadata])
     if len(simulator_data) == 3:
         df = pd.DataFrame(simulator_data[0].astype(np.double), columns = ['rt'])
@@ -25,7 +26,6 @@ def hddm_preprocess(simulator_data = None, subj_id = 'none', keep_negative_respo
         df = pd.DataFrame(simulator_data[0][:, 0], columns = ['rt'])
         df['response'] = simulator_data[0][:, 1].astype(int)
 
-    #df['nn_response'] = df['response']
     if not keep_negative_responses:
         df.loc[df['response'] == -1.0, 'response'] = 0.0
     
@@ -71,7 +71,6 @@ def pad_subj_id(in_str):
         prefix_str += '0' # add zeros to pad subject id to have three digits
 
     out_str = in_str[:stridx + len('.')] + prefix_str + in_str[stridx + len('.'):] #   
-    # print(out_str)
     return out_str
 
 def _add_outliers(sim_out = None, 
@@ -336,7 +335,6 @@ def simulator_stimcoding(model = 'angle',
             if 'v' in split_by:
                 id_tmp = model_config[model]['params'].index('v')
                 param_base[i, id_tmp] = drift_criterion - param_base[i, id_tmp]
-                #gt['v'] = param_base[i, id_tmp]
                 gt['dc'] = drift_criterion
    
         if i == 1:
@@ -369,7 +367,6 @@ def simulator_stimcoding(model = 'angle',
     data_out = pd.concat(dataframes)
     data_out = data_out.rename(columns = {'subj_idx': "stim"})
     data_out['subj_idx'] = 'none'
-    # print(param_base.shape)
     return (data_out, gt)
 
 def simulator_condition_effects(n_conditions = 4,
@@ -895,8 +892,6 @@ def simulator_h_c(n_subjects = 10,
         params_utilized = list(set(params_utilized))
 
         # Rest of Params
-        #print(total_param_list)
-        #print(params_utilized)
         remainder = set(total_param_list) - set(params_utilized)
         
         return remainder
@@ -908,14 +903,12 @@ def simulator_h_c(n_subjects = 10,
             Each column refers to one covariate.
         """
 
-        cov_df = pd.DataFrame(np.zeros((n_samples_by_subject, len(list(regression_covariates.keys())))), columns = [key for key in regression_covariates.keys()])
-        #print(cov_df)
+        cov_df = pd.DataFrame(np.zeros((n_samples_by_subject, len(list(regression_covariates.keys())))), 
+                              columns = [key for key in regression_covariates.keys()])
+        
         for covariate in regression_covariates.keys():
             tmp = regression_covariates[covariate]
             if tmp['type'] == 'categorical':
-                #print(cov_df)
-                #print(covariate)
-                #print(np.random.choice(np.arange(tmp['range'][0], tmp['range'][1], 1), replace =  True, size = n_samples_by_subject))
                 cov_df[covariate] = np.random.choice(np.arange(tmp['range'][0], tmp['range'][1] + 1, 1), replace =  True, size = n_samples_by_subject) / (tmp['range'][1])
             else:
                 cov_df[covariate] = np.random.uniform(low = tmp['range'][0], high = tmp['range'][1], size = n_samples_by_subject) / (tmp['range'][1])
@@ -1051,7 +1044,6 @@ def simulator_h_c(n_subjects = 10,
                         
                 # Append full data:
                 full_data.append(subj_data.copy())
-                # print(full_data)
                  
             remainder_set = 1
             regressor_set = 1
