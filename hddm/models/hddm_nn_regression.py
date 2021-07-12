@@ -1,7 +1,7 @@
 #from collections import OrderedDict
 from copy import deepcopy
 #import math
-#import numpy as np
+import numpy as np
 #import pymc as pm
 #import pandas as pd
 #from patsy import dmatrix
