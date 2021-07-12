@@ -61,7 +61,6 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
 
 wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
 
-
 ################################################################################################
 
 class KnodeRegress(kabuki.hierarchical.Knode):
@@ -82,7 +81,8 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                     args.append(parent)
 
         parents = {'args': args}
-
+        print('passed through create_node from KnodeRegress, printing parents')
+        print(parents)
         # Make sure design matrix is kosher
         #dm = dmatrix(reg['model'], data=self.data)
         #import pdb; pdb.set_trace()
@@ -250,9 +250,10 @@ class HDDMRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        includes_remainder = set(include).difference(self.reg_outcomes)
-        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
-        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
+        print('passed through _create_stochastic_knodes')
+        # includes_remainder = set(include).difference(self.reg_outcomes)
+        knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
+        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
