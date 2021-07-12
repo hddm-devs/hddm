@@ -1,14 +1,14 @@
-#from collections import OrderedDict
+from collections import OrderedDict
 from copy import deepcopy
-#import math
+import math
 import numpy as np
-#import pymc as pm
-#import pandas as pd
-#from patsy import dmatrix
-#import pickle
+import pymc as pm
+import pandas as pd
+from patsy import dmatrix
+import pickle
 
 import hddm
-#from hddm.models import HDDM
+from hddm.models import HDDM
 from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
