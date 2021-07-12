@@ -85,7 +85,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
             network_dict = {'network': self.network}
             self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(model = self.model, pdf_multiplier = self.cnn_pdf_multiplier, **network_dict)
         
-        super(HDDMnnStimCodingInherit, self).__init__(*args, **kwargs)
+        super(HDDMnnStimCoding, self).__init__(*args, **kwargs)
 
     def _create_wfpt_knode(self, knodes):
         
