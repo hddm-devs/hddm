@@ -67,7 +67,6 @@ class HDDMnnStimCoding(HDDMStimCoding):
         self.w_outlier = kwargs.pop('w_outlier', 0.1)
         self.is_informative = kwargs.pop('informative', False)
 
-
         self.nbin = kwargs.pop('nbin', 512)
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
@@ -102,3 +101,28 @@ class HDDMnnStimCoding(HDDMStimCoding):
                                    stims = self.stims,
                                    stim_col = self.stim_col,
                                    **wfpt_parents)
+
+    def __getstate__(self):
+        d = super(HDDMnnStimCoding, self).__getstate__()
+        del d['network']
+        del d['wfpt_nn']
+        #del d['wfpt_class']
+        #del d['wfpt_reg_class']
+        # for model in d['model_descrs']:
+        #     if 'link_func' in model:
+        #         print("WARNING: Will not save custom link functions.")
+        #         del model['link_func']
+        return d
+
+    def __setstate__(self, d):
+        if d['network_type'] == 'cnn':
+            d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
+            network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
+           
+        if d['network_type'] == 'mlp':
+            d['network'] = load_mlp(model = d['model'])
+            network_dict = {'network': d['network']}
+            d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+
+        super(HDDMnnStimCoding, self).__setstate__(d) 
