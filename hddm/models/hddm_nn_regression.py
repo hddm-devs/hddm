@@ -133,12 +133,12 @@ class HDDMnnRegressor(HDDMRegressor):
         if d['network_type'] == 'cnn':
             d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
             network_dict = {'network': d['network']}
-            d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
+            d['wfpt_nn_reg_class'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], **network_dict)
            
         if d['network_type'] == 'mlp':
             d['network'] = load_mlp(model = d['model'])
             network_dict = {'network': d['network']}
-            d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'],pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
 
         super(HDDMnnRegressor, self).__setstate__(d)
 
