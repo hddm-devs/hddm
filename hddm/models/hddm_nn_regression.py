@@ -202,19 +202,18 @@ class HDDMnnRegressor(HDDMRegressor):
         # print("WARNING: Custom link functions will not be loaded.")
         # for model in d['model_descrs']:
         #     model['link_func'] = lambda x: x
-
+        print('passed through HDDMnnRegressor and printing d from __set_state__')
         if d['network_type'] == 'cnn':
             d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
             network_dict = {'network': d['network']}
-            d['wfpt_nn_reg_class'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
+            d['wfpt_nn_reg_class'] = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = d['model'], pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
            
         if d['network_type'] == 'mlp':
             d['network'] = load_mlp(model = d['model'])
             network_dict = {'network': d['network']}
-            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'], **network_dict)
+            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(model = d['model'], **network_dict)
 
         super(HDDMnnRegressor, self).__setstate__(d)
-
 
     # def __getstate__(self):
     #     d = super(HDDMnn, self).__getstate__()

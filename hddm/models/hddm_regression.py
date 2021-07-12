@@ -234,7 +234,7 @@ class HDDMRegressor(HDDM):
 
     def __setstate__(self, d):
         d['wfpt_reg_class'] = deepcopy(wfpt_reg_like)
-        print('From __setstate__ print: ')
+        print('passer through HDDMRegressor and from __setstate__ print: ')
         print("WARNING: Custom link functions will not be loaded.")
         for model in d['model_descrs']:
             model['link_func'] = lambda x: x
