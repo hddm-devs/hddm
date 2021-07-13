@@ -32,6 +32,7 @@ class Infer:
 			#	self.gpuconfig.allow_soft_placement = True
 		self.saver = tf.train.Saver()
 		self.sess = tf.Session()
+		print(self.cfg.model_output)
 		ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
 		self.saver.restore(self.sess, ckpts)
 
