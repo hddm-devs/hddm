@@ -4,7 +4,7 @@
 #import numpy as np
 #import pymc as pm
 #import pandas as pd
-from patsy import dmatrix
+#from patsy import dmatrix
 #import pickle
 
 import hddm

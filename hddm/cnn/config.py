@@ -40,10 +40,10 @@ class Config(object):
         self.method_options[model](self.nBins)
 
         # select dataset
-        param_recovery_folder = os.path.join('../data/{}'.format(self.model_name),
-                                        'parameter_recovery_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.N))
+        # param_recovery_folder = os.path.join('../data/{}'.format(self.model_name),
+        #                                 'parameter_recovery_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.N))
 
-        self.inference_dataset = glob.glob('{}/*'.format(param_recovery_folder))
+        # self.inference_dataset = glob.glob('{}/*'.format(param_recovery_folder))
         
         self.dataset_dir = os.path.join(self.model_name, 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned),self.nBins,self.nDatapoints))
         self.refname = self.dataset_dir.replace('/','_')

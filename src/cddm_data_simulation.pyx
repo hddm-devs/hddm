@@ -11,7 +11,6 @@ from libc.math cimport log, sqrt, pow, fmax, atan, sin, cos, tan, M_PI, M_PI_2
 
 import numpy as np
 cimport numpy as np
-#import pandas as pd
 from time import time
 import inspect
 import pickle
@@ -36,13 +35,8 @@ cdef float random_stable(float alpha_diff):
     if alpha_diff == 1.0:
         eta = M_PI_2 # useless but kept to remain faithful to wikipedia entry
         x = (1.0 / eta) * ((M_PI_2) * tan(u))
-        # x = (1.0 / eta) * ((M_PI_2 + u) * tan(u) - log((M_PI_2 * w * cos(u)) / (M_PI_2 + u)))
     else:
-        # eta = (1.0 / alpha_diff) * atan(- chi)
         x = (sin(alpha_diff * u) / (pow(cos(u), 1 / alpha_diff))) * pow(cos(u - (alpha_diff * u)) / w, (1.0 - alpha_diff) / alpha_diff)
-        # x = pow((1.0 + chi * chi), 1.0 / (2.0 * alpha_diff)) * \
-        #        (sin(alpha_diff * (u + eta)) / pow(cos(u), 1.0 / alpha_diff)) * \
-        #        pow(cos(u - (alpha_diff * (u + eta))) / w, (1.0 - alpha_diff) / alpha_diff)
     return x
 
 cdef float[:] draw_random_stable(int n, float alpha_diff):
@@ -106,10 +100,6 @@ cdef float[:] draw_gaussian(int n):
 # DUMMY TEST SIMULATOR ------------------------------------------------------------------------
 # Simulate (rt, choice) tuples from: SIMPLE DDM -----------------------------------------------
 # Simplest algorithm
-# delete random comment
-# delete random comment 2
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
 
 def test(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
          np.ndarray[float, ndim = 1] a, # boundary separation
@@ -376,18 +366,12 @@ def ddm_flexbound(np.ndarray[float, ndim = 1] v,
     cdef Py_ssize_t k
     cdef float[:] gaussian_values = draw_gaussian(num_draws)
     cdef float[:] boundary_view = boundary
-
-    #print('boundary shape')
-    #print(boundary.shape)
-
     
     # Loop over samples
     for k in range(n_trials):
         # Precompute boundary evaluations
         boundary_params_tmp = {key: boundary_params[key][k] for key in boundary_params.keys()}
-        # print('before passed')
         if boundary_multiplicative:
-            # print('passed')
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
@@ -402,28 +386,7 @@ def ddm_flexbound(np.ndarray[float, ndim = 1] v,
                 if k == 0:
                     traj_view[0, 0] = y
 
-            # Random walker
-            # print('before passed')
-            # print('boundary_view[ix]')
-            # print(boundary[ix])
-            # print(boundary_view[ix])
-# 
-            # print('max_t')
-            # print(max_t)
-            # print('t')
-            # print(t)
-# 
-            # print('truth 1')
-            # print(y >= (-1) * boundary_view[ix])
-# 
-            # print('truth 2')
-            # print(y <= boundary_view[ix])
-# 
-            # print('truth 3')
-            # print(t <= max_t)
-
             while (y >= (-1) * boundary_view[ix]) and (y <= boundary_view[ix]) and (t_particle <= max_t):
-                # print('passed')
                 y += (v_view[k] * delta_t) + (sqrt_st * gaussian_values[m])
                 t_particle += delta_t
                 ix += 1
@@ -459,8 +422,6 @@ def ddm_flexbound(np.ndarray[float, ndim = 1] v,
 # ----------------------------------------------------------------------------------------------------
 
 # Simulate (rt, choice) tuples from: DDM WITH FLEXIBLE BOUNDARIES ------------------------------------
-# @cythonboundscheck(False)
-# @cythonwraparound(False)
 def ddm_flexbound_max(float v = 0.0,
                       float a = 1.0,
                       float z = 0.5,
@@ -561,8 +522,6 @@ def levy_flexbound(np.ndarray[float, ndim = 1] v,
                    boundary_params = {}
                    ):
 
-    #cdef int cov_length = np.max([v.size, a.size, w.size, t.size]).astype(int)
-
     # Param views:
     cdef float[:] v_view  = v
     cdef float[:] a_view = a
@@ -604,10 +563,8 @@ def levy_flexbound(np.ndarray[float, ndim = 1] v,
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
 
         # Loop over samples
@@ -715,10 +672,8 @@ def full_ddm(np.ndarray[float, ndim = 1] v, # = 0,
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary_view[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary_view[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         
         # Loop over samples
@@ -830,10 +785,8 @@ def ddm_sdv(np.ndarray[float, ndim = 1] v,
 
     # Precompute boundary evaluations
     if boundary_multiplicative:
-        # print(a)
         boundary_view[:] = np.multiply(a, boundary_fun(t = t_s, **boundary_params)).astype(DTYPE)
     else:
-        # print(a)
         boundary_view[:] = np.add(a, boundary_fun(t = t_s, **boundary_params)).astype(DTYPE)
     
     cdef float y, t_particle
@@ -967,10 +920,8 @@ def ornstein_uhlenbeck(np.ndarray[float, ndim = 1] v, # drift parameter
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
     
         # Loop over samples
@@ -1242,10 +1193,8 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k, 0], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k, 0], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
 
         for n in range(n_samples):
@@ -1378,10 +1327,8 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
     
         # Loop over samples
@@ -1554,10 +1501,8 @@ def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         
         # Loop over samples
@@ -1691,13 +1636,10 @@ def ddm_flexbound_mic2(np.ndarray[float, ndim = 1] v_h,
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
-            # print(a)
             boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
-            # print(a)
             boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
     
- 
         # Loop over samples
         for n in range(n_samples):
             t_h = 0 # reset time high dimension
