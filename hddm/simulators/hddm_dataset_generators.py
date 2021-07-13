@@ -1052,14 +1052,14 @@ def simulator_h_c(n_subjects = 10,
         parameters = full_data[model_config[model]['params']]
 
         # Run the actual simulations
-        sim_data = hddm.simulators.simulator(theta = parameters.values,
-                                             model = model,
-                                             n_samples = 1,
-                                             delta_t = 0.001, 
-                                             max_t = 20,
-                                             no_noise = False,
-                                             bin_dim = None,
-                                             bin_pointwise = False)
+        sim_data = simulator(theta = parameters.values,
+                             model = model,
+                             n_samples = 1,
+                             delta_t = 0.001, 
+                             max_t = 20,
+                             no_noise = False,
+                             bin_dim = None,
+                             bin_pointwise = False)
 
         # Post-processing
         full_data['rt'] = sim_data[0].astype(np.float64)

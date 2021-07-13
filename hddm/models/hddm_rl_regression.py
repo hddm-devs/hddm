@@ -10,7 +10,7 @@ from hddm.models import HDDM
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
-import kabuki.step_methods as steps
+#import kabuki.step_methods as steps
 
 def generate_wfpt_rl_reg_stochastic_class(wiener_params=None, sampling_method='cdf', cdf_range=(-5,5), sampling_dt=1e-4):
 
@@ -60,9 +60,7 @@ def generate_wfpt_rl_reg_stochastic_class(wiener_params=None, sampling_method='c
 
     return stoch
 
-
 wfpt_reg_like = generate_wfpt_rl_reg_stochastic_class(sampling_method='drift')
-
 
 ################################################################################################
 
@@ -286,7 +284,6 @@ class HDDMrlRegressor(HDDM):
                     reg_family['%s_subj_reg' % param] = reg_family.pop('%s_bottom' % param_lookup)
                 knodes.update(reg_family)
                 self.slice_widths[param] = .05
-
 
             reg_knode = KnodeRegress(pm.Deterministic, "%s_reg" % reg['outcome'],
                                      regressor=reg,
