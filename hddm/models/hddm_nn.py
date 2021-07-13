@@ -3,16 +3,16 @@
 """
 import hddm
 from collections import OrderedDict
-from copy import copy
-import numpy as np
+#from copy import copy
+#import numpy as np
 #import pymc
 #import wfpt
 #import pickle
 #import hickle
-from functools import partial
+#from functools import partial
 
 from kabuki.hierarchical import Knode # LOOK INTO KABUKI TO FIGURE OUT WHAT KNODE EXACTLY DOES
-from kabuki.utils import stochastic_from_dist
+#from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
