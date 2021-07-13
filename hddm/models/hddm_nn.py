@@ -150,12 +150,18 @@ class HDDMnn(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-
-        return Knode(self.wfpt_nn, 
-                     'wfpt', 
-                     observed = True, 
-                     col_name = ['response', 'rt'], # TODO: One could preprocess at initialization
-                     **wfpt_parents)
+        if self.network_type == 'mlp':
+            return Knode(self.wfpt_nn, 
+                        'wfpt', 
+                        observed = True, 
+                        col_name = ['response', 'rt'], # TODO: One could preprocess at initialization
+                        **wfpt_parents)
+        elif self.network_type == 'cnn':
+            return Knode(self.wfpt_nn, 
+                         'wfpt', 
+                         observed = True, 
+                         col_name = ['response_binned', 'rt_binned'], # TODO: One could preprocess at initialization
+                         **wfpt_parents)
 
     def __getstate__(self):
         d = super(HDDMnn, self).__getstate__()

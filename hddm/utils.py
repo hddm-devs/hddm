@@ -80,7 +80,7 @@ def bin_rts_pointwise(data,
     bins[:nbins] = np.linspace(0, max_rt, nbins)
     bins[nbins] = np.inf
     
-    data['rt_binned'] = 0 
+    data['rt_binned'] = 0
     data['rt_binned'].values.astype(np.int_)
     rt_id = data.columns.get_loc('rt')
     rt_binned_id = data.columns.get_loc('rt_binned')
