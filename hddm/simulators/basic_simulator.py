@@ -57,18 +57,12 @@ def bin_simulator_output_pointwise(out = [0, 0],
         bins[:nbins] = np.linspace(0, out[2]['max_t'], nbins)
         bins[nbins] = np.inf
 
-    cnt = 0
-    counts = np.zeros( (nbins, len(out[2]['possible_choices']) ) )
-    
-    #data_out = pd.DataFrame(np.zeros(( columns = ['rt', 'response'])
     out_copy_tmp = deepcopy(out_copy)
     for i in range(out_copy[0].shape[0]):
         for j in range(1, bins.shape[0], 1):
             if out_copy[0][i] > bins[j - 1] and out_copy[0][i] < bins[j]:
                 out_copy_tmp[0][i] = j - 1
-    out_copy = out_copy_tmp
-    #np.array(out_copy[0] / (bins[1] - bins[0])).astype(np.int32)
-    
+    out_copy = out_copy_tmp    
     out_copy[1][out_copy[1] == -1] = 0
     
     return np.concatenate([out_copy[0], out_copy[1]], axis = -1).astype(np.int32)

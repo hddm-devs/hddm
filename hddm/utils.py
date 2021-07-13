@@ -36,7 +36,7 @@ def flip_errors(data):
 
     return data
 
-def flip_errors_nn(data, network_type = 'cnn'):
+def flip_errors_nn(data, network_type = 'cnn', nbins = 512, max_rt = 10):
     """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
 
         :Arguments:
@@ -48,7 +48,11 @@ def flip_errors_nn(data, network_type = 'cnn'):
 
     """
     if network_type == 'cnn':
-        return data
+        if np.any(data['response'] != 1.0):
+            idx = data['response'] < 0
+            data.loc[idx, 'response'] = 0
+
+        return bin_rts_pointwise(data, max_rt = max_rt, nbins = nbins)
     if network_type == 'mlp':
         data = pd.DataFrame(data.copy()) # .values.astype(np.float32)
         
@@ -64,6 +68,25 @@ def flip_errors_nn(data, network_type = 'cnn'):
         idx = data['rt'] < 0.0
         data.loc[idx, 'rt'] = - data.loc[idx, 'rt']
         return data
+
+def bin_rts_pointwise(data, 
+                      max_rt = 10.,
+                      nbins = 512):
+    
+    data = pd.DataFrame(data.copy())
+    data['response_binned'] = data['response'].values.astype(np.int_)
+    
+    bins = np.zeros(nbins + 1)
+    bins[:nbins] = np.linspace(0, max_rt, nbins)
+    bins[nbins] = np.inf
+    
+    data['rt_binned'] = 0 
+    data['rt_binned'].values.astype(np.int_)
+    for i in range(data.shape[0]):
+        for j in range(1, bins.shape[0], 1):
+            if data.iloc[i]['rt'] > bins[j - 1] and data.iloc[i]['rt'] < bins[j]:
+                data.iloc[i, data.columns.get_loc('rt_binned')] = j - 1
+    return data
 
 def check_params_valid(**params):
     a = params.get('a')

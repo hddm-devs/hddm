@@ -74,8 +74,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                               w_outlier = 0,
                               **kwargs): #theta
 
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values, 
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values, 
                                                np.array([v, a, z, t], dtype = np.float32), 
                                                p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                w_outlier = w_outlier,
@@ -103,8 +103,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                                   w_outlier = 0,
                                   **kwargs): #theta
 
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values,
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values,
                                                np.array([v, a, z, t, alpha, beta], dtype = np.float32),
                                                p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                w_outlier = w_outlier,
@@ -129,8 +129,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                                w_outlier = 0,
                                **kwargs): #theta
 
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values,
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values,
                                                np.array([v, a, z, alpha, t], dtype = np.float32),
                                                p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                w_outlier = w_outlier,
@@ -156,8 +156,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                                    w_outlier = 0,
                                    **kwargs): #theta
     
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values, 
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values, 
                                                np.array([v, a, z, g, t], dtype = np.float32),
                                                p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                w_outlier = w_outlier,
@@ -184,8 +184,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                                    w_outlier = 0,
                                    **kwargs):
 
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values,
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values,
                                                np.array([v, a, z, t, sz, sv, st], dtype = np.float32),
                                                p_outlier = p_outlier,
                                                w_outlier = w_outlier,
@@ -211,8 +211,8 @@ def make_cnn_likelihood(model, pdf_multiplier = 1,  **kwargs):
                                 w_outlier = 0,
                                 **kwargs):
 
-            return hddm.wfpt.wiener_like_cnn_2(x['rt'].values,
-                                               x['response'].values,
+            return hddm.wfpt.wiener_like_cnn_2(x['rt_binned'].values,
+                                               x['response_binned'].values,
                                                np.array([v, a, z, t, theta], dtype = np.float32),
                                                p_outlier = p_outlier,
                                                w_outlier = w_outlier,
@@ -286,7 +286,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             for tmp_str in ['v', 'a', 'z', 't']:
 
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -295,8 +295,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
                 cnt += 1
 
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
                                                    data, 
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
@@ -322,7 +322,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             for tmp_str in ['v', 'a', 'z', 't', 'sz', 'sv', 'st']:
 
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -332,8 +332,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
                                                    data, 
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
@@ -360,7 +360,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             for tmp_str in ['v', 'a', 'z', 't', 'theta']:
 
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -370,8 +370,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
                                                    data, 
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
@@ -396,7 +396,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             cnt = 0
             for tmp_str in ['v', 'a', 'z', 'alpha', 't']:
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -406,8 +406,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
                                                    data, 
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
@@ -432,7 +432,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             for tmp_str in ['v', 'a', 'z', 'g', 't']:
 
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -442,8 +442,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
                                                    data, 
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
@@ -468,7 +468,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
             for tmp_str in ['v', 'a', 'z', 't', 'alpha', 'beta']:
 
                 if tmp_str in reg_outcomes:
-                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt_binned'].index].values[:, 0]
                     if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
                         print('boundary violation of regressor part')
                         return - np.inf
@@ -478,9 +478,9 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt'].values.astype(np.int_),
-                                                   value['response'].values.astype(np.int_), 
-                                                   data, 
+            return hddm.wfpt.wiener_like_reg_cnn_2(value['rt_binned'],
+                                                   value['response_binned'], 
+                                                   data,
                                                    p_outlier = p_outlier, # TODO: ACTUALLY USE THIS
                                                    w_outlier = w_outlier,
                                                    **kwargs)
