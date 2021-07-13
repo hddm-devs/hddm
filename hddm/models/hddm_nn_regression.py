@@ -83,13 +83,16 @@ class HDDMnnRegressor(HDDMRegressor):
 
         """
         # Signify as neural net class for later super() inits
-        kwargs['nn'] = True
+        self.nn = False
+        #kwargs['nn'] = True
+        print('Setting priors uninformative (LANs only work with uninformative priors for now)')
+        kwargs['informative'] = False
         self.model = kwargs.pop('model', 'ddm')
         self.w_outlier = kwargs.pop('w_outlier', 0.1)
         self.network_type = kwargs.pop('network_type', 'mlp')
         self.network = None
         self.nbin = kwargs.pop('nbin', 512)
-        self.is_informative = kwargs.pop('informative', False)
+        #self.is_informative = kwargs.pop('informative', False)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2

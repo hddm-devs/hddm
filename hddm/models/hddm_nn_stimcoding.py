@@ -60,12 +60,15 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
     """
     def __init__(self, *args, **kwargs):
-        kwargs['nn'] = True
+        self.nn = True
+        #kwargs['nn'] = True
+        print('Setting priors uninformative (LANs only work with uninformative priors for now)')
+        kwargs['informative'] = False
         self.network_type = kwargs.pop('network_type', 'mlp')
         self.network = None
         self.model = kwargs.pop('model', 'ddm')
         self.w_outlier = kwargs.pop('w_outlier', 0.1)
-        self.is_informative = kwargs.pop('informative', False)
+        #self.is_informative = kwargs.pop('informative', False)
 
         self.nbin = kwargs.pop('nbin', 512)
         if self.nbin == 512:

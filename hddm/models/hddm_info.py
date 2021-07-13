@@ -101,48 +101,30 @@ class HDDM(HDDMBase):
     """
 
     def __init__(self, *args, **kwargs):
-        # self.slice_widths = {'a':1, 't':0.01, 'a_std': 1, 't_std': 0.15, 'sz': 1.1, 'v': 1.5,
-        #                      'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
-        #                      'p_outlier':1., 'v_std': 1, 'alpha': 1.5, 'pos_alpha': 1.5}
-
-        self.slice_widths = {'a': 1, 
-                             't': 0.01, 
-                             'a_std': 1,
-                             't_std': 0.15, 
-                             'sz': 1.1, 
-                             'v': 1.5,
-                             'st': 0.1, 
-                             'sv': 0.5, # from sv = 3.00 
-                             'z_trans': 0.2, 
-                             'z': 0.1,
-                             'p_outlier': 1., 
-                             'v_std': 1, 
-                             'alpha': 1., 
-                             'dual_alpha': 1.5, 
-                             'theta': 0.1,
-                             'beta': 1.,
-                             'g': 0.5}
+        self.slice_widths = {'a': 1, 'a_std': 1, 't': 0.01, 't_std': 0.15, 'st': 0.1, 'v': 1.5, 'v_std': 1, 'sv': 0.5,  # from sv = 3.00 
+                             'z': 0.1, 'sz': 1.1, 'z_trans': 0.2, 'p_outlier': 1., 'alpha': 1., 'dual_alpha': 1.5, 'theta': 0.1, 'beta': 1., 'g': 0.5}
 
         self.emcee_dispersions = {'a':1, 't': 0.1, 'a_std': 1, 't_std': 0.15, 'sz': 1.1, 'v': 1.5,
                                   'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
                                   'p_outlier':1., 'v_std': 1, 'alpha': 1.5, 'pos_alpha': 1.5}
 
-        
-        if hasattr(self, 'is_informative'):
+        if hasattr(self, 'nn'):
             pass
         else:
-            self.is_informative = kwargs.pop('informative', True)
-        
-        #self.is_informative = kwargs.pop('informative', True)
+            self.nn = False
 
-        super(HDDM, self).__init__(*args, **kwargs)
+        self.is_informative = kwargs.pop('informative', True)
 
-        # AF ADDED ----------------------------------------------------------------------------
+        # We attach a 'model' attribute to the class which is helpful to make
+        # some the of plotting functions in the 'graphs' module work for HDDM and HDDMnn
         if not self.nn:
             if ('sv' in self.include) or ('st' in self.include) or ('sz' in self.include):
                 self.model = 'full_ddm'
             else:
                 self.model = 'ddm'
+
+        super(HDDM, self).__init__(*args, **kwargs)
+
         # -------------------------------------------------------------------------------------
 
     def _create_stochastic_knodes(self, include):
@@ -157,14 +139,6 @@ class HDDM(HDDMBase):
                 return self._create_stochastic_knodes_info(include)
             else:
                 return self._create_stochastic_knodes_noninfo(include)
-
-    # def _create_stochastic_knodes(self, include):
-    #     if self.is_informative:
-    #         return self._create_stochastic_knodes_info(include)
-    #     else:
-    #         return self._create_stochastic_knodes_noninfo(include)
-
-    # AF TODO: CREATE STOCHASTIC NODES FOR NN INFORMATIVE
 
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()
