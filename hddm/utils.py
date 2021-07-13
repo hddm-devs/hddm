@@ -82,10 +82,12 @@ def bin_rts_pointwise(data,
     
     data['rt_binned'] = 0 
     data['rt_binned'].values.astype(np.int_)
+    rt_id = data.columns.get_loc('rt')
+    rt_binned_id = data.columns.get_loc('rt_binned')
     for i in range(data.shape[0]):
         for j in range(1, bins.shape[0], 1):
-            if data.iloc[i]['rt'] > bins[j - 1] and data.iloc[i]['rt'] < bins[j]:
-                data.iloc[i, data.columns.get_loc('rt_binned')] = j - 1
+            if data.iloc[i, rt_id] > bins[j - 1] and data.iloc[i, rt_id] < bins[j]:
+                data.iloc[i, rt_binned_id] = j - 1
         print(i)
     return data
 
