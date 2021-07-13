@@ -86,6 +86,7 @@ def bin_rts_pointwise(data,
         for j in range(1, bins.shape[0], 1):
             if data.iloc[i]['rt'] > bins[j - 1] and data.iloc[i]['rt'] < bins[j]:
                 data.iloc[i, data.columns.get_loc('rt_binned')] = j - 1
+        print(i)
     return data
 
 def check_params_valid(**params):
