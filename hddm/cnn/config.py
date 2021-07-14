@@ -1,6 +1,5 @@
 import os
 import numpy as np
-import glob
 import hddm
 class Config(object):
 
@@ -26,8 +25,10 @@ class Config(object):
         else:
             self.N = 1024
 
-        self.method_options = {'ddm': self.ddm_initialize, 'angle': self.angle_initialize, 'weibull_cdf': self.weibull_initialize, 'ornstein': self.ornstein_initialize,
-                               'full_ddm': self.full_ddm_initialize, 'race_model_3': self.race_model_3_initialize, 'race_model_4': self.race_model_4_initialize,'race_model_6':self.race_model_6_initialize,
+        self.method_options = {'ddm': self.ddm_initialize, 'angle': self.angle_initialize, 
+                               'weibull_cdf': self.weibull_initialize, 'ornstein': self.ornstein_initialize, 
+                               'full_ddm': self.full_ddm_initialize, 'race_model_3': self.race_model_3_initialize, 
+                               'race_model_4': self.race_model_4_initialize, 'race_model_6': self.race_model_6_initialize,
                                'lca_3': self.lca_3_initialize, 'lca_4': self.lca_4_initialize,
                                'ddm_seq2': self.ddm_seq2_initialize,
                                'ddm_par2': self.ddm_par2_initialize,
@@ -38,45 +39,14 @@ class Config(object):
 
         # select model
         self.method_options[model](self.nBins)
-
-        # select dataset
-        # param_recovery_folder = os.path.join('../data/{}'.format(self.model_name),
-        #                                 'parameter_recovery_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.N))
-
-        # self.inference_dataset = glob.glob('{}/*'.format(param_recovery_folder))
-        
-        #self.dataset_dir = os.path.join(self.model_name, 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints))
-        #self.refname = self.dataset_dir.replace('/','_')
-
         self.checkpoint_dir = self.model_name + '_' + 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints)
-        
-        #self.train_tfrecords = self.refname+'_train.tfrecords'
-        #self.val_tfrecords = self.refname+'_val.tfrecords'
-        #self.test_tfrecords = self.refname+'_test.tfrecords'
-
-        # Specify whether or not to treat gaussian errors as isotropic
-        # This only matters for the "reverse" model
-
-        #self.full_cov_matrix = False
-        #self.model_suffix = 'full_cov' if self.full_cov_matrix else 'isotropic'
 
         # Data configuration
-        self.model_output = os.path.join(self.base_dir,
+        self.ckpt = os.path.join(self.base_dir,
                                         'cnn_models',
                                          self.checkpoint_dir, # self.refname,
                                          self.checkpoint_id)
-        
-        # with open(os.path.join(self.model_output, 'checkpoint'), 'r') as f:
-        #     ckpt_meta = f.readlines()
 
-
-        # # Checkpoint folder
-        # ckpt_meta = [x.strip().split(':')[0] + ': "' + os.path.join(hddm.__path__[0],'cnn_models', self.refname, x.strip().split(':')[-1].split('/')[-1]) + "\n" for x in ckpt_meta]
-        
-        # # For simple local check in dev environ
-        # with open(os.path.join(self.model_output, 'checkpoint'), 'w') as f:
-        #     f.writelines(ckpt_meta)
-        
         self.data_prop = {'train': 0.9, 'val': 0.05, 'test': 0.05}
         self.min_param_values = np.array([x[0] for x in self.bounds])
         self.param_range = np.array([x[1] - x[0] for x in self.bounds])
@@ -96,6 +66,7 @@ class Config(object):
         self.model_name = 'angle'
         self.param_dims = [None, 1, 5, 1]
         self.test_param_dims = [1, 1, 5, 1]
+        self.flex_param_dims = [-1, 1, 5, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
         self.checkpoint_id = 'angle_210500.ckpt-210500'
@@ -116,6 +87,7 @@ class Config(object):
         self.dataset = 'weibull_cdf_nchoices*'
         self.param_dims = [None, 1, 6, 1]
         self.test_param_dims = [1, 1, 6, 1]
+        self.flex_param_dims = [-1, 1, 6, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0.5, 5.0), (0.5, 7.0)]
         self.checkpoint_id = 'weibull_210500.ckpt-210500'
@@ -133,6 +105,7 @@ class Config(object):
         self.dataset = 'ornstein_nchoices*'
         self.param_dims = [None, 1, 5, 1]
         self.test_param_dims = [1, 1, 5, 1]
+        self.flex_param_dims = [-1, 1, 5, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (-1.0, 1.0), (0.0, 2.0)]
         self.checkpoint_id = 'ornstein_351000.ckpt-351000'
