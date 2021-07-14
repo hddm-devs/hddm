@@ -48,7 +48,7 @@ class Config(object):
         #self.dataset_dir = os.path.join(self.model_name, 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints))
         #self.refname = self.dataset_dir.replace('/','_')
 
-        self.checkpoint_dir = self.model_name + '/' + 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints)
+        self.checkpoint_dir = self.model_name + '_' + 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints)
         
         #self.train_tfrecords = self.refname+'_train.tfrecords'
         #self.val_tfrecords = self.refname+'_val.tfrecords'
