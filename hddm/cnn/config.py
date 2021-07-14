@@ -45,9 +45,11 @@ class Config(object):
 
         # self.inference_dataset = glob.glob('{}/*'.format(param_recovery_folder))
         
-        self.dataset_dir = os.path.join(self.model_name, 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned),self.nBins,self.nDatapoints))
-        self.refname = self.dataset_dir.replace('/','_')
+        #self.dataset_dir = os.path.join(self.model_name, 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints))
+        #self.refname = self.dataset_dir.replace('/','_')
 
+        self.checkpoint_dir = self.model_name + '/' + 'training_data_binned_{}_nbins_{}_n_{}'.format(int(self.isBinned), self.nBins, self.nDatapoints)
+        
         #self.train_tfrecords = self.refname+'_train.tfrecords'
         #self.val_tfrecords = self.refname+'_val.tfrecords'
         #self.test_tfrecords = self.refname+'_test.tfrecords'
@@ -61,7 +63,8 @@ class Config(object):
         # Data configuration
         self.model_output = os.path.join(self.base_dir,
                                         'cnn_models',
-                                         self.refname)
+                                         self.checkpoint_dir, # self.refname,
+                                         self.checkpoint_id)
         
         # with open(os.path.join(self.model_output, 'checkpoint'), 'r') as f:
         #     ckpt_meta = f.readlines()
@@ -95,6 +98,7 @@ class Config(object):
         self.test_param_dims = [1, 1, 5, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
+        self.checkpoint_id = 'angle_210500.ckpt-210500'
 
     def ddm_initialize(self, nbins):
         self.dataset = 'ddm_nchoices*'
@@ -105,6 +109,7 @@ class Config(object):
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.5, 2.2), (0.25, 0.75), (0.05, 1.95)] # done
         self.param_names = ['v', 'a', 'w', 'ndt']
+        self.checkpoint_id = 'ddm_210500.ckpt-210500'
 
     def weibull_initialize(self, nbins):
         self.model_name = 'weibull'
@@ -113,6 +118,7 @@ class Config(object):
         self.test_param_dims = [1, 1, 6, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0.5, 5.0), (0.5, 7.0)]
+        self.checkpoint_id = 'weibull_210500.ckpt-210500'
 
     def full_ddm_initialize(self, nbins):
         self.dataset = 'full_ddm_nchoices*'
@@ -129,6 +135,7 @@ class Config(object):
         self.test_param_dims = [1, 1, 5, 1]
         self.output_hist_dims = [None, 1, nbins, 2]
         self.bounds = [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (-1.0, 1.0), (0.0, 2.0)]
+        self.checkpoint_id = 'ornstein_351000.ckpt-351000'
 
     def ddm_seq2_initialize(self, nbins):
         self.model_name = 'ddm_seq2'
