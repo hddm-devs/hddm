@@ -33,9 +33,10 @@ class Infer:
 		self.saver = tf.train.Saver()
 		self.sess = tf.Session()
 		print(self.cfg.model_output)
-		ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
-		print('ckpts')
-		print(ckpts)
+		#ckpts = tf.train.latest_checkpoint(self.cfg.model_output)
+		#print('ckpts')
+		#print(ckpts)
+		ckpts = self.cfg.model_output
 		self.saver.restore(self.sess, ckpts)
 
 	def __getitem__(self, item):
