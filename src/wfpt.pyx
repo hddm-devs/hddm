@@ -1022,9 +1022,9 @@ def wiener_like_nn_ddm_par2(np.ndarray[float, ndim = 1] x,
                         double v_l_1,
                         double v_l_2,
                         double a,
-                        double w_h,
-                        double w_l_1,
-                        double w_l_2,
+                        double z_h,
+                        double z_l_1,
+                        double z_l_2,
                         double t,
                         double p_outlier = 0,
                         double w_outlier = 0,
@@ -1035,7 +1035,7 @@ def wiener_like_nn_ddm_par2(np.ndarray[float, ndim = 1] x,
     cdef int n_params = 8
     cdef float ll_min = -16.11809
     cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
-    data[:, :n_params] = np.tile([v_h, v_l_1, v_l_2, a, w_h, w_l_1, w_l_2, t], (size, 1)).astype(np.float32)
+    data[:, :n_params] = np.tile([v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t], (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([x, response], axis = 1)
     
     # Call to network:
@@ -1051,9 +1051,9 @@ def wiener_like_nn_ddm_par2_pdf(np.ndarray[float, ndim = 1] x,
                                         double v_l_1,
                                         double v_l_2,
                                         double a,
-                                        double w_h,
-                                        double w_l_1,
-                                        double w_l_2,
+                                        double z_h,
+                                        double z_l_1,
+                                        double z_l_2,
                                         double t,
                                         double p_outlier = 0,
                                         double w_outlier = 0,
@@ -1065,7 +1065,7 @@ def wiener_like_nn_ddm_par2_pdf(np.ndarray[float, ndim = 1] x,
     cdef int n_params = 8
     cdef float ll_min = -16.11809
     cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
-    data[:, :n_params] = np.tile([v_h, v_l_1, v_l_2, a, w_h, w_l_1, w_l_2, t], (size, 1)).astype(np.float32)
+    data[:, :n_params] = np.tile([v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t], (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([x, response], axis = 1)
 
     # Call to network:
