@@ -411,6 +411,58 @@ def make_mlp_likelihood(model,
         wfpt_nn.cdf = cdf_angle
         wfpt_nn.random = random
         return wfpt_nn
+
+    if model == 'par2':
+        def wienernn_like_par2(x,
+                               v_h,
+                               v_l_1,
+                               v_l_2,
+                               a,
+                               w_h,
+                               w_l_1,
+                               w_l_2,
+                               t,
+                               p_outlier = 0.0,
+                               w_outlier = 0.0,
+                               **kwargs):
+            """
+                LAN Log-likelihood for the ANGLE MODEL
+            """  
+
+            return hddm.wfpt.wiener_like_nn_par2(x['rt'].values,
+                                                 x['response'].values,  
+                                                 v_h,
+                                                 v_l_1,
+                                                 v_l_2,
+                                                 a,
+                                                 w_h,
+                                                 w_l_1,
+                                                 w_l_2,
+                                                 t,
+                                                 p_outlier = p_outlier,
+                                                 w_outlier = w_outlier,
+                                                 **kwargs)
+            
+        def pdf_angle(self, x):
+            rt = np.array(x, dtype = np.float32)
+            response = rt / np.abs(rt)
+            rt = np.abs(rt)
+            out = hddm.wfpt.wiener_like_nn_par2_pdf(x = rt, response = response, network = kwargs['network'], **self.parents) # **kwargs) # This may still be buggy !
+            return out
+
+        def cdf_angle(self, x):
+            # TODO: Implement the CDF method for neural networks
+            return 'Not yet implemented'
+
+        # Create wfpt class
+        wfpt_nn = stochastic_from_dist('Wienernn_' + model, partial(wienernn_like_par2, **kwargs))
+
+        wfpt_nn.pdf = pdf_angle
+        wfpt_nn.cdf_vec = None # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        wfpt_nn.cdf = cdf_angle
+        wfpt_nn.random = random
+        return wfpt_nn
+
     else:
         return 'Not implemented errror: Failed to load likelihood because the model specified is not implemented'
 
