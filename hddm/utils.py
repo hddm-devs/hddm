@@ -36,6 +36,60 @@ def flip_errors(data):
 
     return data
 
+def flip_errors_nn(data, network_type = 'cnn', nbins = 512, max_rt = 10):
+    """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
+
+        :Arguments:
+            data : numpy.recarray
+                Input array with at least one column named 'RT' and one named 'response'
+        :Returns:
+            data : numpy.recarray
+                Input array with RTs sign flipped where 'response' < 0
+
+    """
+    if network_type == 'cnn':
+        if np.any(data['response'] != 1.0):
+            idx = data['response'] < 0
+            data.loc[idx, 'response'] = 0
+
+        return bin_rts_pointwise(data, max_rt = max_rt, nbins = nbins)
+    if network_type == 'mlp':
+        data = pd.DataFrame(data.copy()) # .values.astype(np.float32)
+        
+        data['response'] = data['response'].values.astype(np.float32)
+        data['rt'] = data['rt'].values.astype(np.float32)
+
+        if np.any(data['response'] != 1.0):
+            idx = data['response'] < 1.0
+            data.loc[idx, 'response'] = -1.0
+
+        # Copy data
+        # Flip sign for lower boundary response
+        idx = data['rt'] < 0.0
+        data.loc[idx, 'rt'] = - data.loc[idx, 'rt']
+        return data
+
+def bin_rts_pointwise(data, 
+                      max_rt = 10.,
+                      nbins = 512):
+    
+    data = pd.DataFrame(data.copy())
+    data['response_binned'] = data['response'].values.astype(np.int_)
+    
+    bins = np.zeros(nbins + 1)
+    bins[:nbins] = np.linspace(0, max_rt, nbins)
+    bins[nbins] = np.inf
+    
+    data['rt_binned'] = 0
+    data['rt_binned'].values.astype(np.int_)
+    rt_id = data.columns.get_loc('rt')
+    rt_binned_id = data.columns.get_loc('rt_binned')
+    for i in range(data.shape[0]):
+        for j in range(1, bins.shape[0], 1):
+            if data.iloc[i, rt_id] > bins[j - 1] and data.iloc[i, rt_id] < bins[j]:
+                data.iloc[i, rt_binned_id] = j - 1
+    return data
+
 def check_params_valid(**params):
     a = params.get('a')
     v = params.get('v')
@@ -50,7 +104,6 @@ def check_params_valid(**params):
         return False
     else:
         return True
-
 
 def EZ_subjs(data):
     params = {}
@@ -534,28 +587,6 @@ def qp_plot(x, groupby=None, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None, dr
 
     return ax
 
-    #create axes for subjects
-    n_subjs = len(data.subj_idx.unique())
-    if ncols is None:
-        ncols = min(4, n_subjs)
-    nrows = int(np.ceil(n_subjs / ncols))
-    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
-
-    #plot single subject model
-    for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
-        points = np.zeros((nq, len(stats)*2))
-        p = np.zeros(len(stats)*2)
-        for i_key, (key, cond_data) in enumerate(stats.items()):
-            points[:,i_key*2] = cond_data[subj_idx][0]
-            points[:,i_key*2+1] = cond_data[subj_idx][1]
-            p[i_key*2] = 1 - cond_data[subj_idx][2]
-            p[i_key*2+1] = cond_data[subj_idx][2]
-
-        ax = axs.item(i_subj)
-        _points_to_qp_plot(points, p, ax, draw_lines)
-        ax.set_title(subj_idx)
-
-
 def _points_to_qp_plot(points, p, ax, draw_lines):
     """
     plot the points created by the qp_plot function
@@ -568,8 +599,6 @@ def _points_to_qp_plot(points, p, ax, draw_lines):
         ax.plot(p, points[i_q,:], fmt, c='b')
 
     ax.set_xlim(0, 1)
-
-
 
 def _qp_plot_model(model, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9), ncols=None):
     """
@@ -664,6 +693,10 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     q_upper = mquantiles(data[data>0], quantiles)
 
     return q_lower, q_upper, p_upper
+
+def posterior_predictive_dataprocessor_nn(x):
+    print(x)
+    return x[:, 1] * x[:, 0]
 
 if __name__ == "__main__":
     import doctest

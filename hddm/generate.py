@@ -9,7 +9,6 @@ from numpy.random import rand
 from scipy.stats import uniform, norm
 from copy import copy
 
-
 def gen_single_params_set(include=()):
     """Returns a dict of DDM parameters with random values for a singel conditin
     the function is used by gen_rand_params.

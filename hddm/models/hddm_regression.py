@@ -61,16 +61,18 @@ def generate_wfpt_reg_stochastic_class(wiener_params=None, sampling_method='cdf'
 
 wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method='drift')
 
-
 ################################################################################################
 
 class KnodeRegress(kabuki.hierarchical.Knode):
     def __init__(self, *args, **kwargs):
+        # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop('keep_regressor_trace', False)
+        # Initialize kabuki.hierarchical.Knode
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
         reg = kwargs['regressor']
+        
         # order parents according to user-supplied args
         args = []
         for arg in reg['params']:
@@ -79,7 +81,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                     args.append(parent)
 
         parents = {'args': args}
-
+        
         # Make sure design matrix is kosher
         #dm = dmatrix(reg['model'], data=self.data)
         #import pdb; pdb.set_trace()
@@ -92,11 +94,11 @@ class KnodeRegress(kabuki.hierarchical.Knode):
                  knode_data=data):
             # convert parents to matrix
             params = np.matrix(args)
-            #import pdb; pdb.set_trace()
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError('Missing columns in design matrix. You need data for all conditions for all subjects.')
+            
             predictor = link_func(design_matrix.dot(params.T)[0])
 
             return predictor
@@ -220,6 +222,7 @@ class HDDMRegressor(HDDM):
         del d['wfpt_reg_class']
         for model in d['model_descrs']:
             if 'link_func' in model:
+                print('From __get_state__ print:')
                 print("WARNING: Will not save custom link functions.")
                 del model['link_func']
         return d
@@ -240,7 +243,10 @@ class HDDMRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
+
+        # includes_remainder = set(include).difference(self.reg_outcomes)
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(include.difference(self.reg_outcomes))
+        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept

@@ -1,0 +1,12 @@
+NumPy>=1.6.0
+SciPy>=0.6.0
+kabuki>=0.6.0
+PyMC>=2.3.3
+pandas>=0.12.0
+patsy
+seaborn>=0.11.0
+statsmodels>=0.12.0
+tensorflow==1.15
+h5py==2.10.0
+tqdm>=4.1.0
+scikit-learn>=0.24
