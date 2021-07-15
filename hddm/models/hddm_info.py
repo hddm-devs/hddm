@@ -132,6 +132,7 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes(self, include):
         if self.nn:
             if self.is_informative:
+                print('Informative Priors are not yet implemented')
                 return 'Informative Priors are not yet implementend for LANs, coming soon!'
             else:
                 return self._create_stochastic_knodes_nn_noninfo(include)
@@ -489,7 +490,6 @@ class HDDM(HDDMBase):
                                                 std_upper = 1.5
                                                 ))
 
-
             if 'v_l_1' in include:
                 tmp_param = 'v_l_1'
                 knodes.update(self._create_family_trunc_normal(tmp_param, 
@@ -507,7 +507,6 @@ class HDDM(HDDMBase):
                                 value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
                                 std_upper = 1.5
                                 ))
-
 
             if 'z_h' in include:
                 tmp_param = 'z_h'
