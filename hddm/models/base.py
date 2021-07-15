@@ -761,7 +761,9 @@ class HDDMBase(AccumulatorModel):
             self.include = set()
             [self.include.add(param) for param in include]
 
-        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 'dual_alpha', 'theta', 'alpha', 'beta', 'g', 'alpha_diff', 'z_h', 'z_l_1', 'z_l_2', 'v_h', 'v_l_1', 'v_l_2')
+        possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 
+                               'dual_alpha', 'theta', 'alpha', 'beta', 'g', 'alpha_diff', 
+                               'z_h', 'z_l_1', 'z_l_2', 'v_h', 'v_l_1', 'v_l_2')
         assert self.include.issubset(possible_parameters), """Received an invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
@@ -832,6 +834,7 @@ class HDDMBase(AccumulatorModel):
 
             # N CHOICE SSM -----------------------------------------------------------------------------------------------------
             else:
+                print('passing through: _create_wfpt_parents_dict --> ddm_par2')
                 if self.model == 'ddm_par2':
                     wfpt_parents['v_h'] =  knodes['v_h_bottom'] if 'v_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_h')]
                     wfpt_parents['v_l_1'] = knodes['v_l_1_bottom'] if 'v_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_l_1')]
