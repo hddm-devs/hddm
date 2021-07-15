@@ -40,8 +40,8 @@ def load_mlp(model = 'ddm'):
     if model == 'ddm_sdv_analytic:':
         return keras.models.load_model(hddm.keras_models.__path__[0] + '/model_final_ddm_sdv_analytic.h5', compile = False)
     
-    if model == 'par2':
-        return keras.model.load_model(hddm.keras_models.__path__[0] + '/model_final_par2.h5', compile = False)
-        
+    if model == 'ddm_par2':
+        return keras.model.load_model(hddm.keras_models.__path__[0] + '/model_final_ddm_par2.h5', compile = False)
+
     else:
         return 'Model is not known'

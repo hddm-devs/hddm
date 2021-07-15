@@ -413,7 +413,7 @@ def make_mlp_likelihood(model,
         return wfpt_nn
 
     if model == 'par2':
-        def wienernn_like_par2(x,
+        def wienernn_like_ddm_par2(x,
                                v_h,
                                v_l_1,
                                v_l_2,
@@ -429,7 +429,7 @@ def make_mlp_likelihood(model,
                 LAN Log-likelihood for the ANGLE MODEL
             """  
 
-            return hddm.wfpt.wiener_like_nn_par2(x['rt'].values,
+            return hddm.wfpt.wiener_like_nn_ddm_par2(x['rt'].values,
                                                  x['response'].values,  
                                                  v_h,
                                                  v_l_1,
@@ -447,7 +447,7 @@ def make_mlp_likelihood(model,
             rt = np.array(x, dtype = np.float32)
             response = rt / np.abs(rt)
             rt = np.abs(rt)
-            out = hddm.wfpt.wiener_like_nn_par2_pdf(x = rt, response = response, network = kwargs['network'], **self.parents) # **kwargs) # This may still be buggy !
+            out = hddm.wfpt.wiener_like_nn_ddm_par2_pdf(x = rt, response = response, network = kwargs['network'], **self.parents) # **kwargs) # This may still be buggy !
             return out
 
         def cdf_angle(self, x):
@@ -455,7 +455,7 @@ def make_mlp_likelihood(model,
             return 'Not yet implemented'
 
         # Create wfpt class
-        wfpt_nn = stochastic_from_dist('Wienernn_' + model, partial(wienernn_like_par2, **kwargs))
+        wfpt_nn = stochastic_from_dist('Wienernn_' + model, partial(wienernn_like_ddm_par2, **kwargs))
 
         wfpt_nn.pdf = pdf_angle
         wfpt_nn.cdf_vec = None # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
@@ -790,8 +790,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
         stoch = stochastic_from_dist('wfpt_reg', partial(wiener_multi_like_nn_weibull, **kwargs))
         stoch.random = random
 
-    if model == 'par2': # So far placeholder --> not cnn trained yet for this model
-        def wiener_multi_like_nn_par2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t, 
+    if model == 'ddm_par2': # So far placeholder --> not cnn trained yet for this model
+        def wiener_multi_like_nn_ddm_par2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t, 
                                       reg_outcomes, 
                                       p_outlier = 0, 
                                       w_outlier = 0.1,
@@ -824,12 +824,12 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
                 cnt += 1
 
             # Has optimization potential --> AF-TODO: For next version!
-            return hddm.wfpt.wiener_like_multi_nn_par2(data,
+            return hddm.wfpt.wiener_like_multi_nn_ddm_par2(data,
                                                        p_outlier = p_outlier,
                                                        w_outlier = w_outlier,
                                                        **kwargs)
 
-        stoch = stochastic_from_dist('wfpt_reg', partial(wiener_multi_like_nn_par2, **kwargs))
+        stoch = stochastic_from_dist('wfpt_reg', partial(wiener_multi_like_nn_ddm_par2, **kwargs))
         stoch.random = random
     return stoch
 

@@ -479,7 +479,7 @@ class HDDM(HDDMBase):
                                                                std_upper = 1.0
                                                                ))
 
-        if self.model == 'par2':
+        if self.model == 'ddm_par2':
             if 'v_h' in include:
                 tmp_param = 'v_h'
                 knodes.update(self._create_family_trunc_normal(tmp_param, 
