@@ -510,7 +510,7 @@ class HDDM(HDDMBase):
 
             if 'z_h' in include:
                 tmp_param = 'z_h'
-                knodes.update(self._create_family_invlogit('z_h',
+                knodes.update(self._create_family_invlogit(tmp_param,
                                                            g_tau = 10**-2,
                                                            std_std = 0.5,
                                                            lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
@@ -520,7 +520,7 @@ class HDDM(HDDMBase):
 
             if 'z_l_1' in include:
                 tmp_param = 'z_l_1'
-                knodes.update(self._create_family_invlogit('z_l_1',
+                knodes.update(self._create_family_invlogit(tmp_param,
                                             g_tau = 10**-2,
                                             std_std = 0.5,
                                             lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
@@ -530,7 +530,7 @@ class HDDM(HDDMBase):
 
             if 'z_l_2' in include:
                 tmp_param = 'z_l_2'
-                knodes.update(self._create_family_invlogit('z_l_2',
+                knodes.update(self._create_family_invlogit(tmp_param,
                                             g_tau = 10**-2,
                                             std_std = 0.5,
                                             lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
@@ -540,7 +540,7 @@ class HDDM(HDDMBase):
 
             if 'a' in include:
                 tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
+                knodes.update(self._create_family_trunc_normal(tmp_param,
                                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
                                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
                                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
@@ -549,7 +549,7 @@ class HDDM(HDDMBase):
 
             if 't' in include:
                 tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
+                knodes.update(self._create_family_trunc_normal(tmp_param, 
                                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
                                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
                                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],

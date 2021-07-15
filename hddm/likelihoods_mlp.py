@@ -412,7 +412,7 @@ def make_mlp_likelihood(model,
         wfpt_nn.random = random
         return wfpt_nn
 
-    if model == 'par2':
+    if model == 'ddm_par2':
         def wienernn_like_ddm_par2(x,
                                v_h,
                                v_l_1,
