@@ -789,5 +789,47 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model = None,
 
         stoch = stochastic_from_dist('wfpt_reg', partial(wiener_multi_like_nn_weibull, **kwargs))
         stoch.random = random
+
+    if model == 'par2': # So far placeholder --> not cnn trained yet for this model
+        def wiener_multi_like_nn_par2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t, 
+                                      reg_outcomes, 
+                                      p_outlier = 0, 
+                                      w_outlier = 0.1,
+                                      **kwargs):
+
+            """
+                LAN Log-likelihood for the WEIBULL MODEL
+            """  
+
+            params = {'v_h': v_h, 'v_l_1': v_l_1, 'v_l_2': v_l_2,
+                      'a': a, 'z_h': z_h, 'z_l_1': z_l_1, 'z_l_2': z_l_2,
+                      't': t}
+            n_params = int(8)
+            size = int(value.shape[0])
+            data = np.zeros((size, 10), dtype = np.float32)
+            data[:, n_params:] = np.stack([ np.absolute(value['rt']).astype(np.float32), value['response'].astype(np.float32) ], axis = 1)
+
+            cnt = 0
+            for tmp_str in ['v_h', 'v_l_1', 'v_l_2', 'a', 'z_h', 'z_l_1', 'z_l_2', 't']:
+
+                if tmp_str in reg_outcomes:
+                    #data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
+                    data[:, cnt] = params[tmp_str].loc[value['rt'].index].values
+                    if (data[:, cnt].min() < model_config[model]['param_bounds'][0][cnt]) or (data[:, cnt].max() > model_config[model]['param_bounds'][1][cnt]):
+                        print('boundary violation of regressor part')
+                        return - np.inf
+                else:
+                    data[:, cnt] = params[tmp_str]
+
+                cnt += 1
+
+            # Has optimization potential --> AF-TODO: For next version!
+            return hddm.wfpt.wiener_like_multi_nn_par2(data,
+                                                       p_outlier = p_outlier,
+                                                       w_outlier = w_outlier,
+                                                       **kwargs)
+
+        stoch = stochastic_from_dist('wfpt_reg', partial(wiener_multi_like_nn_par2, **kwargs))
+        stoch.random = random
     return stoch
 
