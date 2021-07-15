@@ -763,7 +763,7 @@ class HDDMBase(AccumulatorModel):
 
         possible_parameters = ('v', 'a', 't', 'z', 'st', 'sz', 'sv', 'p_outlier', 
                                'dual_alpha', 'theta', 'alpha', 'beta', 'g', 'alpha_diff', 
-                               'z_h', 'z_l_1', 'z_l_2', 'v_h', 'v_l_1', 'v_l_2')
+                               'z_h', 'z_l_1', 'z_l_2', 'v_h', 'v_l_1', 'v_l_2', 'd')
         assert self.include.issubset(possible_parameters), """Received an invalid parameter using the 'include' keyword.
         parameters received: %s
         parameters allowed: %s """ % (tuple(self.include), possible_parameters)
@@ -843,6 +843,25 @@ class HDDMBase(AccumulatorModel):
                     wfpt_parents['z_h'] = knodes['z_h_bottom'] if 'z_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_h')]
                     wfpt_parents['z_l_1'] = knodes['z_l_1_bottom'] if 'z_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_1')]
                     wfpt_parents['z_l_2'] = knodes['z_l_2_bottom'] if 'z_l_2' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_2')]
+                    wfpt_parents['t'] = knodes['t_bottom'] if 't' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('t')]
+                if self.model == 'ddm_seq2':
+                    wfpt_parents['v_h'] =  knodes['v_h_bottom'] if 'v_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_h')]
+                    wfpt_parents['v_l_1'] = knodes['v_l_1_bottom'] if 'v_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_l_1')]
+                    wfpt_parents['v_l_2'] = knodes['v_l_2_bottom'] if 'v_l_2' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_l_2')]
+                    wfpt_parents['a'] = knodes['a_bottom'] if 'a' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('a')]
+                    wfpt_parents['z_h'] = knodes['z_h_bottom'] if 'z_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_h')]
+                    wfpt_parents['z_l_1'] = knodes['z_l_1_bottom'] if 'z_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_1')]
+                    wfpt_parents['z_l_2'] = knodes['z_l_2_bottom'] if 'z_l_2' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_2')]
+                    wfpt_parents['t'] = knodes['t_bottom'] if 't' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('t')]
+                if self.model == 'ddm_mic2':
+                    wfpt_parents['v_h'] =  knodes['v_h_bottom'] if 'v_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_h')]
+                    wfpt_parents['v_l_1'] = knodes['v_l_1_bottom'] if 'v_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_l_1')]
+                    wfpt_parents['v_l_2'] = knodes['v_l_2_bottom'] if 'v_l_2' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('v_l_2')]
+                    wfpt_parents['a'] = knodes['a_bottom'] if 'a' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('a')]
+                    wfpt_parents['z_h'] = knodes['z_h_bottom'] if 'z_h' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_h')]
+                    wfpt_parents['z_l_1'] = knodes['z_l_1_bottom'] if 'z_l_1' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_1')]
+                    wfpt_parents['z_l_2'] = knodes['z_l_2_bottom'] if 'z_l_2' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('z_l_2')]
+                    wfpt_parents['d'] = knodes['d_bottom'] if 'd' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('d')]
                     wfpt_parents['t'] = knodes['t_bottom'] if 't' in self.include else model_config[self.model]['default_params'][model_config[self.model]['params'].index('t')]
             # ------------------------------------------------------------------------------------------------------------------
 

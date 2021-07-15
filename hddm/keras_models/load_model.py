@@ -43,5 +43,11 @@ def load_mlp(model = 'ddm'):
     if model == 'ddm_par2':
         return keras.models.load_model(hddm.keras_models.__path__[0] + '/model_final_ddm_par2.h5', compile = False)
 
+    if model == 'ddm_seq2':
+        return keras.models.load_model(hddm.keras_models.__path__[0] + '/model_final_ddm_seq2.h5', compile = False)
+
+    if model == 'ddm_mic2':
+        return keras.models.load_model(hddm.keras_models.__path__[0] + '/model_final_ddm_mic2.h5', compile = False)
+    
     else:
         return 'Model is not known'
