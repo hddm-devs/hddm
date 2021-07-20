@@ -4,6 +4,7 @@ import numpy as np
 from kabuki.hierarchical import Knode
 from hddm.models import HDDM
 
+
 class HDDMStimCoding(HDDM):
     """HDDM model that can be used when stimulus coding and estimation
     of bias (i.e. displacement of starting point z) is required.
@@ -29,23 +30,28 @@ class HDDMStimCoding(HDDM):
             Requires split_param='v' to be set.
 
     """
-    def __init__(self, *args, **kwargs):
-        self.stim_col = kwargs.pop('stim_col', 'stim')
-        self.split_param = kwargs.pop('split_param', 'z')
-        self.drift_criterion = kwargs.pop('drift_criterion', False)
 
-        if self.split_param == 'z':
-            assert not self.drift_criterion, "Setting drift_criterion requires split_param='v'."
+    def __init__(self, *args, **kwargs):
+        self.stim_col = kwargs.pop("stim_col", "stim")
+        self.split_param = kwargs.pop("split_param", "z")
+        self.drift_criterion = kwargs.pop("drift_criterion", False)
+
+        if self.split_param == "z":
+            assert (
+                not self.drift_criterion
+            ), "Setting drift_criterion requires split_param='v'."
             print("Setting model to be non-informative")
-            kwargs['informative'] = False
-            if 'include' in kwargs and 'z' not in kwargs['include']:
-                kwargs['include'].append('z')
+            kwargs["informative"] = False
+            if "include" in kwargs and "z" not in kwargs["include"]:
+                kwargs["include"].append("z")
             else:
-                kwargs['include'] = ['z']
+                kwargs["include"] = ["z"]
             print("Adding z to includes.")
 
         self.stims = np.asarray(np.sort(np.unique(args[0][self.stim_col])))
-        assert len(self.stims) == 2, "%s must contain two stimulus types" % self.stim_col
+        assert len(self.stims) == 2, (
+            "%s must contain two stimulus types" % self.stim_col
+        )
 
         super(HDDMStimCoding, self).__init__(*args, **kwargs)
 
@@ -53,37 +59,42 @@ class HDDMStimCoding(HDDM):
         knodes = super(HDDMStimCoding, self)._create_stochastic_knodes(include)
         if self.drift_criterion:
             # Add drift-criterion parameter
-            knodes.update(self._create_family_normal_normal_hnormal('dc',
-                                                                    value=0,
-                                                                    g_mu=0,
-                                                                    g_tau=3**-2,
-                                                                    std_std=2))
+            knodes.update(
+                self._create_family_normal_normal_hnormal(
+                    "dc", value=0, g_mu=0, g_tau=3 ** -2, std_std=2
+                )
+            )
 
         return knodes
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMStimCoding, self)._create_wfpt_parents_dict(knodes)
         if self.drift_criterion:
-            wfpt_parents['dc'] = knodes['dc_bottom']
+            wfpt_parents["dc"] = knodes["dc_bottom"]
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         # Here we use a special Knode (see below) that either inverts v or z
         # depending on what the correct stimulus was for that trial type.
-        return KnodeWfptStimCoding(self.wfpt_class, 'wfpt',
-                                   observed=True, col_name='rt',
-                                   depends=[self.stim_col],
-                                   split_param=self.split_param,
-                                   stims=self.stims,
-                                   stim_col=self.stim_col,
-                                   **wfpt_parents)
+        return KnodeWfptStimCoding(
+            self.wfpt_class,
+            "wfpt",
+            observed=True,
+            col_name="rt",
+            depends=[self.stim_col],
+            split_param=self.split_param,
+            stims=self.stims,
+            stim_col=self.stim_col,
+            **wfpt_parents
+        )
+
 
 class KnodeWfptStimCoding(Knode):
     def __init__(self, *args, **kwargs):
-        self.split_param = kwargs.pop('split_param')
-        self.stims = kwargs.pop('stims')
-        self.stim_col = kwargs.pop('stim_col')
+        self.split_param = kwargs.pop("split_param")
+        self.stims = kwargs.pop("stims")
+        self.stim_col = kwargs.pop("stim_col")
 
         super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
 
@@ -94,19 +105,23 @@ class KnodeWfptStimCoding(Knode):
         # following lines check if the variable stim is equal to the
         # value of stim for which z' = 1-z and transforms z if this is
         # the case (similar to v)
-        dc = kwargs.pop('dc', None)
-        if all(data[self.stim_col] == self.stims[0]): # AF-COMMENT: Should this be reversed? -> self.stims[1]
-            if self.split_param == 'z':
-                kwargs['z'] = 1-kwargs['z']
-            elif self.split_param == 'v' and dc is None:
-                kwargs['v'] = -kwargs['v']
-            elif self.split_param == 'v' and dc != 0:
-                kwargs['v'] = -kwargs['v'] + dc
+        dc = kwargs.pop("dc", None)
+        if all(
+            data[self.stim_col] == self.stims[0]
+        ):  # AF-COMMENT: Should this be reversed? -> self.stims[1]
+            if self.split_param == "z":
+                kwargs["z"] = 1 - kwargs["z"]
+            elif self.split_param == "v" and dc is None:
+                kwargs["v"] = -kwargs["v"]
+            elif self.split_param == "v" and dc != 0:
+                kwargs["v"] = -kwargs["v"] + dc
             else:
-                raise ValueError('split_var must be either v or z, but is %s' % self.split_var)
+                raise ValueError(
+                    "split_var must be either v or z, but is %s" % self.split_var
+                )
 
             return self.pymc_node(name, **kwargs)
         else:
             if dc is not None:
-                kwargs['v'] = kwargs['v'] + dc
+                kwargs["v"] = kwargs["v"] + dc
             return self.pymc_node(name, **kwargs)

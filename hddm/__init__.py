@@ -1,15 +1,15 @@
 #!/usr/bin/python
 
-__docformat__ = 'restructuredtext'
+__docformat__ = "restructuredtext"
 
-__version__ = '0.9.0'
+__version__ = "0.9.0"
 
 from . import likelihoods
 from . import likelihoods_mlp
 from . import likelihoods_cnn
 from . import generate
 from . import utils
-from . import graphs
+from . import plotting
 from . import network_inspectors
 from . import models
 from . import simulators
@@ -28,6 +28,10 @@ except ImportError:
 from kabuki.utils import load_csv, save_csv, load
 
 try:
-    from IPython.core.debugger import Tracer; debug_here = Tracer()
+    from IPython.core.debugger import Tracer
+
+    debug_here = Tracer()
 except:
-    def debug_here(): pass
+
+    def debug_here():
+        pass

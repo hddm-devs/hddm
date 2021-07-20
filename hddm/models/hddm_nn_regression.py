@@ -1,35 +1,45 @@
-#from collections import OrderedDict
-#from copy import deepcopy
-#import math
-#import numpy as np
-#import pymc as pm
-#import pandas as pd
-#from patsy import dmatrix
-#import pickle
+# from collections import OrderedDict
+# from copy import deepcopy
+# import math
+# import numpy as np
+# import pymc as pm
+# import pandas as pd
+# from patsy import dmatrix
+# import pickle
 
 import hddm
-#from hddm.models import HDDM
+
+# from hddm.models import HDDM
 from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
-#from hddm.models.hddm_regression import KnodeRegress
 
-#import kabuki
+# from hddm.models.hddm_regression import KnodeRegress
+
+# import kabuki
 from kabuki import Knode
-#from kabuki.utils import stochastic_from_dist
-#import kabuki.step_methods as steps
 
-#from functools import partial
-#import wfpt
+# from kabuki.utils import stochastic_from_dist
+# import kabuki.step_methods as steps
+
+# from functools import partial
+# import wfpt
 class HDDMnnRegressor(HDDMRegressor):
     """HDDMnnRegressor allows estimation of the NNDDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
     """
 
-    def __init__(self, data, models, group_only_regressors = True, keep_regressor_trace = False, **kwargs):
+    def __init__(
+        self,
+        data,
+        models,
+        group_only_regressors=True,
+        keep_regressor_trace=False,
+        **kwargs
+    ):
         """Instantiate a regression model, with neural network based likelihoods.
-        
+
         :Arguments:
 
             * data : pandas.DataFrame
@@ -84,15 +94,17 @@ class HDDMnnRegressor(HDDMRegressor):
         """
         # Signify as neural net class for later super() inits
         self.nn = False
-        #kwargs['nn'] = True
-        print('Setting priors uninformative (LANs only work with uninformative priors for now)')
-        kwargs['informative'] = False
-        self.model = kwargs.pop('model', 'ddm')
-        self.w_outlier = kwargs.pop('w_outlier', 0.1)
-        self.network_type = kwargs.pop('network_type', 'mlp')
+        # kwargs['nn'] = True
+        print(
+            "Setting priors uninformative (LANs only work with uninformative priors for now)"
+        )
+        kwargs["informative"] = False
+        self.model = kwargs.pop("model", "ddm")
+        self.w_outlier = kwargs.pop("w_outlier", 0.1)
+        self.network_type = kwargs.pop("network_type", "mlp")
         self.network = None
-        self.nbin = kwargs.pop('nbin', 512)
-        #self.is_informative = kwargs.pop('informative', False)
+        self.nbin = kwargs.pop("nbin", 512)
+        # self.is_informative = kwargs.pop('informative', False)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
@@ -100,46 +112,66 @@ class HDDMnnRegressor(HDDMRegressor):
             self.cnn_pdf_multiplier = 25.6
 
         # Load Network
-        if self.network_type == 'mlp':
-            self.network = load_mlp(model = self.model)
-            network_dict = {'network': self.network}
+        if self.network_type == "mlp":
+            self.network = load_mlp(model=self.model)
+            network_dict = {"network": self.network}
             # Make likelihood function
-            self.wfpt_nn_reg_class = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
+            self.wfpt_nn_reg_class = (
+                hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(
+                    model=self.model, **network_dict
+                )
+            )
 
-        if self.network_type == 'cnn':
-            self.network = load_cnn(model = self.model, nbin = self.nbin)
-            network_dict = {'network': self.network}
+        if self.network_type == "cnn":
+            self.network = load_cnn(model=self.model, nbin=self.nbin)
+            network_dict = {"network": self.network}
             # Make likelihood function
-            self.wfpt_nn_reg_class = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = self.model, **network_dict)
-        
-        super(HDDMnnRegressor, self).__init__(data, models, group_only_regressors, keep_regressor_trace, **kwargs)
+            self.wfpt_nn_reg_class = (
+                hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(
+                    model=self.model, **network_dict
+                )
+            )
+
+        super(HDDMnnRegressor, self).__init__(
+            data, models, group_only_regressors, keep_regressor_trace, **kwargs
+        )
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
-        return Knode(self.wfpt_nn_reg_class,
-                     'wfpt',
-                     observed = True,
-                     col_name = ['response', 'rt'],
-                     reg_outcomes = self.reg_outcomes,
-                     **wfpt_parents)
- 
+        return Knode(
+            self.wfpt_nn_reg_class,
+            "wfpt",
+            observed=True,
+            col_name=["response", "rt"],
+            reg_outcomes=self.reg_outcomes,
+            **wfpt_parents
+        )
+
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
         d = super(HDDMnnRegressor, self).__getstate__()
-        del d['network']
-        del d['wfpt_nn_reg_class']
+        del d["network"]
+        del d["wfpt_nn_reg_class"]
         return d
 
     def __setstate__(self, d):
-        if d['network_type'] == 'cnn':
-            d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
-            network_dict = {'network': d['network']}
-            d['wfpt_nn_reg_class'] = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(model = d['model'], pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
-           
-        if d['network_type'] == 'mlp':
-            d['network'] = load_mlp(model = d['model'])
-            network_dict = {'network': d['network']}
-            d['wfpt_nn_reg_class'] = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(model = d['model'], **network_dict)
+        if d["network_type"] == "cnn":
+            d["network"] = load_cnn(model=d["model"], nbin=d["nbin"])
+            network_dict = {"network": d["network"]}
+            d[
+                "wfpt_nn_reg_class"
+            ] = hddm.likelihoods_cnn.generate_wfpt_nn_ddm_reg_stochastic_class(
+                model=d["model"], pdf_multiplier=d["cnn_pdf_multiplier"], **network_dict
+            )
+
+        if d["network_type"] == "mlp":
+            d["network"] = load_mlp(model=d["model"])
+            network_dict = {"network": d["network"]}
+            d[
+                "wfpt_nn_reg_class"
+            ] = hddm.likelihoods_mlp.generate_wfpt_nn_ddm_reg_stochastic_class(
+                model=d["model"], **network_dict
+            )
 
         super(HDDMnnRegressor, self).__setstate__(d)

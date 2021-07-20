@@ -1,25 +1,28 @@
-
 """
 """
 import hddm
 from collections import OrderedDict
-#from copy import copy
-#import numpy as np
-#import pymc
-#import wfpt
-#import pickle
-#import hickle
-#from functools import partial
 
-from kabuki.hierarchical import Knode # LOOK INTO KABUKI TO FIGURE OUT WHAT KNODE EXACTLY DOES
-#from kabuki.utils import stochastic_from_dist
+# from copy import copy
+# import numpy as np
+# import pymc
+# import wfpt
+# import pickle
+# import hickle
+# from functools import partial
+
+from kabuki.hierarchical import (
+    Knode,
+)  # LOOK INTO KABUKI TO FIGURE OUT WHAT KNODE EXACTLY DOES
+
+# from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
 
 
 class HDDMnn(HDDM):
-    """ HDDM model class that uses neural network based likelihoods to include a variety of other models.
+    """HDDM model class that uses neural network based likelihoods to include a variety of other models.
 
     :Arguments:
         data : pandas.DataFrame
@@ -36,9 +39,9 @@ class HDDMnn(HDDM):
         model: str <default='ddm>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
-        
+
         network_type: str <default='mlp>
-            String that defines which kind of network to use for the likelihoods. There are currently two 
+            String that defines which kind of network to use for the likelihoods. There are currently two
             options: 'mlp', 'cnn'. CNNs should be treated as experimental at this point.
 
         nbin: int <default=512>
@@ -47,12 +50,12 @@ class HDDMnn(HDDM):
 
         include: list <default=None>
             A list with parameters we wish to include in the fitting procedure. Generally, per default included
-            in fitting are the drift parameter 'v', the boundary separation parameter 'a' and the non-decision-time 't'. 
+            in fitting are the drift parameter 'v', the boundary separation parameter 'a' and the non-decision-time 't'.
             Which parameters you can include depends on the model you specified under the model parameters.
 
         informative : bool <default=True>
             Whether to use informative priors (True) or vague priors
-            (False).  Informative priors are not yet implemented for neural network based 
+            (False).  Informative priors are not yet implemented for neural network based
             models.
 
         is_group_model : bool
@@ -117,67 +120,87 @@ class HDDMnn(HDDM):
 
     def __init__(self, *args, **kwargs):
 
-        #kwargs['nn'] = True
+        # kwargs['nn'] = True
         self.nn = True
-        print('Setting priors uninformative (LANs only work with uninformative priors for now)')
-        kwargs['informative'] = False
-        self.network_type = kwargs.pop('network_type', 'mlp')
-        self.network = None #LAX
-        self.non_centered = kwargs.pop('non_centered', False)
-        self.w_outlier = kwargs.pop('w_outlier', 0.1)
-        self.model = kwargs.pop('model', 'ddm')
-        self.nbin = kwargs.pop('nbin', 512)
-        #self.is_informative = kwargs.pop('informative', False)
+        print(
+            "Setting priors uninformative (LANs only work with uninformative priors for now)"
+        )
+        kwargs["informative"] = False
+        self.network_type = kwargs.pop("network_type", "mlp")
+        self.network = None  # LAX
+        self.non_centered = kwargs.pop("non_centered", False)
+        self.w_outlier = kwargs.pop("w_outlier", 0.1)
+        self.model = kwargs.pop("model", "ddm")
+        self.nbin = kwargs.pop("nbin", 512)
+        # self.is_informative = kwargs.pop('informative', False)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
         elif self.nbin == 256:
             self.cnn_pdf_multiplier = 25.6
-        
-        # Load Network and likelihood function
-        if self.network_type == 'mlp':
-            self.network = load_mlp(model = self.model)
-            network_dict = {'network': self.network}
-            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(model = self.model, **network_dict)
 
-        if self.network_type == 'cnn':
-            self.network = load_cnn(model = self.model, nbin=self.nbin)
-            network_dict = {'network': self.network}
-            self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(model = self.model, pdf_multiplier = self.cnn_pdf_multiplier, **network_dict)
-        
+        # Load Network and likelihood function
+        if self.network_type == "mlp":
+            self.network = load_mlp(model=self.model)
+            network_dict = {"network": self.network}
+            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model=self.model, **network_dict
+            )
+
+        if self.network_type == "cnn":
+            self.network = load_cnn(model=self.model, nbin=self.nbin)
+            network_dict = {"network": self.network}
+            self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(
+                model=self.model, pdf_multiplier=self.cnn_pdf_multiplier, **network_dict
+            )
+
         # Initialize super class
         super(HDDMnn, self).__init__(*args, **kwargs)
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        if self.network_type == 'mlp':
-            return Knode(self.wfpt_nn, 
-                        'wfpt', 
-                        observed = True, 
-                        col_name = ['response', 'rt'], # TODO: One could preprocess at initialization
-                        **wfpt_parents)
-        elif self.network_type == 'cnn':
-            return Knode(self.wfpt_nn, 
-                         'wfpt', 
-                         observed = True, 
-                         col_name = ['response_binned', 'rt_binned'], # TODO: One could preprocess at initialization
-                         **wfpt_parents)
+        if self.network_type == "mlp":
+            return Knode(
+                self.wfpt_nn,
+                "wfpt",
+                observed=True,
+                col_name=[
+                    "response",
+                    "rt",
+                ],  # TODO: One could preprocess at initialization
+                **wfpt_parents
+            )
+        elif self.network_type == "cnn":
+            return Knode(
+                self.wfpt_nn,
+                "wfpt",
+                observed=True,
+                col_name=[
+                    "response_binned",
+                    "rt_binned",
+                ],  # TODO: One could preprocess at initialization
+                **wfpt_parents
+            )
 
     def __getstate__(self):
         d = super(HDDMnn, self).__getstate__()
-        del d['network']
-        del d['wfpt_nn']
+        del d["network"]
+        del d["wfpt_nn"]
         return d
 
     def __setstate__(self, d):
-        if d['network_type'] == 'cnn':
-            d['network'] =  load_cnn(model = d['model'], nbin = d['nbin'])
-            network_dict = {'network': d['network']}
-            d['wfpt_nn'] = hddm.likelihoods_cnn.make_cnn_likelihood(model = d['model'], pdf_multiplier = d['cnn_pdf_multiplier'], **network_dict)
-           
-        if d['network_type'] == 'mlp':
-            d['network'] = load_mlp(model = d['model'])
-            network_dict = {'network': d['network']}
-            d['wfpt_nn'] = hddm.likelihoods_mlp.make_mlp_likelihood(model = d['model'], **network_dict)
+        if d["network_type"] == "cnn":
+            d["network"] = load_cnn(model=d["model"], nbin=d["nbin"])
+            network_dict = {"network": d["network"]}
+            d["wfpt_nn"] = hddm.likelihoods_cnn.make_cnn_likelihood(
+                model=d["model"], pdf_multiplier=d["cnn_pdf_multiplier"], **network_dict
+            )
 
-        super(HDDMnn, self).__setstate__(d) 
+        if d["network_type"] == "mlp":
+            d["network"] = load_mlp(model=d["model"])
+            network_dict = {"network": d["network"]}
+            d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model=d["model"], **network_dict
+            )
+
+        super(HDDMnn, self).__setstate__(d)

@@ -7,6 +7,8 @@ import pymc as pm
 import kabuki.step_methods as steps
 from hddm.models import HDDMBase
 from kabuki.hierarchical import Knode
+
+
 class HDDM(HDDMBase):
     """Create hierarchical drift-diffusion model in which each subject
     has a set of parameters that are constrained by a group distribution.
@@ -101,29 +103,72 @@ class HDDM(HDDMBase):
     """
 
     def __init__(self, *args, **kwargs):
-        self.slice_widths = {'a': 1, 'a_std': 1, 't': 0.01, 't_std': 0.15, 'st': 0.1, 'v': 1.5, 'v_std': 1, 'sv': 0.5,  # from sv = 3.00 
-                             'z': 0.1, 'sz': 1.1, 'z_trans': 0.2, 'p_outlier': 1., 'alpha': 1., 'dual_alpha': 1.5, 'theta': 0.1, 'beta': 1., 'g': 0.5,
-                             'v_h': 1.5, 'v_l_1': 1.5, 'v_l_2': 1.5, 'z_h': 0.1, 'z_l_1': 0.1, 'z_l_2': 0.1,
-                             'z_h_trans': 0.2, 'z_l_1_trans': 0.2, 'z_l_2_trans': 0.2, 'd': 0.1, 'd_trans': 0.2}
+        self.slice_widths = {
+            "a": 1,
+            "a_std": 1,
+            "t": 0.01,
+            "t_std": 0.15,
+            "st": 0.1,
+            "v": 1.5,
+            "v_std": 1,
+            "sv": 0.5,  # from sv = 3.00
+            "z": 0.1,
+            "sz": 1.1,
+            "z_trans": 0.2,
+            "p_outlier": 1.0,
+            "alpha": 1.0,
+            "dual_alpha": 1.5,
+            "theta": 0.1,
+            "beta": 1.0,
+            "g": 0.5,
+            "v_h": 1.5,
+            "v_l_1": 1.5,
+            "v_l_2": 1.5,
+            "z_h": 0.1,
+            "z_l_1": 0.1,
+            "z_l_2": 0.1,
+            "z_h_trans": 0.2,
+            "z_l_1_trans": 0.2,
+            "z_l_2_trans": 0.2,
+            "d": 0.1,
+            "d_trans": 0.2,
+        }
 
-        self.emcee_dispersions = {'a':1, 't': 0.1, 'a_std': 1, 't_std': 0.15, 'sz': 1.1, 'v': 1.5,
-                                  'st': 0.1, 'sv': 3, 'z_trans': 0.2, 'z': 0.1,
-                                  'p_outlier':1., 'v_std': 1, 'alpha': 1.5, 'pos_alpha': 1.5}
+        self.emcee_dispersions = {
+            "a": 1,
+            "t": 0.1,
+            "a_std": 1,
+            "t_std": 0.15,
+            "sz": 1.1,
+            "v": 1.5,
+            "st": 0.1,
+            "sv": 3,
+            "z_trans": 0.2,
+            "z": 0.1,
+            "p_outlier": 1.0,
+            "v_std": 1,
+            "alpha": 1.5,
+            "pos_alpha": 1.5,
+        }
 
-        if hasattr(self, 'nn'):
+        if hasattr(self, "nn"):
             pass
         else:
             self.nn = False
 
-        self.is_informative = kwargs.pop('informative', True)
+        self.is_informative = kwargs.pop("informative", True)
 
         # We attach a 'model' attribute to the class which is helpful to make
         # some the of plotting functions in the 'graphs' module work for HDDM and HDDMnn
         if not self.nn:
-            if ('sv' in self.include) or ('st' in self.include) or ('sz' in self.include):
-                self.model = 'full_ddm'
+            if (
+                ("sv" in self.include)
+                or ("st" in self.include)
+                or ("sz" in self.include)
+            ):
+                self.model = "full_ddm"
             else:
-                self.model = 'ddm'
+                self.model = "ddm"
 
         super(HDDM, self).__init__(*args, **kwargs)
 
@@ -132,8 +177,10 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes(self, include):
         if self.nn:
             if self.is_informative:
-                print('Informative Priors are not yet implemented')
-                return 'Informative Priors are not yet implementend for LANs, coming soon!'
+                print("Informative Priors are not yet implemented")
+                return (
+                    "Informative Priors are not yet implementend for LANs, coming soon!"
+                )
             else:
                 return self._create_stochastic_knodes_nn_noninfo(include)
 
@@ -145,649 +192,1292 @@ class HDDM(HDDMBase):
 
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()
-        
+
         # Parameter bounds might be different depending on whether we use the MLP or the CNN
-        if self.network_type == 'mlp':
-            param_bnd_str = 'param_bounds'
-        elif self.network_type == 'cnn':
-            param_bnd_str = 'param_bounds_cnn'
+        if self.network_type == "mlp":
+            param_bnd_str = "param_bounds"
+        elif self.network_type == "cnn":
+            param_bnd_str = "param_bounds_cnn"
 
         # PARAMETERS COMMON TO ALL MODELS
-        if 'p_outlier' in include:
-            knodes.update(self._create_family_invlogit('p_outlier',
-                                                        value = 0.2,
-                                                        g_tau = 10**-2,
-                                                        std_std = 0.5
-                                                        ))
+        if "p_outlier" in include:
+            knodes.update(
+                self._create_family_invlogit(
+                    "p_outlier", value=0.2, g_tau=10 ** -2, std_std=0.5
+                )
+            )
 
-        if self.model == 'weibull' or self.model == 'weibull_cdf' or self.model == 'weibull_cdf2':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           )) # should have lower = 0.2, upper = 0.8
-            if 'alpha' in include:
-                tmp_param = 'alpha'
-                knodes.update(self._create_family_trunc_normal('alpha',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 2.0
-                                                               ))
-            if 'beta' in include:
-                tmp_param = 'beta'
-                knodes.update(self._create_family_trunc_normal('beta', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 2.0
-                                                               ))
+        if (
+            self.model == "weibull"
+            or self.model == "weibull_cdf"
+            or self.model == "weibull_cdf2"
+        ):
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )  # should have lower = 0.2, upper = 0.8
+            if "alpha" in include:
+                tmp_param = "alpha"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "alpha",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=2.0,
+                    )
+                )
+            if "beta" in include:
+                tmp_param = "beta"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "beta",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=2.0,
+                    )
+                )
 
-        if self.model == 'ddm' or self.model == 'ddm_analytic':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           )) # should have lower = 0.1, upper = 0.9
+        if self.model == "ddm" or self.model == "ddm_analytic":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )  # should have lower = 0.1, upper = 0.9
 
-        if self.model == 'ddm_sdv' or self.model == 'ddm_sdv_analytic':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           )) # should have lower = 0.1, upper = 0.9
-            if 'sv' in include:
-                tmp_param = 'sv'
-                knodes.update(self._create_family_trunc_normal('sv', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
+        if self.model == "ddm_sdv" or self.model == "ddm_sdv_analytic":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )  # should have lower = 0.1, upper = 0.9
+            if "sv" in include:
+                tmp_param = "sv"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "sv",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
 
-        if self.model == 'full_ddm' or self.model == 'full_ddm2':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           )) # should have lower = 0.1, upper = 0.9
+        if self.model == "full_ddm" or self.model == "full_ddm2":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )  # should have lower = 0.1, upper = 0.9
 
-            if 'sz' in include:
-                tmp_param = 'sz'
-                knodes.update(self._create_family_trunc_normal('sz', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 0.1 # added AF
-                                                               ))
+            if "sz" in include:
+                tmp_param = "sz"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "sz",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=0.1,  # added AF
+                    )
+                )
 
-            if 'sv' in include:
-                tmp_param = 'sv'
-                knodes.update(self._create_family_trunc_normal('sv', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 0.5 # added AF
-                                                               ))
+            if "sv" in include:
+                tmp_param = "sv"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "sv",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=0.5,  # added AF
+                    )
+                )
 
-            if 'st' in include:
-                tmp_param = 'st'
-                knodes.update(self._create_family_trunc_normal('st', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 0.1 # added AF
-                                                               ))
+            if "st" in include:
+                tmp_param = "st"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "st",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=0.1,  # added AF
+                    )
+                )
 
-        if self.model == 'angle':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                              lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                              upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                              value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                              std_upper = 1.0 # added AF
-                                                              ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
-            if 'theta' in include:
-                tmp_param = 'theta'
-                knodes.update(self._create_family_trunc_normal('theta',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0
-                                                               )) # should have lower = 0.2, upper = 0.8
+        if self.model == "angle":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+            if "theta" in include:
+                tmp_param = "theta"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "theta",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,
+                    )
+                )  # should have lower = 0.2, upper = 0.8
 
-        if self.model == 'ornstein':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                              lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                              upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                              value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                              std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
-            if 'g' in include:
-                tmp_param = 'g'
-                knodes.update(self._create_family_trunc_normal('g',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0
-                                                               )) # should have lower = 0.2, upper = 0.8
-        
-        if self.model == 'levy':
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal('a',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'v' in include:
-                tmp_param = 'v'
-                knodes.update(self._create_family_trunc_normal('v', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal('t', 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            if 'z' in include:
-                tmp_param = 'z'
-                knodes.update(self._create_family_invlogit('z',
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
-            if 'alpha' in include:
-                tmp_param = 'alpha'
-                knodes.update(self._create_family_trunc_normal('alpha',
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0
-                                                               ))
+        if self.model == "ornstein":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+            if "g" in include:
+                tmp_param = "g"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "g",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,
+                    )
+                )  # should have lower = 0.2, upper = 0.8
 
-        if self.model == 'ddm_par2':
-            if 'v_h' in include:
-                tmp_param = 'v_h'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                std_upper = 1.5
-                                                ))
+        if self.model == "levy":
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "a",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "v" in include:
+                tmp_param = "v"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "v",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "t",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+            if "z" in include:
+                tmp_param = "z"
+                knodes.update(
+                    self._create_family_invlogit(
+                        "z",
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+            if "alpha" in include:
+                tmp_param = "alpha"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        "alpha",
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,
+                    )
+                )
 
-            if 'v_l_1' in include:
-                tmp_param = 'v_l_1'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                std_upper = 1.5
-                                                ))
+        if self.model == "ddm_par2":
+            if "v_h" in include:
+                tmp_param = "v_h"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'v_l_2' in include:
-                tmp_param = 'v_l_2'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                std_upper = 1.5
-                                ))
+            if "v_l_1" in include:
+                tmp_param = "v_l_1"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_h' in include:
-                tmp_param = 'z_h'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
+            if "v_l_2" in include:
+                tmp_param = "v_l_2"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_l_1' in include:
-                tmp_param = 'z_l_1'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                            g_tau = 10**-2,
-                                            std_std = 0.5,
-                                            lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                            upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                            value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                            ))
+            if "z_h" in include:
+                tmp_param = "z_h"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 'z_l_2' in include:
-                tmp_param = 'z_l_2'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                            g_tau = 10**-2,
-                                            std_std = 0.5,
-                                            lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                            upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                            value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                            ))
+            if "z_l_1" in include:
+                tmp_param = "z_l_1"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal(tmp_param,
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
+            if "z_l_2" in include:
+                tmp_param = "z_l_2"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            
-        if self.model == 'ddm_seq2':
-            if 'v_h' in include:
-                tmp_param = 'v_h'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                std_upper = 1.5
-                                                ))
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
 
-            if 'v_l_1' in include:
-                tmp_param = 'v_l_1'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                std_upper = 1.5
-                                                ))
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
 
-            if 'v_l_2' in include:
-                tmp_param = 'v_l_2'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                std_upper = 1.5
-                                ))
+        if self.model == "ddm_seq2":
+            if "v_h" in include:
+                tmp_param = "v_h"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_h' in include:
-                tmp_param = 'z_h'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
+            if "v_l_1" in include:
+                tmp_param = "v_l_1"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_l_1' in include:
-                tmp_param = 'z_l_1'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                            g_tau = 10**-2,
-                                            std_std = 0.5,
-                                            lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                            upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                            value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                            ))
+            if "v_l_2" in include:
+                tmp_param = "v_l_2"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_l_2' in include:
-                tmp_param = 'z_l_2'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                            g_tau = 10**-2,
-                                            std_std = 0.5,
-                                            lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                            upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                            value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                            ))
+            if "z_h" in include:
+                tmp_param = "z_h"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal(tmp_param,
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
+            if "z_l_1" in include:
+                tmp_param = "z_l_1"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            
-        if self.model == 'ddm_mic2':
-            if 'v_h' in include:
-                tmp_param = 'v_h'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
+            if "z_l_2" in include:
+                tmp_param = "z_l_2"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 'v_l_1' in include:
-                tmp_param = 'v_l_1'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
 
-            if 'v_l_2' in include:
-                tmp_param = 'v_l_2'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.5
-                                                               ))
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
 
-            if 'z_h' in include:
-                tmp_param = 'z_h'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
+        if self.model == "ddm_mic2":
+            if "v_h" in include:
+                tmp_param = "v_h"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_l_1' in include:
-                tmp_param = 'z_l_1'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
+            if "v_l_1" in include:
+                tmp_param = "v_l_1"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'z_l_2' in include:
-                tmp_param = 'z_l_2'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
-            
-            if 'd' in include:
-                tmp_param = 'd'
-                knodes.update(self._create_family_invlogit(tmp_param,
-                                                           g_tau = 10**-2,
-                                                           std_std = 0.5,
-                                                           lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                           upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                           value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                           ))
+            if "v_l_2" in include:
+                tmp_param = "v_l_2"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.5,
+                    )
+                )
 
-            if 'a' in include:
-                tmp_param = 'a'
-                knodes.update(self._create_family_trunc_normal(tmp_param,
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
+            if "z_h" in include:
+                tmp_param = "z_h"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
 
-            if 't' in include:
-                tmp_param = 't'
-                knodes.update(self._create_family_trunc_normal(tmp_param, 
-                                                               lower = model_config[self.model][param_bnd_str][0][model_config[self.model]['params'].index(tmp_param)],
-                                                               upper = model_config[self.model][param_bnd_str][1][model_config[self.model]['params'].index(tmp_param)],
-                                                               value = model_config[self.model]['default_params'][model_config[self.model]['params'].index(tmp_param)],
-                                                               std_upper = 1.0 # added AF
-                                                               ))
-            
+            if "z_l_1" in include:
+                tmp_param = "z_l_1"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+
+            if "z_l_2" in include:
+                tmp_param = "z_l_2"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+
+            if "d" in include:
+                tmp_param = "d"
+                knodes.update(
+                    self._create_family_invlogit(
+                        tmp_param,
+                        g_tau=10 ** -2,
+                        std_std=0.5,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                    )
+                )
+
+            if "a" in include:
+                tmp_param = "a"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+
+            if "t" in include:
+                tmp_param = "t"
+                knodes.update(
+                    self._create_family_trunc_normal(
+                        tmp_param,
+                        lower=model_config[self.model][param_bnd_str][0][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        upper=model_config[self.model][param_bnd_str][1][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        value=model_config[self.model]["default_params"][
+                            model_config[self.model]["params"].index(tmp_param)
+                        ],
+                        std_upper=1.0,  # added AF
+                    )
+                )
+
         return knodes
 
     def _create_stochastic_knodes_info(self, include):
         knodes = OrderedDict()
-        if 'a' in include:
-            knodes.update(self._create_family_gamma_gamma_hnormal('a', g_mean=1.5, g_std=0.75, std_std=2, std_value=0.1, value=1))
-        if 'v' in include:
-            knodes.update(self._create_family_normal_normal_hnormal('v', value=2, g_mu=2, g_tau=3**-2, std_std=2))
-        if 't' in include:
-            knodes.update(self._create_family_gamma_gamma_hnormal('t', g_mean=.4, g_std=0.2, value=0.001, std_std=1, std_value=0.2))
-        if 'sv' in include:
-            knodes['sv_bottom'] = Knode(pm.HalfNormal, 'sv', tau=2**-2, value=1, depends=self.depends['sv'])
-        if 'sz' in include:
-            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=3, value=0.01, depends=self.depends['sz'])
-        if 'st' in include:
-            knodes['st_bottom'] = Knode(pm.HalfNormal, 'st', tau=0.3**-2, value=0.001, depends=self.depends['st'])
-        if 'z' in include:
-            knodes.update(self._create_family_invlogit('z', value=.5, g_tau=0.5**-2, std_std=0.05))
-        if 'p_outlier' in include:
-            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=15, value=0.01, depends=self.depends['p_outlier'])
+        if "a" in include:
+            knodes.update(
+                self._create_family_gamma_gamma_hnormal(
+                    "a", g_mean=1.5, g_std=0.75, std_std=2, std_value=0.1, value=1
+                )
+            )
+        if "v" in include:
+            knodes.update(
+                self._create_family_normal_normal_hnormal(
+                    "v", value=2, g_mu=2, g_tau=3 ** -2, std_std=2
+                )
+            )
+        if "t" in include:
+            knodes.update(
+                self._create_family_gamma_gamma_hnormal(
+                    "t", g_mean=0.4, g_std=0.2, value=0.001, std_std=1, std_value=0.2
+                )
+            )
+        if "sv" in include:
+            knodes["sv_bottom"] = Knode(
+                pm.HalfNormal, "sv", tau=2 ** -2, value=1, depends=self.depends["sv"]
+            )
+        if "sz" in include:
+            knodes["sz_bottom"] = Knode(
+                pm.Beta, "sz", alpha=1, beta=3, value=0.01, depends=self.depends["sz"]
+            )
+        if "st" in include:
+            knodes["st_bottom"] = Knode(
+                pm.HalfNormal,
+                "st",
+                tau=0.3 ** -2,
+                value=0.001,
+                depends=self.depends["st"],
+            )
+        if "z" in include:
+            knodes.update(
+                self._create_family_invlogit(
+                    "z", value=0.5, g_tau=0.5 ** -2, std_std=0.05
+                )
+            )
+        if "p_outlier" in include:
+            knodes["p_outlier_bottom"] = Knode(
+                pm.Beta,
+                "p_outlier",
+                alpha=1,
+                beta=15,
+                value=0.01,
+                depends=self.depends["p_outlier"],
+            )
 
         return knodes
 
     def _create_stochastic_knodes_noninfo(self, include):
         knodes = OrderedDict()
-        if 'a' in include:
-            knodes.update(self._create_family_trunc_normal('a', lower=1e-3, upper=1e3, value=1))
-        if 'v' in include:
-            knodes.update(self._create_family_normal_normal_hnormal('v', value=0, g_tau=50**-2, std_std=10))
-        if 't' in include:
-            knodes.update(self._create_family_trunc_normal('t', lower=1e-3, upper=1e3, value=.01))
-        if 'sv' in include:
-            knodes['sv_bottom'] = Knode(pm.Uniform, 'sv', lower=1e-6, upper=1e3, value=1, depends=self.depends['sv'])
-        if 'sz' in include:
-            knodes['sz_bottom'] = Knode(pm.Beta, 'sz', alpha=1, beta=1, value=0.01, depends=self.depends['sz'])
-        if 'st' in include:
-            knodes['st_bottom'] = Knode(pm.Uniform, 'st', lower=1e-6, upper=1e3, value=0.01, depends=self.depends['st'])
-        if 'z' in include:
-            knodes.update(self._create_family_invlogit('z', value=.5, g_tau=10**-2, std_std=0.5))
-        if 'p_outlier' in include:
-            knodes['p_outlier_bottom'] = Knode(pm.Beta, 'p_outlier', alpha=1, beta=1, value=0.01, depends=self.depends['p_outlier'])
+        if "a" in include:
+            knodes.update(
+                self._create_family_trunc_normal("a", lower=1e-3, upper=1e3, value=1)
+            )
+        if "v" in include:
+            knodes.update(
+                self._create_family_normal_normal_hnormal(
+                    "v", value=0, g_tau=50 ** -2, std_std=10
+                )
+            )
+        if "t" in include:
+            knodes.update(
+                self._create_family_trunc_normal("t", lower=1e-3, upper=1e3, value=0.01)
+            )
+        if "sv" in include:
+            knodes["sv_bottom"] = Knode(
+                pm.Uniform,
+                "sv",
+                lower=1e-6,
+                upper=1e3,
+                value=1,
+                depends=self.depends["sv"],
+            )
+        if "sz" in include:
+            knodes["sz_bottom"] = Knode(
+                pm.Beta, "sz", alpha=1, beta=1, value=0.01, depends=self.depends["sz"]
+            )
+        if "st" in include:
+            knodes["st_bottom"] = Knode(
+                pm.Uniform,
+                "st",
+                lower=1e-6,
+                upper=1e3,
+                value=0.01,
+                depends=self.depends["st"],
+            )
+        if "z" in include:
+            knodes.update(
+                self._create_family_invlogit(
+                    "z", value=0.5, g_tau=10 ** -2, std_std=0.5
+                )
+            )
+        if "p_outlier" in include:
+            knodes["p_outlier_bottom"] = Knode(
+                pm.Beta,
+                "p_outlier",
+                alpha=1,
+                beta=1,
+                value=0.01,
+                depends=self.depends["p_outlier"],
+            )
 
         return knodes
 
     def pre_sample(self, use_slice=True):
         for name, node_descr in self.iter_stochastics():
-            node = node_descr['node']
-            if isinstance(node, pm.Normal) and np.all([isinstance(x, pm.Normal) for x in node.extended_children]):
+            node = node_descr["node"]
+            if isinstance(node, pm.Normal) and np.all(
+                [isinstance(x, pm.Normal) for x in node.extended_children]
+            ):
                 self.mc.use_step_method(steps.kNormalNormal, node)
             else:
-                knode_name = node_descr['knode_name'].replace('_subj', '')
-                if knode_name in ['st', 'sv', 'sz']:
+                knode_name = node_descr["knode_name"].replace("_subj", "")
+                if knode_name in ["st", "sv", "sz"]:
                     left = 0
                 else:
                     left = None
-                self.mc.use_step_method(steps.SliceStep, node, width=self.slice_widths.get(knode_name, 1),
-                                        left=left, maxiter=5000)
+                self.mc.use_step_method(
+                    steps.SliceStep,
+                    node,
+                    width=self.slice_widths.get(knode_name, 1),
+                    left=left,
+                    maxiter=5000,
+                )
 
     def _create_an_average_model(self):
         """
         create an average model for group model quantiles optimization.
         """
 
-        #this code only check that the arguments are as expected, i.e. the constructor was not change
-        #since we wrote this function
+        # this code only check that the arguments are as expected, i.e. the constructor was not change
+        # since we wrote this function
         super_init_function = super(self.__class__, self).__init__
         init_args = set(inspect.getargspec(super_init_function).args)
-        known_args = set(['wiener_params', 'include', 'self', 'bias', 'data', 'p_outlier'])
-        assert known_args.issuperset(init_args), "Arguments of the constructor are not as expected"
+        known_args = set(
+            ["wiener_params", "include", "self", "bias", "data", "p_outlier"]
+        )
+        assert known_args.issuperset(
+            init_args
+        ), "Arguments of the constructor are not as expected"
 
-        #create the avg model
-        avg_model  = self.__class__(self.data, include=self.include, is_group_model=False, **self._kwargs)
+        # create the avg model
+        avg_model = self.__class__(
+            self.data, include=self.include, is_group_model=False, **self._kwargs
+        )
         return avg_model

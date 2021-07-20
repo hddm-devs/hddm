@@ -12,17 +12,18 @@ from .hddm_nn import HDDMnn
 from .hddm_nn_regression import HDDMnnRegressor
 from .hddm_nn_stimcoding import HDDMnnStimCoding
 
-__all__ = ['AccumulatorModel',
-           'HDDMBase',
-           'HDDM',
-           'HDDMTruncated',
-           'HDDMStimCoding',
-           'HDDMRegressor',
-           'HDDMrlRegressor',
-           'HDDMTransformed',
-           'HDDMrl',
-           'Hrl',
-           'HDDMnn',
-           'HDDMnnRegressor',
-           'HDDMnnStimCoding',
+__all__ = [
+    "AccumulatorModel",
+    "HDDMBase",
+    "HDDM",
+    "HDDMTruncated",
+    "HDDMStimCoding",
+    "HDDMRegressor",
+    "HDDMrlRegressor",
+    "HDDMTransformed",
+    "HDDMrl",
+    "Hrl",
+    "HDDMnn",
+    "HDDMnnRegressor",
+    "HDDMnnStimCoding",
 ]
