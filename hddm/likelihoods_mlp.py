@@ -40,6 +40,57 @@ def make_mlp_likelihood(model, **kwargs):
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
         return hddm_preprocess(sim_out, keep_negative_responses=True)
 
+    if model == 'test':
+        def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
+            """
+            LAN Log-likelihood for the DDM
+            """
+            data_shape = x.shape[0]
+            data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
+            data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
+            #data[:, -1] = x['response'].values.astype(np.float32)
+            return hddm.wfpt.wiener_likke_nn_test(data, p_outlier = p_outlier, w_outlier = w_outlier, **kwargs)
+            # return hddm.wfpt.wiener_like_nn_ddm(
+            #     x["rt"].values,
+            #     x["response"].values,
+            #     v,  # sv,
+            #     a,
+            #     z,  # sz,
+            #     t,  # st,
+            #     p_outlier=p_outlier,
+            #     w_outlier=w_outlier,
+            #     **kwargs
+            # )
+
+        def pdf_test(self, x):
+            data_shape = x.shape[0]
+            rt = np.array(x, dtype=np.float32)
+            response = rt / np.abs(rt)
+            rt = np.abs(rt)
+            data = np.tile([self.parents['v'], self.parents['a'], self.parents['z'], self.parents['t'], 0, 0], (data_shape, 1)).astype(np.float32)
+            data[:, -2] = rt.astype(np.float32)
+            data[:, -1] = response.astype(np.float32)
+            # model_config[] # TODO FILL THIS IN SO THAT WE CREATE THE APPROPRIATE ARRAY AS INPUT TO THE SIMULATOR
+            out = hddm.wfpt.wiener_like_nn_test_pdf(
+                data, network=kwargs["network"], **self.parents
+            )  # **kwargs) # This may still be buggy !
+            return out
+
+        def cdf_test(self, x):
+            # TODO: Implement the CDF method for neural networks
+            return "Not yet implemented"
+
+        # Create wfpt class
+        wfpt_nn = stochastic_from_dist(
+            "Wienernn_" + model, partial(wienernn_like_test, **kwargs)
+        )
+
+        wfpt_nn.pdf = pdf_test
+        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        wfpt_nn.cdf = cdf_test
+        wfpt_nn.random = random
+        return wfpt_nn
+
     if model == "ddm":
 
         def wienernn_like_ddm(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):

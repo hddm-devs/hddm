@@ -12,7 +12,7 @@ def load_mlp(model="ddm"):
     Returns:
         keras.model: Returns a pretrained keras model which we can use to get pointwise log-likelihoods for the model supplied in the model string.
     """
-    if model == "ddm":
+    if model == "ddm" or model == "test":
         return keras.models.load_model(
             hddm.keras_models.__path__[0] + "/model_final_ddm.h5", compile=False
         )

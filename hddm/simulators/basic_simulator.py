@@ -170,6 +170,19 @@ def bin_arbitrary_fptd(
 
 
 model_config = {
+    "test": {
+        "params": ["v", "a", "z", "t"],
+        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
+        "param_bounds_cnn": [
+            [-2.5, 0.5, 0.25, 1e-3],
+            [2.5, 2.2, 0.75, 1.95],
+        ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
+        "boundary": bf.constant,
+        "n_params": 4,
+        "default_params": [0.0, 1.0, 0.5, 1e-3],
+        "hddm_include": ["z"],
+        "n_choices": 2,
+    },
     "ddm": {
         "params": ["v", "a", "z", "t"],
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],

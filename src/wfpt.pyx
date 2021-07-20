@@ -514,6 +514,40 @@ def wiener_like_reg_cnn_2(np.ndarray[long, ndim = 1] x,
 
 #############
 # Basic MLP Likelihoods
+def wiener_like_nn_test(np.ndarray[float, ndim = 2] data, 
+                        double p_outlier = 0, 
+                        double w_outlier = 0,
+                        **kwargs):
+
+    cdef float log_p = 0
+    cdef float ll_min = -16.11809
+
+    # Call to network:
+    if p_outlier == 0:
+        log_p = np.sum(np.core.umath.maximum(kwargs['network'].predict_on_batch(data), ll_min))
+    else:
+        log_p = np.sum(np.log(np.exp(np.core.umath.maximum(kwargs['network'].predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+
+    return log_p
+
+def wiener_like_nn_test_pdf(data, 
+                            double p_outlier = 0, 
+                            double w_outlier = 0,
+                            bint logp = 0,
+                            network = None):
+
+    cdef np.ndarray[float, ndim = 1] log_p = np.zeros(data.shape[0], dtype = np.float32)
+    cdef float ll_min = -16.11809
+   
+    # Call to network:
+    if p_outlier == 0: # ddm_model
+        log_p = np.squeeze(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    else: # ddm_model
+        log_p = np.squeeze(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+    if logp == 0:
+        log_p = np.exp(log_p) # shouldn't be called log_p anymore but no need for an extra array here
+    return log_p
+
 def wiener_like_nn_full_ddm(np.ndarray[float, ndim = 1] x, 
                             np.ndarray[float, ndim = 1] response, 
                             double v, 
