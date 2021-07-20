@@ -316,7 +316,7 @@ class HDDM(HDDMBase):
                     )
                 )
 
-        if self.model == "ddm" or self.model == "ddm_analytic":
+        if self.model == "ddm" or self.model == "ddm_analytic" or self.model == "test":
             if "a" in include:
                 tmp_param = "a"
                 knodes.update(
