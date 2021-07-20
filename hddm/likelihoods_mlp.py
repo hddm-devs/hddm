@@ -45,22 +45,15 @@ def make_mlp_likelihood(model, **kwargs):
             """
             LAN Log-likelihood for the DDM
             """
-            params = np.array([v, a, z, t, p_outlier, w_outlier]).astype(np.float32)
-            #data_shape = x.shape[0]
-            #data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
-            #data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
-            return hddm.wfpt.wiener_like_nn_test(x["rt"].values, x["response"].values, params, **kwargs)
+            params = np.array([v, a, z, t]).astype(np.float32)
+            return hddm.wfpt.wiener_like_nn_test(x["rt"].values, x["response"].values, params,  p_outlier = p_outlier, w_outlier = w_outlier, network = kwargs["network"]) #**kwargs)
 
         def pdf_test(self, x):
             rt = np.array(x, dtype=np.float32)
             response = rt / np.abs(rt)
             rt = np.abs(rt)
-            params = np.array([self.parents['v'], 
-                               self.parents['a'], 
-                               self.parents['z'], 
-                               self.parents['t'], 
-                               self.parents['p_outlier'], 
-                               self.parents['w_outlier']]).astype(np.float32)
+            params = np.array([self.parents['v'], self.parents['a'], 
+                               self.parents['z'], self.parents['t']]).astype(np.float32)
             out = hddm.wfpt.wiener_like_nn_test_pdf(rt, response, 
                                                     params, network=kwargs["network"], **self.parents)  # **kwargs) # This may still be buggy !
             return out

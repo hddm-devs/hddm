@@ -517,46 +517,45 @@ def wiener_like_reg_cnn_2(np.ndarray[long, ndim = 1] x,
 def wiener_like_nn_test(np.ndarray[float, ndim = 1] rt,
                         np.ndarray[float, ndim = 1] response,
                         np.ndarray[float, ndim = 1] params,
-                        **kwargs):
+                        double p_outlier = 0,
+                        double w_outlier = 0,
+                        network = None):
 
     cdef Py_ssize_t size = rt.shape[0]
-    cdef Py_ssize_t n_params = (params.shape[0] - 2)
-    cdef float p_outlier = params[-2]
-    cdef float w_outlier = params[-1]
+    cdef Py_ssize_t n_params = params.shape[0]
     cdef float log_p = 0
     cdef float ll_min = -16.11809
 
     cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
-    data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
+    data[:, :n_params] = np.tile(params, (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
     # Call to network:
     if p_outlier == 0:
-        log_p = np.sum(np.core.umath.maximum(kwargs['network'].predict_on_batch(data), ll_min))
+        log_p = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
     else:
-        log_p = np.sum(np.log(np.exp(np.core.umath.maximum(kwargs['network'].predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+        log_p = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
 
     return log_p
 
 def wiener_like_nn_test_pdf(np.ndarray[float, ndim = 1] rt,
                             np.ndarray[float, ndim = 1] response,
                             np.ndarray[float, ndim = 1] params,
+                            double p_outlier = 0, 
+                            double_w_outlier = 0,
                             bint logp = 0,
                             network = None):
     
     cdef Py_ssize_t size = rt.shape[0]
-    cdef Py_ssize_t n_params = (params.shape[0] - 2)
-    cdef float p_outlier = params[-2]
-    cdef float w_outlier = params[-1]
+    cdef Py_ssize_t n_params = parmas.shape[0]
 
     cdef np.ndarray[float, ndim = 1] log_p = np.zeros(size, dtype = np.float32)
     cdef float ll_min = -16.11809
 
-    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params), dtype = np.float32)
-    data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
+    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+    data[:, :n_params] = np.tile(params, (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
-   
     # Call to network:
     if p_outlier == 0: # ddm_model
         log_p = np.squeeze(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
