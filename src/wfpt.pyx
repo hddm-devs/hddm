@@ -542,7 +542,7 @@ def wiener_like_nn_test_pdf(np.ndarray[float, ndim = 1] rt,
                             np.ndarray[float, ndim = 1] response,
                             np.ndarray[float, ndim = 1] params,
                             double p_outlier = 0, 
-                            double_w_outlier = 0,
+                            double w_outlier = 0,
                             bint logp = 0,
                             network = None):
     
