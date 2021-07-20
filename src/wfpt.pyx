@@ -547,7 +547,7 @@ def wiener_like_nn_test_pdf(np.ndarray[float, ndim = 1] rt,
                             network = None):
     
     cdef Py_ssize_t size = rt.shape[0]
-    cdef Py_ssize_t n_params = parmas.shape[0]
+    cdef Py_ssize_t n_params = params.shape[0]
 
     cdef np.ndarray[float, ndim = 1] log_p = np.zeros(size, dtype = np.float32)
     cdef float ll_min = -16.11809
