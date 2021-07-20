@@ -514,13 +514,22 @@ def wiener_like_reg_cnn_2(np.ndarray[long, ndim = 1] x,
 
 #############
 # Basic MLP Likelihoods
-def wiener_like_nn_test(np.ndarray[float, ndim = 2] data, 
-                        double p_outlier = 0, 
-                        double w_outlier = 0,
+def wiener_like_nn_test(np.ndarray[float, ndim = 1] rt,
+                        np.ndarray[float, ndim = 1] response,
+                        np.ndarray[float, ndim = 1] params,
                         **kwargs):
 
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t n_params = (params.shape[0] - 2)
+    cdef float p_outlier = params[-2]
+    cdef float w_outlier = params[-1]
     cdef float log_p = 0
     cdef float ll_min = -16.11809
+
+    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params), dtype = np.float32)
+    data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
+    data[:, n_params:] = np.stack([rt, response], axis = 1)
+
 
     # Call to network:
     if p_outlier == 0:
@@ -530,14 +539,24 @@ def wiener_like_nn_test(np.ndarray[float, ndim = 2] data,
 
     return log_p
 
-def wiener_like_nn_test_pdf(data, 
-                            double p_outlier = 0, 
-                            double w_outlier = 0,
+def wiener_like_nn_test_pdf(np.ndarray[float, ndim = 1] rt,
+                            np.ndarray[float, ndim = 1] response,
+                            np.ndarray[float, ndim = 1] params,
                             bint logp = 0,
                             network = None):
+    
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t n_params = (params.shape[0] - 2)
+    cdef float p_outlier = params[-2]
+    cdef float w_outlier = params[-1]
 
     cdef np.ndarray[float, ndim = 1] log_p = np.zeros(data.shape[0], dtype = np.float32)
     cdef float ll_min = -16.11809
+
+    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params), dtype = np.float32)
+    data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
+    data[:, n_params:] = np.stack([rt, response], axis = 1)
+
    
     # Call to network:
     if p_outlier == 0: # ddm_model

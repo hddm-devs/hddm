@@ -48,19 +48,7 @@ def make_mlp_likelihood(model, **kwargs):
             data_shape = x.shape[0]
             data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
             data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
-            #data[:, -1] = x['response'].values.astype(np.float32)
             return hddm.wfpt.wiener_like_nn_test(data, p_outlier = p_outlier, w_outlier = w_outlier, **kwargs)
-            # return hddm.wfpt.wiener_like_nn_ddm(
-            #     x["rt"].values,
-            #     x["response"].values,
-            #     v,  # sv,
-            #     a,
-            #     z,  # sz,
-            #     t,  # st,
-            #     p_outlier=p_outlier,
-            #     w_outlier=w_outlier,
-            #     **kwargs
-            # )
 
         def pdf_test(self, x):
             data_shape = x.shape[0]
@@ -70,7 +58,6 @@ def make_mlp_likelihood(model, **kwargs):
             data = np.tile([self.parents['v'], self.parents['a'], self.parents['z'], self.parents['t'], 0, 0], (data_shape, 1)).astype(np.float32)
             data[:, -2] = rt.astype(np.float32)
             data[:, -1] = response.astype(np.float32)
-            # model_config[] # TODO FILL THIS IN SO THAT WE CREATE THE APPROPRIATE ARRAY AS INPUT TO THE SIMULATOR
             out = hddm.wfpt.wiener_like_nn_test_pdf(
                 data, network=kwargs["network"], **self.parents
             )  # **kwargs) # This may still be buggy !
