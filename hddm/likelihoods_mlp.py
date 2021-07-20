@@ -52,8 +52,7 @@ def make_mlp_likelihood(model, **kwargs):
             rt = np.array(x, dtype=np.float32)
             response = rt / np.abs(rt)
             rt = np.abs(rt)
-            params = np.array([self.parents['v'], self.parents['a'], 
-                               self.parents['z'], self.parents['t']]).astype(np.float32)
+            params = np.array([self.parents[param] for param in model_config[model]["params"]]).astype(np.float32)
             out = hddm.wfpt.wiener_like_nn_test_pdf(rt, response, 
                                                     params, network=kwargs["network"], **self.parents)  # **kwargs) # This may still be buggy !
             return out
