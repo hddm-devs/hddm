@@ -526,7 +526,7 @@ def wiener_like_nn_test(np.ndarray[float, ndim = 1] rt,
     cdef float log_p = 0
     cdef float ll_min = -16.11809
 
-    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params), dtype = np.float32)
+    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
     data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
