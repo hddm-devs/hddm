@@ -550,7 +550,7 @@ def wiener_like_nn_test_pdf(np.ndarray[float, ndim = 1] rt,
     cdef float p_outlier = params[-2]
     cdef float w_outlier = params[-1]
 
-    cdef np.ndarray[float, ndim = 1] log_p = np.zeros(data.shape[0], dtype = np.float32)
+    cdef np.ndarray[float, ndim = 1] log_p = np.zeros(size, dtype = np.float32)
     cdef float ll_min = -16.11809
 
     cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params), dtype = np.float32)
