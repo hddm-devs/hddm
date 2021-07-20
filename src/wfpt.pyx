@@ -530,7 +530,6 @@ def wiener_like_nn_test(np.ndarray[float, ndim = 1] rt,
     data[:, :n_params] = np.tile(params[:-2], (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
-
     # Call to network:
     if p_outlier == 0:
         log_p = np.sum(np.core.umath.maximum(kwargs['network'].predict_on_batch(data), ll_min))

@@ -45,22 +45,24 @@ def make_mlp_likelihood(model, **kwargs):
             """
             LAN Log-likelihood for the DDM
             """
-            data_shape = x.shape[0]
-            data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
-            data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
-            return hddm.wfpt.wiener_like_nn_test(data, p_outlier = p_outlier, w_outlier = w_outlier, **kwargs)
+            params = np.array([v, a, z, t, p_outlier, w_outlier]).astype(np.float32)
+            #data_shape = x.shape[0]
+            #data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
+            #data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
+            return hddm.wfpt.wiener_like_nn_test(x["rt"].values, x["response"].values, params, **kwargs)
 
         def pdf_test(self, x):
-            data_shape = x.shape[0]
             rt = np.array(x, dtype=np.float32)
             response = rt / np.abs(rt)
             rt = np.abs(rt)
-            data = np.tile([self.parents['v'], self.parents['a'], self.parents['z'], self.parents['t'], 0, 0], (data_shape, 1)).astype(np.float32)
-            data[:, -2] = rt.astype(np.float32)
-            data[:, -1] = response.astype(np.float32)
-            out = hddm.wfpt.wiener_like_nn_test_pdf(
-                data, network=kwargs["network"], **self.parents
-            )  # **kwargs) # This may still be buggy !
+            params = np.array([self.parents['v'], 
+                               self.parents['a'], 
+                               self.parents['z'], 
+                               self.parents['t'], 
+                               self.parents['p_outlier'], 
+                               self.parents['w_outlier']]).astype(np.float32)
+            out = hddm.wfpt.wiener_like_nn_test_pdf(rt, response, 
+                                                    params, network=kwargs["network"], **self.parents)  # **kwargs) # This may still be buggy !
             return out
 
         def cdf_test(self, x):
