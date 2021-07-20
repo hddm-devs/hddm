@@ -1,0 +1,2 @@
+model_checkpoint_path: "./ddm_210500.ckpt-210500"
+all_model_checkpoint_paths: "./ddm_210500.ckpt-210500"

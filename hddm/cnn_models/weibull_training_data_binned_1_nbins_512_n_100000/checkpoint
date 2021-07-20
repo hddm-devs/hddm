@@ -1,0 +1,2 @@
+model_checkpoint_path: "/media/data_cifs/projects/prj_approx-bayes/projectABC/models/weibull_training_data_binned_1_nbins_512_n_100000/weibull_210500.ckpt-210500"
+all_model_checkpoint_paths: "/media/data_cifs/projects/prj_approx-bayes/projectABC/models/weibull_training_data_binned_1_nbins_512_n_100000/weibull_210500.ckpt-210500"
