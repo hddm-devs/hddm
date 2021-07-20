@@ -40,7 +40,7 @@ def make_mlp_likelihood(model, **kwargs):
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
         return hddm_preprocess(sim_out, keep_negative_responses=True)
 
-    if model == 'test':
+    if model == "test":
         def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
             """
             LAN Log-likelihood for the DDM
@@ -49,7 +49,7 @@ def make_mlp_likelihood(model, **kwargs):
             data = np.tile([v, a, z, t, 0, 0], (data_shape, 1)).astype(np.float32)
             data[:, -2:] = x[['rt', 'response']].values.astype(np.float32)
             #data[:, -1] = x['response'].values.astype(np.float32)
-            return hddm.wfpt.wiener_likke_nn_test(data, p_outlier = p_outlier, w_outlier = w_outlier, **kwargs)
+            return hddm.wfpt.wiener_like_nn_test(data, p_outlier = p_outlier, w_outlier = w_outlier, **kwargs)
             # return hddm.wfpt.wiener_like_nn_ddm(
             #     x["rt"].values,
             #     x["response"].values,
