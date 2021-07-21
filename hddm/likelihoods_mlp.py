@@ -287,20 +287,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
         ) # **kwargs
 
-    def wiener_multi_like_nn_full_ddm(
-        value,
-        v,
-        sv,
-        a,
-        z,
-        sz,
-        t,
-        st,
-        reg_outcomes,
-        p_outlier=0,
-        w_outlier=0.1,
-        **kwargs
-    ):
+    def wiener_multi_like_nn_full_ddm(value, v, sv, a, z, sz, t, st,
+                                      reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
         """
         LAN Log-likelihood for the FULL DDM
         """
@@ -520,16 +508,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         LAN Log-likelihood for the WEIBULL MODEL
         """
 
-        params = {
-            "v_h": v_h,
-            "v_l_1": v_l_1,
-            "v_l_2": v_l_2,
-            "a": a,
-            "z_h": z_h,
-            "z_l_1": z_l_1,
-            "z_l_2": z_l_2,
-            "t": t,
-        }
+        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
         n_params = int(8)
         size = int(value.shape[0])
         data = np.zeros((size, 10), dtype=np.float32)
@@ -570,16 +550,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         LAN Log-likelihood for the WEIBULL MODEL
         """
 
-        params = {
-            "v_h": v_h,
-            "v_l_1": v_l_1,
-            "v_l_2": v_l_2,
-            "a": a,
-            "z_h": z_h,
-            "z_l_1": z_l_1,
-            "z_l_2": z_l_2,
-            "t": t,
-        }
+        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
         n_params = int(8)
         size = int(value.shape[0])
         data = np.zeros((size, 10), dtype=np.float32)
@@ -621,17 +593,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         LAN Log-likelihood for the WEIBULL MODEL
         """
 
-        params = {
-            "v_h": v_h,
-            "v_l_1": v_l_1,
-            "v_l_2": v_l_2,
-            "a": a,
-            "z_h": z_h,
-            "z_l_1": z_l_1,
-            "z_l_2": z_l_2,
-            "d": d,
-            "t": t,
-        }
+        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "d": d, "t": t}
         n_params = int(9)
         size = int(value.shape[0])
         data = np.zeros((size, 11), dtype=np.float32)
