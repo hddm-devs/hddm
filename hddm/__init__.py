@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-__docformat__ = 'restructuredtext'
+__docformat__ = "restructuredtext"
 
-__version__ = '0.8.0'
+__version__ = "0.8.0"
 
 from . import likelihoods
 from . import generate
@@ -23,6 +23,10 @@ except ImportError:
 from kabuki.utils import load_csv, save_csv, load
 
 try:
-    from IPython.core.debugger import Tracer; debug_here = Tracer()
+    from IPython.core.debugger import Tracer
+
+    debug_here = Tracer()
 except:
-    def debug_here(): pass
+
+    def debug_here():
+        pass
