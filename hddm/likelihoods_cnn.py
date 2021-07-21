@@ -71,7 +71,7 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
 
     if model == "ddm":  # or model == 'weibull':
 
-        def wienernn_like_ddm(
+        def wienernn_like(
             x, v, a, z, t, p_outlier=0, w_outlier=0, **kwargs
         ):  # theta
 
@@ -85,19 +85,19 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
             )
 
         # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_ddm, **kwargs)
-        )
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_ddm, **kwargs)
+        # )
 
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
+        # wfpt_nn.pdf = pdf
+        # wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        # wfpt_nn.cdf = cdf
+        # wfpt_nn.random = random
+        # return wfpt_nn
 
     if model == "weibull_cdf" or model == "weibull":
 
-        def wienernn_like_weibull(
+        def wienernn_like(
             x, v, a, alpha, beta, z, t, p_outlier=0, w_outlier=0, **kwargs
         ):  # theta
 
@@ -111,19 +111,19 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
             )
 
         # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_weibull, **kwargs)
-        )
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_weibull, **kwargs)
+        # )
 
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
+        # wfpt_nn.pdf = pdf
+        # wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        # wfpt_nn.cdf = cdf
+        # wfpt_nn.random = random
+        # return wfpt_nn
 
     if model == "levy":
 
-        def wienernn_like_levy(
+        def wienernn_like(
             x, v, a, alpha, z, t, p_outlier=0, w_outlier=0, **kwargs
         ):  # theta
 
@@ -137,19 +137,19 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
             )
 
         # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_levy, **kwargs)
-        )
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_levy, **kwargs)
+        # )
 
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
+        # wfpt_nn.pdf = pdf
+        # wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        # wfpt_nn.cdf = cdf
+        # wfpt_nn.random = random
+        # return wfpt_nn
 
     if model == "ornstein":
 
-        def wienernn_like_ornstein(
+        def wienernn_like(
             x, v, a, g, z, t, p_outlier=0, w_outlier=0, **kwargs
         ):  # theta
 
@@ -162,20 +162,20 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
                 **kwargs
             )
 
-        # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_ornstein, **kwargs)
-        )
+        # # Create wfpt class
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_ornstein, **kwargs)
+        # )
 
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
+        # wfpt_nn.pdf = pdf
+        # wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        # wfpt_nn.cdf = cdf
+        # wfpt_nn.random = random
+        # return wfpt_nn
 
     if model == "full_ddm" or model == "full_ddm2":
 
-        def wienernn_like_full_ddm(
+        def wienernn_like(
             x, v, sv, a, z, sz, t, st, p_outlier=0, w_outlier=0, **kwargs
         ):
 
@@ -189,19 +189,19 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
             )
 
         # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_full_ddm, **kwargs)
-        )
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_full_ddm, **kwargs)
+        # )
 
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
+        # wfpt_nn.pdf = pdf
+        # wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+        # wfpt_nn.cdf = cdf
+        # wfpt_nn.random = random
+        # return wfpt_nn
 
     if model == "angle":
 
-        def wienernn_like_angle(
+        def wienernn_like(
             x, v, a, theta, z, t, p_outlier=0, w_outlier=0, **kwargs
         ):
 
@@ -214,18 +214,19 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
                 **kwargs
             )
 
-        # Create wfpt class
-        wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_angle, **kwargs)
-        )
-
-        wfpt_nn.pdf = pdf
-        wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-        wfpt_nn.cdf = cdf
-        wfpt_nn.random = random
-        return wfpt_nn
     else:
         return "Not implemented errror: Failed to load likelihood because the model specified is not implemented"
+    
+    # Create wfpt class
+    wfpt_nn = stochastic_from_dist(
+        "Wienernn_" + model, partial(wienernn_like, **kwargs)
+    )
+
+    wfpt_nn.pdf = pdf
+    wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+    wfpt_nn.cdf = cdf
+    wfpt_nn.random = random
+    return wfpt_nn
 
 
 def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
