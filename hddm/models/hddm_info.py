@@ -150,7 +150,7 @@ class HDDM(HDDMBase):
             "alpha": 1.5,
             "pos_alpha": 1.5,
         }
-
+        
         if hasattr(self, "nn"):
             pass
         else:

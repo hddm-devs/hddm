@@ -36,7 +36,6 @@ def flip_errors(data):
 
     return data
 
-
 def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
     """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
 
@@ -90,7 +89,7 @@ def bin_rts_pointwise(data, max_rt=10.0, nbins=512):
                 data.iloc[i, rt_binned_id] = j - 1
     return data
 
-
+  
 def check_params_valid(**params):
     a = params.get("a")
     v = params.get("v")
@@ -764,7 +763,6 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
 def posterior_predictive_dataprocessor_nn(x):
     print(x)
     return x[:, 1] * x[:, 0]
-
 
 if __name__ == "__main__":
     import doctest
