@@ -11,9 +11,6 @@ import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
 
-# import kabuki.step_methods as steps
-
-
 def generate_wfpt_rl_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
 ):

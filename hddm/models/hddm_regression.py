@@ -113,13 +113,13 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         ):
             # convert parents to matrix
             params = np.matrix(args)
+
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError(
                     "Missing columns in design matrix. You need data for all conditions for all subjects."
                 )
-
             predictor = link_func(design_matrix.dot(params.T)[0])
 
             return predictor

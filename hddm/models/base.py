@@ -622,7 +622,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         lower=0.0,  # previously the lower and upper arguments were not there !
         upper=1.0,
     ):
-
         """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, 1].
