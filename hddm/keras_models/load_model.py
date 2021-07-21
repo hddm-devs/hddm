@@ -22,7 +22,7 @@ def load_mlp(model="ddm"):
             compile=False,
         )
 
-    if model == "weibull_cdf":
+    if model == "weibull_cdf" or model == "weibull":
         return keras.models.load_model(
             hddm.keras_models.__path__[0] + "/model_final_new.h5", compile=False
         )
