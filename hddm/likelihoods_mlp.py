@@ -205,6 +205,14 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     :Returns:
         pymc.object: Returns a stochastic object as defined by PyMC2
     """
+    
+    # Model specific inits ------------------------------------------
+    n_params = model_config[model]["n_params"]
+    data_frame_width = n_params + 2
+    model_parameter_names = model_config[model]["params"]
+    model_parameter_lower_bounds = model_config[model]["param_bounds"][0]
+    model_parameter_upper_bounds = model_config[model]["param_bounds"][1]
+    # ---------------------------------------------------------------
 
     # Need to rewrite these random parts !
     def random(
@@ -248,13 +256,44 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     def cdf(self, x):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
+    
+    def wiener_multi_like_nn_test(value, v, a, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+        params = locals()
+        size = int(value.shape[0])
+        data = np.zeors((size, data_frame_width), dtype = np.float32)
+        data[:, n_params:] = np.stack(
+            [
+                np.absolute(value["rt"]).astype(np.float32),
+                value["response"].astype(np.float32),
+            ],
+            axis=1,
+        )
 
+        cnt = 0
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
+            if tmp_str in reg_outcomes:
+                data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
+                if (
+                    data[:, cnt].min() < model_parameter_lower_bounds
+                ) or (
+                    data[:, cnt].max() > model_parameter_upper_bounds
+                ):
+                    print("boundary violation of regressor part")
+                    return -np.inf
+            else:
+                data[:, cnt] = params[tmp_str]
+            cnt += 1
+
+        # Has optimization potential --> AF-TODO: For next version!
+        return hddm.wfpt.wiener_like_multi_nn_mlp(
+            data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
+        ) # **kwargs
+        
     def wiener_multi_like_nn_ddm(
         value, v, a, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
     ):
 
         """LAN Log-likelihood for the DDM"""
-
         params = {"v": v, "a": a, "z": z, "t": t}
         n_params = 4  # model_config[model]['n_params']
         size = int(value.shape[0])
@@ -283,7 +322,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
-        return hddm.wfpt.wiener_like_multi(
+        return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
         ) # **kwargs
 
@@ -630,6 +669,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
     likelihood_funs = {}
+    likelihood_funs['test'] = wiener_multi_like_nn_test
     likelihood_funs['ddm'] = wiener_multi_like_nn_ddm
     likelihood_funs['full_ddm'] = wiener_multi_like_nn_full_ddm
     likelihood_funs['angle'] = wiener_multi_like_nn_angle
