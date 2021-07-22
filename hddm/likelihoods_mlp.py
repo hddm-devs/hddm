@@ -274,9 +274,9 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             if tmp_str in reg_outcomes:
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_parameter_lower_bounds
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_parameter_upper_bounds
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
