@@ -260,7 +260,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     def wiener_multi_like_nn_test(value, v, a, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
         params = locals()
         size = int(value.shape[0])
-        data = np.zeors((size, data_frame_width), dtype = np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
