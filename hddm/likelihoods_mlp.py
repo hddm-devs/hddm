@@ -141,31 +141,31 @@ def make_mlp_likelihood(model, **kwargs):
                                             np.array([v, a, z, t, theta]).astype(np.float32),  
                                             p_outlier = p_outlier, w_outlier = w_outlier, network = kwargs["network"]) #**kwargs)
     
-    def wienernn_like_par2(x, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t,
+    def wienernn_like_par2(x, vh, vl1, vl2, a, zh, zl1, zl2, t,
                            p_outlier=0.0, w_outlier=0.0, **kwargs):
         """
         LAN Log-likelihood for the DDM
         """
         return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values,
-                                            np.array([v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t]).astype(np.float32),  
+                                            np.array([vh, vl1, vl2, a, zh, zl1, zl2, t]).astype(np.float32),  
                                             p_outlier = p_outlier, w_outlier = w_outlier, network = kwargs["network"]) #**kwargs)
 
-    def wienernn_like_seq2(x, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t,
+    def wienernn_like_seq2(x, vh, vl1, vl2, a, zh, zl1, zl2, t,
                            p_outlier=0.0, w_outlier=0.0, **kwargs):
         """
         LAN Log-likelihood for the DDM
         """
         return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, 
-                                            np.array([v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t]).astype(np.float32),  
+                                            np.array([vh, vl1, vl2, a, zh, zl1, zl2, t]).astype(np.float32),  
                                             p_outlier = p_outlier, w_outlier = w_outlier, network = kwargs["network"]) #**kwargs)
 
-    def wienernn_like_mic2(x, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, d, t, 
+    def wienernn_like_mic2(x, vh, vl1, vl2, a, zh, zl1, zl2, d, t, 
                            p_outlier=0.0, w_outlier=0.0, **kwargs):
         """
         LAN Log-likelihood for the DDM
         """
         return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, 
-                                            np.array([v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, d, t]).astype(np.float32),  
+                                            np.array([vh, vl1, vl2, a, zh, zl1, zl2, d, t]).astype(np.float32),  
                                             p_outlier = p_outlier, w_outlier = w_outlier, network = kwargs["network"]) #**kwargs)
 
     likelihood_funs = {}
@@ -257,7 +257,8 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
     
-    def wiener_multi_like_nn_test(value, v, a, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+    def wiener_multi_like_nn_test(value, v, a, z, t, 
+                                  reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
         params = locals()
         size = int(value.shape[0])
         data = np.zeros((size, data_frame_width), dtype = np.float32)
@@ -294,10 +295,9 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     ):
 
         """LAN Log-likelihood for the DDM"""
-        params = {"v": v, "a": a, "z": z, "t": t}
-        n_params = 4  # model_config[model]['n_params']
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 6), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -307,13 +307,13 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "t"]:  # model_config[model]['params']:
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
@@ -331,12 +331,11 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         """
         LAN Log-likelihood for the FULL DDM
         """
+        # params = {"v": v, "a": a, "z": z, "t": t, "sz": sz, "sv": sv, "st": st}
 
-        params = {"v": v, "a": a, "z": z, "t": t, "sz": sz, "sv": sv, "st": st}
-
-        n_params = int(7)
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 9), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -346,27 +345,24 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "t", "sz", "sv", "st"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
+        ) # **kwargs
 
     def wiener_multi_like_nn_angle(
         value, v, a, theta, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
@@ -375,12 +371,10 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         """
         LAN Log-likelihood for the ANGLE MODEL
         """
-
-        params = {"v": v, "a": a, "z": z, "t": t, "theta": theta}
-
-        n_params = int(5)
+        # params = {"v": v, "a": a, "z": z, "t": t, "theta": theta}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 7), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -390,26 +384,24 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "t", "theta"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
-            data, p_outlier=p_outlier, w_outlier=w_outlier, **kwargs
-        )
+            data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
+        ) # **kwargs
 
     def wiener_multi_like_nn_levy(
         value, v, a, alpha, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
@@ -418,11 +410,10 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         """
         LAN Log-likelihood for the LEVY MODEL
         """
-
-        params = {"v": v, "a": a, "z": z, "alpha": alpha, "t": t}
-        n_params = int(5)
+        # params = {"v": v, "a": a, "z": z, "alpha": alpha, "t": t}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 7), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -432,27 +423,24 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "alpha", "t"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
+        ) # **kwargs
 
     def wiener_multi_like_nn_ornstein(
         value, v, a, g, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
@@ -461,12 +449,10 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         """
         LAN Log-likelihood for the ORNSTEIN MODEL
         """
-
-        params = {"v": v, "a": a, "z": z, "g": g, "t": t}
-
-        n_params = int(5)
+        # params = {"v": v, "a": a, "z": z, "g": g, "t": t}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 7), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -476,27 +462,24 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "g", "t"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
-        return hddm.wfpt.wiener_like_multi(
+        return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
+        ) # **kwargs
 
     def wiener_multi_like_nn_weibull(value, v, a, alpha, beta, z, t,
                                      reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
@@ -504,11 +487,10 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         """
         LAN Log-likelihood for the WEIBULL MODEL
         """
-
-        params = {"v": v, "a": a, "z": z, "t": t, "alpha": alpha, "beta": beta}
-        n_params = int(6)
+        # params = {"v": v, "a": a, "z": z, "t": t, "alpha": alpha, "beta": beta}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 8), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -518,82 +500,36 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v", "a", "z", "t", "alpha", "beta"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
-            cnt += 1
-
-        # Has optimization potential --> AF-TODO: For next version!
-        return hddm.wfpt.wiener_like_multi(
-            data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
-
-    def wiener_multi_like_nn_par2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t,
-                                  reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
-
-        """
-        LAN Log-likelihood for the WEIBULL MODEL
-        """
-
-        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
-                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
-        n_params = int(8)
-        size = int(value.shape[0])
-        data = np.zeros((size, 10), dtype=np.float32)
-        data[:, n_params:] = np.stack(
-            [
-                np.absolute(value["rt"]).astype(np.float32),
-                value["response"].astype(np.float32),
-            ],
-            axis=1,
-        )
-
-        cnt = 0
-        for tmp_str in ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"]:
-
-            if tmp_str in reg_outcomes:
-                data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
-                if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
-                    print("boundary violation of regressor part")
-                    return -np.inf
-            else:
-                data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
+        ) # **kwargs
 
-    def wiener_multi_like_nn_seq2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, t,
+    def wiener_multi_like_nn_par2(value, vh, vl1, vl2, a, zh, zl1, zl2, t,
                                   reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
 
         """
         LAN Log-likelihood for the WEIBULL MODEL
         """
-
-        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
-                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
-        n_params = int(8)
+        # params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+        #          "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 10), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -603,40 +539,36 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
-        )
+        ) # **kwargs
 
-    def wiener_multi_like_nn_mic2(value, v_h, v_l_1, v_l_2, a, z_h, z_l_1, z_l_2, d, t,
+    def wiener_multi_like_nn_seq2(value, vh, vl1, vl2, a, zh, zl1, zl2, t,
                                   reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
 
         """
         LAN Log-likelihood for the WEIBULL MODEL
         """
-
-        params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
-                  "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "d": d, "t": t}
-        n_params = int(9)
+        # params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+        #           "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "t": t}
+        params = locals()
         size = int(value.shape[0])
-        data = np.zeros((size, 11), dtype=np.float32)
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
         data[:, n_params:] = np.stack(
             [
                 np.absolute(value["rt"]).astype(np.float32),
@@ -646,27 +578,63 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
         cnt = 0
-        for tmp_str in ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "d", "t"]:
-
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
             if tmp_str in reg_outcomes:
-                # data[:, cnt] = params[tmp_str].loc[value['rt'].index].values[:, 0]
                 data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
                 if (
-                    data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
                 ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
                 ):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
                 data[:, cnt] = params[tmp_str]
-
             cnt += 1
 
         # Has optimization potential --> AF-TODO: For next version!
         return hddm.wfpt.wiener_like_multi_nn_mlp(
             data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
+        ) # **kwargs
+
+    def wiener_multi_like_nn_mic2(value, vh, vl1, vl2, a, zh, zl1, zl2, d, t,
+                                  reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+
+        """
+        LAN Log-likelihood for the WEIBULL MODEL
+        """
+        # params = {"v_h": v_h, "v_l_1": v_l_1, "v_l_2": v_l_2, "a": a, 
+        #           "z_h": z_h, "z_l_1": z_l_1, "z_l_2": z_l_2, "d": d, "t": t}
+        params = locals()
+        size = int(value.shape[0])
+        data = np.zeros((size, data_frame_width), dtype = np.float32)
+        data[:, n_params:] = np.stack(
+            [
+                np.absolute(value["rt"]).astype(np.float32),
+                value["response"].astype(np.float32),
+            ],
+            axis=1,
         )
+
+        cnt = 0
+        for tmp_str in model_parameter_names:  # model_config[model]['params']:
+            if tmp_str in reg_outcomes:
+                data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
+                if (
+                    data[:, cnt].min() < model_parameter_lower_bounds[cnt]
+                ) or (
+                    data[:, cnt].max() > model_parameter_upper_bounds[cnt]
+                ):
+                    print("boundary violation of regressor part")
+                    return -np.inf
+            else:
+                data[:, cnt] = params[tmp_str]
+            cnt += 1
+
+        # Has optimization potential --> AF-TODO: For next version!
+        return hddm.wfpt.wiener_like_multi_nn_mlp(
+            data, p_outlier=p_outlier, w_outlier=w_outlier, network = kwargs["network"]
+        ) # **kwargs
 
     likelihood_funs = {}
     likelihood_funs['test'] = wiener_multi_like_nn_test

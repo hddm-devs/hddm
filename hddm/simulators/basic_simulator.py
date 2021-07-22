@@ -172,6 +172,8 @@ def bin_arbitrary_fptd(
 model_config = {
     "test": {
         "params": ["v", "a", "z", "t"],
+        "params_trans": [0, 0, 1, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
         "param_bounds_cnn": [
             [-2.5, 0.5, 0.25, 1e-3],
@@ -185,6 +187,8 @@ model_config = {
     },
     "ddm": {
         "params": ["v", "a", "z", "t"],
+        "params_trans": [0, 0, 1, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
         "param_bounds_cnn": [
             [-2.5, 0.5, 0.25, 1e-3],
@@ -198,6 +202,8 @@ model_config = {
     },
     "ddm_vanilla": {
         "params": ["v", "a", "z", "t"],
+        "params_trans": [0, 0, 1, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
         "boundary": bf.constant,
         "n_params": 4,
@@ -207,6 +213,8 @@ model_config = {
     },
     "angle": {
         "params": ["v", "a", "z", "t", "theta"],
+        "params_trans": [0, 0, 1, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.2, 1e-3, -0.1], [3.0, 2.0, 0.8, 2.0, 1.45]],
         "param_bounds_cnn": [
             [-2.5, 0.2, 0.1, 0.0, 0.0],
@@ -220,6 +228,8 @@ model_config = {
     },
     "weibull": {
         "params": ["v", "a", "z", "t", "alpha", "beta"],
+        "params_trans": [0, 0, 1, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 2.0, 2.0],
         "param_bounds": [
             [-2.5, 0.3, 0.2, 1e-3, 0.31, 0.31],
             [2.5, 2.5, 0.8, 2.0, 4.99, 6.99],
@@ -236,6 +246,8 @@ model_config = {
     },
     "levy": {
         "params": ["v", "a", "z", "alpha", "t"],
+        "params_trans": [0, 0, 1, 0, 0],
+        "params_std_uppder": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1.0, 1e-3], [3.0, 2.0, 0.9, 2.0, 2]],
         "param_bounds_cnn": [
             [-2.5, 0.2, 0.1, 1.0, 0.0],
@@ -249,6 +261,8 @@ model_config = {
     },
     "full_ddm": {
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
+        "params_trans": [0, 0, 1, 0, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
         "param_bounds": [
             [-3.0, 0.3, 0.3, 0.25, 1e-3, 1e-3, 1e-3],
             [3.0, 2.5, 0.7, 2.25, 0.2, 2.0, 0.25],
@@ -265,6 +279,8 @@ model_config = {
     },
     "full_ddm_vanilla": {
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
+        "params_trans": [0, 0, 1, 0, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
         "param_bounds": [
             [-5.0, 0.1, 0.3, 0.25, 0, 0, 0],
             [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
@@ -277,6 +293,8 @@ model_config = {
     },
     "ornstein": {
         "params": ["v", "a", "z", "g", "t"],
+        "params_trans": [0, 0, 1, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, None],
         "param_bounds": [[-2.0, 0.3, 0.2, -1.0, 1e-3], [2.0, 2.0, 0.8, 1.0, 2]],
         "param_bounds_cnn": [
             [-2.5, 0.2, 0.1, -1.0, 0.0],
@@ -290,6 +308,8 @@ model_config = {
     },
     "ddm_sdv": {
         "params": ["v", "a", "z", "t", "sv"],
+        "params_trans": [0, 0, 1 ,0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, 1e-3], [3.0, 2.5, 0.9, 2.0, 2.5]],
         "param_bounds_cnn": [
             [-3.0, 0.3, 0.1, 0.0, 0.0],
@@ -302,7 +322,9 @@ model_config = {
         "n_choices": 2,
     },
     "ddm_par2": {
-        "params": ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"],
+        "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
+        "params_trans": [0, 0, 0, 0, 1, 1, 1, 0],
+        "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, 1.0],
         "param_bounds": [
             [-2.0, -2.0, -2.0, 0.3, 0.2, 0.2, 0.2, 0.0],
             [2.0, 2.0, 2.0, 2.0, 0.8, 0.8, 0.8, 2.0],
@@ -314,11 +336,13 @@ model_config = {
         "boundary": bf.constant,
         "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
-        "hddm_include": ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"],
+        "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "n_choices": 4,
     },
     "ddm_seq2": {
-        "params": ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"],
+        "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
+        "param_trans": [0, 0, 0, 0, 1, 1, 1, 0],
+        "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, 1.0],
         "param_bounds": [
             [-2.0, -2.0, -2.0, 0.3, 0.2, 0.2, 0.2, 0.0],
             [2.0, 2.0, 2.0, 2.0, 0.8, 0.8, 0.8, 2.0],
@@ -330,11 +354,13 @@ model_config = {
         "boundary": bf.constant,
         "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
-        "hddm_include": ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "t"],
+        "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "n_choices": 4,
     },
     "ddm_mic2": {
-        "params": ["v_h", "v_l_1", "v_l_2", "a", "z_h", "z_l_1", "z_l_2", "d", "t"],
+        "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
+        "param_trans":[0, 0, 0, 0, 1, 1, 1, 1, 0],
+        "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, None, 1.0],
         "param_bounds": [
             [-2.0, -2.0, -2.0, 0.3, 0.2, 0.2, 0.2, 0.0, 0.0],
             [2.0, 2.0, 2.0, 2.0, 0.8, 0.8, 0.8, 1.0, 2.0],
@@ -346,17 +372,7 @@ model_config = {
         "boundary": bf.constant,
         "n_params": 9,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
-        "hddm_include": [
-            "v_h",
-            "v_l_1",
-            "v_l_2",
-            "a",
-            "z_h",
-            "z_l_1",
-            "z_l_2",
-            "d",
-            "t",
-        ],
+        "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
         "n_choices": 4,
     },
 }

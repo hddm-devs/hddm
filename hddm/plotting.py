@@ -45,7 +45,7 @@ def untransform_traces(traces=None, model=None, is_nn=False):
                     "This function applies inverse logit --> This applies to the z variable. "
                 )
                 print(
-                    "Your are not applying the sigmoid transformation with the ",
+                    "You are not applying the sigmoid transformation with the ",
                     param_id,
                     " parameter",
                 )
