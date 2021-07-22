@@ -93,7 +93,7 @@ class HDDMnnRegressor(HDDMRegressor):
 
         """
         # Signify as neural net class for later super() inits
-        self.nn = False
+        self.nn = True
         # kwargs['nn'] = True
         print(
             "Setting priors uninformative (LANs only work with uninformative priors for now)"
