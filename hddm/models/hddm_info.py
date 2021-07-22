@@ -157,19 +157,6 @@ class HDDM(HDDMBase):
             self.nn = False
 
         self.is_informative = kwargs.pop("informative", True)
-
-        # We attach a 'model' attribute to the class which is helpful to make
-        # some the of plotting functions in the 'graphs' module work for HDDM and HDDMnn
-        if not self.nn:
-            if (
-                ("sv" in self.include)
-                or ("st" in self.include)
-                or ("sz" in self.include)
-            ):
-                self.model = "full_ddm"
-            else:
-                self.model = "ddm"
-
         super(HDDM, self).__init__(*args, **kwargs)
 
         # -------------------------------------------------------------------------------------

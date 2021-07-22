@@ -40,6 +40,20 @@ class AccumulatorModel(kabuki.Hierarchical):
         else:
             data = hddm.utils.flip_errors(data)
 
+        # We attach a 'model' attribute to the class which is helpful to make
+        # some the of plotting functions in the 'graphs' module work for HDDM and HDDMnn
+        if not self.nn:
+            if (
+                ("sv" in self.include)
+                or ("st" in self.include)
+                or ("sz" in self.include)
+            ):
+                self.model = "full_ddm"
+                print('Set model to full_ddm')
+            else:
+                self.model = "ddm"
+                print('Set model to ddm')
+
         self.std_depends = kwargs.pop("std_depends", False)
         super(AccumulatorModel, self).__init__(data, **kwargs)
 
