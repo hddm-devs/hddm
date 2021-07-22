@@ -83,6 +83,7 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)
         # Initialize kabuki.hierarchical.Knode
+
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
@@ -113,7 +114,6 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         ):
             # convert parents to matrix
             params = np.matrix(args)
-
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
@@ -288,7 +288,6 @@ class HDDMRegressor(HDDM):
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-
         # includes_remainder = set(include).difference(self.reg_outcomes)
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(
             include.difference(self.reg_outcomes)

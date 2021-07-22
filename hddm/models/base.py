@@ -41,7 +41,6 @@ class AccumulatorModel(kabuki.Hierarchical):
             data = hddm.utils.flip_errors(data)
 
         self.std_depends = kwargs.pop("std_depends", False)
-
         super(AccumulatorModel, self).__init__(data, **kwargs)
 
     def _create_an_average_model(self):
@@ -765,7 +764,6 @@ class AccumulatorModel(kabuki.Hierarchical):
             # Original version
             # g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
             #           trace=True )
-
             knodes["%s_trans" % name] = g_trans
             knodes["%s_bottom" % name] = g
 
@@ -1079,7 +1077,7 @@ class HDDMBase(AccumulatorModel):
         )
 
         self._kwargs = kwargs
-
+        
         # For 2-choice models adjust include statement
         if model_config[self.model]["n_choices"] == 2:
             self.include = set(["v", "a", "t"])

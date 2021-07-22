@@ -109,6 +109,7 @@ class KnodeWfptStimCoding(Knode):
         if all(
             data[self.stim_col] == self.stims[0]
         ):  # AF-COMMENT: Should this be reversed? -> self.stims[1]
+
             if self.split_param == "z":
                 kwargs["z"] = 1 - kwargs["z"]
             elif self.split_param == "v" and dc is None:
