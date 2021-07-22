@@ -35,7 +35,10 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
+        print('printing self.nn')
+        print(self.nn)
         if self.nn:
+            print('passed through flip errors nn')
             data = hddm.utils.flip_errors_nn(data, self.network_type)
         else:
             data = hddm.utils.flip_errors(data)
