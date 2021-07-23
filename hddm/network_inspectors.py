@@ -364,8 +364,8 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         plot_data[:, 1] = np.concatenate((np.repeat(-1, 2000), np.repeat(1, 2000)))
     else:
         plot_data = np.zeros((model_config[model]['n_choices'] * 1000, 2))
-        plot_data = np.concatenate([[i * 0.01 for i in range(1, 1001, 1)] for j in range(model_config[model]["n_choices"])])
-        plot_data = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
+        plot_data[:, 0] = np.concatenate([[i * 0.01 for i in range(1, 1001, 1)] for j in range(model_config[model]["n_choices"])])
+        plot_data[:, 1] = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
 
     # Load Keras model and initialize batch container
     keras_model = get_mlp(model=model)
