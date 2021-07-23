@@ -1418,7 +1418,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                             'simulator': 'ddm_flexbound',
                             'boundary_fun_type': boundary_fun.__name__,
                             'possible_choices': [0, 1, 2, 3],
-                            'trajectory': traj,
+                            'trajectory': 'This simulator does not yet allow for trajectory simulation',
                             'boundary': boundary})
 # -----------------------------------------------------------------------------------------------
 
