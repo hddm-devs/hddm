@@ -1296,9 +1296,9 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
     cdef float[:] t_view = t
 
     # Trajectory
-    traj = np.zeros((int(max_t / delta_t) + 1, 3), dtype = DTYPE)
-    traj[:, :] = -999 
-    cdef float[:, :] traj_view = traj    
+    #traj = np.zeros((int(max_t / delta_t) + 1, 3), dtype = DTYPE)
+    #traj[:, :] = -999 
+    #cdef float[:, :] traj_view = traj    
 
     rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
     choices = np.zeros((n_samples, n_trials, 1), dtype = np.intc)
@@ -1339,9 +1339,9 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
             # Random walker 1
             y_h = (-1) * boundary_view[0] + (z_h_view[k] * 2 * (boundary_view[0]))  # reset starting position 
 
-            if n == 0:
-                if k == 0:
-                    traj_view[0, 0] = y_h
+            #if n == 0:
+            #    if k == 0:
+            #        traj_view[0, 0] = y_h
             
             while y_h >= (-1) * boundary_view[ix] and y_h <= boundary_view[ix] and t_particle <= max_t:
                 y_h += (v_h_view[k] * delta_t) + (sqrt_st * gaussian_values[m])
@@ -1353,11 +1353,11 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                     gaussian_values = draw_gaussian(num_draws)
                     m = 0
 
-                if n == 0:
-                    traj_view[ix, 0] = y_h
+                #if n == 0:
+                #    traj_view[ix, 0] = y_h
     
             # If we are already at maximum t, to generate a choice we just sample from a bernoulli
-            if t >= max_t:
+            if t_particle >= max_t:
                 if random_uniform() > 0.5:
                     choices_view[n, k, 0] = choices_view[n, k, 0] + 1
             else:
@@ -1490,8 +1490,8 @@ def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
     #            boundary_view[i] = tmp
 #
     cdef float y_h, y_l, v_l, t_h, t_l
-    cdef int n, ix
-    cdef int m = 0
+    cdef Py_ssize_t n, ix, k
+    cdef Py_ssize_t m = 0
     cdef float[:] gaussian_values = draw_gaussian(num_draws)
 
     for k in range(n_trials):
