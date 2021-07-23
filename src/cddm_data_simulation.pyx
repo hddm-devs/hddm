@@ -1296,10 +1296,6 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
     cdef float[:] t_view = t
 
     # Trajectory
-    #traj = np.zeros((int(max_t / delta_t) + 1, 3), dtype = DTYPE)
-    #traj[:, :] = -999 
-    #cdef float[:, :] traj_view = traj    
-
     rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
     choices = np.zeros((n_samples, n_trials, 1), dtype = np.intc)
 
@@ -1339,10 +1335,6 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
             # Random walker 1
             y_h = (-1) * boundary_view[0] + (z_h_view[k] * 2 * (boundary_view[0]))  # reset starting position 
 
-            #if n == 0:
-            #    if k == 0:
-            #        traj_view[0, 0] = y_h
-            
             while y_h >= (-1) * boundary_view[ix] and y_h <= boundary_view[ix] and t_particle <= max_t:
                 y_h += (v_h_view[k] * delta_t) + (sqrt_st * gaussian_values[m])
                 t_particle += delta_t
@@ -1353,9 +1345,6 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                     gaussian_values = draw_gaussian(num_draws)
                     m = 0
 
-                #if n == 0:
-                #    traj_view[ix, 0] = y_h
-    
             # If we are already at maximum t, to generate a choice we just sample from a bernoulli
             if t_particle >= max_t:
                 if random_uniform() > 0.5:
@@ -1393,10 +1382,6 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                 if m == num_draws:
                     gaussian_values = draw_gaussian(num_draws)
                     m = 0
-                
-                #if n == 0:
-                #    if k == 0:
-                #        traj_view[ix, traj_id] = y_l
 
             rts_view[n, k, 0] = t_particle + t_view[k]
             if sign(y_l) >= 0: # store choice update
@@ -1472,23 +1457,6 @@ def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
     boundary = np.zeros(t_s.shape, dtype = DTYPE)
     cdef float[:] boundary_view = boundary
 
-    #boundary = np.zeros(num_draws, dtype = DTYPE)
-    #cdef float[:] boundary_view = boundary
-    #cdef int i
-    #cdef float tmp
-#
-    ## Precompute boundary evaluations
-    #if boundary_multiplicative:
-    #    for i in range(num_draws):
-    #        tmp = a * boundary_fun(t = i * delta_t, **boundary_params)
-    #        if tmp > 0:
-    #            boundary_view[i] = tmp
-    #else:
-    #    for i in range(num_draws):
-    #        tmp = a + boundary_fun(t = i * delta_t, **boundary_params)
-    #        if tmp > 0:
-    #            boundary_view[i] = tmp
-#
     cdef float y_h, y_l, v_l, t_h, t_l
     cdef Py_ssize_t n, ix, k
     cdef Py_ssize_t m = 0
