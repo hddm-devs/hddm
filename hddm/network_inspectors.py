@@ -308,6 +308,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     model=None,
     n_samples=10,
     n_reps=10,
+    alpha = 0.1,
     cols=3,
     save=False,
     show=True,
@@ -374,7 +375,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
 
     # n_subplot = 0
     for i in range(parameter_df.shape[0]):
-        print(str(i) + " of " + str(parameter_df.shape[0]))
+        print(str(i + 1) + " of " + str(parameter_df.shape[0]))
 
         row_tmp = int(np.floor(i / cols))
         col_tmp = i - (cols * row_tmp)
@@ -406,17 +407,19 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
                     plot_data[:, 0] * plot_data[:, 1],
                     np.exp(ll_out_gt),
                     color="black",
-                    alpha=0.5,
+                    alpha=alpha,
                     label=label,
                     ax=ax[row_tmp, col_tmp],
                 )
             
             else:
                 for k in range(model_config[model]["n_choices"]):
+                    if k > 0:
+                        label = None
                     sns.lineplot(x = plot_data[1000*k:1000*(k+1), 0],
                                  y = np.exp(ll_out_gt[1000*k:1000*(k+1)]),
                                  color = 'black',
-                                 alpha = 0.5, 
+                                 alpha = alpha, 
                                  label = label,
                                  ax = ax[row_tmp, col_tmp])
 
