@@ -1374,7 +1374,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                         traj_id = 2
 
             # Random walker 2
-            while y_l >= (-1) * boundary_view[ix] and y_l <= boundary_view[ix] and t <= max_t:
+            while y_l >= (-1) * boundary_view[ix] and y_l <= boundary_view[ix] and t_particle <= max_t:
                 y_l += (v_l * delta_t) + (sqrt_st * gaussian_values[m])
                 t_particle += delta_t
                 ix += 1
