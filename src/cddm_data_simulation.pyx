@@ -1314,7 +1314,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
     cdef float y_h, t_particle, y_l
     cdef Py_ssize_t n, ix, k
     cdef Py_ssize_t m = 0
-    cdef Py_ssize_t traj_id
+    #cdef Py_ssize_t traj_id
     cdef float[:] gaussian_values = draw_gaussian(num_draws)
 
     for k in range(n_trials):
@@ -1360,7 +1360,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                     else:
                         y_l = (-1) * boundary_view[ix] + (z_l_1_view[k] * 2 * (boundary_view[ix])) 
                         v_l = v_l_1_view[k]
-                        traj_id = 1
+                        #traj_id = 1
                 else:
                     choices_view[n, k, 0] = 2
                     
@@ -1371,7 +1371,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                     else:
                         y_l = (-1) * boundary_view[ix] + (z_l_2_view[k] * 2 * (boundary_view[ix])) 
                         v_l = v_l_2_view[k]
-                        traj_id = 2
+                        #traj_id = 2
 
             # Random walker 2
             while y_l >= (-1) * boundary_view[ix] and y_l <= boundary_view[ix] and t_particle <= max_t:

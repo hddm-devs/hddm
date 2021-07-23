@@ -184,6 +184,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "ddm": {
         "params": ["v", "a", "z", "t"],
@@ -199,6 +200,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "ddm_vanilla": {
         "params": ["v", "a", "z", "t"],
@@ -210,6 +212,7 @@ model_config = {
         "default_params": [0.0, 2.0, 0.5, 0],
         "hddm_include": ["z"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "angle": {
         "params": ["v", "a", "z", "t", "theta"],
@@ -225,6 +228,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["z", "theta"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "weibull": {
         "params": ["v", "a", "z", "t", "alpha", "beta"],
@@ -243,6 +247,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
         "hddm_include": ["z", "alpha", "beta"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "levy": {
         "params": ["v", "a", "z", "alpha", "t"],
@@ -258,6 +263,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1.5, 1e-3],
         "hddm_include": ["z", "alpha"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "full_ddm": {
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
@@ -276,6 +282,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
         "hddm_include": ["z", "st", "sv", "sz"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "full_ddm_vanilla": {
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
@@ -290,6 +297,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
         "hddm_include": ["z", "st", "sv", "sz"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "ornstein": {
         "params": ["v", "a", "z", "g", "t"],
@@ -305,6 +313,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 0.0, 1e-3],
         "hddm_include": ["z", "g"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "ddm_sdv": {
         "params": ["v", "a", "z", "t", "sv"],
@@ -320,6 +329,7 @@ model_config = {
         "default_params": [0.0, 1.0, 0.5, 1e-3, 1e-3],
         "hddm_include": ["z", "sv"],
         "n_choices": 2,
+        "choices": [-1, 1],
     },
     "ddm_par2": {
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
@@ -338,6 +348,7 @@ model_config = {
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "n_choices": 4,
+        "choices": [0, 1, 2, 3],
     },
     "ddm_seq2": {
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
@@ -356,6 +367,7 @@ model_config = {
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "n_choices": 4,
+        "choices": [0, 1, 2, 3],
     },
     "ddm_mic2": {
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
@@ -374,6 +386,7 @@ model_config = {
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
         "n_choices": 4,
+        "choices": [0, 1, 2, 3],
     },
 }
 

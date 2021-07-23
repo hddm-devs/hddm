@@ -353,14 +353,19 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     sns.despine(right=True)
 
     # Data template
-    plot_data = np.zeros((4000, 2))
-    plot_data[:, 0] = np.concatenate(
-        (
-            [i * 0.0025 for i in range(2000, 0, -1)],
-            [i * 0.0025 for i in range(1, 2001, 1)],
+    if model_config[model]['n_choices'] == 2:
+        plot_data = np.zeros((4000, 2))
+        plot_data[:, 0] = np.concatenate(
+            (
+                [i * 0.0025 for i in range(2000, 0, -1)],
+                [i * 0.0025 for i in range(1, 2001, 1)],
+            )
         )
-    )
-    plot_data[:, 1] = np.concatenate((np.repeat(-1, 2000), np.repeat(1, 2000)))
+        plot_data[:, 1] = np.concatenate((np.repeat(-1, 2000), np.repeat(1, 2000)))
+    else:
+        plot_data = np.zeros((model_config[model]['n_choices'] * 1000, 2))
+        plot_data = np.concatenate([[i * 0.01 for i in range(1, 1001, 1)] for j in range(model_config[model]["n_choices"])])
+        plot_data = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
 
     # Load Keras model and initialize batch container
     keras_model = get_mlp(model=model)
@@ -392,32 +397,53 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
 
             # Plot kde predictions
             if j == 0:
+                label = "KDE"
+            else:
+                label = None
+            
+            if model_config[model]["n_choices"] == 2:
                 sns.lineplot(
                     plot_data[:, 0] * plot_data[:, 1],
                     np.exp(ll_out_gt),
                     color="black",
                     alpha=0.5,
-                    label="KDE",
+                    label=label,
                     ax=ax[row_tmp, col_tmp],
                 )
-            elif j > 0:
-                sns.lineplot(
-                    plot_data[:, 0] * plot_data[:, 1],
-                    np.exp(ll_out_gt),
-                    color="black",
-                    alpha=0.5,
-                    ax=ax[row_tmp, col_tmp],
-                )
+            
+            else:
+                for k in range(model_config[model]["n_choices"]):
+                    sns.lineplot(x = plot_data[1000*k:1000*(k+1), 0],
+                                 y = np.exp(ll_out_gt[1000*k:1000*(k+1)]),
+                                 color = 'black',
+                                 alpha = 0.5, 
+                                 label = label,
+                                 ax = ax[row_tmp, col_tmp])
 
-        # Plot keras predictions
-        sns.lineplot(
-            plot_data[:, 0] * plot_data[:, 1],
-            np.exp(ll_out_keras[:, 0]),
-            color="green",
-            label="MLP",
-            alpha=1,
-            ax=ax[row_tmp, col_tmp],
-        )
+            if j == 0:
+                # Plot keras predictions
+                if model_config[model]["n_choices"] == 2:
+                    sns.lineplot(
+                        plot_data[:, 0] * plot_data[:, 1],
+                        np.exp(ll_out_keras[:, 0]),
+                        color="green",
+                        label="MLP",
+                        alpha=1,
+                        ax=ax[row_tmp, col_tmp],
+                    )
+                else:
+                    for k in range(model_config[model]["n_choices"]):
+                        if k == 0:
+                            label = "MLP"
+                        else:
+                            label = None
+
+                        sns.lineplot(x = plot_data[1000*k:1000*(k+1), 0], 
+                                    y = np.exp(ll_out_keras[1000*k:1000*(k+1), 0]),
+                                    color = 'green',
+                                    label = label,
+                                    alpha = 1,
+                                    ax = ax[row_tmp, col_tmp])        
 
         # Legend adjustments
         if row_tmp == 0 and col_tmp == 0:
@@ -507,6 +533,8 @@ def lan_manifold(
     # mpl.rcParams['text.usetex'] = True
     # #matplotlib.rcParams['pdf.fonttype'] = 42
     # mpl.rcParams['svg.fonttype'] = 'none'
+
+    assert model_config[model]["n_choices"] == 2, "This plot works only for 2-choice models at the moment. Improvements coming!"
 
     if parameter_df.shape[0] > 0:
         parameters = parameter_df.iloc[0, :]
