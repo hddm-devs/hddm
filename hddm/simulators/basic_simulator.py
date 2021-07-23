@@ -443,6 +443,8 @@ def simulator(
     #     return
 
     if theta.ndim > 1:
+        print('n_trials')
+        print(n_trials)
         n_trials = theta.shape[0]
     else:
         n_trials = 1

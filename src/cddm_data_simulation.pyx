@@ -1468,7 +1468,6 @@ def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
 
     # Boundary storage for the upper bound
     cdef int num_draws = int((max_t / delta_t) + 1)
-
     t_s = np.arange(0, max_t + delta_t, delta_t).astype(DTYPE)
     boundary = np.zeros(t_s.shape, dtype = DTYPE)
     cdef float[:] boundary_view = boundary
@@ -1512,7 +1511,7 @@ def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
             ix = 0 # reset boundary index
 
             # Initialize walkers
-            y_h = (-1) * boundary_view[0] + (z_h * 2 * (boundary_view[0])) 
+            y_h = (-1) * boundary_view[0] + (z_h_view[k] * 2 * (boundary_view[0])) 
 
             # Random walks until y_h hits bound
             while y_h >= (-1) * boundary_view[ix] and y_h <= boundary_view[ix] and t_h <= max_t:
@@ -1616,7 +1615,6 @@ def ddm_flexbound_mic2(np.ndarray[float, ndim = 1] v_h,
 
     # Boundary storage for the upper bound
     cdef int num_draws = int((max_t / delta_t) + 1)
-
     t_s = np.arange(0, max_t + delta_t, delta_t).astype(DTYPE)
     boundary = np.zeros(t_s.shape, dtype = DTYPE)
     cdef float[:] boundary_view = boundary
