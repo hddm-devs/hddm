@@ -720,13 +720,14 @@ def model_plot(
                     .values
                 )
         return data_dict
-
     # ----------------------------------------
 
     if hddm_model is None and model_ground_truth is None:
         return "Please provide either posterior samples, \n or a ground truth model and parameter set to plot something here. \n Currently you are requesting an empty plot"
     if hddm_model is not None and dataset is not None:
         return "Plesae provide either a dataset directly OR a fitted hddm_model object. You seem to have supplied both"
+
+    assert model_config[hddm_model.model]["n_choices"] == 2, "The model_plot() currently only works for 2-choice models"
 
     # AF-TODO: Shape checks
     if hddm_model is not None:
@@ -1317,6 +1318,8 @@ def posterior_predictive_plot(
             Timesteps to use for the simulation runs performed for plotting.
     Return: plot object
     """
+
+    assert model_config[hddm_model.model]["n_choices"] == 2, "The posterior_predictive() plot currently only works for 2-choice models"
 
     if n_posterior_parameters <= 1:
         print("ERROR: n_posterior_parameters needs to be larger than 1")
