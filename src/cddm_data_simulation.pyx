@@ -1394,9 +1394,9 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
                     gaussian_values = draw_gaussian(num_draws)
                     m = 0
                 
-                if n == 0:
-                    if k == 0:
-                        traj_view[ix, traj_id] = y_l
+                #if n == 0:
+                #    if k == 0:
+                #        traj_view[ix, traj_id] = y_l
 
             rts_view[n, k, 0] = t_particle + t_view[k]
             if sign(y_l) >= 0: # store choice update
