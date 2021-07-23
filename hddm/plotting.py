@@ -122,10 +122,10 @@ def make_trace_plotready_h_c(
 
             # Check if data contains ground truth parameters (once for the case where we supply 'model_ground_truth' and once where we didn't)
             # AF-TODO: Reorganize this so that we supply trial by trial parameters separately
-            print("model_ground_truth")
-            print(model_ground_truth)
-            print("data_h_c[key][subj_id[data]")
-            print(list(dat_h_c[key][subj_id]["data"].keys()))
+            #print("model_ground_truth")
+            #print(model_ground_truth)
+            #print("data_h_c[key][subj_id[data]")
+            #print(list(dat_h_c[key][subj_id]["data"].keys()))
 
             test_passed = 1
             if model_ground_truth is None:
@@ -749,8 +749,8 @@ def model_plot(
     # Some style settings
     sns.set(style="white", palette="muted", color_codes=True, font_scale=2)
 
-    print("n_plots")
-    print(n_plots)
+    #print("n_plots")
+    #print(n_plots)
 
     # Outer for loop loops over Figures
     for plot_n in range(n_plots):
@@ -1652,7 +1652,7 @@ def posterior_pair_plot(
                                     "gt_parameter_vector"
                                 ][idx_tmp]
                         else:
-                            print("problem")
+                            pass #print("problem")
 
                     data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
 
