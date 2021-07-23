@@ -151,7 +151,7 @@ class HDDM(HDDMBase):
             "alpha": 1.5,
             "pos_alpha": 1.5,
         }
-        
+
         if hasattr(self, "nn"):
             pass
         else:
@@ -203,39 +203,28 @@ class HDDM(HDDMBase):
                 if trans:
                     knodes.update(
                         self._create_family_invlogit(
-                        tmp_param,
-                        g_tau = 10 ** -2,
-                        std_std = 0.5,
-                        lower = model_config[self.model][param_bnd_str][0][
-                                param_id
-                            ],
-                        upper = model_config[self.model][param_bnd_str][1][
-                                param_id
-                            ],
-                        value = model_config[self.model]["default_params"][
-                                param_id
-                            ],
-                    ))
+                            tmp_param,
+                            g_tau=10 ** -2,
+                            std_std=0.5,
+                            lower=model_config[self.model][param_bnd_str][0][param_id],
+                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
+                        )
+                    )
                 else:
                     knodes.update(
                         self._create_family_trunc_normal(
                             tmp_param,
-                            lower=model_config[self.model][param_bnd_str][0][
-                                param_id
-                            ],
-                            upper=model_config[self.model][param_bnd_str][1][
-                                param_id
-                            ],
-                            value=model_config[self.model]["default_params"][
-                                param_id
-                            ],
+                            lower=model_config[self.model][param_bnd_str][0][param_id],
+                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
                             std_upper=model_config[self.model]["params_std_upper"][
                                 param_id
                             ],  # added AF
                         )
                     )
         return knodes
-                
+
         # if (
         #     self.model == "weibull"
         #     or self.model == "weibull_cdf"

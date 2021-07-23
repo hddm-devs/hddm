@@ -308,7 +308,7 @@ model_config = {
     },
     "ddm_sdv": {
         "params": ["v", "a", "z", "t", "sv"],
-        "params_trans": [0, 0, 1 ,0, 0],
+        "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, 1e-3], [3.0, 2.5, 0.9, 2.0, 2.5]],
         "param_bounds_cnn": [
@@ -359,7 +359,7 @@ model_config = {
     },
     "ddm_mic2": {
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
-        "param_trans":[0, 0, 0, 0, 1, 1, 1, 1, 0],
+        "param_trans": [0, 0, 0, 0, 1, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, None, 1.0],
         "param_bounds": [
             [-2.0, -2.0, -2.0, 0.3, 0.2, 0.2, 0.2, 0.0, 0.0],

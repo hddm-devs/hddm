@@ -36,6 +36,7 @@ def flip_errors(data):
 
     return data
 
+
 def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
     """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
 

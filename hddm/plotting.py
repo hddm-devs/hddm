@@ -40,7 +40,9 @@ def untransform_traces(traces=None, model=None, is_nn=False):
             param_idx = key.find("_")
             param_id = key[:param_idx]
 
-            if not model_config[model]["params_trans"][model_config[model]["params"].index(param_id)]:
+            if not model_config[model]["params_trans"][
+                model_config[model]["params"].index(param_id)
+            ]:
                 print(
                     "You are applying the sigmoid transformation with the ",
                     param_id,

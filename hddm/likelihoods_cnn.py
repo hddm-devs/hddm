@@ -69,9 +69,7 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
 
-    def wienernn_like_ddm(
-        x, v, a, z, t, p_outlier=0, w_outlier=0, **kwargs
-    ):  # theta
+    def wienernn_like_ddm(x, v, a, z, t, p_outlier=0, w_outlier=0, **kwargs):  # theta
 
         return hddm.wfpt.wiener_like_cnn_2(
             x["rt_binned"].values,
@@ -129,17 +127,21 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
             x["rt_binned"].values,
             x["response_binned"].values,
             np.array([v, a, z, t, sz, sv, st], dtype=np.float32),
-            p_outlier=p_outlier, w_outlier=w_outlier, **kwargs)
+            p_outlier=p_outlier,
+            w_outlier=w_outlier,
+            **kwargs
+        )
 
-    def wienernn_like_angle(
-        x, v, a, theta, z, t, p_outlier=0, w_outlier=0, **kwargs
-    ):
+    def wienernn_like_angle(x, v, a, theta, z, t, p_outlier=0, w_outlier=0, **kwargs):
 
         return hddm.wfpt.wiener_like_cnn_2(
             x["rt_binned"].values,
             x["response_binned"].values,
             np.array([v, a, z, t, theta], dtype=np.float32),
-            p_outlier=p_outlier, w_outlier=w_outlier, **kwargs)
+            p_outlier=p_outlier,
+            w_outlier=w_outlier,
+            **kwargs
+        )
 
     likelihood_funs = {}
     likelihood_funs["ddm"] = wienernn_like_ddm
@@ -159,6 +161,7 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
     wfpt_nn.cdf = cdf
     wfpt_nn.random = random
     return wfpt_nn
+
 
 def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     """Defines the regressor likelihoods for the CNN networks.
@@ -192,9 +195,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
 
-        sim_out = simulator(
-            theta=param_data, n_samples = 1, model=model, max_t=20
-            )
+        sim_out = simulator(theta=param_data, n_samples=1, model=model, max_t=20)
         return hddm_preprocess(sim_out, keep_negative_responses=True)
 
     def pdf(self, x):
@@ -222,9 +223,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -241,8 +240,20 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             **kwargs
         )
 
-    def wiener_multi_like_nn_full_ddm(value, v, sv, a, z, sz, t, st,
-                                      reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+    def wiener_multi_like_nn_full_ddm(
+        value,
+        v,
+        sv,
+        a,
+        z,
+        sz,
+        t,
+        st,
+        reg_outcomes,
+        p_outlier=0,
+        w_outlier=0.1,
+        **kwargs
+    ):
 
         params = {"v": v, "a": a, "z": z, "t": t, "sz": sz, "sv": sv, "st": st}
 
@@ -259,9 +270,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -279,8 +288,9 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             **kwargs
         )
 
-    def wiener_multi_like_nn_angle(value, v, a, theta, z, t, 
-                                   reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+    def wiener_multi_like_nn_angle(
+        value, v, a, theta, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
+    ):
 
         """Log-likelihood for the full DDM using the interpolation method"""
 
@@ -298,9 +308,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -336,9 +344,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -374,9 +380,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -394,8 +398,19 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
             **kwargs
         )
 
-    def wiener_multi_like_nn_weibull(value, v, a, alpha, beta, z, t,
-                                    reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):
+    def wiener_multi_like_nn_weibull(
+        value,
+        v,
+        a,
+        alpha,
+        beta,
+        z,
+        t,
+        reg_outcomes,
+        p_outlier=0,
+        w_outlier=0.1,
+        **kwargs
+    ):
 
         params = {"v": v, "a": a, "z": z, "t": t, "alpha": alpha, "beta": beta}
         n_params = int(6)
@@ -411,9 +426,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
                 )
                 if (
                     data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]
-                ) or (
-                    data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]
-                ):
+                ) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):
                     print("boundary violation of regressor part")
                     return -np.inf
             else:
@@ -432,12 +445,12 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
         )
 
     likelihood_funs = {}
-    likelihood_funs['ddm'] = wiener_multi_like_nn_ddm
-    likelihood_funs['full_ddm'] = wiener_multi_like_nn_full_ddm
-    likelihood_funs['angle'] = wiener_multi_like_nn_angle
-    likelihood_funs['levy'] = wiener_multi_like_nn_levy
-    likelihood_funs['ornstein'] = wiener_multi_like_nn_ornstein
-    likelihood_funs['weibull'] = wiener_multi_like_nn_weibull
+    likelihood_funs["ddm"] = wiener_multi_like_nn_ddm
+    likelihood_funs["full_ddm"] = wiener_multi_like_nn_full_ddm
+    likelihood_funs["angle"] = wiener_multi_like_nn_angle
+    likelihood_funs["levy"] = wiener_multi_like_nn_levy
+    likelihood_funs["ornstein"] = wiener_multi_like_nn_ornstein
+    likelihood_funs["weibull"] = wiener_multi_like_nn_weibull
 
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_funs[model], **kwargs))
     stoch.pdf = pdf

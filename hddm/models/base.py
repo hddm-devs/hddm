@@ -35,10 +35,10 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
-        print('printing self.nn')
+        print("printing self.nn")
         print(self.nn)
         if self.nn:
-            print('passed through flip errors nn')
+            print("passed through flip errors nn")
             data = hddm.utils.flip_errors_nn(data, self.network_type)
         else:
             data = hddm.utils.flip_errors(data)
@@ -52,10 +52,10 @@ class AccumulatorModel(kabuki.Hierarchical):
                 or ("sz" in self.include)
             ):
                 self.model = "full_ddm"
-                print('Set model to full_ddm')
+                print("Set model to full_ddm")
             else:
                 self.model = "ddm"
-                print('Set model to ddm')
+                print("Set model to ddm")
 
         self.std_depends = kwargs.pop("std_depends", False)
         super(AccumulatorModel, self).__init__(data, **kwargs)
@@ -1094,7 +1094,7 @@ class HDDMBase(AccumulatorModel):
         )
 
         self._kwargs = kwargs
-        
+
         # For 2-choice models adjust include statement
         if model_config[self.model]["n_choices"] == 2:
             self.include = set(["v", "a", "t"])
@@ -1190,14 +1190,14 @@ class HDDMBase(AccumulatorModel):
 
         if self.nn:
             for tmp_param in model_config[self.model]["params"]:
-                    wfpt_parents[tmp_param] = (knodes[tmp_param + "_bottom"] 
-                        if tmp_param in self.include
-                        else model_config[self.model]["default_params"][
-                            model_config[self.model]["params"].index(tmp_param)
-                        ]
-                    )
+                wfpt_parents[tmp_param] = (
+                    knodes[tmp_param + "_bottom"]
+                    if tmp_param in self.include
+                    else model_config[self.model]["default_params"][
+                        model_config[self.model]["params"].index(tmp_param)
+                    ]
+                )
 
-            
             # Define parents for HDDMnn across included models
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]
@@ -1215,7 +1215,7 @@ class HDDMBase(AccumulatorModel):
 
             #     # MODEL SPECIFIC PARAMETERS
             #     for tmp_param in model_config[self.model]["params"]:
-            #         wfpt_parents[tmp_param] = (knodes[tmp_param + "_bottom"] 
+            #         wfpt_parents[tmp_param] = (knodes[tmp_param + "_bottom"]
             #             if tmp_param in self.include
             #             else model_config[self.model]["default_params"][
             #                 model_config[self.model]["params"].index(tmp_param)
