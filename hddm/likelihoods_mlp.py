@@ -94,7 +94,7 @@ def make_mlp_likelihood(model, **kwargs):
         # )
 
         wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_test, netork = kwargs["network"])
+            "Wienernn_" + model, partial(wienernn_like_test, network = kwargs["network"])
         )
 
 
