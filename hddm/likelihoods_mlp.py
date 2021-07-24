@@ -57,10 +57,12 @@ def make_mlp_likelihood(model, **kwargs):
 
     if model == "test":
 
-        def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
+        #def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
+        def wienernn_like_test(**kwargs):
             """
             LAN Log-likelihood for the DDM
             """
+            print(locals())
             return hddm.wfpt.wiener_like_nn_mlp(
                 x["rt"].values,
                 x["response"].values,

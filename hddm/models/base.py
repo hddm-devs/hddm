@@ -1116,8 +1116,14 @@ class HDDMBase(AccumulatorModel):
             self.include = set()
             [self.include.add(param) for param in include]
 
-        possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "dual_alpha",
-            "theta", "alpha", "beta", "g", "alpha_diff", "zh", "zl1", "zl2", "vh", "vl1", "vl2", "d")
+        # Automate possible_parameters
+        if self.nn:
+            possible_parameters = tuple(model_config[self.model]["params"]) + ("p_outlier",)
+        else:
+            possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "alpha",)
+        
+        # possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "dual_alpha",
+        #     "theta", "alpha", "beta", "g", "alpha_diff", "zh", "zl1", "zl2", "vh", "vl1", "vl2", "d")
 
         assert self.include.issubset(
             possible_parameters
