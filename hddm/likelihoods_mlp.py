@@ -58,7 +58,7 @@ def make_mlp_likelihood(model, **kwargs):
     if model == "test":
 
         #def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
-        def wienernn_like_test(**kwargs):
+        def wienernn_like_test(network = kwargs["network"], **pymcargs):
             """
             LAN Log-likelihood for the DDM
             """
