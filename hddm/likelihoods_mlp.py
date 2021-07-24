@@ -89,9 +89,14 @@ def make_mlp_likelihood(model, **kwargs):
             return "Not yet implemented"
 
         # Create wfpt class
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_test, **kwargs)
+        # )
+
         wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_test, **kwargs)
+            "Wienernn_" + model, partial(wienernn_like_test, netork = kwargs["network"])
         )
+
 
         wfpt_nn.pdf = pdf_test
         wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
