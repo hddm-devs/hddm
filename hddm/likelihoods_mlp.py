@@ -58,6 +58,7 @@ def make_mlp_likelihood(model, **kwargs):
     if model == "test":
         print('passing through exec statement')
         exec('def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"], x["response"], np.array([v, a, z, t], dtype=np.float32), p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])')
+        exec('def myfun():\n    print("I am the new myfunc output")\n    return')
         #def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
         # def wienernn_like_test(x, v, a, z, t, p_outlier = 0, w_outlier = 0.1, **kwargs):
         #     """
@@ -72,6 +73,8 @@ def make_mlp_likelihood(model, **kwargs):
         #         w_outlier=w_outlier,
         #         network=kwargs["network"],
         #     )  # **kwargs)
+        print(myfun)
+        myfun()
         print(wienernn_like_test)
         
         def pdf_test(self, x):
