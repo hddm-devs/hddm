@@ -56,21 +56,21 @@ def make_mlp_likelihood(model, **kwargs):
         return "Not yet implemented"
 
     if model == "test":
-
+        exec('def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"], x["response"], np.array([v, a, z, t], dtype=np.float32), p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])')
         #def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
-        def wienernn_like_test(*args, p_outlier = 0, w_outlier = 0.1, **kwargs):
-            """
-            LAN Log-likelihood for the DDM
-            """
-            print(locals())
-            return hddm.wfpt.wiener_like_nn_mlp(
-                x["rt"].values,
-                x["response"].values,
-                np.array([v, a, z, t]).astype(np.float32),
-                p_outlier=p_outlier,
-                w_outlier=w_outlier,
-                network=kwargs["network"],
-            )  # **kwargs)
+        # def wienernn_like_test(x, v, a, z, t, p_outlier = 0, w_outlier = 0.1, **kwargs):
+        #     """
+        #     LAN Log-likelihood for the DDM
+        #     """
+        #     print(locals())
+        #     return hddm.wfpt.wiener_like_nn_mlp(
+        #         x["rt"].values,
+        #         x["response"].values,
+        #         np.array([v, a, z, t]).astype(np.float32),
+        #         p_outlier=p_outlier,
+        #         w_outlier=w_outlier,
+        #         network=kwargs["network"],
+        #     )  # **kwargs)
 
         def pdf_test(self, x):
             rt = np.array(x, dtype=np.float32)
