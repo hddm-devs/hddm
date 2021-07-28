@@ -120,9 +120,7 @@ class HDDMnnRegressor(HDDMRegressor):
                 self.network = load_mlp(model=self.model)
             network_dict = {"network": self.network}
             # Make likelihood function
-
-            if self.custom_likelihood is not None:
-                network_dict["likelihood_fun"] = self.custom_likelihood
+            network_dict["likelihood_fun"] = self.custom_likelihood
             
             self.wfpt_nn_reg_class = (
                 hddm.likelihoods_mlp.make_mlp_likelihood_reg(
