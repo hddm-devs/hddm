@@ -1,4 +1,6 @@
 import hddm
+from hddm.simulators import *
+import hddm.simulators.boundary_functions as bf
 
 model_config = {
     "test": {
