@@ -1,6 +1,7 @@
 import hddm
-from hddm.simulators import *
+#from hddm.simulators import *
 import hddm.simulators.boundary_functions as bf
+import numpy as np
 
 model_config = {
     "test": {
@@ -12,7 +13,7 @@ model_config = {
             [-2.5, 0.5, 0.25, 1e-3],
             [2.5, 2.2, 0.75, 1.95],
         ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 4,
         "default_params": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
@@ -32,7 +33,7 @@ model_config = {
             [-2.5, 0.5, 0.25, 1e-3],
             [2.5, 2.2, 0.75, 1.95],
         ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 4,
         "default_params": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
@@ -48,7 +49,7 @@ model_config = {
         "params_trans": [0, 0, 1, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 4,
         "default_params": [0.0, 2.0, 0.5, 0],
         "hddm_include": ["z"],
@@ -68,7 +69,7 @@ model_config = {
             [-2.5, 0.2, 0.1, 0.0, 0.0],
             [2.5, 2.0, 0.9, 2.0, (np.pi / 2 - 0.2)],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
-        "boundary": hddm.simulators.bf.angle,
+        "boundary": bf.angle,
         "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["z", "theta"],
@@ -92,7 +93,7 @@ model_config = {
             [-2.5, 0.2, 0.1, 0.0, 0.5, 0.5],
             [2.5, 2.0, 0.9, 2.0, 5.0, 7.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0.5, 5.0), (0.5, 7.0)]
-        "boundary": hddm.simulators.bf.weibull_cdf,
+        "boundary": bf.weibull_cdf,
         "n_params": 6,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
         "hddm_include": ["z", "alpha", "beta"],
@@ -114,7 +115,7 @@ model_config = {
             [-2.5, 0.2, 0.1, 1.0, 0.0],
             [2.5, 2.0, 0.9, 2.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2), (0.1, 0.9), (1.0, 2.0), (0.0, 2.0)]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1.5, 1e-3],
         "hddm_include": ["z", "alpha"],
@@ -138,7 +139,7 @@ model_config = {
             [-2.5, 0.2, 0.1, 0.25, 0.0, 0.0, 0.0],
             [2.5, 2.0, 0.9, 2.5, 0.4, 1.0, 0.5],
         ],  #  [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.25, 2.5), (0, 0.4), (0, 1), (0.0, 0.5)]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 7,
         "default_params": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
         "hddm_include": ["z", "st", "sv", "sz"],
@@ -160,7 +161,7 @@ model_config = {
             [-5.0, 0.1, 0.3, 0.25, 0, 0, 0],
             [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
         ],
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 7,
         "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
         "hddm_include": ["z", "st", "sv", "sz"],
@@ -183,7 +184,7 @@ model_config = {
             [-2.5, 0.2, 0.1, -1.0, 0.0],
             [2.5, 2.0, 0.9, 1.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (-1.0, 1.0), (0.0, 2.0)]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 0.0, 1e-3],
         "hddm_include": ["z", "g"],
@@ -205,7 +206,7 @@ model_config = {
             [-3.0, 0.3, 0.1, 0.0, 0.0],
             [3.0, 2.5, 0.9, 2.0, 2.5],
         ],  # [(-3, 3), (0.3, 2.5), (0.1, 0.9), (0.0, 2.0), (0.0, 2.5)]
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 1e-3],
         "hddm_include": ["z", "sv"],
@@ -230,7 +231,7 @@ model_config = {
             [-2.5, -2.5, -2.5, 0.2, 0.1, 0.1, 0.1, 0.0],
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
@@ -258,7 +259,7 @@ model_config = {
             [-2.5, -2.5, -2.5, 0.2, 0.1, 0.1, 0.1, 0.0],
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
@@ -286,7 +287,7 @@ model_config = {
             [-2.5, -2.5, -2.5, 0.2, 0.1, 0.1, 0.1, 0.0, 0.0],
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 1.0, 2.0],
         ],
-        "boundary": hddm.simulators.bf.constant,
+        "boundary": bf.constant,
         "n_params": 9,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
