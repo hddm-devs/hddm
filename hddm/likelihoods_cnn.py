@@ -3,6 +3,7 @@ import hddm
 from functools import partial
 from kabuki.utils import stochastic_from_dist
 from hddm.simulators import *
+from hddm.model_config import model_config
 
 # import data_simulators
 from copy import deepcopy
@@ -163,7 +164,7 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
     return wfpt_nn
 
 
-def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
+def make_likelihood_reg_cnn(model=None, **kwargs):
     """Defines the regressor likelihoods for the CNN networks.
 
     :Arguments:

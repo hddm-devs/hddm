@@ -11,6 +11,8 @@
 
 # AF - New:
 from hddm.simulators import *
+from hddm.model_config import model_config
+
 
 from collections import OrderedDict
 

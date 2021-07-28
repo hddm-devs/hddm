@@ -8,9 +8,67 @@ import pandas as pd
 import string
 from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 
+
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
 
+# Simply alias for exec function, to make the function call more expressive for a 
+# single use case (define custom likelihoods)
+make_likelihood_fun_from_str = exec
+
+def make_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood'):
+    """Define string for a likelihood function that can be used as an mlp-likelihood 
+    in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
+    :Arguments:
+        config : dict() <default = None>
+            Config dictionary for the model for which you would like to construct a custom 
+            likelihood. In the style of what you find under hddm.model_config.
+    :Returns:
+        str : 
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    params_str = ', '.join(config["params"])
+
+    fun_str = 'def ' + fun_name + '(x, ' + params_str + \
+              ', p_outlier=0.0, w_outlier=0.1, network = None):\n    ' + \
+              'return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, ' + \
+              'np.array([' + params_str + '], dtype = np.float32), ' + \
+              'p_outlier=p_outlier, w_outlier=w_outlier, network=network)'
+    return fun_str
+
+def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg'):
+    """Define string for a likelihood function that can be used as a 
+    mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
+    :Arguments:
+        config : dict() <default = None>
+            Config dictionary for the model for which you would like to construct a custom 
+            likelihood. In the style of what you find under hddm.model_config.
+    :Returns:
+        str : 
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    params_str = ', '.join(config["params"])
+    fun_str = 'def ' + fun_name + '(value, ' + params_str + ', reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):' + \
+              '\n    params = locals()' + \
+              '\n    size = int(value.shape[0])' + \
+              '\n    data = np.zeros((size, data_frame_width), dtype=np.float32)' + \
+              '\n    data[:, n_params] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)' + \
+              '\n    cnt=0' + \
+              '\n    for tmp_str in model_parameter_names:' + \
+              '\n        if tmp_str in reg_outcomes:' + \
+              '\n            data[:, cnt] = params[tmp_str].loc[values["rt"].index].values' + \
+              '\n            if (data[:, cnt].min() < model_parameter_lower_bounds[cnt]) or (data[:, cnt].max() > model_parameter_upper_bounds[cnt]):' + \
+              '\n                print("boundary violation of regressor part")' + \
+              '\n                return -np.inf' + \
+              '\n        else:' + \
+              '\n            data[:, cnt] = params[tmp_str]' + \
+              '\n        cnt += 1' + \
+              '\n    return hddm.wfpt.wiener_like_multi_nn_mlp(data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])'
+    return fun_str
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.

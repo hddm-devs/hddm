@@ -69,10 +69,13 @@ class HDDMnnStimCoding(HDDMStimCoding):
         )
         kwargs["informative"] = False
         self.network_type = kwargs.pop("network_type", "mlp")
-        self.network = None
-        self.model = kwargs.pop("model", "ddm")
+        self.network = kwargs.pop("network", None)
+        self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
+        self.model = kwargs.pop("model", "ddm")
+        self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
+        self.custom_likelihood = kwargs.pop("custom_likelihood", None)
 
         self.nbin = kwargs.pop("nbin", 512)
         if self.nbin == 512:
@@ -82,8 +85,13 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
         # Attach likelihood corresponding to model
         if self.network_type == "mlp":
-            self.network = load_mlp(model=self.model)
+            if self.network is None:
+                self.network = load_mlp(model=self.model)
             network_dict = {"network": self.network}
+
+            if self.custom_likelihood is not None:
+                network_dict["likelihood_fun"] = self.custom_likelihood
+            
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=self.model, **network_dict
             )

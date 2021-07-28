@@ -11,6 +11,7 @@ from scipy.stats import truncnorm
 from patsy import dmatrix
 from collections import OrderedDict
 from hddm.simulators.basic_simulator import *
+from hddm.model_config import model_config
 
 # Helper
 def hddm_preprocess(

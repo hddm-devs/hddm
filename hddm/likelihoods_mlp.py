@@ -3,6 +3,8 @@ import hddm
 from functools import partial
 from kabuki.utils import stochastic_from_dist
 from hddm.simulators import *
+from hddm.model_config import model_config
+
 
 # import data_simulators
 from copy import deepcopy
@@ -55,27 +57,43 @@ def make_mlp_likelihood(model, **kwargs):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
 
+    # if model == "custom":
+    #     wfpt_nn = stochastic_from_dist(
+    #         "Wienernn_" + model, partial(kwargs["likelihood_fun"], network = kwargs["network"])
+    #         )
+
+    #     wfpt_nn.pdf = pdf
+    #     wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
+    #     wfpt_nn.cdf = cdf
+    #     wfpt_nn.random = random
+    #     return wfpt_nn
+
     if model == "test":
-        print('passing through exec statement')
-        exec('def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"], x["response"], np.array([v, a, z, t], dtype=np.float32), p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])')
-        exec('def myfun():\n    print("I am the new myfunc output")\n    return')
+        #print('passing through exec statement')
+        #likelihood_dict = {}
+        #exec('def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, network = None):\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"], x["response"], np.array([v, a, z, t], dtype=np.float32), p_outlier=p_outlier, w_outlier=w_outlier, network=network)', globals(), locals())
+        #print(likelihood_dict)
+        #custom_likelihood = likelihood_dict['wienernn_like_test']
+        #exec('def myfun():\n    print("I am the new myfun output")\n    return', globals(), locals())
         #def wienernn_like_test(x, v, a, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
-        # def wienernn_like_test(x, v, a, z, t, p_outlier = 0, w_outlier = 0.1, **kwargs):
-        #     """
-        #     LAN Log-likelihood for the DDM
-        #     """
-        #     print(locals())
-        #     return hddm.wfpt.wiener_like_nn_mlp(
-        #         x["rt"].values,
-        #         x["response"].values,
-        #         np.array([v, a, z, t]).astype(np.float32),
-        #         p_outlier=p_outlier,
-        #         w_outlier=w_outlier,
-        #         network=kwargs["network"],
-        #     )  # **kwargs)
-        print(myfun)
-        myfun()
-        print(wienernn_like_test)
+        #def wienernn_like_test(x, v, a, z, t, p_outlier = 0, w_outlier = 0.1, **kwargs):
+        def wienernn_like_test(p_outlier = 0, w_outlier = 0.1, network = None, **kws):
+            """
+            LAN Log-likelihood for the DDM
+            """
+            print(kws)
+            print(locals())
+            return hddm.wfpt.wiener_like_nn_mlp(
+                kws['x']["rt"].values,
+                kws['x']["response"].values,
+                np.array([kws[param] for param in model_config[model]["params"]], dtype = np.float32),
+                p_outlier=p_outlier,
+                w_outlier=w_outlier,
+                network=network,
+            )  # **kwargs)
+        #print(myfun)
+        #myfun()
+        #print(wienernn_like_test)
         
         def pdf_test(self, x):
             rt = np.array(x, dtype=np.float32)
@@ -93,15 +111,18 @@ def make_mlp_likelihood(model, **kwargs):
             # TODO: Implement the CDF method for neural networks
             return "Not yet implemented"
 
-        # Create wfpt class
-        # wfpt_nn = stochastic_from_dist(
-        #     "Wienernn_" + model, partial(wienernn_like_test, **kwargs)
-        # )
-
+        #Create wfpt class
         wfpt_nn = stochastic_from_dist(
-            "Wienernn_" + model, partial(wienernn_like_test, **kwargs)
+            "Wienernn_" + model, partial(wienernn_like_test, network = kwargs["network"])
         )
 
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(kwargs["likelihood_fun"], network = kwargs["network"])
+        # )
+
+        # wfpt_nn = stochastic_from_dist(
+        #     "Wienernn_" + model, partial(wienernn_like_test, network = kwargs["network"])
+        # )
 
         wfpt_nn.pdf = pdf_test
         wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
@@ -261,6 +282,7 @@ def make_mlp_likelihood(model, **kwargs):
     likelihood_funs["ddm_par2"] = wienernn_like_par2
     likelihood_funs["ddm_seq2"] = wienernn_like_seq2
     likelihood_funs["ddm_mic2"] = wienernn_like_mic2
+    likelihood_funs["custom"] = kwargs["likelihood_fun"]
 
     wfpt_nn = stochastic_from_dist(
         "Wienernn_" + model, partial(likelihood_funs[model], **kwargs)
@@ -271,9 +293,8 @@ def make_mlp_likelihood(model, **kwargs):
     wfpt_nn.random = random
     return wfpt_nn
 
-
 # REGRESSOR LIKELIHOODS
-def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
+def make_mlp_likelihood_reg(model=None, **kwargs):
     """Defines the regressor likelihoods for the MLP networks.
 
     :Arguments:
@@ -772,6 +793,7 @@ def generate_wfpt_nn_ddm_reg_stochastic_class(model=None, **kwargs):
     likelihood_funs["ddm_par2"] = wiener_multi_like_nn_par2
     likelihood_funs["ddm_seq2"] = wiener_multi_like_nn_seq2
     likelihood_funs["ddm_mic2"] = wiener_multi_like_nn_mic2
+    likelihood_funs["custom"] = kwargs["likelihood_fun"]
 
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_funs[model], **kwargs))
     stoch.pdf = pdf

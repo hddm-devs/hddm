@@ -1,4 +1,5 @@
 from hddm.simulators import *
+from hddm.model_config import model_config
 from hddm.simulators.basic_simulator import *
 from collections import OrderedDict
 import inspect

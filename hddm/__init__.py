@@ -13,6 +13,7 @@ from . import plotting
 from . import network_inspectors
 from . import models
 from . import simulators
+from . import model_config
 import cdfdif_wrapper
 
 from .models import *

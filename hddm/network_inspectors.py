@@ -36,7 +36,8 @@ from hddm.simulators.basic_simulator import *
 from sklearn.neighbors import KernelDensity
 import os
 
-model_config = hddm.simulators.model_config
+#model_config = hddm.simulators.model_config
+from hddm.model_config import model_config
 
 # NETWORK LOADERS -------------------------------------------------------------------------
 

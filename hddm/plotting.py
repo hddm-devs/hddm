@@ -23,7 +23,8 @@ from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
 from copy import deepcopy
 
-model_config = hddm.simulators.model_config
+#model_config = hddm.simulators.model_config
+from hddm.model_config import model_config
 
 # PREPROCESSING FUNCTIONS ------------------------------------------------------------------------------------------------------------------
 
