@@ -164,7 +164,7 @@ def make_cnn_likelihood(model, pdf_multiplier=1, **kwargs):
     return wfpt_nn
 
 
-def make_likelihood_reg_cnn(model=None, **kwargs):
+def make_cnn_likelihood_reg(model=None, **kwargs):
     """Defines the regressor likelihoods for the CNN networks.
 
     :Arguments:
