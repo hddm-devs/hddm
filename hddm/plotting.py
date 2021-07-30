@@ -643,6 +643,8 @@ def model_plot(
     scale_x=1.0,  # styling
     scale_y=1.0,  # styling
     delta_t_graph=0.01,  # styling
+    legend_fontsize = 'medium', # styling
+    legend_shadow = False, # styling
 ):
 
     """The model plot is useful to illustrate model behavior graphically. It is quite a flexible
@@ -700,6 +702,11 @@ def model_plot(
             Salces the y axes o the graph
         delta_t_graph: float <default=0.01>
             Timesteps to use for the simulation runs performed for plotting.
+        legend_fontsize: str <default='medium>
+            Specify the fontsize of legends. Allowed are for example: 'x-small', 'small', 'medium', 'large', 'x-large'. 
+            See matplotlib documentation for further possible values.
+        legend_shadown: bool <default=False>
+            Should the legend have a box with shadow around it?
     Return: plot object
     """
 
@@ -992,7 +999,7 @@ def model_plot(
                 )
 
                 if row_tmp == 0 and col_tmp == 0:
-                    ax_tmp_twin_up.legend(loc="lower right")
+                    ax_tmp_twin_up.legend(loc="lower right", fontsize=legend_fontsize, shadow=legend_shadow)
 
             # BOUNDS AND SLOPES (model)
             if show_model:
@@ -1153,7 +1160,7 @@ def model_plot(
                         and row_tmp == 0
                         and col_tmp == 0
                     ):
-                        ax_tmp.legend(loc="upper right")
+                        ax_tmp.legend(loc="upper right", fontsize=legend_fontsize , shadow=legend_shadow)
 
                     if rows == 1 and cols == 1:
                         ax_tmp.patch.set_visible(False)
@@ -1276,6 +1283,9 @@ def posterior_predictive_plot(
     hist_linewidth=3,
     scale_x=0.5,
     scale_y=0.5,
+    legend_fontsize = 'medium',
+    legend_shadow = False,
+    legend_pos = 'best',
     save=False,
     save_path=None,
     show=True,
@@ -1315,7 +1325,15 @@ def posterior_predictive_plot(
         scale_x: float <default=1.0>
             Scales the x axis of the graph
         scale_y: float <default=1.0>
-            Salces the y axes o the graph
+            Scales the y axes o the graph
+        legend_fontsize: str <default='medium'>
+            Fontsize of legend items. Amongst others (see matplotlib documentation for a full list) you can use,
+            'x-small', 'small', 'medium', 'large', 'x-large'
+        legend_shadow: bool <default=False>
+            Should the legend have a box with shadown around it?
+        legend_position: str <default='best'>
+            Position of the legend item. Amonst others (see matplotlib documentation for a full list) you can use,
+            'center', 'upper right', 'lower right', 'upper left', 'lower left'. 
         delta_t_graph: float <default=0.01>
             Timesteps to use for the simulation runs performed for plotting.
     Return: plot object
@@ -1492,8 +1510,9 @@ def posterior_predictive_plot(
                     label_0 = "DATA"
                 ax_tmp.legend(
                     labels=["Posterior Predictive", label_0],
-                    fontsize=12,
-                    loc="upper right",
+                    fontsize=legend_fontsize,
+                    shadow=legend_shadow,
+                    loc=legend_pos, #"upper right",
                 )
 
             # rt x-axis label if we are dealing with the last row of a figure
