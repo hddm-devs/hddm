@@ -641,7 +641,13 @@ def lan_manifold(
     ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
     ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
 
+    # Save plot
     if save:
+        if os.path.isdir("figures/"):
+            pass
+        else:
+            os.mkdir("figures/")
+
         plt.savefig("figures/mlp_manifold_" + model + ".png", format="png")
 
     if show:
