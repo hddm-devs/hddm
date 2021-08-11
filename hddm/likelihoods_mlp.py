@@ -287,12 +287,15 @@ def make_mlp_likelihood(model, **kwargs):
     if model == 'custom':
         def make_likelihood(model = model):
             assert 'custom' in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary!'
-            exec(make_likelihood_str_mlp(config = model_config[model]))
+            likelihood_str = make_likelihood_str_mlp(config = model_config[model])
+            print('likelihood_str')
+            exec(likelihood_str)
+            print(locals())
             my_fun = custom_likelihood
             return my_fun
 
-        custom_likelihood = make_likelihood(model = model)
-        likelihood_funs["custom"] = custom_likelihood
+        custom_likelihood_ = make_likelihood(model = model)
+        likelihood_funs["custom"] = custom_likelihood_
 
     wfpt_nn = stochastic_from_dist(
         "Wienernn_" + model, partial(likelihood_funs[model], **kwargs)
