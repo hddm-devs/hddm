@@ -4,6 +4,7 @@ from functools import partial
 from kabuki.utils import stochastic_from_dist
 from hddm.simulators import *
 from hddm.model_config import model_config
+from hddm.utils import *
 
 
 # import data_simulators
@@ -282,7 +283,16 @@ def make_mlp_likelihood(model, **kwargs):
     likelihood_funs["ddm_par2"] = wienernn_like_par2
     likelihood_funs["ddm_seq2"] = wienernn_like_seq2
     likelihood_funs["ddm_mic2"] = wienernn_like_mic2
-    likelihood_funs["custom"] = kwargs["likelihood_fun"]
+
+    if model == 'custom':
+        def make_likelihood(model = model):
+            assert 'custom' in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary!'
+            exec(make_likelihood_str_mlp(config = model_config[model]))
+            my_fun = custom_likelihood
+            return my_fun
+
+        custom_likelihood = make_likelihood(model = model)
+        likelihood_funs["custom"] = custom_likelihood
 
     wfpt_nn = stochastic_from_dist(
         "Wienernn_" + model, partial(likelihood_funs[model], **kwargs)
