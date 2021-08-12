@@ -288,10 +288,11 @@ def make_mlp_likelihood(model, **kwargs):
         def make_likelihood(model = model):
             assert 'custom' in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary!'
             likelihood_str = make_likelihood_str_mlp(config = model_config[model])
-            print('likelihood_str')
+            print(likelihood_str)
             exec(likelihood_str)
             print(locals())
-            my_fun = custom_likelihood
+            my_fun = locals()['custom_likelihood']
+            print(my_fun)
             return my_fun
 
         custom_likelihood_ = make_likelihood(model = model)
