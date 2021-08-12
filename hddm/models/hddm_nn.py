@@ -145,7 +145,7 @@ class HDDMnn(HDDM):
             if self.network is None:
                 self.network = load_mlp(model=self.model)
             network_dict = {"network": self.network}
-            network_dict["likelihood_fun"] = self.custom_likelihood
+            #network_dict["likelihood_fun"] = self.custom_likelihood
             
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=self.model, **network_dict
