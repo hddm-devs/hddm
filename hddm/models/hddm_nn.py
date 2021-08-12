@@ -3,14 +3,6 @@
 import hddm
 from collections import OrderedDict
 
-# from copy import copy
-# import numpy as np
-# import pymc
-# import wfpt
-# import pickle
-# import hickle
-# from functools import partial
-
 from kabuki.hierarchical import (
     Knode,
 )  # LOOK INTO KABUKI TO FIGURE OUT WHAT KNODE EXACTLY DOES
@@ -133,7 +125,6 @@ class HDDMnn(HDDM):
         self.model = kwargs.pop("model", "ddm")
         self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
-        self.custom_likelihood = kwargs.pop("custom_likelihood", None)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
@@ -145,7 +136,6 @@ class HDDMnn(HDDM):
             if self.network is None:
                 self.network = load_mlp(model=self.model)
             network_dict = {"network": self.network}
-            #network_dict["likelihood_fun"] = self.custom_likelihood
             
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=self.model, **network_dict

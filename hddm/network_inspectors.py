@@ -1,6 +1,4 @@
 from hddm.simulators import *
-
-# from hddm.simulators import boundary_functions
 import numpy as np
 
 # plotting
@@ -13,34 +11,19 @@ from matplotlib import cm
 
 # import pymc as pm
 import hddm
-
-# import sys
-# import kabuki
 import pandas as pd
 import seaborn as sns
 
-# import string
-# import argparse
-# from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
-
-# from statsmodels.distributions.empirical_distribution import ECDF
-# from scipy.stats import truncnorm
-# from scipy.stats import scoreatpercentile
-# from scipy.stats.mstats import mquantiles
-# from copy import deepcopy
 from hddm.simulators.basic_simulator import *
 
-# import scipy as scp
 from sklearn.neighbors import KernelDensity
 import os
 
-#model_config = hddm.simulators.model_config
 from hddm.model_config import model_config
 
 # NETWORK LOADERS -------------------------------------------------------------------------
-
 
 def get_mlp(model="angle"):
     """Returns the keras network which is the basis of the MLP likelihoods
@@ -302,8 +285,6 @@ class logkde:
 
 
 # PLOTTNG -------------------------------------------------------------------------------------
-
-
 def kde_vs_lan_likelihoods(  # ax_titles = [],
     parameter_df=None,
     model=None,
@@ -495,7 +476,6 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     plt.close()
 
     return
-
 
 # Predict
 def lan_manifold(

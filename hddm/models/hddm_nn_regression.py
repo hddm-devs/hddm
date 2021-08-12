@@ -1,12 +1,3 @@
-# from collections import OrderedDict
-# from copy import deepcopy
-# import math
-# import numpy as np
-# import pymc as pm
-# import pandas as pd
-# from patsy import dmatrix
-# import pickle
-
 import hddm
 
 # from hddm.models import HDDM
@@ -14,16 +5,10 @@ from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
 
-# from hddm.models.hddm_regression import KnodeRegress
-
 # import kabuki
 from kabuki import Knode
 
-# from kabuki.utils import stochastic_from_dist
-# import kabuki.step_methods as steps
 
-# from functools import partial
-# import wfpt
 class HDDMnnRegressor(HDDMRegressor):
     """HDDMnnRegressor allows estimation of the NNDDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
@@ -107,7 +92,6 @@ class HDDMnnRegressor(HDDMRegressor):
         self.model = kwargs.pop("model", "ddm")
         self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
-        self.custom_likelihood = kwargs.pop("custom_likelihood", None)
 
         if self.nbin == 512:
             self.cnn_pdf_multiplier = 51.2
@@ -119,9 +103,7 @@ class HDDMnnRegressor(HDDMRegressor):
             if self.network is None:
                 self.network = load_mlp(model=self.model)
             network_dict = {"network": self.network}
-            # Make likelihood function
-            network_dict["likelihood_fun"] = self.custom_likelihood
-            
+
             self.wfpt_nn_reg_class = (
                 hddm.likelihoods_mlp.make_mlp_likelihood_reg(
                     model=self.model, **network_dict
