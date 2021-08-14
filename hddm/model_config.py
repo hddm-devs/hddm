@@ -110,7 +110,7 @@ model_config = {
     "levy": {
         "params": ["v", "a", "z", "alpha", "t"],
         "params_trans": [0, 0, 1, 0, 0],
-        "params_std_uppder": [1.5, 1.0, None, 1.0, 1.0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-3.0, 0.3, 0.1, 1.0, 1e-3], [3.0, 2.0, 0.9, 2.0, 2]],
         "param_bounds_cnn": [
             [-2.5, 0.2, 0.1, 1.0, 0.0],
