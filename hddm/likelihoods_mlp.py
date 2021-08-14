@@ -809,6 +809,20 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     likelihood_funs["ddm_mic2"] = wiener_multi_like_nn_mic2
     #likelihood_funs["custom"] = kwargs["likelihood_fun"]
 
+    if model == 'custom':
+        def make_likelihood(model = model):
+            assert 'custom' in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary!'
+            likelihood_str = make_reg_likelihood_str_mlp(config = model_config[model])
+            print(likelihood_str)
+            exec(likelihood_str)
+            print(locals())
+            my_fun = locals()['custom_likelihood']
+            print(my_fun)
+            return my_fun
+
+        custom_likelihood_ = make_likelihood(model = model)
+        likelihood_funs["custom"] = custom_likelihood_
+
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_funs[model], **kwargs))
     stoch.pdf = pdf
     stoch.cdf = cdf
