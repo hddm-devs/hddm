@@ -807,7 +807,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     likelihood_funs["ddm_par2"] = wiener_multi_like_nn_par2
     likelihood_funs["ddm_seq2"] = wiener_multi_like_nn_seq2
     likelihood_funs["ddm_mic2"] = wiener_multi_like_nn_mic2
-    likelihood_funs["custom"] = kwargs["likelihood_fun"]
+    #likelihood_funs["custom"] = kwargs["likelihood_fun"]
 
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_funs[model], **kwargs))
     stoch.pdf = pdf
