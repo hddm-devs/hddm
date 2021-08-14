@@ -21,7 +21,8 @@ from data_simulators import ddm_flexbound_par2
 from data_simulators import ddm_flexbound_mic2
 
 # import data_simulators as cds
-import hddm.simulators.boundary_functions as bf
+#import hddm.simulators.boundary_functions as bf
+import boundary_functions as bf
 from hddm.model_config import model_config
 # import hddm.simulators
 
