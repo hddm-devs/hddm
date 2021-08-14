@@ -1,7 +1,7 @@
 #import hddm
 #from hddm.simulators import *
 #import hddm.simulators.boundary_functions as bf
-from simulators import boundary_functions as bf
+from .simulators import boundary_functions as bf
 import numpy as np
 
 model_config = {
