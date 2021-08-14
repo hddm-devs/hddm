@@ -4,6 +4,7 @@ from functools import partial
 from kabuki.utils import stochastic_from_dist
 from hddm.simulators import *
 from hddm.model_config import model_config
+from hddm.utils import *
 
 # import data_simulators
 from copy import deepcopy
