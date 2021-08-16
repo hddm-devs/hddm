@@ -185,7 +185,7 @@ def make_mlp_likelihood(model, **kwargs):
             network=kwargs["network"],
         )  # **kwargs)
 
-    def wienernn_like_ornstein(x, v, a, g, z, t, p_outlier=0, w_outlier=0.1, **kwargs):
+    def wienernn_like_ornstein(x, v, a, z, g, t, p_outlier=0, w_outlier=0.1, **kwargs):
         """
         LAN Log-likelihood for the DDM
         """

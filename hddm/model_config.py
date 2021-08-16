@@ -179,7 +179,7 @@ model_config = {
     "ornstein": {
         "params": ["v", "a", "z", "g", "t"],
         "params_trans": [0, 0, 1, 0, 0],
-        "params_std_upper": [1.5, 1.0, None, 1.0, None],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
         "param_bounds": [[-2.0, 0.3, 0.2, -1.0, 1e-3], [2.0, 2.0, 0.8, 1.0, 2]],
         "param_bounds_cnn": [
             [-2.5, 0.2, 0.1, -1.0, 0.0],
@@ -191,12 +191,13 @@ model_config = {
         "hddm_include": ["z", "g"],
         "n_choices": 2,
         "choices": [-1, 1],
-        "slice_widths": {"v": 1.5, "v_std": 1,  
-                         "a": 1, "a_std": 1, 
+        "slice_widths": {"v": 1.5, "v_std": 0.1,  
+                         "a": 1, "a_std": 0.1, 
                          "z": 0.1, "z_trans": 0.2, 
                          "t": 0.01, "t_std": 0.15,
                          "g": 0.5, # AF-TODO: Might be worth adding std ?
-                         "g_trans": 0.2},
+                         "g_trans": 0.2,
+                         "g_std": 0.1},
     },
     "ddm_sdv": {
         "params": ["v", "a", "z", "t", "sv"],
