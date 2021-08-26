@@ -189,7 +189,8 @@ First we print the model stats
 
     m_reg.print_stats()
 
-Here is the relevant output for our purposes (in this case I fit a single subject, ie. I set n_subjects =1 above):
+Here is the relevant output for our purposes (in this case I fit a single subject, ie. I set n_subjects =1 above)
+
 .. parsed-literal::
 
                                mean        std       2.5q       25q        50q       75q     97.5q       mc err
