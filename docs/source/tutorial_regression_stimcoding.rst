@@ -194,6 +194,7 @@ Here is the relevant output for our purposes (in this case I fit a single subjec
 .. parsed-literal::
 
                                mean        std       2.5q       25q        50q       75q     97.5q       mc err
+			       
 a                           2.01142  0.0326427    1.94747   1.98924    2.00941   2.03399   2.07567   0.00238618
 
 t                          0.296854  0.0077349   0.279701  0.291899   0.297717  0.302649  0.310614  0.000605895
