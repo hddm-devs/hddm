@@ -5,3 +5,5 @@ The following people have contributed to HDDM:
 * Michael J. Frank
 * Guido Biele
 * Øystein Sandvik
+* Mads Pedersen
+* Alex Fengler
