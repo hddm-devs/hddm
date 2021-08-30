@@ -28,7 +28,6 @@ from hddm.model_config import model_config
 
 # PREPROCESSING FUNCTIONS ------------------------------------------------------------------------------------------------------------------
 
-
 def untransform_traces(traces=None, model=None, is_nn=False):
     """
     Check which traces are transformed and apply inverse logit transform to them. (This works only if the transformed variable was

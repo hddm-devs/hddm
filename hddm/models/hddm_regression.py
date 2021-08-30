@@ -12,6 +12,9 @@ from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
 import kabuki.step_methods as steps
 
+# To fix regression
+from hddm.model_config import model_config
+
 
 def generate_wfpt_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
@@ -317,13 +320,49 @@ class HDDMRegressor(HDDM):
                     ]
                 )
 
+            # CHECK IF LINK FUNCTION IS IDENTITY
+            # ------
+            link_is_identity = np.array_equal(reg['link_fun'](np.arange(-1000, 1000, 0.1)), np.arange(-1000, 1000, 0.1))
+            if link_is_identity:
+                print('Reg Model:')
+                print(reg)
+                print('Uses Identity Link')
+            # ------
+            
             for inter, param in zip(intercept, reg["params"]):
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[: param.find("_")]
-                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(
-                        [param_lookup]
-                    )
+                    
+                    # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
+                    trans = 0
+                    if self.nn:
+                        param_id = model_config[self.model]["params"].index(tmp_param)
+                        trans = model_config[self.model]["params_trans"][param_id]
+
+                        if trans:
+                            param_lower = model_config[self.model][param_bnd_str][0][param_id]
+                            param_upper = model_config[self.model][param_bnd_str][1][param_id]
+                            param_std_upper = model_config[self.model]["params_std_upper"][param_id]
+
+                    elif param_lookup == 'z':
+                        trans = 1
+                        if trans:
+                            param_lower = 0
+                            param_upper = 1
+                            param_std_upper = 100
+
+                    # If yes and link function is identity or if parameter is not trans --> apply usual prior
+                    if (trans and link_is_identity) or (not trans):
+                        reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(
+                            [param_lookup]
+                        )                    
+                    else: # Otherwise apply normal prior family
+                        reg_family = self._create_family_trunc_normal(param, 
+                                                                      lower = param_lower,
+                                                                      upper = param_upper,
+                                                                      std_upper = param_std_upper)
+
                     # Rename nodes to avoid collissions
                     names = list(reg_family.keys())
                     for name in names:

@@ -1637,10 +1637,11 @@ def ddm_flexbound_mic2(np.ndarray[float, ndim = 1] v_h,
                     bias_trace_view[ix_tmp] = 1.0
                     ix_tmp += 1
 
-                # We need to reverse the bias if we took the lower choice
+                #We need to reverse the bias if we took the lower choice
+                #
                 ix_tmp = 0 
                 while ix_tmp < num_draws:
-                    bias_trace_view[ix_tmp] = bias_trace_view[ix_tmp]
+                    bias_trace_view[ix_tmp] = 1.0 - bias_trace_view[ix_tmp]
                     ix_tmp += 1
 
             else:
@@ -1655,7 +1656,6 @@ def ddm_flexbound_mic2(np.ndarray[float, ndim = 1] v_h,
             # Random walks until the y_l corresponding to y_h hits bound
             ix = 0
             while y_l >= (-1) * boundary_view[ix] and y_l <= boundary_view[ix] and t_l <= max_t:
-                #y_l += (bias_trace_view[ix] * v_l * delta_t) + (sqrt_st * gaussian_values[m])
                 y_l += (v_l * (1.0 - bias_trace_view[ix] * d_view[k]) * delta_t) + (sqrt_st * gaussian_values[m])
                 t_l += delta_t
                 ix += 1

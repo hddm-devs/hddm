@@ -159,7 +159,19 @@ class HDDM(HDDMBase):
             "pos_alpha": 1.5,
         }
 
-        self.is_informative = kwargs.pop("informative", True)
+
+        if self.nn:
+            self.is_informative = kwargs.pop("informative", False)
+        else:
+            self.is_informative = kwargs.pop("informative", True)
+
+        # Check if self has model attribute
+        if not hasattr(self, 'model'):
+            if ('st' in self.include) or ('sz' in self.include) or ('sv' in self.include):
+                self.model = 'full_ddm'
+            else:
+                self.model = 'ddm'
+
         super(HDDM, self).__init__(*args, **kwargs)
 
         # -------------------------------------------------------------------------------------

@@ -193,10 +193,9 @@ model_config = {
         "choices": [-1, 1],
         "slice_widths": {"v": 1.5, "v_std": 0.1,  
                          "a": 1, "a_std": 0.1, 
-                         "z": 0.1, "z_trans": 0.2, 
+                         "z": 0.1, "z_trans": 0.2,
                          "t": 0.01, "t_std": 0.15,
-                         "g": 0.5, # AF-TODO: Might be worth adding std ?
-                         "g_trans": 0.2,
+                         "g": 0.1, "g_trans": 0.2,
                          "g_std": 0.1},
     },
     "ddm_sdv": {
