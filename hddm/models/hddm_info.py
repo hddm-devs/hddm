@@ -167,7 +167,7 @@ class HDDM(HDDMBase):
 
         # Check if self has model attribute
         if not hasattr(self, 'model'):
-            if ('st' in self.include) or ('sz' in self.include) or ('sv' in self.include):
+            if ('st' in include) or ('sz' in include) or ('sv' in include):
                 self.model = 'full_ddm'
             else:
                 self.model = 'ddm'
