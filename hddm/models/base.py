@@ -1097,7 +1097,7 @@ class HDDMBase(AccumulatorModel):
 
         self._kwargs = kwargs
         print(kwargs)
-
+        print(include)
         # Check if self has model attribute
         if not hasattr(self, 'model'):
             print('No model attribute --> setting up standard HDDM')
