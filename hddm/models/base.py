@@ -1097,6 +1097,14 @@ class HDDMBase(AccumulatorModel):
 
         self._kwargs = kwargs
 
+        # Check if self has model attribute
+        if not hasattr(self, 'model'):
+            print('No model attribute --> setting up standard HDDM')
+            if ('st' in include) or ('sz' in include) or ('sv' in include):
+                self.model = 'full_ddm'
+            else:
+                self.model = 'ddm'
+
         # For 2-choice models adjust include statement
         if model_config[self.model]["n_choices"] == 2:
             self.include = set(["v", "a", "t"])
