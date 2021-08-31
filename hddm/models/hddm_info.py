@@ -165,13 +165,6 @@ class HDDM(HDDMBase):
         else:
             self.is_informative = kwargs.pop("informative", True)
 
-        # Check if self has model attribute
-        if not hasattr(self, 'model'):
-            if ('st' in include) or ('sz' in include) or ('sv' in include):
-                self.model = 'full_ddm'
-            else:
-                self.model = 'ddm'
-
         super(HDDM, self).__init__(*args, **kwargs)
 
         # -------------------------------------------------------------------------------------
