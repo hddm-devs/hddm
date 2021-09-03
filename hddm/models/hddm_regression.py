@@ -337,12 +337,12 @@ class HDDMRegressor(HDDM):
                     # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
                     trans = 0
                     if self.nn:
-                        param_id = model_config[self.model]["params"].index(tmp_param)
+                        param_id = model_config[self.model]["params"].index(param_lookup)
                         trans = model_config[self.model]["params_trans"][param_id]
 
                         if trans:
-                            param_lower = model_config[self.model][param_bnd_str][0][param_id]
-                            param_upper = model_config[self.model][param_bnd_str][1][param_id]
+                            param_lower = model_config[self.model]["param_bounds"][0][param_id]
+                            param_upper = model_config[self.model]["param_bounds"][1][param_id]
                             param_std_upper = model_config[self.model]["params_std_upper"][param_id]
 
                     elif param_lookup == 'z':
