@@ -1,5 +1,6 @@
 """
 """
+#from hddm.torch.mlp_inference_class import load_torch_mlp
 import hddm
 from collections import OrderedDict
 
@@ -11,6 +12,7 @@ from kabuki.hierarchical import (
 from hddm.models import HDDM
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
+from hddm.torch.mlp_inference_class import load_torch_mlp
 
 
 class HDDMnn(HDDM):
@@ -146,6 +148,14 @@ class HDDMnn(HDDM):
             network_dict = {"network": self.network}
             self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(
                 model=self.model, pdf_multiplier=self.cnn_pdf_multiplier, **network_dict
+            )
+
+        if self.network_type == "torch_mlp":
+            if self.network is None:
+                self.network = load_torch_mlp(model = self.model)
+            network_dict = {"network": self.network}
+            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model = self.model, **network_dict
             )
 
         # Initialize super class

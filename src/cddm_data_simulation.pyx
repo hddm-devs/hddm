@@ -226,7 +226,7 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
             # Note that for purposes of consistency with Navarro and Fuss, 
             # the choice corresponding the lower barrier is +1, higher barrier is -1
             rts_view[n, k, 0] = t_particle + t_view[k] # store rt
-            choices_view[n, k, 0] = (-1) * sign(y) # store choice
+            choices_view[n, k, 0] = sign(y) # store choice
         
     return (rts, choices, {'v': v,
                            'a': a,

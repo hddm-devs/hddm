@@ -2,19 +2,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import argparse
-import sys
-import tempfile
-import os, glob, pickle
+#import argparse
+#import sys
+#import tempfile
+#import os, glob, pickle
 import tensorflow as tf
 from .config import *
 
 # from .tf_data_handler import inputs
 import numpy as np
-import tqdm, time
-import matplotlib.pyplot as plt
-import math
-from textwrap import wrap
+#import tqdm, time
+#import matplotlib.pyplot as plt
+#import math
+#from textwrap import wrap
 
 
 class CNNModelStruct:

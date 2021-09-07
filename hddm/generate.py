@@ -383,7 +383,7 @@ def _gen_rts_from_cdf(params, samples=1000):
              Parameter names and values.
 
      :Optional:
-         samlpes : int
+         samples : int
              How many samples to generate.
 
      :SeeAlso:

@@ -75,7 +75,6 @@ def generate_wfpt_reg_stochastic_class(
 
     return stoch
 
-
 wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="drift")
 
 ################################################################################################

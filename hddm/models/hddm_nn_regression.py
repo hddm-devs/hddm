@@ -4,6 +4,7 @@ import hddm
 from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
+from hddm.torch.mlp_inference_class import load_torch_mlp
 
 # import kabuki
 from kabuki import Knode
@@ -116,6 +117,17 @@ class HDDMnnRegressor(HDDMRegressor):
             # Make likelihood function
             self.wfpt_nn_reg_class = (
                 hddm.likelihoods_cnn.make_cnn_likelihood_reg(
+                    model=self.model, **network_dict
+                )
+            )
+
+        if self.network_type == "torch_mlp":
+            if self.network is None:
+                self.network = load_torch_mlp(model=self.model)
+            network_dict = {"network": self.network}
+
+            self.wfpt_nn_reg_class = (
+                hddm.likelihoods_mlp.make_mlp_likelihood_reg(
                     model=self.model, **network_dict
                 )
             )

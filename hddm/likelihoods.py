@@ -8,7 +8,6 @@ np.seterr(divide="ignore")
 
 import hddm
 
-
 def wiener_like_contaminant(
     value,
     cont_x,

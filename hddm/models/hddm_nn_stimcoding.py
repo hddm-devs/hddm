@@ -2,6 +2,7 @@ from hddm.models import HDDMStimCoding
 from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
 from hddm.keras_models import load_mlp
 from hddm.cnn.wrapper import load_cnn
+from hddm.torch.mlp_inference_class import load_torch_mlp
 import hddm
 class HDDMnnStimCoding(HDDMStimCoding):
     """HDDMnn model that can be used when stimulus coding and estimation
@@ -85,6 +86,14 @@ class HDDMnnStimCoding(HDDMStimCoding):
             network_dict = {"network": self.network}
             self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(
                 model=self.model, pdf_multiplier=self.cnn_pdf_multiplier, **network_dict
+            )
+
+        if self.network_type == "torch_mlp":
+            if self.network is None:
+                self.network = load_torch_mlp(model = self.model)
+            network_dict = {"network": self.network}
+            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model = self.model, **network_dict
             )
 
         super(HDDMnnStimCoding, self).__init__(*args, **kwargs)

@@ -12,6 +12,7 @@ from data_simulators import levy_flexbound
 from data_simulators import ornstein_uhlenbeck
 from data_simulators import full_ddm
 from data_simulators import ddm_sdv
+from data_simulators import ddm
 
 # from data_simulators import ddm_flexbound_pre
 from data_simulators import race_model
@@ -70,7 +71,6 @@ def bin_simulator_output_pointwise(
 
     return np.concatenate([out_copy[0], out_copy[1]], axis=-1).astype(np.int32)
 
-
 def bin_simulator_output(
     out=None, bin_dt=0.04, nbins=0, max_t=-1, freq_cnt=False
 ):  # ['v', 'a', 'w', 't', 'angle']
@@ -121,7 +121,6 @@ def bin_simulator_output(
         counts = counts / out[2]["n_samples"]
 
     return counts
-
 
 def bin_arbitrary_fptd(
     out=None, bin_dt=0.04, nbins=256, nchoices=2, choice_codes=[-1.0, 1.0], max_t=10.0
@@ -266,6 +265,22 @@ def simulator(
             boundary_multiplicative=True,
             max_t=max_t,
         )
+
+    if model == "ddm_legacy" or model == "ddm_vanilla":
+        x = ddm(
+                v=theta[:, 0],
+                a=theta[:, 1],
+                z=theta[:, 2],
+                t=theta[:, 3],
+                s=s,
+                n_samples=n_samples,
+                n_trials=n_trials,
+                delta_t=delta_t,
+                boundary_params={},
+                boundary_fun=bf.constant,
+                boundary_multiplicative=True,
+                max_t=max_t,
+                )
 
     if model == "angle" or model == "angle2":
         x = ddm_flexbound(
