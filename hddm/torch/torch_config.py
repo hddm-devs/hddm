@@ -8,7 +8,7 @@ class TorchConfig(object):
         self.network_files = {"ddm": "db415ca6008311ec8d90a0423f3e9b42_ddm_torch_state_dict.pt"}
         self.network_config_files = {"ddm": "db415ca6008311ec8d90a0423f3e9b42_ddm_torch__network_config.pickle"}
         self.network_config = self.get_network_config(file_name = self.network_config_files[model])
-        self.network_path = os.path.join(hddm.__path__[0], "torch_models", network_files[model])
+        self.network_path = os.path.join(hddm.__path__[0], "torch_models", self.network_files[model])
 
     def get_network_config(self, file_name = None):
         return pickle.load(open(os.path.join(hddm.__path__[0], "torch_models", file_name), 'rb'))
