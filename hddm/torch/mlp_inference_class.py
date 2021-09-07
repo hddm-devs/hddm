@@ -25,7 +25,7 @@ class LoadTorchMLPInfer:
     def predict_on_batch(self, x = None):
         return self.net(torch.from_numpy(x).to(self.dev)).cpu().numpy()
 
-def load_torch_mlp(model = model):
+def load_torch_mlp(model = None):
     cfg = TorchConfig(model = model)
     infer_model  = LoadTorchMLPInfer(model_file_path  = cfg.network_path,
                                      network_config = cfg.network_config,
