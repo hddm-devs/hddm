@@ -1,5 +1,6 @@
 import torch
 from .torch_config import TorchConfig
+from .mlp_model_class import TorchMLP
 import hddm
 
 class LoadTorchMLPInfer:
