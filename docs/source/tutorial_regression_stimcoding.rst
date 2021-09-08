@@ -130,15 +130,15 @@ generate such an array from the stimulus column of our simulated data
 ::
 
     def z_link_func(x, data=mydata):
-    stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
-                               {'s': data.stimulus.loc[x.index]}))
-    )
-    # Apply z = (1 - x) to flip them along 0.5
-    z_flip = stim - x
-    # The above inverts those values we do not want to flip,
-    # so invert them back
-    z_flip[stim == 0] *= -1
-    return z_flip
+        stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
+                                  {'s': data.stimulus.loc[x.index]}))
+        )
+        # Apply z = (1 - x) to flip them along 0.5
+        z_flip = stim - x
+        # The above inverts those values we do not want to flip,
+        # so invert them back
+        z_flip[stim == 0] *= -1
+        return z_flip
 
 (NOTE: earlier versions of this tutorial suggested applying an inverse logit
 link function to the regression, but this should no longer be used given changes to the prior 
