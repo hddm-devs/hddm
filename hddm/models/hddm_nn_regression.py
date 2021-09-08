@@ -138,7 +138,7 @@ class HDDMnnRegressor(HDDMRegressor):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-
+        # This should be adjusted to include cnn / mlp
         return Knode(
             self.wfpt_nn_reg_class,
             "wfpt",

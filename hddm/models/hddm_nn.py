@@ -163,7 +163,7 @@ class HDDMnn(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        if self.network_type == "mlp":
+        if self.network_type == "mlp" or self.network_type == "torch_mlp":
             return Knode(
                 self.wfpt_nn,
                 "wfpt",

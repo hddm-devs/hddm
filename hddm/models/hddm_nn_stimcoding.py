@@ -103,7 +103,8 @@ class HDDMnnStimCoding(HDDMStimCoding):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         # Here we use a special Knode (see below) that either inverts v or z
         # depending on what the correct stimulus was for that trial type.
-
+        
+        # This should be adjusted to incorporate cnn / mlp properly: rn only mlp ready
         return KnodeWfptStimCoding(
             self.wfpt_nn,
             "wfpt",  # TD: ADD wfpt class we need
