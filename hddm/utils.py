@@ -113,7 +113,7 @@ def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
             data.loc[idx, "response"] = 0
 
         return bin_rts_pointwise(data, max_rt=max_rt, nbins=nbins)
-    if network_type == "mlp":
+    if network_type == "mlp" or network_type == "torch_mlp":
         data = pd.DataFrame(data.copy())  # .values.astype(np.float32)
 
         data["response"] = data["response"].values.astype(np.float32)
