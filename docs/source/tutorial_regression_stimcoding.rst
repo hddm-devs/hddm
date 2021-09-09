@@ -145,6 +145,7 @@ link function to the regression, but this should no longer be used given changes
 on the intercept.) 
 
 Also depending on your python version, the above code may give you errors and you can try this instead:
+::
 
     def z_link_func(x, data=mydata):
         stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
