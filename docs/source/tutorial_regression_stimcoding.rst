@@ -144,6 +144,20 @@ generate such an array from the stimulus column of our simulated data
 link function to the regression, but this should no longer be used given changes to the prior 
 on the intercept.) 
 
+Also depending on your python version, the above code may give you errors and you can try this instead:
+
+    def z_link_func(x, data=mydata):
+        stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
+                                  {'s': data.stimulus.loc[x.index]},return_type='dataframe'))
+        )
+        # Apply z = (1 - x) to flip them along 0.5
+        z_flip = np.subtract(stim, x.to_frame())
+        # The above inverts those values we do not want to flip,
+        # so invert them back
+        z_flip[stim == 0] *= -1
+        return z_flip
+
+
 Now we set up the regression models for ``z`` and ``v`` and also include the
 link functions The relevant string here used by ``patsy`` is '1 +
 C(condition)'. This will generate a design matrix with an intercept
