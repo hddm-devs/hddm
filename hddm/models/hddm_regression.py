@@ -321,7 +321,13 @@ class HDDMRegressor(HDDM):
 
             # CHECK IF LINK FUNCTION IS IDENTITY
             # ------
-            link_is_identity = np.array_equal(reg['link_func'](np.arange(-1000, 1000, 0.1)), np.arange(-1000, 1000, 0.1))
+            try:
+                link_is_identity = np.array_equal(reg['link_func'](np.arange(-1000, 1000, 0.1)), np.arange(-1000, 1000, 0.1))
+            except:
+                print('exception raised that hints at the fact that your link function is not identity. \n' + \
+                      'If all your link functions are identity this means trouble!')
+                link_is_identity = False
+
             if link_is_identity:
                 print('Reg Model:')
                 print(reg)
