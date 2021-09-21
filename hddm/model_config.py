@@ -483,7 +483,6 @@ model_config = {
                                      "beta": 1.0, "beta_std": 0.5,
                                     },
                 },
-    },
     "race_no_bias_3":{'params': ["v0", "v1", "v2", "a", "z", "t"],
                       'params_trans': [0, 0, 0, 0, 1, 0],
                       'params_std_upper': [1.5, 1.5, 1.5, 1.0, None, 1.0],
