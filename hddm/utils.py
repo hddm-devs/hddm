@@ -123,8 +123,8 @@ def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
             idx = data["response"] < 1.0
             data.loc[idx, "response"] = -1.0
 
-        # Copy data
-        # Flip sign for lower boundary response
+        # If flipped rt was supplied
+        # --> unflip it
         idx = data["rt"] < 0.0
         data.loc[idx, "rt"] = -data.loc[idx, "rt"]
         return data

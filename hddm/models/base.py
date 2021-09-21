@@ -40,8 +40,14 @@ class AccumulatorModel(kabuki.Hierarchical):
         print("printing self.nn")
         print(self.nn)
         if self.nn:
-            print("passed through flip errors nn")
-            data = hddm.utils.flip_errors_nn(data, self.network_type)
+            if model_config[self.model]['n_choices'] == 2:
+                print("2-choice model --> passed through flip errors nn")
+                data = hddm.utils.flip_errors_nn(data, self.network_type)
+            else:
+                print("More than 2-choice model --> don't flip any responses.")
+                print("Make sure you supplied rt and choice data in appropriate format!")
+                pass
+
         else:
             data = hddm.utils.flip_errors(data)
 
