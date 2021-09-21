@@ -46,6 +46,8 @@ class AccumulatorModel(kabuki.Hierarchical):
             else:
                 print("More than 2-choice model --> don't flip any responses.")
                 print("Make sure you supplied rt and choice data in appropriate format!")
+                data["response"] = data["response"].values.astype(np.float32)
+                data["rt"] = data["rt"].values.astype(np.float32)
                 pass
 
         else:
