@@ -21,6 +21,7 @@ class TorchMLP(nn.Module):
         
         self.layers.append(nn.Linear(input_shape, self.network_config['layer_sizes'][0]))
         self.layers.append(self.activations[self.network_config['activations'][0]])
+        print(self.network_config['activations'][0])
         for i in range(len(self.network_config['layer_sizes']) - 1):
             self.layers.append(nn.Linear(self.network_config['layer_sizes'][i], self.network_config['layer_sizes'][i + 1]))
             print(self.network_config['activations'][i + 1])
