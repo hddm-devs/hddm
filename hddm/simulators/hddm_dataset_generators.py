@@ -255,7 +255,16 @@ def simulator_single_subject(
 
     print("Model: ", model)
     print("Parameters needed: ", model_config[model]["params"])
-    if type(parameters) != dict:
+    if parameters is None:
+        parameters = np.random.uniform(low = model_config[model]['param_bounds'][0],
+                                       high = model_config[model]['param_bounds'][1],
+                                       size =1)
+        gt = {}
+        for param in model_config[model]["params"]:
+            id_tmp = model_config[model]["params"].index(param)
+            gt[param] = parameters[id_tmp]
+        
+    elif type(parameters) != dict and parameters is not None:
         gt = {}
         for param in model_config[model]["params"]:
             id_tmp = model_config[model]["params"].index(param)
@@ -767,10 +776,10 @@ def simulator_covariate(
     return (data, gt)
 
 
-# ALEX TD: Change n_samples_by_subject --> n_trials_per_subject (but apply consistently)
+# ALEX TD: Change n_trials_by_subject --> n_trials_per_subject (but apply consistently)
 def simulator_hierarchical(
     n_subjects=5,
-    n_samples_by_subject=500,
+    n_trials_by_subject=500,
     prespecified_param_means=None,  # {'v': 2},
     prespecified_param_stds=None,  # {'v': 0.3},
     p_outlier=0.0,
@@ -787,7 +796,7 @@ def simulator_hierarchical(
     :Arguments:
         n_subjects: int <default=5>
             Number of subjects in the datasets
-        n_samples_by_subject: int <default=500>
+        n_trials_by_subject: int <default=500>
             Number of trials for each subject
         prspecified_param_means: dict <default={'v': 2}>
             Prespeficied group means
@@ -882,7 +891,7 @@ def simulator_hierarchical(
         sim_out = simulator(
             subject_parameters[i, :],
             model=model,
-            n_samples=n_samples_by_subject,
+            n_samples=n_trials_by_subject,
             bin_dim=bin_dim,
             bin_pointwise=bin_pointwise,
             max_t=max_t,
@@ -892,7 +901,7 @@ def simulator_hierarchical(
         sim_out = _add_outliers(
             sim_out=sim_out,
             p_outlier=p_outlier,
-            n_samples=n_samples_by_subject,
+            n_samples=n_trials_by_subject,
             max_rt_outlier=max_rt_outlier,
         )
 
@@ -914,7 +923,7 @@ def simulator_hierarchical(
 ### NEW
 def simulator_h_c(
     n_subjects=10,
-    n_samples_by_subject=100,
+    n_trials_by_subject=100,
     model="ddm_vanilla",
     conditions={
         "c_one": ["high", "low"],
@@ -938,7 +947,7 @@ def simulator_h_c(
     :Arguments:
         n_subjects: int <default=5>
             Number of subjects in the datasets
-        n_samples_by_subject: int <default=500>
+        n_trials_by_subject: int <default=500>
             Number of trials for each subject
         model: str <default = 'ddm_vanilla'>
             Model to sample from. For traditional hddm supported models, append '_vanilla' to the model. Omitting 'vanilla'
@@ -1011,7 +1020,7 @@ def simulator_h_c(
         params_utilized = []
 
         # Regression Part
-        # reg_df = make_covariate_df(regression_covariates, n_samples_by_subject)
+        # reg_df = make_covariate_df(regression_covariates, n_trials_by_subject)
         if regression_models is not None:
             for regression_model in regression_models:
                 separator = regression_model.find("~")
@@ -1038,14 +1047,14 @@ def simulator_h_c(
 
         return remainder
 
-    def make_covariate_df(regression_covariates, n_samples_by_subject):
+    def make_covariate_df(regression_covariates, n_trials_by_subject):
         """
         Goes through the supplied covariate data, and turns it into a dataframe, with randomly generated covariate values.
         Each column refers to one covariate.
         """
 
         cov_df = pd.DataFrame(
-            np.zeros((n_samples_by_subject, len(list(regression_covariates.keys())))),
+            np.zeros((n_trials_by_subject, len(list(regression_covariates.keys())))),
             columns=[key for key in regression_covariates.keys()],
         )
 
@@ -1056,13 +1065,13 @@ def simulator_h_c(
                     np.random.choice(
                         np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
                         replace=True,
-                        size=n_samples_by_subject,
+                        size=n_trials_by_subject,
                     )
                     / (tmp["range"][1])
                 )
             else:
                 cov_df[covariate] = np.random.uniform(
-                    low=tmp["range"][0], high=tmp["range"][1], size=n_samples_by_subject
+                    low=tmp["range"][0], high=tmp["range"][1], size=n_trials_by_subject
                 ) / (tmp["range"][1])
 
         return cov_df
@@ -1090,7 +1099,7 @@ def simulator_h_c(
         model,
         group_level_parameter_dict,
         n_subjects,
-        n_samples_by_subject,
+        n_trials_by_subject,
     ):
 
         # Construct subject data
@@ -1110,7 +1119,7 @@ def simulator_h_c(
 
             for subj_idx in range(n_subjects):
                 # Parameter vector
-                subj_data = pd.DataFrame(index=np.arange(0, n_samples_by_subject, 1))
+                subj_data = pd.DataFrame(index=np.arange(0, n_trials_by_subject, 1))
                 subj_data["subj_idx"] = str(subj_idx)
 
                 # Fixed part
@@ -1189,7 +1198,7 @@ def simulator_h_c(
                 # Regressor part
                 if regression_covariates is not None:
                     cov_df = make_covariate_df(
-                        regression_covariates, n_samples_by_subject
+                        regression_covariates, n_trials_by_subject
                     )
 
                     # Add cov_df to subject data
@@ -1267,6 +1276,7 @@ def simulator_h_c(
         parameters = full_data[model_config[model]["params"]]
 
         # Run the actual simulations
+        print(parameters)
         sim_data = simulator(
             theta=parameters.values,
             model=model,
@@ -1445,7 +1455,7 @@ def simulator_h_c(
 
         # Regressor part
         if regression_covariates is not None:
-            cov_df = make_covariate_df(regression_covariates, n_samples_by_subject)
+            cov_df = make_covariate_df(regression_covariates, n_trials_by_subject)
 
         if regression_models is not None:
             for reg_model in regression_models:
@@ -1560,7 +1570,7 @@ def simulator_h_c(
             regression_covariates=regression_covariates,
             group_only_regressors=group_only_regressors,
             group_level_parameter_dict=group_level_param_dict,
-            n_samples_by_subject=n_samples_by_subject,
+            n_trials_by_subject=n_trials_by_subject,
             n_subjects=n_subjects,
         )
 
