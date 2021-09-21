@@ -288,7 +288,7 @@ model_config = {
                                  'param_bounds': [[-2.5, -2.5, -2.5, 0.3, 0.0, 0.31, 0.31], 
                                                   [2.5, 2.5, 2.5, 2.0, 2.0, 4.99, 6.99]],
                                  'params_trans': [0, 0, 0, 0, 0, 0, 0],
-                                 'params_std_upper': [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5]
+                                 'params_std_upper': [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5],
                                  'boundary': bf.weibull_cdf,
                                  'boundary_multiplicative': True,
                                  'n_params': 7,
