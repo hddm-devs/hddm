@@ -191,8 +191,8 @@ class HDDM(HDDMBase):
         # Parameter bounds might be different depending on whether we use the MLP or the CNN
         if self.network_type == "mlp" or self.network_type == "torch_mlp":
             param_bnd_str = "param_bounds"
-        elif self.network_type == "cnn":
-            param_bnd_str = "param_bounds_cnn"
+        # elif self.network_type == "cnn":
+        #     param_bnd_str = "param_bounds_cnn"
 
         # PARAMETERS COMMON TO ALL MODELS
         if "p_outlier" in include:

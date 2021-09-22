@@ -3,7 +3,7 @@ import hddm
 # from hddm.models import HDDM
 from hddm.models import HDDMRegressor
 from hddm.keras_models import load_mlp
-from hddm.cnn.wrapper import load_cnn
+#from hddm.cnn.wrapper import load_cnn
 from hddm.torch.mlp_inference_class import load_torch_mlp
 
 # import kabuki
@@ -80,12 +80,12 @@ class HDDMnnRegressor(HDDMRegressor):
         """
         # Signify as neural net class for later super() inits
         self.nn = True
-        # kwargs['nn'] = True
+
         print(
             "Setting priors uninformative (LANs only work with uninformative priors for now)"
         )
         kwargs["informative"] = False
-        self.network_type = kwargs.pop("network_type", "mlp")
+        self.network_type = kwargs.pop("network_type", "torch_mlp")
         self.network = kwargs.pop("network", None)
         self.non_centered = kwargs.pop("non_centered", False)
         
@@ -93,11 +93,6 @@ class HDDMnnRegressor(HDDMRegressor):
         self.model = kwargs.pop("model", "ddm")
         self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
-
-        if self.nbin == 512:
-            self.cnn_pdf_multiplier = 51.2
-        elif self.nbin == 256:
-            self.cnn_pdf_multiplier = 25.6
 
         # Load Network
         if self.network_type == "mlp":
@@ -107,16 +102,6 @@ class HDDMnnRegressor(HDDMRegressor):
 
             self.wfpt_nn_reg_class = (
                 hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-                    model=self.model, **network_dict
-                )
-            )
-
-        if self.network_type == "cnn":
-            self.network = load_cnn(model=self.model, nbin=self.nbin)
-            network_dict = {"network": self.network}
-            # Make likelihood function
-            self.wfpt_nn_reg_class = (
-                hddm.likelihoods_cnn.make_cnn_likelihood_reg(
                     model=self.model, **network_dict
                 )
             )
@@ -138,7 +123,6 @@ class HDDMnnRegressor(HDDMRegressor):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        # This should be adjusted to include cnn / mlp
         return Knode(
             self.wfpt_nn_reg_class,
             "wfpt",
@@ -156,14 +140,11 @@ class HDDMnnRegressor(HDDMRegressor):
         return d
 
     def __setstate__(self, d):
-        if d["network_type"] == "cnn":
-            d["network"] = load_cnn(model=d["model"], nbin=d["nbin"])
-            network_dict = {"network": d["network"]}
-            d[
-                "wfpt_nn_reg_class"
-            ] = hddm.likelihoods_cnn.make_cnn_likelihood_reg(
-                model=d["model"], pdf_multiplier=d["cnn_pdf_multiplier"], **network_dict
-            )
+        if d['network_type'] == "torch_mlp":
+            d["network"] = load_torch_mlp(model = d["model"])
+            network_dict = {'network': d["network"]}
+            d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
+                model = d["model"], **network_dict)
 
         if d["network_type"] == "mlp":
             d["network"] = load_mlp(model=d["model"])

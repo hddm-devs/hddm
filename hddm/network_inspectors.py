@@ -15,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 
 from hddm.keras_models import load_mlp
-from hddm.cnn.wrapper import load_cnn
+# from hddm.cnn.wrapper import load_cnn
 from hddm.torch.mlp_inference_class import load_torch_mlp
 
 from hddm.simulators.basic_simulator import *
@@ -52,29 +52,29 @@ def get_mlp(model="angle"):
     return network.predict_on_batch
 
 
-def get_cnn(model="angle", nbin=512):
-    """Returns tensorflow CNN which is the basis of the CNN likelihoods
+# def get_cnn(model="angle", nbin=512):
+#     """Returns tensorflow CNN which is the basis of the CNN likelihoods
 
-    :Arguments:
-        model: str <default='angle'>
-        Specifies the models you would like to load
+#     :Arguments:
+#         model: str <default='angle'>
+#         Specifies the models you would like to load
 
-    Returns:
-        function
-            Returns a function that you can call passing as an argument a 1d or 2d np.array with datatype np.float32.
-            The shape of the input to this function should match the number of parameter vectors (rows) and the corresponding parameters (cols).
-            Per paraemter vector passed, this function will give out an np.array() of shape (1, n_choice_options * nbins).
-            This output defines a probability mass functions over discretized rt / choice space. The first 'n_choice_options' indices
-            define the probability of landing in the first bin for each choice option etc..
+#     Returns:
+#         function
+#             Returns a function that you can call passing as an argument a 1d or 2d np.array with datatype np.float32.
+#             The shape of the input to this function should match the number of parameter vectors (rows) and the corresponding parameters (cols).
+#             Per paraemter vector passed, this function will give out an np.array() of shape (1, n_choice_options * nbins).
+#             This output defines a probability mass functions over discretized rt / choice space. The first 'n_choice_options' indices
+#             define the probability of landing in the first bin for each choice option etc..
 
-    Example:
-        :Example:
-        >>> forward = hddm.network_inspectors.get_cnn(model = 'ddm')
-        >>> data = np.array([[0.5, 1.5, 0.5, 0.5], [0.5, 1.5, 0.5, 0.5]], dtype = np.float32)
-        >>> forward(data)
-    """
-    network = load_cnn(model=model, nbin=nbin)
-    return network
+#     Example:
+#         :Example:
+#         >>> forward = hddm.network_inspectors.get_cnn(model = 'ddm')
+#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5], [0.5, 1.5, 0.5, 0.5]], dtype = np.float32)
+#         >>> forward(data)
+#     """
+#     network = load_cnn(model=model, nbin=nbin)
+#     return network
 
 def get_torch_mlp(model="angle", nbin=512):
     """Returns the torch network which is the basis of the TORCH_MLP likelihoods

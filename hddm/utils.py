@@ -96,7 +96,7 @@ def flip_errors(data):
     return data
 
 
-def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
+def flip_errors_nn(data, network_type="mlp", nbins=None, max_rt=20):
     """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
 
     :Arguments:
@@ -107,12 +107,12 @@ def flip_errors_nn(data, network_type="cnn", nbins=512, max_rt=10):
             Input array with RTs sign flipped where 'response' < 0
 
     """
-    if network_type == "cnn":
-        if np.any(data["response"] != 1.0):
-            idx = data["response"] < 0
-            data.loc[idx, "response"] = 0
-
-        return bin_rts_pointwise(data, max_rt=max_rt, nbins=nbins)
+    # if network_type == "cnn":
+    #     if np.any(data["response"] != 1.0):
+    #         idx = data["response"] < 0
+    #         data.loc[idx, "response"] = 0
+        # return bin_rts_pointwise(data, max_rt=max_rt, nbins=nbins)
+    
     if network_type == "mlp" or network_type == "torch_mlp":
         data = pd.DataFrame(data.copy())  # .values.astype(np.float32)
 

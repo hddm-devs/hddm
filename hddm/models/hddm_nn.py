@@ -11,7 +11,7 @@ from kabuki.hierarchical import (
 # from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
 from hddm.keras_models import load_mlp
-from hddm.cnn.wrapper import load_cnn
+#from hddm.cnn.wrapper import load_cnn
 from hddm.torch.mlp_inference_class import load_torch_mlp
 
 
@@ -128,11 +128,6 @@ class HDDMnn(HDDM):
         self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
 
-        if self.nbin == 512:
-            self.cnn_pdf_multiplier = 51.2
-        elif self.nbin == 256:
-            self.cnn_pdf_multiplier = 25.6
-
         # Load Network and likelihood function
         if self.network_type == "mlp":
             if self.network is None:
@@ -141,13 +136,6 @@ class HDDMnn(HDDM):
             
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=self.model, **network_dict
-            )
-
-        if self.network_type == "cnn":
-            self.network = load_cnn(model=self.model, nbin=self.nbin)
-            network_dict = {"network": self.network}
-            self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(
-                model=self.model, pdf_multiplier=self.cnn_pdf_multiplier, **network_dict
             )
 
         if self.network_type == "torch_mlp":
@@ -163,28 +151,17 @@ class HDDMnn(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        if self.network_type == "mlp" or self.network_type == "torch_mlp":
-            return Knode(
-                self.wfpt_nn,
-                "wfpt",
-                observed=True,
-                col_name=[
-                    "response",
-                    "rt",
-                ],  # TODO: One could preprocess at initialization
-                **wfpt_parents
-            )
-        elif self.network_type == "cnn":
-            return Knode(
-                self.wfpt_nn,
-                "wfpt",
-                observed=True,
-                col_name=[
-                    "response_binned",
-                    "rt_binned",
-                ],  # TODO: One could preprocess at initialization
-                **wfpt_parents
-            )
+        #if self.network_type == "mlp" or self.network_type == "torch_mlp":
+        return Knode(
+            self.wfpt_nn,
+            "wfpt",
+            observed=True,
+            col_name=[
+                "response",
+                "rt",
+            ],  # TODO: One could preprocess at initialization
+            **wfpt_parents
+        )
 
     def __getstate__(self):
         d = super(HDDMnn, self).__getstate__()
@@ -193,12 +170,6 @@ class HDDMnn(HDDM):
         return d
 
     def __setstate__(self, d):
-        if d["network_type"] == "cnn":
-            d["network"] = load_cnn(model=d["model"], nbin=d["nbin"])
-            network_dict = {"network": d["network"]}
-            d["wfpt_nn"] = hddm.likelihoods_cnn.make_cnn_likelihood(
-                model=d["model"], pdf_multiplier=d["cnn_pdf_multiplier"], **network_dict
-            )
 
         if d["network_type"] == "mlp":
             d["network"] = load_mlp(model=d["model"])
@@ -207,4 +178,26 @@ class HDDMnn(HDDM):
                 model=d["model"], **network_dict
             )
 
+        if d["network_type"] == "torch_mlp":
+            d["network"] = load_torch_mlp(model=d["model"])
+            network_dict = {"network": d["network"]}
+            d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model=d["model"], **network_dict
+            )
+
         super(HDDMnn, self).__setstate__(d)
+
+
+# Knode definition for previous cnn network
+
+        # elif self.network_type == "cnn":
+        #     return Knode(
+        #         self.wfpt_nn,
+        #         "wfpt",
+        #         observed=True,
+        #         col_name=[
+        #             "response_binned",
+        #             "rt_binned",
+        #         ],  # TODO: One could preprocess at initialization
+        #         **wfpt_parents
+        #     )

@@ -1,7 +1,7 @@
 from hddm.models import HDDMStimCoding
 from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
 from hddm.keras_models import load_mlp
-from hddm.cnn.wrapper import load_cnn
+#from hddm.cnn.wrapper import load_cnn
 from hddm.torch.mlp_inference_class import load_torch_mlp
 import hddm
 class HDDMnnStimCoding(HDDMStimCoding):
@@ -52,24 +52,17 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
     def __init__(self, *args, **kwargs):
         self.nn = True
-        # kwargs['nn'] = True
         print(
             "Setting priors uninformative (LANs only work with uninformative priors for now)"
         )
         kwargs["informative"] = False
-        self.network_type = kwargs.pop("network_type", "mlp")
+        self.network_type = kwargs.pop("network_type", "torch_mlp")
         self.network = kwargs.pop("network", None)
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
         self.nbin = kwargs.pop("nbin", 512)
         # self.is_informative = kwargs.pop('informative', False)
-
-        self.nbin = kwargs.pop("nbin", 512)
-        if self.nbin == 512:
-            self.cnn_pdf_multiplier = 51.2
-        elif self.nbin == 256:
-            self.cnn_pdf_multiplier = 25.6
 
         # Attach likelihood corresponding to model
         if self.network_type == "mlp":
@@ -79,13 +72,6 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=self.model, **network_dict
-            )
-
-        if self.network_type == "cnn":
-            self.network = load_cnn(model=self.model, nbin=self.nbin)
-            network_dict = {"network": self.network}
-            self.wfpt_nn = hddm.likelihoods_cnn.make_cnn_likelihood(
-                model=self.model, pdf_multiplier=self.cnn_pdf_multiplier, **network_dict
             )
 
         if self.network_type == "torch_mlp":
@@ -104,7 +90,6 @@ class HDDMnnStimCoding(HDDMStimCoding):
         # Here we use a special Knode (see below) that either inverts v or z
         # depending on what the correct stimulus was for that trial type.
         
-        # This should be adjusted to incorporate cnn / mlp properly: rn only mlp ready
         return KnodeWfptStimCoding(
             self.wfpt_nn,
             "wfpt",  # TD: ADD wfpt class we need
@@ -127,15 +112,15 @@ class HDDMnnStimCoding(HDDMStimCoding):
         return d
 
     def __setstate__(self, d):
-        if d["network_type"] == "cnn":
-            d["network"] = load_cnn(model=d["model"], nbin=d["nbin"])
-            network_dict = {"network": d["network"]}
-            d["wfpt_nn"] = hddm.likelihoods_cnn.make_cnn_likelihood(
-                model=d["model"], pdf_multiplier=d["cnn_pdf_multiplier"], **network_dict
-            )
-
         if d["network_type"] == "mlp":
             d["network"] = load_mlp(model=d["model"])
+            network_dict = {"network": d["network"]}
+            d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
+                model=d["model"], **network_dict
+            )
+
+        if d["network_type"] == "torch_mlp":
+            d["network"] = load_torch_mlp(model=d["model"])
             network_dict = {"network": d["network"]}
             d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model=d["model"], **network_dict

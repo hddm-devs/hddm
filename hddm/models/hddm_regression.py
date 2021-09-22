@@ -15,7 +15,6 @@ import kabuki.step_methods as steps
 # To fix regression
 from hddm.model_config import model_config
 
-
 def generate_wfpt_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
