@@ -283,7 +283,8 @@ def simulator_single_subject(
                         model_config[model]["params"].index(param)
                     ]
                 )
-
+                
+    print(parameters)
     x = simulator(
         theta=parameters,
         model=model,
@@ -1207,6 +1208,7 @@ def simulator_h_c(
 
                 if regression_models is not None:
                     for reg_model in regression_models:
+                        # Make Design Matrix
                         separator = reg_model.find("~")
                         outcome = reg_model[:separator].strip(" ")
                         reg_model_stripped = reg_model[(separator + 1) :]
@@ -1214,7 +1216,6 @@ def simulator_h_c(
 
                         reg_params_tmp = []
                         reg_param_names_tmp = []
-
                         for reg_param_key in group_level_parameter_dict[
                             outcome + "_reg"
                         ].keys():
@@ -1277,6 +1278,7 @@ def simulator_h_c(
 
         # Run the actual simulations
         print(parameters)
+
         sim_data = simulator(
             theta=parameters.values,
             model=model,
@@ -1295,6 +1297,7 @@ def simulator_h_c(
 
         # Add in outliers
         if p_outlier > 0:
+            print('passing through outlier creation')
             outlier_idx = np.random.choice(
                 list(data.index),
                 replace=False,
