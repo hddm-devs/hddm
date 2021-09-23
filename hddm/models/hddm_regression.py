@@ -273,6 +273,8 @@ class HDDMRegressor(HDDM):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
         print("WARNING: Custom link functions will not be loaded.")
         for model in d["model_descrs"]:
+            print('passing model_descris loop')
+            print('current outcome:', model['outcome'])
             if model['outcome'] == 'v':
                 model["link_func"] = self.v_link_func
             else:
