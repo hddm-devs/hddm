@@ -280,7 +280,8 @@ class HDDMRegressor(HDDM):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
         print("WARNING: Custom link functions will not be loaded.")
         for model in d["model_descrs"]:
-            model["link_func"] = lambda x: x
+            # model["link_func"] = lambda x: x
+            model["link_func"] = id_link
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
@@ -412,3 +413,8 @@ class HDDMRegressor(HDDM):
             knodes["%s_bottom" % reg["outcome"]] = reg_knode
 
         return knodes
+
+# Some standard link functions
+
+def id_link(x):
+    return x
