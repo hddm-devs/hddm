@@ -80,6 +80,7 @@ wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="drift")
 
 
 class KnodeRegress(kabuki.hierarchical.Knode):
+    print('passing through Knoderegress')
     def __init__(self, *args, **kwargs):
         # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)

@@ -148,7 +148,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     def cdf(self, x):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
-   
+
     #if model == 'custom':
     def make_likelihood(model = model):
         likelihood_str = make_reg_likelihood_str_mlp(config = model_config[model])
@@ -164,7 +164,6 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     stoch.pdf = pdf
     stoch.cdf = cdf
     stoch.random = random
-
     return stoch
 
 # KEEP BELOW AS AN EXAMPLE FOR HOW MLP LIKELIHOODS WERE DEFINED
