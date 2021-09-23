@@ -275,7 +275,8 @@ class HDDMRegressor(HDDM):
         for model in d["model_descrs"]:
             if model['outcome'] == 'v':
                 model["link_func"] = self.v_link_func
-            model["link_func"] = lambda x: x
+            else:
+                model["link_func"] = lambda x: x
         super(HDDMRegressor, self).__setstate__(d)
 
     def v_link_func(x, data= None):
