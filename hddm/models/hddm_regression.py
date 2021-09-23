@@ -15,6 +15,13 @@ import kabuki.step_methods as steps
 # To fix regression
 from hddm.model_config import model_config
 
+# AF TEMPORARY
+def v_link_func(x, data = None):
+    stim = pd.Series(1, index = x.index)
+    data = data.loc[x.index]
+    stim.loc[data.tar_trial_type == 'nontarget'] = -1.
+    return x * stim
+
 def generate_wfpt_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
@@ -276,16 +283,10 @@ class HDDMRegressor(HDDM):
             print('passing model_descris loop')
             print('current outcome:', model['outcome'])
             if model['outcome'] == 'v':
-                model["link_func"] = self.v_link_func
+                model["link_func"] = v_link_func
             else:
                 model["link_func"] = lambda x: x
         super(HDDMRegressor, self).__setstate__(d)
-
-    def v_link_func(x, data= None):
-        stim = pd.Series(1, index = x.index)
-        data = data.loc[x.index]
-        stim.loc[data.tar_trial_type == 'nontarget'] = -1.
-        return x * stim
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
