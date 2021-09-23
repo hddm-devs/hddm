@@ -295,6 +295,7 @@ class HDDMRegressor(HDDM):
         )
 
     def _create_stochastic_knodes(self, include):
+        print('passing through _create_stochastic_knodes')
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
         # includes_remainder = set(include).difference(self.reg_outcomes)
