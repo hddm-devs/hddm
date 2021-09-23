@@ -16,7 +16,7 @@ import kabuki.step_methods as steps
 from hddm.model_config import model_config
 
 # AF TEMPORARY
-def v_link_func(x, data = None):
+def v_link_func(x, data):
     stim = pd.Series(1, index = x.index)
     data = data.loc[x.index]
     stim.loc[data.tar_trial_type == 'nontarget'] = -1.
