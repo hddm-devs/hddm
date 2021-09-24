@@ -550,7 +550,7 @@ model_config = {
                 'boundary': bf.angle,
                 'n_params': 8,
                 'default_params': [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
-                'hddm_include': ["v0", "v1", "v2", "a", "z", "ndt", "theta"],
+                'hddm_include': ["v0", "v1", "v2", "a", "z", "t", "theta"],
                 'n_choices': 4,
                 'choices': [0, 1, 2, 3],
                 'slice_widths': {"v1": 1.5, "v0_std": 0.5,
@@ -630,7 +630,7 @@ model_config = {
     },
     "lca_no_bias_angle_4": {'params': ['v0', 'v1', 'v2', 'v3', 'a', 'z', 'g', 'b', 't', 'theta'],
                             'param_bounds': [[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0, -.1], 
-                                             [2.5, 2.5, 2.5, 2.5, 3.0, 0.9, 1.0, 1.0, 2.0, 1.45]], #[[0, 2.5], [0, 2.5], [0, 2.5], [0, 2.5], [1.0, 3.0], [0.1, 0.9], [-1.0, 1.0], [-1.0, 1.0], [0.0, 2.0], [-.1, 1.45]],
+                                             [2.5, 2.5, 2.5, 2.5, 3.0, 0.9, 1.0, 1.0, 2.0, 1.45]], 
                             'params_trans': [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
                             'boundary': bf.angle,
                             'n_params': 10,
@@ -649,9 +649,7 @@ model_config = {
                                              "b": 0.1, "b_std": 0.2,
                                              "theta": 0.1, "theta_std": 0.2,
                                              },
-                            },
-
-    
+                            },    
 }
 
 # Models for which configs can be reused
