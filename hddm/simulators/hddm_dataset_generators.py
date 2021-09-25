@@ -39,6 +39,7 @@ def hddm_preprocess(
         df["subj_idx"] = subj_id
 
     # Add ground truth parameters to dataframe
+    print(simulator_data[2])
     if add_model_parameters:
         for param in model_config[simulator_data[2]["model"]]["params"]:
             if len(simulator_data[2][param]) > 1:
