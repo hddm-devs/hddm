@@ -45,6 +45,8 @@ def hddm_preprocess(
             if len(simulator_data[2][param]) > 1:
                 df[param] = simulator_data[2][param]
             else:
+                print(param)
+                print(simulator_data[2][param][0])
                 df[param] = simulator_data[2][param][0]
     return df
 
