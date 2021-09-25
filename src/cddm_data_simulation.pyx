@@ -1101,14 +1101,15 @@ def race_model(np.ndarray[float, ndim = 2] v,  # np.array expected, one column o
         z_dict = {}
         #t_dict = {}
         for i in range(n_particles):
-            v_dict['v_' + str(i)] = v[:, i]
-            z_dict['z_' + str(i)] = z[:, i]
+            v_dict['v' + str(i)] = v[:, i]
+            z_dict['z' + str(i)] = z[:, i]
             #t_dict['t_' + str(i)] = t[i] # for now no t by choice
 
 
     return (rts, choices, {**v_dict,
                         'a': a, 
-                        **z_dict,
+                        **z_dict, # if z's are different
+                        'z': z[:, 0], # single z if z's all the same
                         't': t,
                         # **t_dict, # for now no t by choice
                         's': s,
@@ -1243,12 +1244,13 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
     #t_dict = {}
     
     for i in range(n_particles):
-        v_dict['v_' + str(i)] = v[:, i]
+        v_dict['v' + str(i)] = v[:, i]
         z_dict['z_' + str(i)] = z[:, i]
 
     return (rts, choices, {**v_dict,
                            'a': a,
-                           **z_dict,
+                           **z_dict, # --> if different z's
+                           'z': z[:, 0], # z --> if all z_s the same , 
                            'g': g,
                            'b': b,
                            't': t,
