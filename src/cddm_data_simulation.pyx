@@ -976,27 +976,27 @@ def ornstein_uhlenbeck(np.ndarray[float, ndim = 1] v, # drift parameter
 # @cythonwraparound(False)
 
 # Function that checks boundary crossing of particles
-cdef bint check_finished(float[:] particles, float boundary):
-    cdef int i,n
-    n = particles.shape[0]
+cdef bint check_finished(float[:] particles, float boundary, int n):
+    cdef int i # ,n
+    #n = particles.shape[0]
     for i in range(n):
         if particles[i] > boundary:
             return True
     return False
 
-def test_check():
-    # Quick sanity check for the check_finished function
-    temp = np.random.normal(0,1, 10).astype(DTYPE)
-    cdef float[:] temp_view = temp
-    start = time()
-    [check_finished(temp_view, 3) for _ in range(1000000)]
-    print(check_finished(temp_view, 3))
-    end = time()
-    print("cython check: {}".format(start - end))
-    start = time()
-    [(temp > 3).any() for _ in range(1000000)]
-    end = time()
-    print("numpy check: {}".format(start - end))
+#def test_check():
+#    # Quick sanity check for the check_finished function
+#    temp = np.random.normal(0,1, 10).astype(DTYPE)
+#    cdef float[:] temp_view = temp
+#    start = time()
+#    [check_finished(temp_view, 3) for _ in range(1000000)]
+#    print(check_finished(temp_view, 3))
+#    end = time()
+#    print("cython check: {}".format(start - end))
+#    start = time()
+#    [(temp > 3).any() for _ in range(1000000)]
+#    end = time()
+#    print("numpy check: {}".format(start - end))
 
 # @cythonboundscheck(False)
 # @cythonwraparound(False)
@@ -1078,7 +1078,7 @@ def race_model(np.ndarray[float, ndim = 2] v,  # np.array expected, one column o
                         traj_view[0, j] = particles[j]
 
             # Random walker
-            while not check_finished(particles_view, boundary_view[ix]) and t_particle <= max_t:
+            while not check_finished(particles_view, boundary_view[ix], n_particles) and t_particle <= max_t:
                 for j in range(n_particles):
                     particles_view[j] += (v_view[k, j] * delta_t) + sqrt_st_view[k, j] * gaussian_values[m]
                     m += 1
@@ -1244,7 +1244,6 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
     v_dict = {}
     z_dict = {}
     #t_dict = {}
-    
     
     for i in range(n_particles):
         v_dict['v' + str(i)] = v[:, i]
