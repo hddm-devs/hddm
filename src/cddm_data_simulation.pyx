@@ -1107,10 +1107,10 @@ def race_model(np.ndarray[float, ndim = 2] v,  # np.array expected, one column o
 
 
     return (rts, choices, {**v_dict,
-                        'a': a, 
+                        'a': a[:, 0], 
                         **z_dict, # if z's are different
                         'z': z[:, 0], # single z if z's all the same
-                        't': t,
+                        't': t[:, 0],
                         # **t_dict, # for now no t by choice
                         's': s,
                         **boundary_params,
@@ -1248,12 +1248,12 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
         z_dict['z_' + str(i)] = z[:, i]
 
     return (rts, choices, {**v_dict,
-                           'a': a,
+                           'a': a[:, 0],
                            **z_dict, # --> if different z's
                            'z': z[:, 0], # z --> if all z_s the same , 
-                           'g': g,
-                           'b': b,
-                           't': t,
+                           'g': g[:, 0],
+                           'b': b[:, 0],
+                           't': t[:, 0],
                            's': s,
                            **boundary_params,
                            'delta_t': delta_t,
