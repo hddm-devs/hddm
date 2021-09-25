@@ -28,9 +28,9 @@ def hddm_preprocess(
     # Define dataframe if simulator output is binned pointwise (comes out as tuple [np.array, metadata])
 
     # I think this part is never called !
-    if len(simulator_data) == 2:
-        df = pd.DataFrame(simulator_data[0][:, 0], columns=["rt"])
-        df["response"] = simulator_data[0][:, 1].astype(int)
+    # if len(simulator_data) == 2:
+    #     df = pd.DataFrame(simulator_data[0][:, 0], columns=["rt"])
+    #     df["response"] = simulator_data[0][:, 1] #.astype(int)
 
     if not keep_negative_responses:
         df.loc[df["response"] == -1.0, "response"] = 0.0
@@ -261,7 +261,7 @@ def simulator_single_subject(
     if parameters is None:
         parameters = np.random.uniform(low = model_config[model]['param_bounds'][0],
                                        high = model_config[model]['param_bounds'][1],
-                                       size =1)
+                                       size = 1)
         gt = {}
         for param in model_config[model]["params"]:
             id_tmp = model_config[model]["params"].index(param)

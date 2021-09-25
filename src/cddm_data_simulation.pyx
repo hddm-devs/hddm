@@ -1156,7 +1156,7 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
     cdef int n_particles = v.shape[1]
     traj = np.zeros((int(max_t / delta_t) + 1, n_particles), dtype = DTYPE)
     traj[:, :] = -999 
-    cdef float[:, :] traj_view = traj    
+    cdef float[:, :] traj_view = traj
 
     rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
     cdef float[:, :, :] rts_view = rts
@@ -1194,8 +1194,10 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
 
         # Precompute boundary evaluations
         if boundary_multiplicative:
+            # print(a)
             boundary[:] = np.multiply(a_view[k, 0], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
         else:
+            # print(a)
             boundary[:] = np.add(a_view[k, 0], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
 
         for n in range(n_samples):
@@ -1211,15 +1213,15 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
                     for i in range(n_particles):
                         traj_view[0, i] = particles[i]
 
-            while not check_finished(particles_view, boundary_view[ix]) and t_particle <= max_t:
+            while not check_finished(particles_view, boundary_view[ix], n_particles) and t_particle <= max_t:
                 # calculate current sum over particle positions
                 particles_sum = csum(particles_view)
                 
                 # update particle positions 
                 for i in range(n_particles):
                     particles_reduced_sum_view[i] = (- 1) * particles_view[i] + particles_sum
-                    particles_view[i] += ((v_view[k, i] - (g_view[k, i] * particles_view[i]) - \
-                            (b_view[k, i] * particles_reduced_sum_view[i])) * delta_t) + (sqrt_st_view[k, i] * gaussian_values[m])
+                    particles_view[i] += ((v_view[k, i] - (g_view[k, 0] * particles_view[i]) - \
+                            (b_view[k, 0] * particles_reduced_sum_view[i])) * delta_t) + (sqrt_st_view[k, i] * gaussian_values[m])
                     particles_view[i] = fmax(0.0, particles_view[i])
                     m += 1
 
@@ -1235,13 +1237,14 @@ def lca(np.ndarray[float, ndim = 2] v, # drift parameters (np.array expect: one 
                         for i in range(n_particles):
                             traj_view[ix, i] = particles[i]
         
-            choices_view[n, k, 0] = particles.argmax() # store choices for sample n
+            choices_view[n, k, 0] = np.argmax(particles) # store choices for sample n
             rts_view[n, k, 0] = t_particle + t_view[k, 0] # t[choices_view[n, 0]] # store reaction time for sample n
         
     # Create some dics
     v_dict = {}
     z_dict = {}
     #t_dict = {}
+    
     
     for i in range(n_particles):
         v_dict['v' + str(i)] = v[:, i]
