@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import hddm
+import uuid
 #import torch.optim as optim
 #import torch.nn.functional as F
 #from torch import optim

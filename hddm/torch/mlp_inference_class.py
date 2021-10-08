@@ -18,7 +18,8 @@ class LoadTorchMLPInfer:
         self.net = TorchMLP(network_config = self.network_config,
                             input_shape = self.input_dim,
                             generative_model_id = None)
-        self.net.load_state_dict(torch.load(self.model_file_path))
+        self.net.load_state_dict(torch.load(self.model_file_path), map_location = self.dev)
+        # AF Q: IS THIS REDUNDANT NOW?
         self.net.to(self.dev)
         self.net.eval()
     

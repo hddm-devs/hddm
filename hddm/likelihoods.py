@@ -51,7 +51,6 @@ WienerContaminant = stochastic_from_dist(
     name="Wiener Simple Diffusion Process", logp=wiener_like_contaminant
 )
 
-
 def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3):
     _like = lambda value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max, err=err, n_st=n_st, n_sz=n_sz, use_adaptive=use_adaptive, simps_err=simps_err: wiener_like_contaminant(
         value,
@@ -138,16 +137,19 @@ def generate_wfpt_stochastic_class(
 
     # create random function
     def random(self):
-        return hddm.utils.flip_errors(
-            hddm.generate.gen_rts(
-                method=sampling_method,
-                size=self.shape,
-                dt=sampling_dt,
-                range_=cdf_range,
-                structured=True,
-                **self.parents.value
+        if sampling_method == 'cdf' or sampling_method == 'drift':
+            return hddm.utils.flip_errors(
+                hddm.generate.gen_rts(
+                    method=sampling_method,
+                    size=self.shape,
+                    dt=sampling_dt,
+                    range_=cdf_range,
+                    structured=True,
+                    **self.parents.value
+                )
             )
-        )
+        elif sampling_method == 'cssm':
+            # AF ADD: fill in simulator code
 
     # create pdf function
     def pdf(self, x):

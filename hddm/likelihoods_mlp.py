@@ -43,7 +43,12 @@ def make_mlp_likelihood(model, **kwargs):
             cnt += 1
 
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
-        return hddm_preprocess(sim_out, keep_negative_responses=True)
+        sim_out_proc = hddm_preprocess(sim_out, keep_negative_responses=True)
+
+        if (model_config[model]["n_choices"] == 2):
+            sim_out_proc['rt'] = sim_out_proc['rt'] * sim_out_proc['response']
+
+        return sim_out_proc
 
     def pdf(self, x):
         rt = np.array(x, dtype=np.float32)
@@ -99,11 +104,11 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     assert model in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary'
 
     # Model specific inits ------------------------------------------
-    n_params = model_config[model]["n_params"]
-    data_frame_width = n_params + 2
-    model_parameter_names = model_config[model]["params"]
-    model_parameter_lower_bounds = model_config[model]["param_bounds"][0]
-    model_parameter_upper_bounds = model_config[model]["param_bounds"][1]
+    #n_params = model_config[model]["n_params"]
+    # data_frame_width = n_params + 2
+    # model_parameter_names = model_config[model]["params"]
+    # model_parameter_lower_bounds = model_config[model]["param_bounds"][0]
+    # model_parameter_upper_bounds = model_config[model]["param_bounds"][1]
     # ---------------------------------------------------------------
 
     # Need to rewrite these random parts !
@@ -119,9 +124,8 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
 
-        # size = sampled_rts.shape[0]
-        n_params = model_config[model]["n_params"]
-        param_data = np.zeros((self.value.shape[0], n_params), dtype=np.float32)
+        param_data = np.zeros((self.value.shape[0], 
+                               model_config[model]["n_params"]), dtype=np.float32)
 
         cnt = 0
         for tmp_str in model_config[model]["params"]:  # ['v', 'a', 'z', 't']:
@@ -135,12 +139,16 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
             theta=param_data, model=model, n_samples=1, max_t=20  # n_trials = size,
         )
 
-        return hddm_preprocess(
-            sim_out,
-            keep_negative_responses=keep_negative_responses,
-            add_model_parameters=add_model_parameters,
-            keep_subj_idx=keep_subj_idx,
-        )
+        sim_out_proc = hddm_preprocess(sim_out,             
+                                       keep_negative_responses=keep_negative_responses,
+                                       add_model_parameters=add_model_parameters,
+                                       keep_subj_idx=keep_subj_idx,
+                                       )                           
+
+        if (model_config[model]["n_choices"] == 2):
+            sim_out_proc['rt'] = sim_out_proc['rt'] * sim_out_proc['response']
+
+        return sim_out_proc
 
     def pdf(self, x):
         return "Not yet implemented"

@@ -59,6 +59,7 @@ def generate_wfpt_reg_stochastic_class(
         )
 
     def random(self):
+        # AF add: exchange this with new simulator
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
         sampled_rts = self.value.copy()
