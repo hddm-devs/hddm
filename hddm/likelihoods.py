@@ -148,7 +148,7 @@ def generate_wfpt_stochastic_class(
                     **self.parents.value
                 )
             )
-        elif sampling_method == 'cssm':
+        # elif sampling_method == 'cssm':
             # AF ADD: fill in simulator code
 
     # create pdf function
