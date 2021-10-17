@@ -148,6 +148,16 @@ def generate_wfpt_stochastic_class(
                     **self.parents.value
                 )
             )
+        return hddm.utils.flip_errors(
+                hddm.generate.gen_rts(
+                    method=sampling_method,
+                    size=self.shape,
+                    dt=sampling_dt,
+                    range_=cdf_range,
+                    structured=True,
+                    **self.parents.value
+                )
+            )
         # elif sampling_method == 'cssm':
             # AF ADD: fill in simulator code
 
