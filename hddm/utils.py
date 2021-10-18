@@ -56,13 +56,13 @@ def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg
     fun_str = 'def ' + fun_name + '(value, ' + params_str + ', reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):' + \
               '\n    params = locals()' + \
               '\n    size = int(value.shape[0])' + \
-              '\n    data = np.zeros((size, ' + str(config["n_params"] + 2) + '), dtype=np.float32)' + \
-              '\n    data[:, ' + str(config["n_params"]) + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)' + \
+              '\n    data = np.zeros((size, str(model_config[model]["n_params"] + 2)), dtype=np.float32)' + \
+              '\n    data[:, str(model_config[model]["n_params"]):] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)' + \
               '\n    cnt=0' + \
-              '\n    for tmp_str in model_parameter_names:' + \
+              '\n    for tmp_str in model_config[model]["params"]:' + \
               '\n        if tmp_str in reg_outcomes:' + \
               '\n            data[:, cnt] = params[tmp_str].loc[values["rt"].index].values' + \
-              '\n            if (data[:, cnt].min() < model_parameter_lower_bounds[cnt]) or (data[:, cnt].max() > model_parameter_upper_bounds[cnt]):' + \
+              '\n            if (data[:, cnt].min() < model_config[model]["param_bounds"][0][cnt]) or (data[:, cnt].max() > model_config[model]["param_bounds"][1][cnt]):' + \
               '\n                print("boundary violation of regressor part")' + \
               '\n                return -np.inf' + \
               '\n        else:' + \
