@@ -56,7 +56,7 @@ def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg
     fun_str = 'def ' + fun_name + '(value, ' + params_str + ', reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):' + \
               '\n    params = locals()' + \
               '\n    size = int(value.shape[0])' + \
-              '\n    data = np.zeros((size, data_frame_width), dtype=np.float32)' + \
+              '\n    data = np.zeros((size, ' + str(config["n_params"] + 2) + '), dtype=np.float32)' + \
               '\n    data[:, n_params] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)' + \
               '\n    cnt=0' + \
               '\n    for tmp_str in model_parameter_names:' + \
