@@ -163,7 +163,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         print(likelihood_str)
         exec(likelihood_str)
         print(locals())
-        my_fun = locals()['custom_likelihood']
+        my_fun = locals()['custom_likelihood_reg']
         print(my_fun)
         return my_fun
 
