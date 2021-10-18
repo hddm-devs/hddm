@@ -68,7 +68,7 @@ def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg
               '\n    cnt=0' + \
               '\n    for tmp_str in ' + params_str + ':' + \
               '\n        if tmp_str in reg_outcomes:' + \
-              '\n            data[:, cnt] = params[tmp_str].loc[values["rt"].index].values' + \
+              '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values' + \
               '\n            if (data[:, cnt].min() < ' + lower_bounds_str + '[cnt]) or (data[:, cnt].max() > ' + upper_bounds_str + '[cnt]):' + \
               '\n                print("boundary violation of regressor part")' + \
               '\n                return -np.inf' + \
