@@ -104,8 +104,8 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     assert model in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary'
 
     # Model specific inits ------------------------------------------
-    #n_params = model_config[model]["n_params"]
-    # data_frame_width = n_params + 2
+    n_params = model_config[model]["n_params"]
+    data_frame_width = n_params + 2
     # model_parameter_names = model_config[model]["params"]
     # model_parameter_lower_bounds = model_config[model]["param_bounds"][0]
     # model_parameter_upper_bounds = model_config[model]["param_bounds"][1]
