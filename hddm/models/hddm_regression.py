@@ -114,6 +114,8 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         # if math.isnan(dm.sum()):
         #    raise NotImplementedError('DesignMatrix contains NaNs.')
 
+        # AF-comment: The dmatrix seems to be hardcoded --> If you want to use post_pred_gen() later on other covariates, 
+        # you can't, because changing model.data doesn't affect func as defined here ?
         def func(
             args,
             design_matrix=dmatrix(
