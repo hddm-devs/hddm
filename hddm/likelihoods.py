@@ -160,7 +160,7 @@ def generate_wfpt_stochastic_class(
             )
         # elif sampling_method == 'cssm':
             # AF ADD: fill in simulator code
-
+            
     # create pdf function
     def pdf(self, x):
         out = hddm.wfpt.pdf_array(x, **self.parents)

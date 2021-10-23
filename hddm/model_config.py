@@ -470,7 +470,7 @@ model_config = {
                     'boundary_multiplicative': True,
                     'n_params': 8,
                     'default_params': [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 2.5, 3.5],
-                    'hddm_include': ["vh", "vl1", "vl2", "a", "d", "t", "theta"],
+                    'hddm_include': ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
                     'n_choices': 4,
                     'choices': [0, 1, 2, 3],
                     'slice_widths': {"vh": 1.5, "vh_std": 0.5,
