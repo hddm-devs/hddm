@@ -607,6 +607,7 @@ def simulator(
     z_vec = np.tile(np.array([0.5], dtype = np.float32), reps = n_trials)
     print('z_vec shape')
     print(z_vec.shape)
+    print(z_vec[:].shape)
     
     if model == 'ddm_seq2':
         x = ddm_flexbound_seq2(v_h = theta[:, 0],
@@ -855,9 +856,9 @@ def simulator(
                                         v_l_1 = theta[:, 1],
                                         v_l_2 = theta[:, 2],
                                         a = theta[:, 3],
-                                        z_h = z_vec,
-                                        z_l_1 = z_vec,
-                                        z_l_2 = z_vec,
+                                        z_h = z_vec[:],
+                                        z_l_1 = z_vec[:],
+                                        z_l_2 = z_vec[:],
                                         d = theta[:, 4],
                                         t = theta[:, 5],
                                         s = s,
