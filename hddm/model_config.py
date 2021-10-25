@@ -49,7 +49,7 @@ model_config = {
         "params": ["v", "a", "z", "t"],
         "params_trans": [0, 0, 1, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0],
-        "param_bounds": [[5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
+        "param_bounds": [[-5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
         "boundary": bf.constant,
         "n_params": 4,
         "default_params": [0.0, 2.0, 0.5, 0],

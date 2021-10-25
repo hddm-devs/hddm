@@ -13,6 +13,7 @@ from data_simulators import ornstein_uhlenbeck
 from data_simulators import full_ddm
 from data_simulators import ddm_sdv
 from data_simulators import ddm
+from data_simulators import full_ddm_vanilla
 
 # from data_simulators import ddm_flexbound_pre
 from data_simulators import race_model
@@ -277,11 +278,24 @@ def simulator(
                 n_samples=n_samples,
                 n_trials=n_trials,
                 delta_t=delta_t,
-                boundary_params={},
-                boundary_fun=bf.constant,
-                boundary_multiplicative=True,
                 max_t=max_t,
                 )
+
+    if model == "full_ddm_legacy" or model == "full_ddm_vanilla":
+        x = full_ddm_vanilla(
+                             v=theta[:, 0],
+                             a=theta[:, 1],
+                             z=theta[:, 2],
+                             t=theta[:, 3],
+                             sz=theta[:, 4],
+                             sv=theta[:, 5],
+                             st=theta[:, 6],
+                             s=s,
+                             n_samples=n_samples,
+                             n_trials=n_trials,
+                             delta_t=delta_t,
+                             max_t=max_t,
+                             )
 
     if model == "angle" or model == "angle2":
         x = ddm_flexbound(

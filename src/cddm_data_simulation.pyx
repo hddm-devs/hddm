@@ -168,6 +168,118 @@ def test(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
 
 # ---------------------------------------------------------------------------------------------
 
+# Simulate (rt, choice) tuples from: Full DDM with flexible bounds --------------------------------
+# @cythonboundscheck(False)
+# @cythonwraparound(False)
+def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
+                     np.ndarray[float, ndim = 1] a, # = 1,
+                     np.ndarray[float, ndim = 1] z, # = 0.5,
+                     np.ndarray[float, ndim = 1] t, # = 0.0,
+                     np.ndarray[float, ndim = 1] sz, # = 0.05,
+                     np.ndarray[float, ndim = 1] sv, # = 0.1,
+                     np.ndarray[float, ndim = 1] st, # = 0.0,
+                     float s = 1,
+                     float delta_t = 0.001,
+                     float max_t = 20,
+                     int n_samples = 20000,
+                     int n_trials = 1,
+                     ):
+
+    # cdef int cov_length = np.max([v.size, a.size, w.size, t.size]).astype(int)
+
+    # Param views
+    cdef float[:] v_view  = v
+    cdef float[:] a_view = a
+    cdef float[:] z_view = z
+    cdef float[:] t_view = t
+    cdef float[:] sz_view = sz
+    cdef float[:] sv_view = sv
+    cdef float[:] st_view = st
+
+    # Data-structs for trajectory storage
+    traj = np.zeros((int(max_t / delta_t) + 1, 1), dtype = DTYPE)
+    traj[:, :] = -999 
+    cdef float[:, :] traj_view = traj
+
+    rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
+    choices = np.zeros((n_samples, n_trials, 1), dtype = np.intc)
+
+    cdef float[:, :, :] rts_view = rts
+    cdef int[:, :, :] choices_view = choices
+
+    cdef float delta_t_sqrt = sqrt(delta_t) # correct scalar so we can use standard normal samples for the brownian motion
+    cdef float sqrt_st = delta_t_sqrt * s # scalar to ensure the correct variance for the gaussian step
+
+    # Boundary storage for the upper bound
+    cdef int num_draws = int((max_t / delta_t) + 1)
+    t_s = np.arange(0, max_t + delta_t, delta_t).astype(DTYPE)
+
+    cdef float y, t_particle, t_tmp
+    cdef Py_ssize_t n, ix, k
+    cdef Py_ssize_t m = 0
+    cdef float drift_increment = 0.0
+    cdef float[:] gaussian_values = draw_gaussian(num_draws) 
+
+    # Loop over trials
+    for k in range(n_trials): 
+        # Loop over samples
+        for n in range(n_samples):
+            # initialize starting point
+            y = (z_view[k] * (a))  # reset starting position
+            
+            # get drift by random displacement of v 
+            drift_increment = (v_view[k] + sv_view[k] * gaussian_values[m]) * delta_t
+            t_tmp = t_view[k] + (2 * (random_uniform() - 0.5) * st_view[k])
+            
+            # apply uniform displacement on y
+            y += 2 * (random_uniform() - 0.5) * sz_view[k]
+            
+            # increment m appropriately
+            m += 1
+            if m == num_draws:
+                    gaussian_values = draw_gaussian(num_draws)
+                    m = 0
+            
+            t_particle = 0.0 # reset time
+            ix = 0 # reset boundary index
+            
+            if n == 0:
+                if k == 0:
+                    traj_view[0, 0] = y
+
+            # Random walker
+            while y >= 0 and y <= a_view[k] and t_particle <= max_t:
+                y += drift_increment + (sqrt_st * gaussian_values[m])
+                t_particle += delta_t
+                ix += 1
+                m += 1
+                
+                if n == 0:
+                    if k == 0:
+                        traj_view[ix, 0] = y
+                if m == num_draws:
+                    gaussian_values = draw_gaussian(num_draws)
+                    m = 0
+
+            rts_view[n, k, 0] = t_particle + t_tmp # Store rt
+            choices_view[n, k, 0] = np.sign(y) # Store choice
+
+    return (rts, choices,  {'v': v,
+                            'a': a,
+                            'z': z,
+                            't': t,
+                            'sz': sz,
+                            'sv': sv,
+                            'st': st,
+                            's': s,
+                            'delta_t': delta_t,
+                            'max_t': max_t,
+                            'n_samples': n_samples,
+                            'simulator': 'full_ddm_vanilla',
+                            'possible_choices': [-1, 1],
+                            'trajectory': traj})
+# -------------------------------------------------------------------------------------------------
+
 # Simulate (rt, choice) tuples from: SIMPLE DDM -----------------------------------------------
 # Simplest algorithm
 # delete random comment
