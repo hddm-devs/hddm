@@ -1268,7 +1268,6 @@ def model_plot(
 
     return plt.show()
 
-
 def posterior_predictive_plot(
     hddm_model=None,
     model_ground_truth="angle",
