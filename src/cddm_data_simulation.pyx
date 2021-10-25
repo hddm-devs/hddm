@@ -1959,7 +1959,7 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
             if random_uniform() > (y_l + boundary_view[ix] / (2 * boundary_view[ix])):
                 choices_view[n, k, 0] += 1
 
-    return {rts, choices, {'vh': v_h,
+    return (rts, choices, {'vh': v_h,
                            'vl1': v_l_1,
                            'vl2': v_l_2,
                            'a': a,
@@ -1977,5 +1977,5 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                            'boundary_fun_type': boundary_fun.__name__,
                            'possible_choices': [0, 1, 2, 3],
                            'trajectory': 'This simulator does not yet allow for trajectory simulation',
-                           'boundary': boundary}}
+                           'boundary': boundary})
 # -----------------------------------------------------------------------------------------------
