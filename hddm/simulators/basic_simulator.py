@@ -20,7 +20,6 @@ from data_simulators import race_model
 from data_simulators import lca
 from data_simulators import ddm_flexbound_seq2
 from data_simulators import ddm_flexbound_par2
-from data_simulators import ddm_flexbound_mic2
 from data_simulators import ddm_flexbound_mic2_adj
 
 # import data_simulators as cds
