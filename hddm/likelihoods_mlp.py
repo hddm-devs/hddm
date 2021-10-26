@@ -143,11 +143,11 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
                                        keep_negative_responses=keep_negative_responses,
                                        add_model_parameters=add_model_parameters,
                                        keep_subj_idx=keep_subj_idx,
-                                       )                           
+                                       )                        
 
         if (model_config[model]["n_choices"] == 2):
             sim_out_proc['rt'] = sim_out_proc['rt'] * sim_out_proc['response']
-
+        
         return sim_out_proc
 
     def pdf(self, x):

@@ -604,10 +604,7 @@ def simulator(
     
     # Precompute z_vector for no_bias models
     z_vec = np.tile(np.array([0.5], dtype = np.float32), reps = n_trials)
-    print('z_vec shape')
-    print(z_vec.shape)
-    print(z_vec[:].shape)
-    
+
     if model == 'ddm_seq2':
         x = ddm_flexbound_seq2(v_h = theta[:, 0],
                                     v_l_1 = theta[:, 1],
