@@ -27,7 +27,11 @@ def make_mlp_likelihood(model, **kwargs):
 
     assert model in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary'
 
-    def random(self):
+    def random(self,
+        keep_negative_responses=True,
+        add_model_parameters=False,
+        keep_subj_idx=False,
+    ):
         """
         Generate random samples from a given model (the dataset matches the size of the respective observated dataset supplied as an attribute of 'self').
         """
@@ -43,7 +47,10 @@ def make_mlp_likelihood(model, **kwargs):
             cnt += 1
 
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
-        sim_out_proc = hddm_preprocess(sim_out, keep_negative_responses=True)
+        sim_out_proc = hddm_preprocess(sim_out, 
+                                       keep_negative_responses=keep_negative_responses,
+                                       keep_subj_ix = keep_subj_idx,
+                                       add_model_parameters = add_model_parameters)
 
         if (model_config[model]["n_choices"] == 2):
             sim_out_proc['rt'] = sim_out_proc['rt'] * sim_out_proc['response']
