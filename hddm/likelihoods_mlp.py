@@ -49,7 +49,7 @@ def make_mlp_likelihood(model, **kwargs):
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
         sim_out_proc = hddm_preprocess(sim_out, 
                                        keep_negative_responses=keep_negative_responses,
-                                       keep_subj_ix = keep_subj_idx,
+                                       keep_subj_idx = keep_subj_idx,
                                        add_model_parameters = add_model_parameters)
 
         if (model_config[model]["n_choices"] == 2):
