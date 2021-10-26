@@ -137,7 +137,7 @@ def generate_wfpt_stochastic_class(
 
     # create random function
     def random(self):
-        print(self.parants._value)
+        print(self.parents._value)
         if sampling_method == 'cdf' or sampling_method == 'drift':
             return hddm.utils.flip_errors(
                 hddm.generate.gen_rts(
