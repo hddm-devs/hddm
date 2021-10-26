@@ -391,7 +391,7 @@ model_config = {
                                      "beta": 1.0, "beta_std": 0.5,
                                     },
     },
-    "ddm_mic2": {
+    "ddm_mic2_adj": {
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
         "params_trans": [0, 0, 0, 0, 1, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, None, 1.0],
@@ -420,7 +420,7 @@ model_config = {
                          "t": 0.01, "t_std": 0.15,
                          },
     },
-    "ddm_mic2_no_bias": {'params': ["vh", "vl1", "vl2", "a", "d", "t"],
+    "ddm_mic2_adj_no_bias": {'params': ["vh", "vl1", "vl2", "a", "d", "t"],
                          'param_bounds': [[-2.5, -2.5, -2.5, 0.3, 0.0, 0.0], 
                                           [2.5, 2.5, 2.5, 2.0, 1.0, 2.0]],
                          'params_trans': [0, 0, 0, 0, 0, 0],
@@ -439,7 +439,7 @@ model_config = {
                                           "t": 0.01, "t_std": 0.15,
                                           },
                          },
-    "ddm_mic2_angle_no_bias": {'params': ["vh", "vl1", "vl2", "a", "d", "t", 'theta'],
+    "ddm_mic2_adj_angle_no_bias": {'params': ["vh", "vl1", "vl2", "a", "d", "t", 'theta'],
                                'param_bounds': [[-2.5, -2.5, -2.5, 0.3, 0.0, 0.0, -0.1], 
                                                 [2.5, 2.5, 2.5, 2.0, 1.0, 2.0, 1.0]],
                                'params_trans': [0, 0, 0, 0, 0, 0 , 0],
@@ -460,8 +460,7 @@ model_config = {
                                           "theta": 0.1, "theta_std": 0.2,
                                           },
                               },
-    "ddm_mic2_weibull_no_bias": {'name': 'ddm_mic2_weibull_no_bias',
-                    'params': ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
+    "ddm_mic2_adj_weibull_no_bias": {'params': ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
                     'param_bounds': [[-2.5, -2.5, -2.5, 0.3, 0.0, 0.0, 0.31, 0.31], 
                                      [2.5, 2.5, 2.5, 2.0, 1.0, 2.0, 4.99, 6.99]],
                     'params_trans': [0, 0, 0, 0, 0, 0, 0, 0],
@@ -654,9 +653,5 @@ model_config = {
 }
 
 # Models for which configs can be reused
-model_config['ddm_mic2_adj'] = model_config['ddm_mic2'].copy()
-model_config['ddm_mic2_adj_no_bias'] = model_config['ddm_mic2_no_bias'].copy()
-model_config['ddm_mic2_adj_angle_no_bias'] = model_config['ddm_mic2_angle_no_bias'].copy()
-model_config['ddm_mic2_adj_weibull_no_bias'] = model_config['ddm_mic2_weibull_no_bias'].copy()
 model_config["weibull_cdf"] = model_config["weibull"].copy()
 model_config["full_ddm2"] = model_config["full_ddm"].copy()
