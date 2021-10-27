@@ -6,6 +6,7 @@ from hddm.simulators import *
 from kabuki.utils import stochastic_from_dist
 
 from hddm.model_config import model_config
+from hddm.utils import flip_errors
 
 
 np.seterr(divide="ignore")
@@ -171,8 +172,7 @@ def generate_wfpt_stochastic_class(
                                            keep_negative_responses = keep_negative_responses,
                                            keep_subj_idx = keep_subj_idx,
                                            add_model_parameters = add_model_parameters)
-
-            sim_out_proc['rt'] = sim_out_proc['rt'] * sim_out_proc['response']
+            sim_out_proc['rt'] = flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
 
             return sim_out_proc
     
