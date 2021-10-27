@@ -164,7 +164,7 @@ def test(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
                            'n_samples': n_samples,
                            'simulator': 'ddm',
                            'boundary_fun_type': 'constant',
-                           'possible_choices': [-1, 1]})
+                           'possible_choices': [0, 1]})
 
 # ---------------------------------------------------------------------------------------------
 
@@ -262,7 +262,11 @@ def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
                     m = 0
 
             rts_view[n, k, 0] = t_particle + t_tmp # Store rt
-            choices_view[n, k, 0] = np.sign(y) # Store choice
+            
+            if y < 0:
+                choices_view[n, k, 0] = 0 # Store choice
+            else:
+                choices_view[n, k, 0] = 1
 
     return (rts, choices,  {'v': v,
                             'a': a,
@@ -276,7 +280,7 @@ def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
                             'max_t': max_t,
                             'n_samples': n_samples,
                             'simulator': 'full_ddm_vanilla',
-                            'possible_choices': [-1, 1],
+                            'possible_choices': [0, 1],
                             'trajectory': traj})
 # -------------------------------------------------------------------------------------------------
 
@@ -338,7 +342,10 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
             # Note that for purposes of consistency with Navarro and Fuss, 
             # the choice corresponding the lower barrier is +1, higher barrier is -1
             rts_view[n, k, 0] = t_particle + t_view[k] # store rt
-            choices_view[n, k, 0] = sign(y) # store choice
+            if y < 0:
+                choices_view[n, k, 0] = 0 # store choice
+            else:
+                choices_view[n, k, 0] = 1 # store choice
         
     return (rts, choices, {'v': v,
                            'a': a,
@@ -350,7 +357,7 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
                            'n_samples': n_samples,
                            'simulator': 'ddm',
                            'boundary_fun_type': 'constant',
-                           'possible_choices': [-1, 1]})
+                           'possible_choices': [0, 1]})
 
 
 
