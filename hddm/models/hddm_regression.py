@@ -23,8 +23,11 @@ from hddm.model_config import model_config
 #     return x * stim
 
 def generate_wfpt_reg_stochastic_class(
-    wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
-):
+                                       wiener_params=None, 
+                                       sampling_method="cdf", 
+                                       cdf_range=(-5, 5), 
+                                       sampling_dt=1e-4
+                                       ):
 
     # set wiener_params
     if wiener_params is None:
@@ -58,10 +61,16 @@ def generate_wfpt_reg_stochastic_class(
             p_outlier=p_outlier,
         )
 
-    def random(self):
+    def random(self,
+               keep_negative_responses=True,
+               add_model_parameters=False,
+               keep_subj_idx=False
+               ):
+
         # AF add: exchange this with new simulator
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
+        print(self.value)
         sampled_rts = self.value.copy()
 
         for i in self.value.index:

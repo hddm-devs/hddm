@@ -225,7 +225,7 @@ def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
         # Loop over samples
         for n in range(n_samples):
             # initialize starting point
-            y = (z_view[k] * (a))  # reset starting position
+            y = (z_view[k] * (a_view[k]))  # reset starting position
             
             # get drift by random displacement of v 
             drift_increment = (v_view[k] + sv_view[k] * gaussian_values[m]) * delta_t

@@ -144,7 +144,8 @@ def generate_wfpt_stochastic_class(
                keep_negative_responses = True, 
                add_model_parameters = False,
                keep_subj_idx = False):
-        print(self.parents._value)
+        print(self.value)
+        print(type(self.value))
         assert sampling_method in ['cdf', 'drift', 'cssm'], 'Sampling method is invalid!'
 
         if sampling_method == 'cdf' or sampling_method == 'drift':
