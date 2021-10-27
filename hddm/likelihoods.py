@@ -77,7 +77,6 @@ def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3)
     _like.__doc__ = wiener_like_contaminant.__doc__
     return stochastic_from_dist(name="Wiener Diffusion Contaminant Process", logp=_like)
 
-
 def generate_wfpt_stochastic_class(
     wiener_params=None, sampling_method="cssm", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
@@ -165,6 +164,7 @@ def generate_wfpt_stochastic_class(
 
             for param in model_config['full_ddm_vanilla']['params']:
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
+                cnt += 1
             
             sim_out = simulator(theta=theta, model='full_ddm_vanilla', n_samples=self.shape[0], max_t=20)
             sim_out_proc = hddm_preprocess(sim_out,
