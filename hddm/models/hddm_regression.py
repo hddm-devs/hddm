@@ -12,6 +12,8 @@ from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
 import kabuki.step_methods as steps
 
+from hddm.simulators import *
+
 # To fix regression
 from hddm.model_config import model_config
 
@@ -67,31 +69,58 @@ def generate_wfpt_reg_stochastic_class(
                keep_subj_idx=False
                ):
 
+        assert sampling_method in ['drift', 'cssm'], 'Sampling method is invalid!'
         # AF add: exchange this with new simulator
+        print(self.parents.value)
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
-        print(self.value)
         sampled_rts = self.value.copy()
+        
+        if sampling_method == 'drift':
+            for i in self.value.index:
+                # get current params
+                for p in self.parents["reg_outcomes"]:
+                    param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
+                # sample
+                samples = hddm.generate.gen_rts(
+                    method=sampling_method, size=1, dt=sampling_dt, **param_dict
+                )
 
-        for i in self.value.index:
-            # get current params
-            for p in self.parents["reg_outcomes"]:
-                param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
-            # sample
-            samples = hddm.generate.gen_rts(
-                method=sampling_method, size=1, dt=sampling_dt, **param_dict
-            )
+                sampled_rts.loc[i, "rt"] = hddm.utils.flip_errors(samples).rt.iloc[0]
 
-            sampled_rts.loc[i, "rt"] = hddm.utils.flip_errors(samples).rt.iloc[0]
+            return sampled_rts
+        
+        if sampling_method == 'cssm':
+            param_data = np.zeros((self.value.shape[0],
+                                   model_config["full_ddm_vanilla"]["n_params"]), dtype =np.float32)
+            cnt = 0
+            for tmp_str in model_config["full_ddm_vanilla"]["params"]:
+                if tmp_str in self.parents["reg_outcomes"]:
+                    param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index, 0]
+                else:
+                    param_data[:, cnt] = param_dict[tmp_str]
+                cnt += 1
+            
+            sim_out = simulator(theta=param_data, 
+                                model = "full_ddm_vanilla", 
+                                n_samples = 1, max_t=20)
 
-        return sampled_rts
+            sim_out_proc = hddm_preprocess(sim_out,
+                                           keep_negative_responses=keep_negative_responses,
+                                           add_model_parameters=add_model_parameters,
+                                           keep_subj_idx=keep_subj_idx)
+            
+            sim_out_proc = hddm.utils.flip_errors(sim_out_proc)
+
+            return sim_out_proc
+
 
     stoch = stochastic_from_dist("wfpt_reg", wiener_multi_like)
     stoch.random = random
 
     return stoch
 
-wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="drift")
+wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="cssm")  # "drift"
 
 ################################################################################################
 
