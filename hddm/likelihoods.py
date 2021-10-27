@@ -172,7 +172,7 @@ def generate_wfpt_stochastic_class(
                                            keep_negative_responses = keep_negative_responses,
                                            keep_subj_idx = keep_subj_idx,
                                            add_model_parameters = add_model_parameters)
-            sim_out_proc['rt'] = flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
+            sim_out_proc = flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
 
             return sim_out_proc
     
