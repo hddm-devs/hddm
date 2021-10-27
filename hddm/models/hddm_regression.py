@@ -129,7 +129,7 @@ wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="cssm")  # "d
 
 
 class KnodeRegress(kabuki.hierarchical.Knode):
-    print('passing through Knoderegress')
+    #print('passing through Knoderegress')
     def __init__(self, *args, **kwargs):
         # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)
@@ -291,8 +291,8 @@ class HDDMRegressor(HDDM):
             }
             self.model_descrs.append(model_descr)
 
-            print("Adding these covariates:")
-            print(model_descr["params"])
+            #print("Adding these covariates:")
+            #print(model_descr["params"])
             if group_only_regressors:
                 group_only_nodes += model_descr["params"]
                 kwargs["group_only_nodes"] = group_only_nodes
@@ -340,7 +340,7 @@ class HDDMRegressor(HDDM):
         )
 
     def _create_stochastic_knodes(self, include):
-        print('passing through _create_stochastic_knodes')
+        #print('passing through _create_stochastic_knodes')
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
         # includes_remainder = set(include).difference(self.reg_outcomes)
@@ -377,8 +377,11 @@ class HDDMRegressor(HDDM):
             try:
                 link_is_identity = np.array_equal(reg['link_func'](np.arange(-1000, 1000, 0.1)), np.arange(-1000, 1000, 0.1))
             except:
-                print('exception raised that hints at the fact that your link function is not identity. \n' + \
-                      'If all your link functions are identity this means trouble!')
+                print('Reg Model: ')
+                print(reg)
+                print('Does not use Identity Link')
+                # print('exception raised that hints at the fact that your link function is not identity. \n' + \
+                #       'If all your link functions are identity this means trouble!')
                 link_is_identity = False
 
             if link_is_identity:

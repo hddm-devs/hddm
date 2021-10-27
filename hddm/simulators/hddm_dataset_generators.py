@@ -35,7 +35,7 @@ def hddm_preprocess(
     if not keep_negative_responses:
         df.loc[df["response"] == -1.0, "response"] = 0.0
 
-    print('keep_subj_idx: ', keep_subj_idx)
+    #print('keep_subj_idx: ', keep_subj_idx)
     if keep_subj_idx:
         df["subj_idx"] = subj_id
 
