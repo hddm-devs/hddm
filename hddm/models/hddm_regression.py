@@ -96,9 +96,9 @@ def generate_wfpt_reg_stochastic_class(
             cnt = 0
             for tmp_str in model_config["full_ddm_vanilla"]["params"]:
                 if tmp_str in self.parents["reg_outcomes"]:
-                    print(param_dict[tmp_str])
-                    print(param_dict[tmp_str].shape)
-                    print(type(param_dict[tmp_str]))
+                    # print(param_dict[tmp_str])
+                    # print(param_dict[tmp_str].shape)
+                    # print(type(param_dict[tmp_str]))
                     param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index]
                 else:
                     param_data[:, cnt] = param_dict[tmp_str]
