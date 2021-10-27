@@ -71,7 +71,7 @@ def generate_wfpt_reg_stochastic_class(
 
         assert sampling_method in ['drift', 'cssm'], 'Sampling method is invalid!'
         # AF add: exchange this with new simulator
-        print(self.parents.value)
+        #print(self.parents.value)
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
         sampled_rts = self.value.copy()
@@ -99,7 +99,7 @@ def generate_wfpt_reg_stochastic_class(
                     print(param_dict[tmp_str])
                     print(param_dict[tmp_str].shape)
                     print(type(param_dict[tmp_str]))
-                    param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index, 0]
+                    param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index]
                 else:
                     param_data[:, cnt] = param_dict[tmp_str]
                 cnt += 1
