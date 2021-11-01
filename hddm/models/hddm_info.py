@@ -21,8 +21,9 @@ class HDDM(HDDMBase):
                 * 'rt': Reaction time of trial in seconds.
                 * 'response': Binary response (e.g. 0->error, 1->correct)
                 * 'subj_idx': A unique ID (int) of each subject.
-                * Other user-defined columns that can be used in depends_on
+                * Other user-defined columns that can be used in depends\_on
                 keyword.
+
 
     :Optional:
         informative : bool <default=True>

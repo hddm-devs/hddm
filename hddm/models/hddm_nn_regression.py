@@ -28,10 +28,10 @@ class HDDMnnRegressor(HDDMRegressor):
 
         :Arguments:
 
-            * data : pandas.DataFrame
+            data : pandas.DataFrame
                 data containing 'rt', 'response', column and any
                 covariates you might want to use.
-            * models : str or list of str
+            models : str or list of str
                 Patsy linear model specifier.
                 E.g. 'v ~ cov'
                 You can include multiple linear models that influence
@@ -39,12 +39,12 @@ class HDDMnnRegressor(HDDMRegressor):
 
         :Optional:
 
-            * group_only_regressors : bool (default = True)
+            group_only_regressors : bool (default = True)
                 Do not estimate individual subject parameters for all regressors.
-            * keep_regressor_trace : bool (default = False)
+            keep_regressor_trace : bool (default = False)
                 Whether to keep a trace of the regressor. This will use much more space,
                 but needed for posterior predictive checks.
-            * Additional keyword args are passed on to HDDM.
+            Additional keyword args are passed on to HDDM.
 
         :Note:
 
