@@ -78,7 +78,7 @@ The first ten lines of the data file look as follows:
 
 .. code:: python
 
-    !head cavanagh_theta_nn.csv
+    `!`head cavanagh_theta_nn.csv
 
 .. parsed-literal::
 
