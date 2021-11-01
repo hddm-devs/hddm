@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+import sphinx_rtd_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -33,19 +34,21 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.extlinks',
               'sphinx.ext.todo',
-              'numpydoc',
+              'sphinx.ext.napoleon',
+              #'numpydoc',
               'ipython_directive',
               'ipython_console_highlighting',
               'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
               'sphinx.ext.ifconfig',
-              'sphinx.ext.autosummary',
-              'matplotlib.sphinxext.only_directives',
+              'sphinx.ext.autosummary',  #'matplotlib.sphinxext.only_directives',
               'matplotlib.sphinxext.plot_directive',
               'sphinxcontrib.bibtex',
               'sphinx.ext.mathjax'
               ]
+
+autosummary_generate=True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -114,7 +117,10 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'agogo'
+# html_theme = 'agogo'
+
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

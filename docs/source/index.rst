@@ -16,10 +16,7 @@ Documentation
     methods
     tutorial
     howto
-    manual
-
-
-
+    modules
 
 Indices and tables
 ==================

@@ -58,7 +58,8 @@ Authors
 
 # Stdlib
 import ast
-import cStringIO
+#import cStringIO
+import io
 import os
 import re
 import sys
@@ -75,14 +76,19 @@ import matplotlib
 import sphinx
 from docutils.parsers.rst import directives
 from docutils import nodes
-from sphinx.util.compat import Directive
+# from sphinx.util.compat import Directive
+from docutils.parsers.rst import Directive
 
 matplotlib.use('Agg')
 
 # Our own
-from IPython import Config, InteractiveShell
+from traitlets.config.loader import Config
+# from IPython import Config, InteractiveShell
+from IPython import InteractiveShell
 from IPython.core.profiledir import ProfileDir
-from IPython.utils import io
+import io
+
+#from IPython.utils 
 
 from pdb import set_trace
 
@@ -194,7 +200,9 @@ class EmbeddedSphinxShell(object):
 
     def __init__(self):
 
-        self.cout = cStringIO.StringIO()
+        # self.cout = cStringIO.StringIO()
+        self.cout = io.StringIO()
+
 
         # Create config object for IPython
         config = Config()
@@ -216,7 +224,9 @@ class EmbeddedSphinxShell(object):
         IP = InteractiveShell.instance(config=config, profile_dir=profile)
 
         # io.stdout redirect must be done *after* instantiating InteractiveShell
-        io.stdout = self.cout
+        #io.stdout = self.cout
+        sys.stdout = self.cout
+        #io.stderr = self.cout
         io.stderr = self.cout
 
         # For debugging, so we can see normal output, use this:
@@ -728,7 +738,7 @@ class IpythonDirective(Directive):
         #print lines
         if len(lines)>2:
             if debug:
-                print '\n'.join(lines)
+                print('\n'.join(lines))
             else: #NOTE: this raises some errors, what's it for?
                 #print 'INSERTING %d lines'%len(lines)
                 self.state_machine.insert_input(
@@ -906,4 +916,4 @@ if __name__=='__main__':
     if not os.path.isdir('_static'):
         os.mkdir('_static')
     test()
-    print 'All OK? Check figures in _static/'
+    print('All OK? Check figures in _static/')

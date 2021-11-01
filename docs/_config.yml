@@ -1,1 +1,4 @@
 theme: jekyll-theme-minimal
+sphinx: 
+  config:
+    bibtex_bibfiles: "paper/hddm.bib"
