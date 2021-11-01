@@ -1,3 +1,5 @@
+hddm package
+============
 
 Subpackages
 -----------
@@ -5,13 +7,11 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   hddm.keras_models
    hddm.models
    hddm.simulators
-   hddm.torch
 
-Submodules
-----------
+**Submodules**
+--------------
 
 hddm.generate module
 --------------------
@@ -33,14 +33,6 @@ hddm.likelihoods\_mlp module
 ----------------------------
 
 .. automodule:: hddm.likelihoods_mlp
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-hddm.model\_config module
--------------------------
-
-.. automodule:: hddm.model_config
    :members:
    :undoc-members:
    :show-inheritance:

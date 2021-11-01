@@ -361,7 +361,7 @@ measure for each condition. The ``C()`` specifies that ``trial_type``
 categorical variable which will be dummy-coded.
 
 Internally, ``HDDM`` uses ``Patsy`` for the spcification of the linear
-model. The `patsy documentation`_ gives a complete overview of the
+model. The `Patsy`_ documentation gives a complete overview of the
 functionality.
 
 You can also pass a list to linear model descriptors if you want to

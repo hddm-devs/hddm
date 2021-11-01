@@ -30,11 +30,12 @@ sys.path.extend([
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
+extensions = ['sphinx.ext.napoleon',
+              'sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.extlinks',
               'sphinx.ext.todo',
-              'sphinx.ext.napoleon',
+              # 'sphinx.ext.napoleon',
               #'numpydoc',
               'ipython_directive',
               'ipython_console_highlighting',
@@ -49,6 +50,9 @@ extensions = ['sphinx.ext.autodoc',
               ]
 
 autosummary_generate=True
+
+# Bibtex stuff
+bibtex_bibfiles = ['zzz_hddm.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

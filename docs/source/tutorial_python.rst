@@ -1,3 +1,5 @@
+.. index:: Tutorial
+.. _chap_demo:
 
 Demo
 ----
@@ -21,6 +23,7 @@ plots.
 
     import pandas as pd
     import matplotlib.pyplot as plt
+
 Next, we will import HDDM. At the time of this writing, this version was
 used.
 
@@ -75,7 +78,7 @@ The first ten lines of the data file look as follows:
 
 .. code:: python
 
-    !head cavanagh_theta_nn.csv
+    \!head cavanagh_theta_nn.csv
 
 .. parsed-literal::
 
