@@ -25,16 +25,15 @@ class HDDMnn(HDDM):
               * 'rt': Reaction time of trial in seconds.
               * 'response': Binary response (e.g. 0->error, 1->correct)
               * 'subj_idx': A unique ID (int) of each subject.
-              * Other user-defined columns that can be used in depends_on
-                keyword.
+              * Other user-defined columns that can be used in depends_on keyword.
 
     :Optional:
 
-        model: str <default='ddm>
+        model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
 
-        network_type: str <default='mlp>
+        network_type: str <default='mlp'>
             String that defines which kind of network to use for the likelihoods. There are currently two
             options: 'mlp', 'cnn'. CNNs should be treated as experimental at this point.
 

@@ -11,7 +11,7 @@ from kabuki.hierarchical import Knode
 
 
 class HDDM(HDDMBase):
-    """Create hierarchical drift-diffusion model in which each subject
+    """Create hierarchical drift-diffusion model in which each subject 
     has a set of parameters that are constrained by a group distribution.
 
     :Arguments:
@@ -21,8 +21,7 @@ class HDDM(HDDMBase):
                 * 'rt': Reaction time of trial in seconds.
                 * 'response': Binary response (e.g. 0->error, 1->correct)
                 * 'subj_idx': A unique ID (int) of each subject.
-                * Other user-defined columns that can be used in depends\_on
-                keyword.
+                * Other user-defined columns that can be used in depends_on keyword.
 
 
     :Optional:
@@ -64,12 +63,12 @@ class HDDM(HDDMBase):
             however, when the 'response' column codes
             correct/error.
 
-        p_outlier : double (default=0)
+        p_outlier : double <default=0>
             The probability of outliers in the data. if p_outlier is passed in the
             'include' argument, then it is estimated from the data and the value passed
             using the p_outlier argument is ignored.
 
-        default_intervars : dict (default = {'sz': 0, 'st': 0, 'sv': 0})
+        default_intervars : dict <default = {'sz': 0, 'st': 0, 'sv': 0}>
             Fix intertrial variabilities to a certain value. Note that this will only
             have effect for variables not estimated from the data.
 
@@ -81,7 +80,7 @@ class HDDM(HDDMBase):
              Save trace for subjs (needed for many
              statistics so probably a good idea.)
 
-        std_depends : bool (default=False)
+        std_depends : bool <default=False>
              Should the depends_on keyword affect the group std node.
              If True it means that both, group mean and std will be split
              by condition.
@@ -91,11 +90,11 @@ class HDDM(HDDMBase):
              numerical integration.
 
          :Parameters:
-             * err: Error bound for wfpt (default 1e-4)
-             * n_st: Maximum depth for numerical integration for st (default 2)
-             * n_sz: Maximum depth for numerical integration for Z (default 2)
-             * use_adaptive: Whether to use adaptive numerical integration (default True)
-             * simps_err: Error bound for Simpson integration (default 1e-3)
+             * err: Error bound for wfpt <default=1e-4>
+             * n_st: Maximum depth for numerical integration for st <default=2>
+             * n_sz: Maximum depth for numerical integration for Z <default=2>
+             * use_adaptive: Whether to use adaptive numerical integration <default=True>
+             * simps_err: Error bound for Simpson integration <default=1e-3>
 
     :Example:
         >>> data, params = hddm.generate.gen_rand_data() # gen data
