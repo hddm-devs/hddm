@@ -17,6 +17,7 @@ Documentation
     tutorial
     howto
     modules
+    references
 
 Indices and tables
 ==================

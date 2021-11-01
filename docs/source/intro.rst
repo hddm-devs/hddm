@@ -114,4 +114,4 @@ trials (:cite: `SoferWieckiFrank`).
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _IPython: http://ipython.org
-..  bibliography:: zzz_hddm.bib
+

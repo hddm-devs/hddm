@@ -78,9 +78,10 @@ def hddm_preprocess(
 
 
 def num_to_str(num=0, n_digits=3):
-    """Turn a number to a str of a given number of digits
+    """Turn a number to a str of a given number of digits.
+    
     :Arguments:
-        num: float <default = 0>
+        num: float <default=0>
             Number to be turned into a string
         n_digits: float
             Number of digits of the number in output string (e.g. num 1, and n_digit 3 --> '001')

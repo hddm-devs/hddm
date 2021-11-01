@@ -663,10 +663,11 @@ def qp_plot(
     draw_lines=True,
     ax=None,
 ):
-    """
-    qp plot
+    """qp plot
+    
     :Arguments:
         x: either a HDDM model or data
+        
         grouby: list
             a list of conditions to group the data. if x is a model then groupby is ignored.
 

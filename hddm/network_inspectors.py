@@ -110,8 +110,9 @@ def _bandwidth_silverman(
     std_n_1=1e-1,  # HERE WE CAN ALLOW FOR SOMETHING MORE INTELLIGENT
 ):
     """Function returns a bandwidth for kernel density estimators from a sample of data
-        :Arguments:
-            sample: np.array or list <default=[0, 0, 0]
+    
+    :Arguments:
+            sample: np.array or list <default=[0, 0, 0]>
                 The dataset which to base the final bandwidth on.
             std_cutoff: numeric <default=1e-3>
                 The lowest acceptable standard deviation in a sample
@@ -121,8 +122,8 @@ def _bandwidth_silverman(
             std_n_1: numeric <default=1e-1>
                 If the sample size is 1, set the sample standard deviation to this value.
 
-    Returns:
-        numeric
+    :Returns:
+        numeric:
             Returns a bandwidth value for a kernel density estimator
     """
 
@@ -144,9 +145,10 @@ def _bandwidth_silverman(
 
 class logkde:
     """Class that takes in simulator data and constructs a kernel density estimator from it.
+    
     :Arguments:
         simulator_data: tuple
-            Output of a call to hddm.simulators.simulator()
+            Output of a call to hddm.simulators.simulator
         bandwidth_type: str <default='silverman'>
             At this point only 'silverman' is allowed.
         auto_bandwidth: bool <default=True>

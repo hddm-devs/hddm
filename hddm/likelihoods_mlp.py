@@ -20,6 +20,7 @@ def make_mlp_likelihood(model, **kwargs):
         **kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
+    
     :Returns:
         Returns a pymc.object stochastic object as defined by PyMC2
     """
@@ -32,7 +33,7 @@ def make_mlp_likelihood(model, **kwargs):
         keep_subj_idx=False,
     ):
         """
-        Generate random samples from a given model (the dataset matches the size of the respective observated dataset supplied as an attribute of 'self').
+        Generate random samples from a given model (the dataset matches the size of the respective observated dataset supplied as an attribute of self).
         """
 
         # this can be simplified so that we pass parameters directly to the simulator ...
@@ -103,6 +104,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         **kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
+    
     :Returns:
         Returns a pymc.object stochastic object as defined by PyMC2
     """
