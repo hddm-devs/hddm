@@ -17,7 +17,7 @@ def make_mlp_likelihood(model, **kwargs):
         model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
-        **kwargs: dict
+        kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
     
@@ -101,7 +101,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
-        **kwargs: dict
+        kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
     

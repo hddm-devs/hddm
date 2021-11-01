@@ -22,7 +22,8 @@ def hddm_preprocess(
     keep_subj_idx=True,
     ):
 
-    """Takes simulator data and turns it into HDDM ready format
+    """Takes simulator data and turns it into HDDM ready format.
+        
         :Arguments: 
             simulator_data: tuple
                 Output of e.g. the hddm.simulators.basic_simulator function.

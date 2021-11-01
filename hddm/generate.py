@@ -151,7 +151,7 @@ def gen_rts(
     :Optional:
         size : int
             Number of RTs to simulate.
-        range_ : tuple
+        range\_ : tuple
             Minimum (negative) and maximum (positve) RTs.
         dt : float
             Number of steps/sec.
