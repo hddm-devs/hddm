@@ -1,12 +1,6 @@
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-
-# import re
-# import argparse
-# import sys
-# import pickle
-# from data_simulators import ddm
 from data_simulators import ddm_flexbound
 from data_simulators import levy_flexbound
 from data_simulators import ornstein_uhlenbeck
@@ -125,16 +119,16 @@ def bin_simulator_output(
 
 def bin_arbitrary_fptd(
     out=None, bin_dt=0.04, nbins=256, nchoices=2, choice_codes=[-1.0, 1.0], max_t=10.0
-):  # ['v', 'a', 'w', 't', 'angle']
-
+    ):  
     """Takes in simulator output and returns a histogram of bin counts
+
     :Arguments:
         out: tuple
-            Output of the 'simulator' function
-        bin_dt : float
+            Output of the hddm.simulators.simulator function
+        bin_dt: float
             If nbins is 0, this determines the desired bin size which in turn automatically
             determines the resulting number of bins.
-        nbins : int
+        nbins: int
             Number of bins to bin reaction time data into. If supplied as 0, bin_dt instead determines the number of
             bins automatically.
         nchoices: int <default=2>
@@ -144,7 +138,7 @@ def bin_arbitrary_fptd(
         max_t: float
             Maximum RT to consider.
 
-    Returns:
+    :Returns:
         2d array (nbins, nchoices): A histogram of bin counts
     """
 
@@ -177,12 +171,11 @@ def simulator(
     no_noise=False,
     bin_dim=None,
     bin_pointwise=False,
-):
+    ):
     """Basic data simulator for the models included in HDDM.
 
-
     :Arguments:
-        theta : list or numpy.array or panda DataFrame
+        theta : list or numpy.array or panda.DataFrame
             Parameters of the simulator. If 2d array, each row is treated as a 'trial'
             and the function runs n_sample * n_trials simulations.
         model: str <default='angle'>

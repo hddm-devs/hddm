@@ -273,13 +273,13 @@ class HDDMrlRegressor(HDDM):
         del d["wfpt_reg_class"]
         for model in d["model_descrs"]:
             if "link_func" in model:
-                print("WARNING: Will not save custom link functions.")
+                # print("WARNING: Will not save custom link functions.")
                 del model["link_func"]
         return d
 
     def __setstate__(self, d):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
-        print("WARNING: Custom link functions will not be loaded.")
+        # print("WARNING: Custom link functions will not be loaded.")
         for model in d["model_descrs"]:
             model["link_func"] = lambda x: x
         super(HDDMrlRegressor, self).__setstate__(d)

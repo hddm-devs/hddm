@@ -10,19 +10,18 @@ from hddm.utils import *
 # import data_simulators
 from copy import deepcopy
 
-
 def make_mlp_likelihood(model, **kwargs):
     """Defines the likelihoods for the MLP networks.
 
     :Arguments:
-        model: str <default='ddm>
+        model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
         **kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
     :Returns:
-        pymc.object: Returns a stochastic object as defined by PyMC2
+        Returns a pymc.object stochastic object as defined by PyMC2
     """
 
     assert model in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary'
@@ -98,14 +97,14 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     """Defines the regressor likelihoods for the MLP networks.
 
     :Arguments:
-        model: str <default='ddm>
+        model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
         **kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
     :Returns:
-        pymc.object: Returns a stochastic object as defined by PyMC2
+        Returns a pymc.object stochastic object as defined by PyMC2
     """
 
     assert model in model_config.keys(), 'Model supplied does not have an entry in the model_config dictionary'

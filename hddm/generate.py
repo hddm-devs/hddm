@@ -2,7 +2,6 @@ import kabuki
 import hddm
 import numpy as np
 import pandas as pd
-
 from numpy.random import rand
 from scipy.stats import uniform, norm
 from copy import copy
@@ -81,16 +80,17 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
             random seed
 
         Output:
-        if conditions is None:
-            params: dictionary
-                a dictionary holding the parameters values
-        else:
-            cond_params: a dictionary holding the parameters for each one of the conditions,
-                that has the form {'c1': params1, 'c2': params2, ...}
-                it can be used directly as an argument in gen_rand_data.
-            merged_params:
-                 a dictionary of parameters that can be used to validate the optimization
-                 and learning algorithms.
+            if conditions is None:
+                params: dictionary
+                    A dictionary holding the parameters values
+            else:
+                cond_params: 
+                    A dictionary holding the parameters for each one of the conditions,
+                    that has the form {'c1': params1, 'c2': params2, ...}
+                    it can be used directly as an argument in gen_rand_data.
+                merged_params:
+                    A dictionary of parameters that can be used to validate the optimization
+                    and learning algorithms.
     """
 
     # set seed
@@ -428,17 +428,18 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
 
     :Example:
          # Generate random data set
+
          >>> data, params = hddm.generate.gen_rand_data({'v':0, 'a':2, 't':.3},
                                                         size=100, subjs=5)
 
          # Generate 2 conditions
+
          >>> data, params = hddm.generate.gen_rand_data({'cond1': {'v':0, 'a':2, 't':.3},
                                                          'cond2': {'v':1, 'a':2, 't':.3}})
 
     :Notes:
          Wrapper function for kabuki.generate.gen_rand_data. See
          the help doc of that function for more options.
-
     """
 
     if params is None:
@@ -895,11 +896,22 @@ def gen_rand_rlddm_onestep_data(
     return df
 
 
-def add_outliers(data, n_fast, n_slow, seed=None):
-    """add outliers to data. outliers are distrbuted randomly across condition.
-    Input:
-        data - data
-        n_fast/n_slow - numberprobability of fast/slow outliers
+def add_outliers(data, 
+                 n_fast, 
+                 n_slow, 
+                 seed=None):
+
+    """Add outliers to data, outliers are distrbuted randomly across conditions.
+    
+    :Arguments:
+         data: pd.DataFrame
+            Reaction time and choice data
+         n_fast: float
+            Probability of fast outliers
+         n_slow: float
+            Probability of slow outliers
+         seed: int <default=None>
+            Seed for random number generation
     """
     data = pd.DataFrame(data)
     n_outliers = n_fast + n_slow

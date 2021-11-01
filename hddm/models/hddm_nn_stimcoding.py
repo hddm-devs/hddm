@@ -18,11 +18,11 @@ class HDDMnnStimCoding(HDDMStimCoding):
     to specify a variety of generative models. Likelihoods are based on Neural Networks.
 
     :Arguments:
-        model: str <default='ddm>
+        model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
 
-        network_type: str <default='mlp>
+        network_type: str <default='mlp'>
             String that defines which kind of network to use for the likelihoods. There are currently two
             options: 'mlp', 'cnn'. CNNs should be treated as experimental at this point.
 

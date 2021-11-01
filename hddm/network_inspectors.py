@@ -336,10 +336,10 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
             How many columns to use when creating subplots.
         save: bool <default=False>
             Whether to save the plot.
-        show: bool <default=True
+        show: bool <default=True>
             Wheter to show the plot.
 
-    Returns:
+    :Returns:
         empty
     """
 

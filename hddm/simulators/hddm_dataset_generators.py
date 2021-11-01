@@ -20,13 +20,28 @@ def hddm_preprocess(
     keep_negative_responses=False,
     add_model_parameters=False,
     keep_subj_idx=True,
-):
+    ):
+
+    """Takes simulator data and turns it into HDDM ready format
+        :Arguments: 
+            simulator_data: tuple
+                Output of e.g. the hddm.simulators.basic_simulator function.
+            subj_id: str <default='none'>
+                Subject id to attach to returned dataset
+            keep_negative_responses: bool <default=False>
+                Whether or not to turn negative responses into 0
+            add_model_parameters: bool <default=False>
+                Whether or not to add trial by trial model parameters to returned dataset
+            keep_subj_idx: bool <default=True>
+                Whether to keep subject id in the returned dataset
+        
+    """
     # Define dataframe if simulator output is normal (comes out as list tuple [rts, choices, metadata])
     if len(simulator_data) == 3:
         df = pd.DataFrame(simulator_data[0].astype(np.double), columns=["rt"])
         df["response"] = simulator_data[1].astype(int)
+    
     # Define dataframe if simulator output is binned pointwise (comes out as tuple [np.array, metadata])
-
     # I think this part is never called !
     # if len(simulator_data) == 2:
     #     df = pd.DataFrame(simulator_data[0][:, 0], columns=["rt"])
@@ -34,8 +49,6 @@ def hddm_preprocess(
 
     if not keep_negative_responses:
         df.loc[df["response"] == -1.0, "response"] = 0.0
-
-    #print('keep_subj_idx: ', keep_subj_idx)
     if keep_subj_idx:
         df["subj_idx"] = subj_id
 
@@ -52,19 +65,26 @@ def hddm_preprocess(
     return df
 
 
-def str_to_num(string="", n_digits=3):
-    new_str = ""
-    leading = 1
-    for digit in range(n_digits):
-        if string[digit] == "0" and leading and (digit < n_digits - 1):
-            pass
-        else:
-            new_str += string[digit]
-            leading = 0
-    return int(new_str)
+# def str_to_num(string="", n_digits=3):
+#     new_str = ""
+#     leading = 1
+#     for digit in range(n_digits):
+#         if string[digit] == "0" and leading and (digit < n_digits - 1):
+#             pass
+#         else:
+#             new_str += string[digit]
+#             leading = 0
+#     return int(new_str)
 
 
 def num_to_str(num=0, n_digits=3):
+    """Turn a number to a str of a given number of digits
+    :Arguments:
+        num: float <default = 0>
+            Number to be turned into a string
+        n_digits: float
+            Number of digits of the number in output string (e.g. num 1, and n_digit 3 --> '001')
+    """
     new_str = ""
     for i in range(n_digits - 1, -1, -1):
         if num < np.power(10, i):
@@ -73,34 +93,46 @@ def num_to_str(num=0, n_digits=3):
         new_str += str(num)
     return new_str
 
+# def pad_subj_id(in_str):
+#     """"""
+#     # Make subj ids have three digits by prepending 0s if necessary
+#     stridx = in_str.find(".")  # get index of 'subj.' substring
+#     subj_idx_len = len(
+#         in_str[(stridx + len(".")) :]
+#     )  # check how many letters remain after 'subj.' is enocuntered
+#     out_str = ""
+#     prefix_str = ""
+#     for i in range(3 - subj_idx_len):
+#         prefix_str += "0"  # add zeros to pad subject id to have three digits
 
-def pad_subj_id(in_str):
-    # Make subj ids have three digits by prepending 0s if necessary
-    stridx = in_str.find(".")  # get index of 'subj.' substring
-    subj_idx_len = len(
-        in_str[(stridx + len(".")) :]
-    )  # check how many letters remain after 'subj.' is enocuntered
-    out_str = ""
-    prefix_str = ""
-    for i in range(3 - subj_idx_len):
-        prefix_str += "0"  # add zeros to pad subject id to have three digits
-
-    out_str = in_str[: stridx + len(".")] + prefix_str + in_str[stridx + len(".") :]  #
-    return out_str
-
+#     out_str = in_str[: stridx + len(".")] + prefix_str + in_str[stridx + len(".") :]  #
+#     return out_str
 
 def _add_outliers(
     sim_out=None,
-    p_outlier=None,
-    n_samples=None,
-    max_rt_outlier=0.05,
+    p_outlier=None, # AF-comment: Redundant argument, can compute from sim_out !
+    max_rt_outlier=10.0,
 ):
+    """Add outliers to simulated data
+        
+        :Arguments:
+            sim_out: tuple <default=None>
+                Output of hddm.simulators.basic_simulator
+            p_outlier: float <default=None>
+                Probability of outliers
+            max_rt_outlier: float
+                Maximum reaction time that an outlier can take
+
+        :Return:
+            sim_out data with the appropriate number of samples exchanged by the samples
+            from the outlier distribution.
+    """
 
     if p_outlier == 0:
         return sim_out
     else:
         # Sample number of outliers from appropriate binomial
-        n_outliers = np.random.binomial(n=n_samples, p=p_outlier)
+        n_outliers = np.random.binomial(n=sim_out[0].shape[0], p=p_outlier)
 
         # Only if the sampled number of outliers is above 0,
         # do we bother generating and storing them
@@ -121,8 +153,7 @@ def _add_outliers(
             # Exchange the last parts of the simulator data for the outliers
             sim_out[0][-n_outliers:, 0] = outlier_data[:, 0]
             sim_out[1][-n_outliers:, 0] = outlier_data[:, 1]
-    return
-
+    return sim_out
 
 # -------------------------------------------------------------------------------------
 # Parameter set generator
@@ -304,14 +335,12 @@ def simulator_single_subject(
     x = _add_outliers(
         sim_out=x,
         p_outlier=p_outlier,
-        n_samples=n_samples,
         max_rt_outlier=max_rt_outlier,
     )
 
     data_out = hddm_preprocess(x, add_model_parameters=True)
 
     return (data_out, gt)
-
 
 # TD: DIDN'T GO OVER THIS ONE YET !
 def simulator_stimcoding(
@@ -433,7 +462,6 @@ def simulator_stimcoding(
         sim_out = _add_outliers(
             sim_out=sim_out,
             p_outlier=p_outlier,
-            n_samples=n_samples_by_condition,
             max_rt_outlier=max_rt_outlier,
         )
 
@@ -579,7 +607,6 @@ def simulator_condition_effects(
         sim_out = _add_outliers(
             sim_out=sim_out,
             p_outlier=p_outlier,
-            n_samples=n_samples_by_condition,
             max_rt_outlier=max_rt_outlier,
         )
 
@@ -748,7 +775,6 @@ def simulator_covariate(
     sim_out = _add_outliers(
         sim_out=sim_out,
         p_outlier=p_outlier,
-        n_samples=n_samples,
         max_rt_outlier=max_rt_outlier,
     )
 
@@ -906,7 +932,6 @@ def simulator_hierarchical(
         sim_out = _add_outliers(
             sim_out=sim_out,
             p_outlier=p_outlier,
-            n_samples=n_trials_per_subject,
             max_rt_outlier=max_rt_outlier,
         )
 

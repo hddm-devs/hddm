@@ -20,12 +20,13 @@ make_likelihood_fun_from_str = exec
 def make_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood'):
     """Define string for a likelihood function that can be used as an mlp-likelihood 
     in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
+    
     :Arguments:
-        config : dict() <default = None>
+        config : dict <default = None>
             Config dictionary for the model for which you would like to construct a custom 
             likelihood. In the style of what you find under hddm.model_config.
     :Returns:
-        str : 
+        str: 
             A string that holds the code to define a likelihood function as needed by HDDM to pass
             to PyMC2. (Serves as a wrapper around the LAN forward pass)
 
@@ -42,12 +43,14 @@ def make_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood'):
 def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg'):
     """Define string for a likelihood function that can be used as a 
     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
+    
     :Arguments:
-        config : dict() <default = None>
+        config : dict <default = None>
             Config dictionary for the model for which you would like to construct a custom 
             likelihood. In the style of what you find under hddm.model_config.
+    
     :Returns:
-        str : 
+        str: 
             A string that holds the code to define a likelihood function as needed by HDDM to pass
             to PyMC2. (Serves as a wrapper around the LAN forward pass)
 
@@ -81,9 +84,11 @@ def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg
 def flip_errors(data):
     """Flip sign for lower boundary responses.
 
+
     :Arguments:
         data : numpy.recarray
             Input array with at least one column named 'RT' and one named 'response'
+
     :Returns:
         data : numpy.recarray
             Input array with RTs sign flipped where 'response' == 0
@@ -660,19 +665,18 @@ def qp_plot(
 ):
     """
     qp plot
-    Input:
-        x : either a HDDM model or data
-
-        grouby: <list>
+    :Arguments:
+        x: either a HDDM model or data
+        grouby: list
             a list of conditions to group the data. if x is a model then groupby is ignored.
 
-        quantiles : sequence
+        quantiles: sequence
             sequence of quantiles
 
-        ncols : int
+        ncols: int
             number of columns in output figure
 
-        draw_lines: boolean (default: True)
+        draw_lines: bool <default=True>
             draw lines to connect the same quantiles across conditions
     """
     # if x is a hddm model use _qp_plot_model

@@ -6,7 +6,7 @@ from hddm.simulators import *
 from kabuki.utils import stochastic_from_dist
 
 from hddm.model_config import model_config
-from hddm.utils import flip_errors
+
 
 
 np.seterr(divide="ignore")
@@ -84,12 +84,17 @@ def generate_wfpt_stochastic_class(
     """
     create a wfpt stochastic class by creating a pymc nodes and then adding quantile functions.
     Input:
-        wiener_params <dict> - dictonary of wiener_params for wfpt likelihoods
-        sampling_method <string> - an argument used by hddm.generate.gen_rts
-        cdf_range <sequance> -  an argument used by hddm.generate.gen_rts
-        sampling_dt <float> - an argument used by hddm.generate.gen_rts
+        wiener_params: dict <default=None> 
+            dictonary of wiener_params for wfpt likelihoods
+        sampling_method: str <default='cssm'>
+            an argument used by hddm.generate.gen_rts
+        cdf_range: sequence <default=(-5,5)>
+            an argument used by hddm.generate.gen_rts
+        sampling_dt: float <default=1e-4> 
+            an argument used by hddm.generate.gen_rts
     Ouput:
-        wfpt <class> - the wfpt stochastic
+        wfpt: class
+            the wfpt stochastic
     """
 
     # set wiener_params
@@ -144,8 +149,8 @@ def generate_wfpt_stochastic_class(
                keep_negative_responses = True, 
                add_model_parameters = False,
                keep_subj_idx = False):
-        print(self.value)
-        print(type(self.value))
+        #print(self.value)
+        #print(type(self.value))
         assert sampling_method in ['cdf', 'drift', 'cssm'], 'Sampling method is invalid!'
 
         if sampling_method == 'cdf' or sampling_method == 'drift':
@@ -173,7 +178,7 @@ def generate_wfpt_stochastic_class(
                                            keep_negative_responses = keep_negative_responses,
                                            keep_subj_idx = keep_subj_idx,
                                            add_model_parameters = add_model_parameters)
-            sim_out_proc = flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
+            sim_out_proc = hddm.utils.flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
 
             return sim_out_proc
     
@@ -204,10 +209,9 @@ def generate_wfpt_stochastic_class(
 
 
 def add_quantiles_functions_to_pymc_class(pymc_class):
-    """
-    add quantiles methods to a pymc class
+    """add quantiles methods to a pymc class
     Input:
-        pymc_class <class>
+        pymc_class: <class>
     """
 
     # turn pymc node into the final wfpt_node
