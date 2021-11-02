@@ -46,7 +46,8 @@ extensions = ['sphinx.ext.napoleon',
               'sphinx.ext.autosummary',  #'matplotlib.sphinxext.only_directives',
               'matplotlib.sphinxext.plot_directive',
               'sphinxcontrib.bibtex',
-              'sphinx.ext.mathjax'
+              'sphinx.ext.mathjax',
+              'myst_parser',
               ]
 
 autosummary_generate=True
@@ -58,7 +59,9 @@ bibtex_bibfiles = ['zzz_hddm.bib']
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+# source_suffic = '.rst'
+source_suffix = {'.rst': 'restructuredtext',
+                 '.md': 'markdown'}
 
 # The encoding of source files.
 #source_encoding = 'utf-8'
@@ -68,7 +71,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'HDDM'
-copyright = u'2019, Thomas V. Wiecki'
+copyright = u'2021, Thomas V. Wiecki, Mads Lund Pedersen, Alexander Fengler'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -154,8 +157,8 @@ html_theme_path = ['themes']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
+#html_static_path = ['_static']
+html_static_path = []
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'

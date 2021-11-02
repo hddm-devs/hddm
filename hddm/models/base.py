@@ -27,9 +27,11 @@ import inspect
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
 
+# AF-TODO: This should be changed to use 
 try:
-    from IPython import parallel
-    from IPython.parallel.client.asyncresult import AsyncResult
+    import ipyparallel #as parallel
+    #from IPython import parallel
+    #from IPython.parallel.client.asyncresult import AsyncResult
 except ImportError:
     pass
 
@@ -204,7 +206,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         # prepare view for parallelization
         if parallel_profile is not None:  # create view
-            client = parallel.Client(profile=parallel_profile)
+            client = ipyparallel.Client(profile=parallel_profile)
             view = client.load_balanced_view()
             runs_list = [None] * n_bootstraps
         else:

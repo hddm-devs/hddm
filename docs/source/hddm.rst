@@ -1,8 +1,5 @@
-hddm package
-============
-
 Subpackages
------------
+===========
 
 .. toctree::
    :maxdepth: 4
@@ -10,8 +7,8 @@ Subpackages
    hddm.models
    hddm.simulators
 
-**Submodules**
---------------
+Submodules
+==============
 
 hddm.generate module
 --------------------

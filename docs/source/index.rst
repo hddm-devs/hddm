@@ -11,7 +11,6 @@ Documentation
 .. toctree::
     :maxdepth: 2
 
-    abstract
     intro
     methods
     tutorial

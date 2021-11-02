@@ -76,9 +76,9 @@ stimulation (dbs) of the STN, which interferes with normal processing.
 
 The first ten lines of the data file look as follows:
 
-.. code:: python
+.. code:: 
 
-    `!`head cavanagh_theta_nn.csv
+    !head cavanagh_theta_nn.csv
 
 .. parsed-literal::
 
@@ -99,11 +99,10 @@ We use the ``hddm.load_csv()`` function to load this file.
 .. code:: python
 
     data = hddm.load_csv('./cavanagh_theta_nn.csv')
+
 .. code:: python
 
     data.head(10)
-
-
 
 .. raw:: html
 
