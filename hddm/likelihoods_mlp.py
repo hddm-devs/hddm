@@ -138,7 +138,7 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         cnt = 0
         for tmp_str in model_config[model]["params"]:  # ['v', 'a', 'z', 't']:
             if tmp_str in self.parents["reg_outcomes"]:
-                param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index, 0]
+                param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index] # changed from iloc[self.value.index][0]
             else:
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
