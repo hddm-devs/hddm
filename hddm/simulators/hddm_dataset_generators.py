@@ -915,7 +915,7 @@ def simulator_h_c(
             
             param_gen_info[param_name]['mid'] = model_config[model]["param_bounds"][0][idx] + (param_gen_info[idx]['range'] / 2)
             param_gen_info[param_name]['gen_norm_std'] = gen_norm_std * (param_gen_info[idx]['range'] / 2)
-            param_gen_info[param_name]]['uniform_buffer'] = uniform_buffer * (param_gen_info[idx]['range'] / 2)
+            param_gen_info[param_name]['uniform_buffer'] = uniform_buffer * (param_gen_info[idx]['range'] / 2)
             param_gen_info[param_name]['std_gen_std'] = gen_std_std * param_gen_info[idx]['range']
             param_gen_info[param_name]['covariate_range'] = covariate_range * param_gen_info[idx]['range']
 
