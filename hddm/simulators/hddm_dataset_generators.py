@@ -909,32 +909,34 @@ def simulator_h_c(
         for param_name in model_config[model]["params"]:
             idx = model_config[model]["params"].index(param_name)
             
-            param_gen_info[idx] = {}
-            param_gen_info[idx]['range'] = model_config[model]["param_bounds"][1][idx] - \
+            param_gen_info[param_name] = {}
+            param_gen_info[param_name]['range'] = model_config[model]["param_bounds"][1][idx] - \
                 model_config[model]["param_bounds"][0][idx]
             
-            param_gen_info[idx]['mid'] = model_config[model]["param_bounds"][0][idx] + (param_gen_info[idx]['range'] / 2)
-            param_gen_info[idx]['gen_norm_std'] = gen_norm_std * (param_gen_info[idx]['range'] / 2)
-            param_gen_info[idx]['uniform_buffer'] = uniform_buffer * (param_gen_info[idx]['range'] / 2)
-            param_gen_info[idx]['std_gen_std'] = gen_std_std * param_gen_info[idx]['range']
-            param_gen_info[idx]['covariate_range'] = covariate_range * param_gen_info[idx]['range']
+            param_gen_info[param_name]['mid'] = model_config[model]["param_bounds"][0][idx] + (param_gen_info[idx]['range'] / 2)
+            param_gen_info[param_name]['gen_norm_std'] = gen_norm_std * (param_gen_info[idx]['range'] / 2)
+            param_gen_info[param_name]]['uniform_buffer'] = uniform_buffer * (param_gen_info[idx]['range'] / 2)
+            param_gen_info[param_name]['std_gen_std'] = gen_std_std * param_gen_info[idx]['range']
+            param_gen_info[param_name]['covariate_range'] = covariate_range * param_gen_info[idx]['range']
 
             if  group_param_dist == 'normal':
-                param_gen_info[idx]['rv'] = partial(np.random.normal, 
+                param_gen_info[param_name]]['rv'] = partial(np.random.normal, 
                                                               loc = param_gen_info[idx]['mid'],
                                                               scale = param_gen_info[idx]['gen_norm_std'])
             elif group_param_dist == 'uniform':
-                param_gen_info[idx]['rv'] = partial(np.random.uniform,
-                                                    low = model_config[model]["param_bounds"][0][idx] + param_gen_info[idx]['uniform_buffer'],
-                                                    high = model_config[model]["param_bounds"][1][idx] - param_gen_info[idx]['uniform_buffer'])
+                param_gen_info[param_name]['rv'] = partial(np.random.uniform,
+                                                           low = model_config[model]["param_bounds"][0][idx] + \
+                                                               param_gen_info[idx]['uniform_buffer'],
+                                                           high = model_config[model]["param_bounds"][1][idx] - \
+                                                               param_gen_info[idx]['uniform_buffer'])
 
-            param_gen_info[idx]['std_rv'] = partial(np.random.uniform,
-                                                    low = 0,
-                                                    high = param_gen_info[idx]['std_gen_std'])
+            param_gen_info[param_name]['std_rv'] = partial(np.random.uniform,
+                                                           low = 0,
+                                                           high = param_gen_info[idx]['std_gen_std'])
 
-            param_gen_info[idx]['covariate_rv'] = partial(np.random.uniform,
-                                                          low = - param_gen_info[idx]['covariate_range'],
-                                                          high = param_gen_info[idx]['covariate_range'])
+            param_gen_info[param_name]['covariate_rv'] = partial(np.random.uniform,
+                                                                 low = - param_gen_info[idx]['covariate_range'],
+                                                                 high = param_gen_info[idx]['covariate_range'])
 
         # Fixed part
         if fixed_at_default is not None:
