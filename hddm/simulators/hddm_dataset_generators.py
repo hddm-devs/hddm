@@ -920,7 +920,7 @@ def simulator_h_c(
             param_gen_info[param_name]['covariate_range'] = covariate_range * param_gen_info[idx]['range']
 
             if  group_param_dist == 'normal':
-                param_gen_info[param_name]]['rv'] = partial(np.random.normal, 
+                param_gen_info[param_name]['rv'] = partial(np.random.normal, 
                                                               loc = param_gen_info[idx]['mid'],
                                                               scale = param_gen_info[idx]['gen_norm_std'])
             elif group_param_dist == 'uniform':
