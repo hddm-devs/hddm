@@ -950,44 +950,12 @@ def simulator_h_c(
                     pass
                 else:
                     group_level_parameter_dict[group_only_tmp] = param_gen_info[group_only_tmp]['rv']() 
-                    
-                    # np.random.uniform(
-                    #     low=model_config[model]["param_bounds"][0][
-                    #         model_config[model]["params"].index(group_only_tmp)
-                    #     ],
-                    #     high=model_config[model]["param_bounds"][1][
-                    #          model_config[model]["params"].index(group_only_tmp)
-                    #     ],
-                    # )
 
         # Remainder part
         if remainder is not None:
             for remainder_tmp in remainder:
                 group_level_parameter_dict[remainder_tmp] = param_gen_info[remainder_tmp]['rv']() 
                 
-                # np.random.uniform(
-                #     low=model_config[model]["param_bounds"][0][
-                #         model_config[model]["params"].index(remainder_tmp)
-                #     ],
-                #     high=model_config[model]["param_bounds"][1][
-                #         model_config[model]["params"].index(remainder_tmp)
-                #     ],
-                # )
-                group_level_parameter_dict[remainder_tmp + "_std"] = param_gen_info[remainder_tmp]['std_rv']()
-                
-                # np.random.uniform(
-                #     low=0,
-                #     high=(1 / 10)
-                #     * (
-                #         model_config[model]["param_bounds"][1][
-                #             model_config[model]["params"].index(remainder_tmp)
-                #         ]
-                #         - model_config[model]["param_bounds"][0][
-                #             model_config[model]["params"].index(remainder_tmp)
-                #         ]
-                #     ),
-                # )
-
         # Depends on part
         if depends_on is not None:
             for depends_tmp in depends_on.keys():
@@ -1004,26 +972,7 @@ def simulator_h_c(
                         depends_tmp + "(" + unique_elem + ")"
                     ] = param_gen_info[depends_tmp]['rv']()
                     
-                    
-                    # np.random.uniform(
-                    #     low=model_config[model]["param_bounds"][0][
-                    #         model_config[model]["params"].index(depends_tmp)
-                    #     ],
-                    #     high=model_config[model]["param_bounds"][1][
-                    #         model_config[model]["params"].index(depends_tmp)
-                    #     ],
-                    # )
-
                 if depends_tmp not in group_only:
-                    # bound_to_bound_tmp = (
-                    #     model_config[model]["param_bounds"][1][
-                    #         model_config[model]["params"].index(depends_tmp)
-                    #     ]
-                    #     - model_config[model]["param_bounds"][0][
-                    #         model_config[model]["params"].index(depends_tmp)
-                    #     ]
-                    # )
-                    
                     group_level_parameter_dict[
                         depends_tmp + "_std"
                     ] = param_gen_info[remainder_tmp]['std_rv']()
@@ -1051,29 +1000,10 @@ def simulator_h_c(
 
                 for covariate in covariate_names:
                     if ("Intercept" in covariate) or (covariate == '1'):
-                        # bound_to_bound_tmp = (
-                        #     model_config[model]["param_bounds"][1][
-                        #         model_config[model]["params"].index(outcome)
-                        #     ]
-                        #     - model_config[model]["param_bounds"][0][
-                        #         model_config[model]["params"].index(outcome)
-                        #     ]
-                        # )
 
                         # AF-COMMENT: Here instead of covariate_rv --> just use
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[outcome]['rv']()
                         
-                        
-                        # np.random.uniform(
-                        #     low=model_config[model]["param_bounds"][0][
-                        #         model_config[model]["params"].index(outcome)
-                        #     ]
-                        #     + 0.3 * bound_to_bound_tmp,
-                        #     high=model_config[model]["param_bounds"][0][
-                        #         model_config[model]["params"].index(outcome)
-                        #     ]
-                        #     + 0.7 * bound_to_bound_tmp,
-                        # )
                         print(reg_trace_dict[outcome + "_" + covariate])
 
                         # Intercept is always fit subject wise
@@ -1081,22 +1011,14 @@ def simulator_h_c(
                             outcome + "_" + covariate + "_" + "std"
                         ] = param_gen_info[outcome]['std_rv']()
                         
-                        # np.random.uniform(low=0, high=bound_to_bound_tmp / 10)
-
                     else:
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[outcome]['covariate_rv']()
                         
-                        # np.random.uniform(
-                        #     low=-0.1, high=0.1
-                        # )
                         if not group_only_regressors:
                             reg_std_trace_dict[
                                 outcome + "_" + covariate + "_" + "std"
                             ] = param_gen_info[outcome]['std_rv']()
                             
-                            
-                            # np.random.uniform(low=0, high=bound_to_bound_tmp / 10)
-
                 group_level_parameter_dict[outcome + "_reg"] = reg_trace_dict.copy()
 
                 # AF-COMMENT: Is this necessary ?

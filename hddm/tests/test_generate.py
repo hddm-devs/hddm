@@ -6,7 +6,6 @@ import numpy as np
 
 from nose import SkipTest
 
-
 class TestGenerate(unittest.TestCase):
     def test_compare_drift_simulated_data_to_analytic(self):
         raise SkipTest(
