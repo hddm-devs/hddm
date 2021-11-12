@@ -805,7 +805,7 @@ def simulator_h_c(
         parameters = full_data[model_config[model]["params"]]
 
         # Run the actual simulations
-        print(parameters)
+        # print(parameters)
 
         sim_data = simulator(
             theta=parameters.values,
@@ -825,7 +825,7 @@ def simulator_h_c(
 
         # Add in outliers
         if p_outlier > 0:
-            print('passing through outlier creation')
+            # print('passing through outlier creation')
             outlier_idx = np.random.choice(
                 list(data.index),
                 replace=False,
@@ -1004,7 +1004,7 @@ def simulator_h_c(
                         # AF-COMMENT: Here instead of covariate_rv --> just use
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[outcome]['rv']()
                         
-                        print(reg_trace_dict[outcome + "_" + covariate])
+                        # print(reg_trace_dict[outcome + "_" + covariate])
 
                         # Intercept is always fit subject wise
                         reg_std_trace_dict[
@@ -1042,14 +1042,14 @@ def simulator_h_c(
         depends_on=depends_on,
         fixed_at_default=fixed_at_default,
     )
-    print(fixed_at_default)
-    print(remainder)
+    #print(fixed_at_default)
+    #print(remainder)
 
     # Make conditions df
     if depends_on is not None:
         conditions_df = make_conditions_df(conditions=conditions)
-        print("Conditions created...")
-        print(conditions_df)
+        #print("Conditions created...")
+        #print(conditions_df)
     else:
         conditions_df = None
 
