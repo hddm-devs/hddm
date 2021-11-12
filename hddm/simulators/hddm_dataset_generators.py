@@ -670,6 +670,8 @@ def simulator_h_c(
                 if remainder is not None:
                     for remainder_tmp in remainder:
                         if not remainder_set:
+                            print('group_level_parameter_dict')
+                            print(group_level_parameter_dict)
                             tmp_mean = group_level_parameter_dict[remainder_tmp]
                             tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
                             full_parameter_dict[
