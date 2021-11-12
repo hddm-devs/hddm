@@ -957,6 +957,7 @@ def simulator_h_c(
         if remainder is not None:
             for remainder_tmp in remainder:
                 group_level_parameter_dict[remainder_tmp] = param_gen_info[remainder_tmp]['rv']() 
+                group_level_parameter_dict[remainder_tmp + "_std"] = param_gen_info[remainder_tmp]['std_rv']()
                 
         # Depends on part
         if depends_on is not None:
