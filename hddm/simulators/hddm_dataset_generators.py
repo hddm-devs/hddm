@@ -903,6 +903,7 @@ def simulator_h_c(data = None,
                                         model,
                                         group_level_parameter_dict,
                                         ):
+        #print('hello')
         # Construct subject data
         full_parameter_dict = group_level_parameter_dict.copy()
 
@@ -974,62 +975,74 @@ def simulator_h_c(data = None,
                         condition_elem = ".".join(conditions_df_tmp.iloc[condition_id])
                         #print(type(subj_idx))
                         bool_ = (data['subj_idx'] == int(subj_idx))
+                        #print(np.sum(bool_))
+
 
                         for key_ in conditions_df_tmp.keys():
                             #print('before')
                             #print(conditions_df_tmp.iloc[condition_id][key_])
                             #print(type(conditions_df_tmp.iloc[condition_id][key_]))
-                            bool_ = bool_ & (data[key_] == conditions_df_tmp.iloc[condition_id][key_])
+                            #print(key_)
+                            #print(type(conditions_df_tmp.iloc[condition_id][key_]))
+                            #print(data[key_].dtype)
+                            #if data[key_]
+                            bool_ = (bool_) & (data[key_].astype(str) == conditions_df_tmp.iloc[condition_id][key_])
+                            #print(bool_)
                             #print('after')
 
-                    # Check if there is data which adheres to the condition currently active
-                    # Otherwise there is nothing to update
-                    # AF COMMENT: This check should already be applied at the point of generating the condition_df dataframe 
-                    if np.sum(bool_) > 0:
-                        if depends_tmp not in group_only:
-                            tmp_mean = group_level_parameter_dict[
-                                depends_tmp + "(" + condition_elem + ")"
-                            ]
-                            tmp_std = group_level_parameter_dict[depends_tmp + "_std"]
+                        # Check if there is data which adheres to the condition currently active
+                        # Otherwise there is nothing to update
+                        # AF COMMENT: This check should already be applied at the point of generating the condition_df dataframe 
+                        #print(np.sum(bool_))
+                        if np.sum(bool_) > 0:
+                            #print('passed')
+                            if depends_tmp not in group_only:
+                                print('passed here (not_group_only) with depends_tmp: ', depends_tmp)
 
-                            full_parameter_dict[
-                                depends_tmp
-                                + "_subj("
-                                + condition_elem
-                                + ")."
-                                + str(subj_idx)
-                            ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
+                                tmp_mean = group_level_parameter_dict[
+                                    depends_tmp + "(" + condition_elem + ")"
+                                ]
+                                tmp_std = group_level_parameter_dict[depends_tmp + "_std"]
+
+                                full_parameter_dict[
+                                    depends_tmp
+                                    + "_subj("
+                                    + condition_elem
+                                    + ")."
+                                    + str(subj_idx)
+                                ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
+                                
+                                data.loc[bool_, depends_tmp] = full_parameter_dict[
+                                    depends_tmp
+                                    + "_subj("
+                                    + condition_elem
+                                    + ")."
+                                    + str(subj_idx)
+                                ]
+
+                                # subj_data[depends_tmp] = full_parameter_dict[
+                                #     depends_tmp
+                                #     + "_subj("
+                                #     + condition_elem
+                                #     + ")."
+                                #     + str(subj_idx)
+                                # ]
+                            else:
+                                print('passed here (group_only) with depends_tmp: ', depends_tmp)
+                                data.loc[bool_, depends_tmp] = full_parameter_dict[
+                                    depends_tmp + "(" + condition_elem + ")"
+                                ]
+                                # subj_data[depends_tmp] = full_parameter_dict[
+                                #     depends_tmp + "(" + condition_elem + ")"
+                                # ]
                             
-                            data.loc[bool_, depends_tmp] = full_parameter_dict[
-                                depends_tmp
-                                + "_subj("
-                                + condition_elem
-                                + ")."
-                                + str(subj_idx)
-                            ]
-
-                            # subj_data[depends_tmp] = full_parameter_dict[
-                            #     depends_tmp
-                            #     + "_subj("
-                            #     + condition_elem
-                            #     + ")."
-                            #     + str(subj_idx)
-                            # ]
-                        else:
-                            data.loc[bool_, depends_tmp] = full_parameter_dict[
-                                depends_tmp + "(" + condition_elem + ")"
-                            ]
-                            # subj_data[depends_tmp] = full_parameter_dict[
-                            #     depends_tmp + "(" + condition_elem + ")"
-                            # ]
-                        
-                        # AF COMMENT: This assigns the actual condition columns to the data
-                        # Not necessary when data is supplied instead
-                        # 
-                        # for condition_key_tmp in conditions_df_tmp.keys():
-                        #     subj_data[condition_key_tmp] = conditions_df_tmp[
-                        #         condition_key_tmp
-                        #     ]
+                            # AF COMMENT: This assigns the actual condition columns to the data
+                            # Not necessary when data is supplied instead
+                            # 
+                            # for condition_key_tmp in conditions_df_tmp.keys():
+                            #     subj_data[condition_key_tmp] = conditions_df_tmp[
+                            #         condition_key_tmp
+                            #     ]
 
             # Regressor part
             if regression_covariates is not None:
@@ -1365,19 +1378,25 @@ def simulator_h_c(data = None,
     #print(remainder)
 
     # Make conditions df
-    if depends_on is not None:
-        # If data is None then conditions were supplied as an argument
-        if data is None:
-            conditions_df = make_conditions_df(conditions=conditions)
-        else: # Otherwise we have covariate data, so we can deduce conditions
-            conditions = dict()
-            for key_ in depends_on.keys():
-                for col in depends_on[key_]:
-                    conditions[col] = np.sort(data[col].unique()).astype(str)
-            #print(conditions)
-            conditions_df = make_conditions_df(conditions=conditions)
-        #print("Conditions created...")
-        #print(conditions_df)
+    if (depends_on is not None):
+        if type(depends_on) == dict:
+            if len(list(depends_on.key())) > 0:
+                # If data is None then conditions were supplied as an argument
+                if data is None:
+                    conditions_df = make_conditions_df(conditions=conditions)
+                else: # Otherwise we have covariate data, so we can deduce conditions
+                    conditions = dict()
+                    for key_ in depends_on.keys():
+                        for col in depends_on[key_]:
+                            conditions[col] = np.sort(data[col].unique()).astype(str)
+                    #print(conditions)
+                    conditions_df = make_conditions_df(conditions=conditions)
+                #print("Conditions created...")
+                #print(conditions_df)
+            else:
+                conditions_df = None
+        else:
+            conditions_df = None
     else:
         conditions_df = None
 
