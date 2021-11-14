@@ -1379,8 +1379,9 @@ def simulator_h_c(data = None,
 
     # Make conditions df
     if (depends_on is not None):
+        print('depends_on is: ', depends_on)
         if type(depends_on) == dict:
-            if len(list(depends_on.key())) > 0:
+            if len(list(depends_on.keys())) > 0:
                 # If data is None then conditions were supplied as an argument
                 if data is None:
                     conditions_df = make_conditions_df(conditions=conditions)
