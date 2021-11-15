@@ -727,22 +727,22 @@ def simulator(
 
     if model == 'ddm_par2_weibull_no_bias':
         x = ddm_flexbound_par2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.weibull_cdf,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {'alpha': theta[:, 5],
-                                                       'beta': theta[:, 6]})
+                               v_l_1 = theta[:, 1],
+                               v_l_2 = theta[:, 2],
+                               a = theta[:, 3],
+                               z_h = z_vec,
+                               z_l_1 = z_vec,
+                               z_l_2 = z_vec,
+                               t = theta[:, 4],
+                               s = s,
+                               n_samples = n_samples,
+                               n_trials = n_trials,
+                               delta_t = delta_t,
+                               max_t = max_t,
+                               boundary_fun = bf.weibull_cdf,
+                               boundary_multiplicative = True,
+                               boundary_params = {'alpha': theta[:, 5],
+                                                  'beta': theta[:, 6]})
 
     if model == 'ddm_mic2_adj':
         x = ddm_flexbound_mic2_adj(v_h = theta[:, 0],

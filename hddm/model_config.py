@@ -292,7 +292,7 @@ model_config = {
                                  'boundary': bf.weibull_cdf,
                                  'boundary_multiplicative': True,
                                  'n_params': 7,
-                                 'default_params': [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+                                 'default_params': [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
                                  'hddm_include': ['vh', 'vl1', 'vl2', 'a', 't', 'theta', 'alpha', 'beta'],
                                  'n_choices': 4,
                                  'choices': [0, 1, 2, 3],
