@@ -1657,6 +1657,7 @@ def posterior_pair_plot(
             gt_dict = {}
             for c_tmp in data.keys():
                 for s_tmp in data[c_tmp].keys():
+                    print('moving across subjects')
                     sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
                     for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
                         if (
@@ -1664,6 +1665,7 @@ def posterior_pair_plot(
                             in model_config["angle"]["params"]
                         ):
                             tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
+                            print(tmp_param)
                             idx_tmp = model_config["angle"]["params"].index(tmp_param)
                             sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
                             if model_ground_truth is not None:
@@ -1889,7 +1891,7 @@ def caterpillar_plot(
     )
 
     if not hddm_model.nn:
-        trace = _convert_params(traces)
+        trace = _convert_params(trace)
 
     # TODO: Probably have to add parameter adjustments to account for LAN/no LAN case
     if keep_key is None:
