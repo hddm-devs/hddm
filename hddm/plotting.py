@@ -105,6 +105,9 @@ def make_trace_plotready_h_c(
     dat_h_c = (
         {}
     )  # will store a dictionary of dictionaries of dictionaries. Level-one keys specify conditions, level-two keys specify subject level data
+    
+    print('trace_dict: ')
+    print(trac_dict)
     for key in trace_dict.keys():
         dat_h_c[key] = {}  # intialize condition level dict
         unique_subj_ids = trace_dict[key]["data"][
@@ -178,6 +181,9 @@ def make_trace_plotready_h_c(
                         key_param_only = trace_key.split("_")[0]
                     if not ("subj" in trace_key) and ("(" in trace_key):
                         key_param_only = trace_key.split("(")[0]
+
+                    print('key_param_only')
+                    print(key_param_only)
 
                     trace_names_param_only_tmp.append(key_param_only)
 
@@ -1652,7 +1658,8 @@ def posterior_pair_plot(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
     # return data
-    #print(data)
+    print('data: ')
+    print(data)
     plot_cnt = 0
     for c_tmp in data.keys():
         for s_tmp in data[c_tmp].keys():

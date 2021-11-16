@@ -14,7 +14,7 @@ from hddm.models import HDDM
 #from hddm.cnn.wrapper import load_cnn
 
 try:
-    print('HDDM: Trying import of pytorch related classes.')
+    # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
     print('It seems that you do not have pytorch installed.' + \
