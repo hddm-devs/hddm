@@ -476,7 +476,8 @@ def filter_subject_condition_traces(
             is_group_model=is_group_model,
             model_ground_truth=model_ground_truth,
         )
-
+        print('plotready_traces')
+        print(plotready_traces)
         return plotready_traces
 
     # Scenario 2: Single condition single subject model (or data collapsed across subjects)
