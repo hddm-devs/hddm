@@ -379,7 +379,7 @@ def filter_subject_condition_traces(
 
     # Scenario 1: We have multiple conditions and / or a group model
     # Use Hierarchical DataFrame
-    if depends is not None or (depends is None and is_group_model):
+    if (depends is not None) or (depends is None and is_group_model):
 
         # Get parameters that have condition dependence (finally condition + subj)
         if depends is not None:
@@ -395,6 +395,7 @@ def filter_subject_condition_traces(
                             condition_list.append(tmp_depend)
                 else:
                     pass
+            
             # Make dataframe that holds all the unique conditions (via groupby and summarizing with size)
             condition_dataframe = (
                 data.groupby(condition_list)
@@ -434,6 +435,9 @@ def filter_subject_condition_traces(
             params_group_only=group_only_nodes,
             is_group_model=is_group_model,
         )
+
+        print('condition wise params dict: ')
+        print(condition_wise_params_dict)
 
         for key_tmp in condition_wise_params_dict.keys():
             # Condition wise params carries all expected parameter names for a given condition
