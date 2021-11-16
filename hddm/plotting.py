@@ -106,9 +106,9 @@ def make_trace_plotready_h_c(
         {}
     )  # will store a dictionary of dictionaries of dictionaries. Level-one keys specify conditions, level-two keys specify subject level data
     
-    print('trace_dict: ')
-    print(trace_dict)
-    
+    #print('trace_dict: ')
+    #print(trace_dict)
+
     for key in trace_dict.keys():
         dat_h_c[key] = {}  # intialize condition level dict
         unique_subj_ids = trace_dict[key]["data"][
@@ -206,6 +206,9 @@ def make_trace_plotready_h_c(
                     ]
 
             dat_h_c[key][subj_id]["trace_names"] = trace_names_tmp
+
+    print('dat_h_c')
+    print(dat_h_c)
     return dat_h_c
 
 
