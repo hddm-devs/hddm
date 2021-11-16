@@ -1666,7 +1666,7 @@ def posterior_pair_plot(
                         ):
                             tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
                             print(tmp_param)
-                            idx_tmp = model_config["angle"]["params"].index(tmp_param)
+                            idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
                             sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
                             if model_ground_truth is not None:
                                 gt_dict[trace_name_tmp] = data[c_tmp][s_tmp][
@@ -1676,6 +1676,7 @@ def posterior_pair_plot(
                             pass #print("problem")
 
                     data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
+                    print(data[c_tmp][s_tmp]["trace_names"])
 
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
