@@ -99,6 +99,9 @@ class KnodeWfptStimCoding(Knode):
         super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
+        # AF-COMMENT: Not fully clear how creat_node works !
+        # StimCoding more transparent via regressor ?
+
         # the addition of "depends=['stim']" in the call of
         # KnodeWfptInvZ in HDDMStimCoding makes that data are
         # submitted splitted by the values of the variable stim the

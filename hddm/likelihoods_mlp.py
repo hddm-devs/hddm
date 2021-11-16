@@ -74,11 +74,11 @@ def make_mlp_likelihood(model, **kwargs):
 
     def make_likelihood(model = model):
         likelihood_str = make_likelihood_str_mlp(config = model_config[model])
-        print(likelihood_str)
+        #print(likelihood_str)
         exec(likelihood_str)
-        print(locals())
+        #print(locals())
         my_fun = locals()['custom_likelihood']
-        print(my_fun)
+        #print(my_fun)
         return my_fun
     
     likelihood_ = make_likelihood(model = model)
@@ -168,13 +168,13 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     #if model == 'custom':
     def make_likelihood(model = model):
         likelihood_str = make_reg_likelihood_str_mlp(config = model_config[model])
-        print(likelihood_str)
-        print('PRINTING MODEL: ')
-        print(model)
+        #print(likelihood_str)
+        #print('PRINTING MODEL: ')
+        #print(model)
         exec(likelihood_str)
-        print(locals())
+        #print(locals())
         my_fun = locals()['custom_likelihood_reg']
-        print(my_fun)
+        #print(my_fun)
         return my_fun
 
     likelihood_ = make_likelihood(model = model)

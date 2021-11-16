@@ -14,9 +14,17 @@ import hddm
 import pandas as pd
 import seaborn as sns
 
-from hddm.keras_models import load_mlp
+#from hddm.keras_models import load_mlp
 # from hddm.cnn.wrapper import load_cnn
-from hddm.torch.mlp_inference_class import load_torch_mlp
+
+try:
+    print('HDDM: Trying import of pytorch related classes.')
+    from hddm.torch.mlp_inference_class import load_torch_mlp
+except:
+    print('It seems that you do not have pytorch installed.' + \
+          ' You cannot use the network_inspector module.')
+
+#from hddm.torch.mlp_inference_class import load_torch_mlp
 
 from hddm.simulators.basic_simulator import *
 
@@ -27,29 +35,29 @@ from hddm.model_config import model_config
 
 # NETWORK LOADERS -------------------------------------------------------------------------
 
-def get_mlp(model="angle"):
-    """Returns the keras network which is the basis of the MLP likelihoods
+# def get_mlp(model="angle"):
+#     """Returns the keras network which is the basis of the MLP likelihoods
 
-    :Arguments:
-        model: str <default='angle'>
-        Specifies the models you would like to load
+#     :Arguments:
+#         model: str <default='angle'>
+#         Specifies the models you would like to load
 
-    Returns:
-        keras.model.predict_on_batch
-        Returns a function that gives you access to a forward pass through the MLP.
-        This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
-        model parameters trailed by a reaction time and a choice.
-        (e.g. input dims for a ddm MLP could be (3, 6), 3 datapoints and 4 parameters + reaction time and choice).
-        Predict on batch then returns for each row of the input the log likelihood of the respective parameter vector and datapoint.
+#     Returns:
+#         keras.model.predict_on_batch
+#         Returns a function that gives you access to a forward pass through the MLP.
+#         This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
+#         model parameters trailed by a reaction time and a choice.
+#         (e.g. input dims for a ddm MLP could be (3, 6), 3 datapoints and 4 parameters + reaction time and choice).
+#         Predict on batch then returns for each row of the input the log likelihood of the respective parameter vector and datapoint.
 
-    :Example:
-        >>> forward = hddm.network_inspectors.get_mlp(model = 'ddm')
-        >>> data = np.array([[0.5, 1.5, 0.5, 0.5, 1.0, -1.0], [0.5, 1.5, 0.5, 0.5, 1.0, -1.0]], dtype = np.float32)
-        >>> forward(data)
-    """
+#     :Example:
+#         >>> forward = hddm.network_inspectors.get_mlp(model = 'ddm')
+#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5, 1.0, -1.0], [0.5, 1.5, 0.5, 0.5, 1.0, -1.0]], dtype = np.float32)
+#         >>> forward(data)
+#     """
 
-    network = load_mlp(model=model)
-    return network.predict_on_batch
+#     network = load_mlp(model=model)
+#     return network.predict_on_batch
 
 
 # def get_cnn(model="angle", nbin=512):

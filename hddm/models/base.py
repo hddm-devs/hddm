@@ -39,15 +39,15 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
-        print("printing self.nn")
-        print(self.nn)
+        #print("printing self.nn")
+        #print(self.nn)
         if self.nn:
             if model_config[self.model]['n_choices'] == 2:
-                print("2-choice model --> passed through flip errors nn")
+                #print("2-choice model --> passed through flip errors nn")
                 data = hddm.utils.flip_errors_nn(data, self.network_type)
             else:
-                print("More than 2-choice model --> don't flip any responses.")
-                print("Make sure you supplied rt and choice data in appropriate format!")
+                #print("More than 2-choice model --> don't flip any responses.")
+                #print("Make sure you supplied rt and choice data in appropriate format!")
                 data["response"] = data["response"].values.astype(np.float32)
                 data["rt"] = data["rt"].values.astype(np.float32)
                 pass
@@ -1106,8 +1106,8 @@ class HDDMBase(AccumulatorModel):
         )
 
         self._kwargs = kwargs
-        print(kwargs)
-        print(include)
+        #print(kwargs)
+        #print(include)
         # Check if self has model attribute
         if not hasattr(self, 'model'):
             print('No model attribute --> setting up standard HDDM')

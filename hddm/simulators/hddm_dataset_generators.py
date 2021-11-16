@@ -506,7 +506,7 @@ def simulator_h_c(data = None,
                   } 
 
     for key_ in kwargs.keys():
-        meta_params[key] = kwargs[key]
+        meta_params[key_] = kwargs[key_]
 
 
     def check_params(data=None, model=None, is_nn=True):
@@ -931,7 +931,7 @@ def simulator_h_c(data = None,
             # Fixed part
             if fixed_at_default is not None:
                 for fixed_tmp in fixed_at_default:
-                    data.loc[data['subj_idx'] == int(subj_idx), ['fixed_tmp']] = group_level_parameter_dict[fixed_tmp]
+                    data.loc[data['subj_idx'] == int(subj_idx), [fixed_tmp]] = group_level_parameter_dict[fixed_tmp]
                     #subj_data.loc[fixed_tmp] = group_level_parameter_dict[fixed_tmp]
 
             # Group only part
@@ -997,7 +997,7 @@ def simulator_h_c(data = None,
                         if np.sum(bool_) > 0:
                             #print('passed')
                             if depends_tmp not in group_only:
-                                print('passed here (not_group_only) with depends_tmp: ', depends_tmp)
+                                #print('passed here (not_group_only) with depends_tmp: ', depends_tmp)
 
                                 tmp_mean = group_level_parameter_dict[
                                     depends_tmp + "(" + condition_elem + ")"
@@ -1028,7 +1028,7 @@ def simulator_h_c(data = None,
                                 #     + str(subj_idx)
                                 # ]
                             else:
-                                print('passed here (group_only) with depends_tmp: ', depends_tmp)
+                                #print('passed here (group_only) with depends_tmp: ', depends_tmp)
                                 data.loc[bool_, depends_tmp] = full_parameter_dict[
                                     depends_tmp + "(" + condition_elem + ")"
                                 ]

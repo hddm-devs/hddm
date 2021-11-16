@@ -47,7 +47,9 @@ class TorchConfig(object):
         self.network_path = os.path.join(hddm.__path__[0], "torch_models", self.network_files[model])
 
     def get_network_config(self, file_name = None):
-        return pickle.load(open(os.path.join(hddm.__path__[0], "torch_models", file_name), 'rb'))
+        with open(os.path.join(hddm.__path__[0], "torch_models", file_name), 'rb') as f:
+            network_config = pickle.load(f)
+        return network_config
 
 #network_configs = 
 # network_configs['ddm'] = {'layer_types': ['dense', 'dense', 'dense', 'dense'],
