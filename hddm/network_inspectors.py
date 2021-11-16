@@ -105,7 +105,7 @@ def get_torch_mlp(model="angle", nbin=512):
         >>> forward(data)
     """
     network = load_torch_mlp(model=model)
-    return network
+    return network.predict_on_batch
 
 
 # KDE CLASS --------------------------------------------------------------------------------
@@ -386,7 +386,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         plot_data[:, 1] = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
 
     # Load Keras model and initialize batch container
-    keras_model = get_mlp(model=model)
+    keras_model = get_torch_mlp(model=model)
     keras_input_batch = np.zeros((4000, parameter_df.shape[1] + 2))
     keras_input_batch[:, parameter_df.shape[1] :] = plot_data
 
