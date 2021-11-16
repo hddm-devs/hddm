@@ -1680,9 +1680,9 @@ def posterior_pair_plot(
             )
             
             print(data[c_tmp][s_tmp]["traces"].sample(n_subsample))
-            g = sns.PairGrid(
-                data[c_tmp][s_tmp]["traces"].sample(n_subsample)
-            )
+            # g = sns.PairGrid(
+            #     data[c_tmp][s_tmp]["traces"].sample(n_subsample)
+            # )
             # g = sns.PairGrid(
             #     data[c_tmp][s_tmp]["traces"].sample(n_subsample),
             #     height=height,
