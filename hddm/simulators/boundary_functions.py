@@ -50,9 +50,12 @@ def weibull_cdf(t=1, alpha=1, beta=1):
             t: np.array or float <default = 1>
                 Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
             alpha: float <default = 1.0>
+                Shape parameter
             beta: float <default = 1.0>
-          
+                Shape parameter
+                
     """
+
     return np.exp(-np.power(np.divide(t, beta), alpha))
 
 # # Gamma shape: (additive)

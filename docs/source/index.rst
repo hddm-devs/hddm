@@ -13,8 +13,10 @@ Documentation
 
     intro
     methods
+    demos
     tutorial
     howto
+    lan_extension
     modules
     references
 

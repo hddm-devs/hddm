@@ -1648,7 +1648,7 @@ def posterior_pair_plot(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
     # return data
-
+    print(data)
     plot_cnt = 0
     for c_tmp in data.keys():
         for s_tmp in data[c_tmp].keys():
@@ -1678,10 +1678,11 @@ def posterior_pair_plot(
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
             )
-
+            
+            print(data[c_tmp][s_tmp]["traces"].sample(n_subsample))
             g = sns.PairGrid(
                 data[c_tmp][s_tmp]["traces"].sample(n_subsample),
-                height=height,  # / data[c_tmp][s_tmp]['traces'].shape[1], # len(list(posterior_samples.keys())),
+                height=height,
                 aspect=aspect_ratio,
                 diag_sharey=False,
             )
