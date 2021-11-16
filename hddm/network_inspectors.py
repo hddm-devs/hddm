@@ -14,7 +14,7 @@ import hddm
 import pandas as pd
 import seaborn as sns
 
-#from hddm.keras_models import load_mlp
+#from hddm.torch_models import load_mlp
 # from hddm.cnn.wrapper import load_cnn
 
 try:
@@ -386,9 +386,9 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         plot_data[:, 1] = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
 
     # Load Keras model and initialize batch container
-    keras_model = get_torch_mlp(model=model)
-    keras_input_batch = np.zeros((4000, parameter_df.shape[1] + 2))
-    keras_input_batch[:, parameter_df.shape[1] :] = plot_data
+    torch_model = get_torch_mlp(model=model)
+    input_batch = np.zeros((4000, parameter_df.shape[1] + 2))
+    input_batch[:, parameter_df.shape[1] :] = plot_data
 
     # n_subplot = 0
     for i in range(parameter_df.shape[0]):
@@ -398,8 +398,9 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         col_tmp = i - (cols * row_tmp)
 
         # Get predictions from keras model
-        keras_input_batch[:, : parameter_df.shape[1]] = parameter_df.iloc[i, :].values
-        ll_out_keras = keras_model(keras_input_batch)
+        input_batch[:, : parameter_df.shape[1]] = parameter_df.iloc[i, :].values
+        # input_batch = input_batch.astype(np.float32)
+        ll_out_keras = torch_model(input_batch.astype(np.float32))
 
         for j in range(n_reps):
             out = simulator(
@@ -567,7 +568,7 @@ def lan_manifold(
         parameters = parameter_df
 
     # Load Keras model and initialize batch container
-    keras_model = get_mlp(model=model)
+    torch_model = get_torch_mlp(model=model)
 
     # Prepare data structures
 
@@ -599,7 +600,7 @@ def lan_manifold(
         data_var[tmp_begin:tmp_end, :n_params] = parameters
         data_var[tmp_begin:tmp_end, n_params : (n_params + 2)] = plot_data
         data_var[tmp_begin:tmp_end, (n_params + 2)] = np.squeeze(
-            np.exp(keras_model(data_var[tmp_begin:tmp_end, :-1].astype(np.float32)))
+            np.exp(torch_model(data_var[tmp_begin:tmp_end, :-1].astype(np.float32)))
         )
 
         cnt += 1
