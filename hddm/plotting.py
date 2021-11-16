@@ -539,7 +539,6 @@ def filter_subject_condition_traces(
         }
         return out_dict
 
-
 def extract_multi_cond_subj_plot_n(data=None):
     """
     Function expects as data the output of a call to filter_subject_condition_traces().
@@ -1676,10 +1675,16 @@ def posterior_pair_plot(
                     print('moving across subjects')
                     sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
                     for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
+                        print('trace_name_tmp')
+                        print(trace_name_tmp)
+                        print('after split')
+                        print(trace_name_tmp.split("_")[0].split("(")[0])
                         if (
                             trace_name_tmp.split("_")[0].split("(")[0]
-                            in model_config["angle"]["params"]
+                            in model_config['angle']["params"]
                         ):
+                            print('trace_name_tmp_repeat')
+                            print(trace_name_tmp)
                             tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
                             print(tmp_param)
                             idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
