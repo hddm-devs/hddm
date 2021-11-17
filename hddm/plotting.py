@@ -1658,25 +1658,27 @@ def posterior_pair_plot(
             # Turn traces into dataframe:
             # Get all ground truths
             gt_dict = {}
-            for c_tmp in data.keys():
-                for s_tmp in data[c_tmp].keys():
-                    sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
-                    for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
-                        if (
-                            trace_name_tmp.split("_")[0].split("(")[0]
-                            in model_config[model_fitted]["params"]
-                        ):
-                            tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
-                            idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
-                            sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
-                            if model_ground_truth is not None:
-                                gt_dict[trace_name_tmp] = data[c_tmp][s_tmp][
-                                    "gt_parameter_vector"
-                                ][idx_tmp]
-                        else:
-                            pass
+            # for c_tmp in data.keys():
+            #     for s_tmp in data[c_tmp].keys():
+            
+            # AF COMMENT: Is this sorting of trace names necessrary?
+            sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
+            for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
+                if (
+                    trace_name_tmp.split("_")[0].split("(")[0]
+                    in model_config[model_fitted]["params"]
+                ):
+                    tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
+                    idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
+                    sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
+                    if model_ground_truth is not None:
+                        gt_dict[trace_name_tmp] = data[c_tmp][s_tmp][
+                            "gt_parameter_vector"
+                        ][idx_tmp]
+                else:
+                    pass
 
-                    data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
+            data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
 
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
