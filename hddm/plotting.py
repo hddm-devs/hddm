@@ -1679,7 +1679,7 @@ def posterior_pair_plot(
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
             )
-            
+            print(data[c_tmp][s_tmp])
             g = sns.PairGrid(
                 data[c_tmp][s_tmp]["traces"].sample(n_subsample),
                 height=height,
