@@ -1652,6 +1652,8 @@ def posterior_pair_plot(
     sns.set_context("notebook", font_scale = font_scale)
     plot_cnt = 0
     for c_tmp in data.keys():
+        print('data[c_tmp].keys()')
+        print(data[c_tmp].keys())
         for s_tmp in data[c_tmp].keys():
             # Turn traces into dataframe:
             # Get all ground truths
@@ -1768,8 +1770,8 @@ def posterior_pair_plot(
                 plt.setp(ax.get_xticklabels(), rotation=45)
 
             g.fig.suptitle(model_fitted.upper() + \
-                           ' , condition: ' + c_tmp + \
-                           ', subject: ' + s_tmp  , y=1.03, fontsize=24)
+                           ' , condition: ' + str(c_tmp) + \
+                           ', subject: ' + str(s_tmp)  , y=1.03, fontsize=24)
 
             # posterior_samples_key_set = np.sort(posterior_samples.keys())
             # If ground truth is available add it in:
