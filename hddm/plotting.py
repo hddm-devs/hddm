@@ -183,8 +183,8 @@ def make_trace_plotready_h_c(
                     if not ("subj" in trace_key) and ("(" in trace_key):
                         key_param_only = trace_key.split("(")[0]
 
-                    print('key_param_only')
-                    print(key_param_only)
+                    #print('key_param_only')
+                    #print(key_param_only)
 
                     trace_names_param_only_tmp.append(key_param_only)
 
@@ -207,8 +207,8 @@ def make_trace_plotready_h_c(
 
             dat_h_c[key][subj_id]["trace_names"] = trace_names_tmp
 
-    print('dat_h_c')
-    print(dat_h_c)
+    #print('dat_h_c')
+    #print(dat_h_c)
     return dat_h_c
 
 
@@ -446,8 +446,8 @@ def filter_subject_condition_traces(
             is_group_model=is_group_model,
         )
 
-        print('condition wise params dict: ')
-        print(condition_wise_params_dict)
+        #print('condition wise params dict: ')
+        #print(condition_wise_params_dict)
 
         for key_tmp in condition_wise_params_dict.keys():
             # Condition wise params carries all expected parameter names for a given condition
@@ -476,8 +476,8 @@ def filter_subject_condition_traces(
             is_group_model=is_group_model,
             model_ground_truth=model_ground_truth,
         )
-        print('plotready_traces')
-        print(plotready_traces)
+        #print('plotready_traces')
+        #print(plotready_traces)
         return plotready_traces
 
     # Scenario 2: Single condition single subject model (or data collapsed across subjects)
@@ -1662,8 +1662,8 @@ def posterior_pair_plot(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
     # return data
-    print('data: ')
-    print(data)
+    #print('data: ')
+    #print(data)
     plot_cnt = 0
     for c_tmp in data.keys():
         for s_tmp in data[c_tmp].keys():
@@ -1672,21 +1672,21 @@ def posterior_pair_plot(
             gt_dict = {}
             for c_tmp in data.keys():
                 for s_tmp in data[c_tmp].keys():
-                    print('moving across subjects')
+                    #print('moving across subjects')
                     sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
                     for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
-                        print('trace_name_tmp')
-                        print(trace_name_tmp)
-                        print('after split')
-                        print(trace_name_tmp.split("_")[0].split("(")[0])
+                        #print('trace_name_tmp')
+                        #print(trace_name_tmp)
+                        #print('after split')
+                        #print(trace_name_tmp.split("_")[0].split("(")[0])
                         if (
                             trace_name_tmp.split("_")[0].split("(")[0]
                             in model_config[model_fitted]["params"]
                         ):
-                            print('trace_name_tmp_repeat')
-                            print(trace_name_tmp)
+                            #print('trace_name_tmp_repeat')
+                            #print(trace_name_tmp)
                             tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
-                            print(tmp_param)
+                            #print(tmp_param)
                             idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
                             sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
                             if model_ground_truth is not None:
@@ -1697,14 +1697,14 @@ def posterior_pair_plot(
                             pass #print("problem")
 
                     data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
-                    print(data[c_tmp][s_tmp]["trace_names"])
+                    #print(data[c_tmp][s_tmp]["trace_names"])
 
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
             )
             
-            print(data[c_tmp][s_tmp]["traces"].sample(n_subsample))
-            print(type(data[c_tmp][s_tmp]["traces"].sample(n_subsample)))
+            #print(data[c_tmp][s_tmp]["traces"].sample(n_subsample))
+            #print(type(data[c_tmp][s_tmp]["traces"].sample(n_subsample)))
             #return data[c_tmp][s_tmp]["traces"].sample(n_subsample)
             # g = sns.PairGrid(
             #     data[c_tmp][s_tmp]["traces"].sample(n_subsample)
@@ -1726,6 +1726,7 @@ def posterior_pair_plot(
                 cmap="Purples_d",
             )  # 'Greys'
 
+            # Hide upper triangular part
             for i, j in zip(*np.triu_indices_from(g.axes, 1)):
                 g.axes[i, j].set_visible(False)
 
@@ -1824,6 +1825,8 @@ def posterior_pair_plot(
                         color="red",
                         markersize=10,
                     )
+                    y_lims_tmp = g.axes[i, i].get_ylim()
+                    g.axes[i, i].set_ylim(0, y_lims_tmp[1])
 
             if save == True:
                 if save_path is None:
