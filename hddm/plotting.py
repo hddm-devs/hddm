@@ -1646,7 +1646,7 @@ def posterior_pair_plot(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
 
-    print(data)
+    #print(data)
 
     sns.set()
     sns.set_theme(style = 'ticks', rc = {"axes.spines.right": False, 
@@ -1658,10 +1658,8 @@ def posterior_pair_plot(
             # Turn traces into dataframe:
             # Get all ground truths
             gt_dict = {}
-            # for c_tmp in data.keys():
-            #     for s_tmp in data[c_tmp].keys():
             
-            # AF COMMENT: Is this sorting of trace names necessrary?
+            # AF COMMENT: Is this sorting of trace names necessrary ?
             sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
             for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
                 if (
