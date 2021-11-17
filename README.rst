@@ -53,6 +53,15 @@ Features
   
 * NEW: HDDM extension to fitting arbitrary sequential sampling models beyond the DDM, using neural networks. Includes all the features of regular HDDM including regression etc, and more. For methods on how to use this extension, see tutorial https://github.com/lnccbrown/lans/tree/master/hddmnn_tutorial and in the paper here: https://elifesciences.org/articles/65074.
 
+* HDDM 0.9.0 brings a host of new features. HDDM includes likelihod approximation networks via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
+  This allows fitting of a number of variants of sequential sampling models. You can now easily use custom likelihoods
+  for model fitting. We included a range of new **simulators**, which allow data generation for a host of variants of sequential sampling models.
+  There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
+  Some sampler settings are now exposed to the user via a customizable **model_config dictionary**. Lastly you are now able to save and load **HDDMRegression** models with 
+  custom link functions. 
+  Please see the **documentation** (under **LAN Extension**) for illustrations on how to use the new features.
+
+
 Comparison to other packages
 ============================
 
@@ -93,6 +102,28 @@ please see the main `publication`_.
 Installation
 ============
 
+As of release 0.9.0, the most convenient way to install HDDM, is to directly 
+install via git.
+
+:: 
+
+    pip install git+https://github.com/hddm-devs/hddm
+
+
+A common issue is that the installation of the **pymc** package (a necessary dependency),
+is hampered by issues with compiling its fortran code. Try downgrading you the version of your
+**gcc* compiler. This can be done on a MAC (not the new M1 versions tragically), via 
+
+::
+
+    brew install gcc@9
+
+In case you do not have the **brew** command, install the `Homebrew <https://brew.sh/>`_ .
+
+You usually do not run into problems with **linux** machines.
+
+
+(Previous instructions for HDDM <= 0.8.0)
 As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
 
 The easiest way to install HDDM is through Anaconda (available for
