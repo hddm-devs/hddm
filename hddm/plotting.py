@@ -1816,6 +1816,10 @@ def posterior_pair_plot(
                         )
 
                 for i in range(g.axes.shape[0]):
+                    if i == 0:
+                        y_lims_tmp = g.axes[i, i].get_ylim()
+                        g.axes[i, i].set_ylim(0, y_lims_tmp[1])
+                    
                     g.axes[i, i].plot(
                         data[c_tmp][s_tmp]["gt_parameter_vector"][
                             i
@@ -1825,8 +1829,7 @@ def posterior_pair_plot(
                         color="red",
                         markersize=10,
                     )
-                    y_lims_tmp = g.axes[i, i].get_ylim()
-                    g.axes[i, i].set_ylim(0, y_lims_tmp[1])
+
 
             if save == True:
                 if save_path is None:
