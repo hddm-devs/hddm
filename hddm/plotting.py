@@ -1836,6 +1836,7 @@ def posterior_pair_plot(
                         color="red",
                         markersize=10,
                     )
+                    g.axes[i, i].yaxis.set_ticks([])
 
 
             if save == True:
