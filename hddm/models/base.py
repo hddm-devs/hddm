@@ -1177,6 +1177,7 @@ class HDDMBase(AccumulatorModel):
         self.cdf_range = (-cdf_bound, cdf_bound)
 
         # set wfpt class
+        # AF-TODO: Add argument to allow changing sampling_method (mostly to test cssm vs. cdf)
         self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(
             wp, cdf_range=self.cdf_range
         )
