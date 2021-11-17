@@ -114,17 +114,6 @@ class HDDM(HDDMBase):
             self.slice_widths = model_config[self.model]["slice_widths"]
             self.slice_widths["p_outlier"] = 1.0
         else:
-            # Now abandoned --> This was previously encompassing all models including
-            # the LAN based ones
-            # self.slice_widths = {"a": 1, "a_std": 1, "t": 0.01, "t_std": 0.15,
-            #                      "st": 0.1, "v": 1.5, "v_std": 1, "sv": 0.5,  # from sv = 3.00
-            #                      "z": 0.1, "sz": 1.1, "z_trans": 0.2, "p_outlier": 1.0,
-            #                      "alpha": 1.0, "dual_alpha": 1.5, "theta": 0.1, "beta": 1.0,
-            #                      "g": 0.5, "g_trans": 0.2, "vh": 1.5, "vl1": 1.5,
-            #                      "vl2": 1.5, "zh": 0.1, "zl1": 0.1, "zl2": 0.1,
-            #                      "zh_trans": 0.2, "zl1_trans": 0.2, "zl2_trans": 0.2, "d": 0.1,
-            #                      "d_trans": 0.2,
-            #                      }
             self.slice_widths = {
                                   "a": 1,
                                   "t": 0.01,
