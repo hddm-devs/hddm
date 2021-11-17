@@ -1795,6 +1795,9 @@ def posterior_pair_plot(
 
             for ax in g.axes.flat:
                 plt.setp(ax.get_xticklabels(), rotation=45)
+                ax.set_yticklabels(ax.get_yticklabels(), size = 14)
+                ax.set_xticklabels(ax.get_xticklabels(), size = 14)
+                #plt.setp(ax.get_xticklabels(), fontsize)
 
             g.fig.suptitle(model_fitted.upper(), y=1.03, fontsize=24)
 
@@ -1863,7 +1866,6 @@ def posterior_pair_plot(
 
     # Show
     return
-
 
 def caterpillar_plot(
     hddm_model=None,
