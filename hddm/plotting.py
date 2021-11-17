@@ -1611,11 +1611,11 @@ def posterior_predictive_plot(
 
     return
 
-
 # Posterior Pair Plot
 def posterior_pair_plot(
     hddm_model=None,
     axes_limits="samples",  # 'samples' or dict({'parameter_name': [lower bound, upper bound]})
+    font_scale = 1.5,
     height=2,
     aspect_ratio=1,
     n_subsample=1000,
@@ -1664,6 +1664,8 @@ def posterior_pair_plot(
     # return data
     #print('data: ')
     #print(data)
+    sns.set()
+    sns.set_context("notebook", font_scale = font_scale)
     plot_cnt = 0
     for c_tmp in data.keys():
         for s_tmp in data[c_tmp].keys():
@@ -1795,8 +1797,8 @@ def posterior_pair_plot(
 
             for ax in g.axes.flat:
                 plt.setp(ax.get_xticklabels(), rotation=45)
-                ax.set_yticklabels(ax.get_yticklabels(), size = 14)
-                ax.set_xticklabels(ax.get_xticklabels(), size = 14)
+                # ax.set_yticklabels(ax.get_yticklabels(), size = 14)
+                # ax.set_xticklabels(ax.get_xticklabels(), size = 14)
                 #plt.setp(ax.get_xticklabels(), fontsize)
 
             g.fig.suptitle(model_fitted.upper(), y=1.03, fontsize=24)
