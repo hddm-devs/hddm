@@ -1681,7 +1681,7 @@ def posterior_pair_plot(
                         print(trace_name_tmp.split("_")[0].split("(")[0])
                         if (
                             trace_name_tmp.split("_")[0].split("(")[0]
-                            in model_config['angle']["params"]
+                            in model_config[model_fitted]["params"]
                         ):
                             print('trace_name_tmp_repeat')
                             print(trace_name_tmp)
