@@ -1,8 +1,6 @@
 """
 """
-#from hddm.torch.mlp_inference_class import load_torch_mlp
 import hddm
-from collections import OrderedDict
 
 from kabuki.hierarchical import (
     Knode,
@@ -10,11 +8,8 @@ from kabuki.hierarchical import (
 
 # from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
-#from hddm.keras_models import load_mlp
-#from hddm.cnn.wrapper import load_cnn
 
 try:
-    # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
     print('It seems that you do not have pytorch installed.' + \
@@ -120,7 +115,6 @@ class HDDMnn(HDDM):
 
     def __init__(self, *args, **kwargs):
 
-        # kwargs['nn'] = True
         self.nn = True
         print(
             "Setting priors uninformative (LANs only work with uninformative priors for now)"
@@ -131,18 +125,6 @@ class HDDMnn(HDDM):
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
-        #self.nbin = kwargs.pop("nbin", 512)
-        # self.is_informative = kwargs.pop('informative', False)
-
-        # Load Network and likelihood function
-        # if self.network_type == "mlp":
-        #     if self.network is None:
-        #         self.network = load_mlp(model=self.model)
-        #     network_dict = {"network": self.network}
-            
-        #     self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-        #         model=self.model, **network_dict
-        #     )
 
         if self.network_type == "torch_mlp":
             if self.network is None:
@@ -157,7 +139,6 @@ class HDDMnn(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-        #if self.network_type == "mlp" or self.network_type == "torch_mlp":
         return Knode(
             self.wfpt_nn,
             "wfpt",
@@ -177,13 +158,6 @@ class HDDMnn(HDDM):
 
     def __setstate__(self, d):
 
-        # if d["network_type"] == "mlp":
-        #     d["network"] = load_mlp(model=d["model"])
-        #     network_dict = {"network": d["network"]}
-        #     d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
-        #         model=d["model"], **network_dict
-        #     )
-
         if d["network_type"] == "torch_mlp":
             d["network"] = load_torch_mlp(model=d["model"])
             network_dict = {"network": d["network"]}
@@ -193,7 +167,7 @@ class HDDMnn(HDDM):
 
         super(HDDMnn, self).__setstate__(d)
 
-
+# --------------------------------------------------------------------
 # Knode definition for previous cnn network
 
         # elif self.network_type == "cnn":

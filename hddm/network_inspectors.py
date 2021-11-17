@@ -4,8 +4,6 @@ import numpy as np
 # plotting
 import matplotlib.pyplot as plt
 
-# import matplotlib as mpl
-# from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 from matplotlib import cm
 
@@ -14,17 +12,12 @@ import hddm
 import pandas as pd
 import seaborn as sns
 
-#from hddm.torch_models import load_mlp
-# from hddm.cnn.wrapper import load_cnn
-
 try:
     #print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
     print('It seems that you do not have pytorch installed.' + \
           ' You cannot use the network_inspector module.')
-
-#from hddm.torch.mlp_inference_class import load_torch_mlp
 
 from hddm.simulators.basic_simulator import *
 
@@ -34,55 +27,6 @@ import os
 from hddm.model_config import model_config
 
 # NETWORK LOADERS -------------------------------------------------------------------------
-
-# def get_mlp(model="angle"):
-#     """Returns the keras network which is the basis of the MLP likelihoods
-
-#     :Arguments:
-#         model: str <default='angle'>
-#         Specifies the models you would like to load
-
-#     Returns:
-#         keras.model.predict_on_batch
-#         Returns a function that gives you access to a forward pass through the MLP.
-#         This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
-#         model parameters trailed by a reaction time and a choice.
-#         (e.g. input dims for a ddm MLP could be (3, 6), 3 datapoints and 4 parameters + reaction time and choice).
-#         Predict on batch then returns for each row of the input the log likelihood of the respective parameter vector and datapoint.
-
-#     :Example:
-#         >>> forward = hddm.network_inspectors.get_mlp(model = 'ddm')
-#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5, 1.0, -1.0], [0.5, 1.5, 0.5, 0.5, 1.0, -1.0]], dtype = np.float32)
-#         >>> forward(data)
-#     """
-
-#     network = load_mlp(model=model)
-#     return network.predict_on_batch
-
-
-# def get_cnn(model="angle", nbin=512):
-#     """Returns tensorflow CNN which is the basis of the CNN likelihoods
-
-#     :Arguments:
-#         model: str <default='angle'>
-#         Specifies the models you would like to load
-
-#     Returns:
-#         function
-#             Returns a function that you can call passing as an argument a 1d or 2d np.array with datatype np.float32.
-#             The shape of the input to this function should match the number of parameter vectors (rows) and the corresponding parameters (cols).
-#             Per paraemter vector passed, this function will give out an np.array() of shape (1, n_choice_options * nbins).
-#             This output defines a probability mass functions over discretized rt / choice space. The first 'n_choice_options' indices
-#             define the probability of landing in the first bin for each choice option etc..
-
-#     Example:
-#         :Example:
-#         >>> forward = hddm.network_inspectors.get_cnn(model = 'ddm')
-#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5], [0.5, 1.5, 0.5, 0.5]], dtype = np.float32)
-#         >>> forward(data)
-#     """
-#     network = load_cnn(model=model, nbin=nbin)
-#     return network
 
 def get_torch_mlp(model="angle", nbin=512):
     """Returns the torch network which is the basis of the TORCH_MLP likelihoods
@@ -329,6 +273,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     cols=3,
     save=False,
     show=True,
+    font_scale = 1.5,
 ):
     """Function creates a plot that compares kernel density estimates from simulation data with mlp output.
 
@@ -348,6 +293,9 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
             Whether to save the plot.
         show: bool <default=True>
             Wheter to show the plot.
+        font_scale: float <default=1.5>
+            Seaborn setting, exposed here to be adjusted by user, since it is not always
+            obvious which value is best.
 
     :Returns:
         empty
@@ -480,12 +428,12 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
             ax[row_tmp, col_tmp].tick_params(color="white")
 
         if col_tmp == 0:
-            ax[row_tmp, col_tmp].set_ylabel("likelihood", fontsize=24)
+            ax[row_tmp, col_tmp].set_ylabel("likelihood", fontsize=20)
 
         # tmp title
         ax[row_tmp, col_tmp].set_title(str(i), fontsize=20)  # ax_titles[i],
-        ax[row_tmp, col_tmp].tick_params(axis="y", size=16)
-        ax[row_tmp, col_tmp].tick_params(axis="x", size=16)
+        ax[row_tmp, col_tmp].tick_params(axis="y", size=14)
+        ax[row_tmp, col_tmp].tick_params(axis="x", size=14)
 
     for i in range(parameter_df.shape[0], rows * cols, 1):
         row_tmp = int(np.floor(i / cols))
@@ -671,3 +619,53 @@ def lan_manifold(
 
     plt.close()
     return
+
+# -------------------------------------------------------------------------------------
+# def get_mlp(model="angle"):
+#     """Returns the keras network which is the basis of the MLP likelihoods
+
+#     :Arguments:
+#         model: str <default='angle'>
+#         Specifies the models you would like to load
+
+#     Returns:
+#         keras.model.predict_on_batch
+#         Returns a function that gives you access to a forward pass through the MLP.
+#         This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
+#         model parameters trailed by a reaction time and a choice.
+#         (e.g. input dims for a ddm MLP could be (3, 6), 3 datapoints and 4 parameters + reaction time and choice).
+#         Predict on batch then returns for each row of the input the log likelihood of the respective parameter vector and datapoint.
+
+#     :Example:
+#         >>> forward = hddm.network_inspectors.get_mlp(model = 'ddm')
+#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5, 1.0, -1.0], [0.5, 1.5, 0.5, 0.5, 1.0, -1.0]], dtype = np.float32)
+#         >>> forward(data)
+#     """
+
+#     network = load_mlp(model=model)
+#     return network.predict_on_batch
+
+
+# def get_cnn(model="angle", nbin=512):
+#     """Returns tensorflow CNN which is the basis of the CNN likelihoods
+
+#     :Arguments:
+#         model: str <default='angle'>
+#         Specifies the models you would like to load
+
+#     Returns:
+#         function
+#             Returns a function that you can call passing as an argument a 1d or 2d np.array with datatype np.float32.
+#             The shape of the input to this function should match the number of parameter vectors (rows) and the corresponding parameters (cols).
+#             Per paraemter vector passed, this function will give out an np.array() of shape (1, n_choice_options * nbins).
+#             This output defines a probability mass functions over discretized rt / choice space. The first 'n_choice_options' indices
+#             define the probability of landing in the first bin for each choice option etc..
+
+#     Example:
+#         :Example:
+#         >>> forward = hddm.network_inspectors.get_cnn(model = 'ddm')
+#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5], [0.5, 1.5, 0.5, 0.5]], dtype = np.float32)
+#         >>> forward(data)
+#     """
+#     network = load_cnn(model=model, nbin=nbin)
+#     return network

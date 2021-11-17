@@ -1,9 +1,6 @@
 import hddm
 
-# from hddm.models import HDDM
 from hddm.models import HDDMRegressor
-#from hddm.keras_models import load_mlp
-#from hddm.cnn.wrapper import load_cnn
 
 try:
     #print('HDDM: Trying import of pytorch related classes.')
@@ -98,20 +95,6 @@ class HDDMnnRegressor(HDDMRegressor):
         
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
-        #self.nbin = kwargs.pop("nbin", 512)
-        # self.is_informative = kwargs.pop('informative', False)
-
-        # Load Network
-        # if self.network_type == "mlp":
-        #     if self.network is None:
-        #         self.network = load_mlp(model=self.model)
-        #     network_dict = {"network": self.network}
-
-        #     self.wfpt_nn_reg_class = (
-        #         hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-        #             model=self.model, **network_dict
-        #         )
-        #     )
 
         if self.network_type == "torch_mlp":
             if self.network is None:
@@ -152,14 +135,5 @@ class HDDMnnRegressor(HDDMRegressor):
             network_dict = {'network': d["network"]}
             d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
                 model = d["model"], **network_dict)
-
-        # if d["network_type"] == "mlp":
-        #     d["network"] = load_mlp(model=d["model"])
-        #     network_dict = {"network": d["network"]}
-        #     d[
-        #         "wfpt_nn_reg_class"
-        #     ] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-        #         model=d["model"], **network_dict
-        #     )
 
         super(HDDMnnRegressor, self).__setstate__(d)

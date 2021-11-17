@@ -1,7 +1,5 @@
 from hddm.models import HDDMStimCoding
 from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
-#from hddm.keras_models import load_mlp
-#from hddm.cnn.wrapper import load_cnn
 
 try:
     # print('HDDM: Trying import of pytorch related classes.')
@@ -10,8 +8,6 @@ except:
     print('It seems that you do not have pytorch installed.' + \
           'The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding' + \
           'classes will not work')
-
-#from hddm.torch.mlp_inference_class import load_torch_mlp
 
 import hddm
 class HDDMnnStimCoding(HDDMStimCoding):
@@ -71,19 +67,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
-        self.nbin = kwargs.pop("nbin", 512)
-        # self.is_informative = kwargs.pop('informative', False)
-
-        # Attach likelihood corresponding to model
-        # if self.network_type == "mlp":
-        #     if self.network is None:
-        #         self.network = load_mlp(model=self.model)
-        #     network_dict = {"network": self.network}
-
-        #     self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-        #         model=self.model, **network_dict
-        #     )
-
+        
         if self.network_type == "torch_mlp":
             if self.network is None:
                 self.network = load_torch_mlp(model = self.model)
@@ -122,13 +106,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
         return d
 
     def __setstate__(self, d):
-        # if d["network_type"] == "mlp":
-        #     d["network"] = load_mlp(model=d["model"])
-        #     network_dict = {"network": d["network"]}
-        #     d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
-        #         model=d["model"], **network_dict
-        #     )
-
+        
         if d["network_type"] == "torch_mlp":
             d["network"] = load_torch_mlp(model=d["model"])
             network_dict = {"network": d["network"]}
