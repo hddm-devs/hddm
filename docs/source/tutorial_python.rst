@@ -1,3 +1,5 @@
+.. index:: Tutorial
+.. _chap_demo:
 
 Demo
 ----
@@ -21,6 +23,7 @@ plots.
 
     import pandas as pd
     import matplotlib.pyplot as plt
+
 Next, we will import HDDM. At the time of this writing, this version was
 used.
 
@@ -73,7 +76,7 @@ stimulation (dbs) of the STN, which interferes with normal processing.
 
 The first ten lines of the data file look as follows:
 
-.. code:: python
+.. code:: 
 
     !head cavanagh_theta_nn.csv
 
@@ -96,11 +99,10 @@ We use the ``hddm.load_csv()`` function to load this file.
 .. code:: python
 
     data = hddm.load_csv('./cavanagh_theta_nn.csv')
+
 .. code:: python
 
     data.head(10)
-
-
 
 .. raw:: html
 

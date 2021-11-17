@@ -13,7 +13,6 @@ from nose import SkipTest
 import hddm
 from hddm.diag import check_model
 
-
 def add_outliers(data, p_outlier):
     """add outliers to data. half of the outliers will be fast, and the rest will be slow
     Input:
@@ -27,12 +26,12 @@ def add_outliers(data, p_outlier):
     outliers = data[:n_outliers].copy()
 
     # fast outliers
-    outliers.rt[: n_outliers // 2] = (
+    outliers.iloc[: (n_outliers // 2), list(outliers.columns).index('rt')] = (
         np.random.rand(n_outliers // 2) * (min(abs(data["rt"])) - 0.11) + 0.11
     )
 
     # slow outliers
-    outliers.rt[n_outliers // 2 :] = np.random.rand(
+    outliers.iloc[(n_outliers // 2) :, list(outliers.columns).index('rt')] = np.random.rand(
         n_outliers - n_outliers // 2
     ) * 2 + max(abs(data["rt"]))
     outliers.response = np.random.randint(0, 2, n_outliers)
@@ -123,7 +122,7 @@ def set_hddm_nodes_values(model, params_dict):
             org_name = param_name
             transform = lambda x: x
         try:
-            model.nodes_db.ix[param_name]["node"].value = transform(
+            model.nodes_db.loc[param_name]["node"].value = transform(
                 params_dict[org_name]
             )
         except KeyError:
@@ -170,6 +169,8 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
     np.random.seed(seed)
     for include in include_sets:
         for i in range(repeats):
+            # AF-comment: DONT UNDERSTAND THIS TEST
+            # AF-comment: Recover first with HDDMTruncated --> then with standard HDDM and see if same ???
             # generate params for experiment with n_conds conditions
             cond_params, merged_params = hddm.generate.gen_rand_params(
                 include=include, cond_dict={"v": v}
@@ -178,7 +179,7 @@ def recovery_with_outliers(repeats=10, seed=1, random_p_outlier=True):
             print(merged_params)
 
             # generate samples
-            samples, _ = hddm.generate.gen_rand_data(cond_params, size=200)
+            samples, _ = hddm.generate.gen_rand_data(cond_params, size=500)
 
             # get best recovered_params
             h = hddm.models.HDDMTruncated(
@@ -232,10 +233,10 @@ def test_recovery_with_outliers():
 
 
 def test_recovery_with_random_p_outlier():
-    """test for recovery with o_outliers as random variable"""
+    """test for recovery with p_outliers as random variable"""
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=True)
 
 
 def test_recovery_with_fixed_p_outlier():
-    """test for recovery with o_outliers as a fixed value"""
+    """test for recovery with p_outliers as a fixed value"""
     recovery_with_outliers(repeats=5, seed=1, random_p_outlier=False)

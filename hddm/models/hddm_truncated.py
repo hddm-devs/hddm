@@ -4,6 +4,13 @@ from hddm.models import HDDMBase
 
 
 class HDDMTruncated(HDDMBase):
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, "nn"):
+            pass
+        else:
+            self.nn = False
+        super(HDDMTruncated, self).__init__(*args, **kwargs)
+
     def _create_stochastic_knodes(self, include):
         knodes = OrderedDict()
         if "a" in include:

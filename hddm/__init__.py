@@ -2,12 +2,17 @@
 
 __docformat__ = "restructuredtext"
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 
+from . import simulators
 from . import likelihoods
+from . import likelihoods_mlp
 from . import generate
 from . import utils
+from . import plotting
+from . import network_inspectors
 from . import models
+from . import model_config
 import cdfdif_wrapper
 
 from .models import *

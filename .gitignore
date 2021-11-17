@@ -1,7 +1,11 @@
 *.pyc
 *.so
 *.c
+*.cpp
 *~
 build/
 dist/
 docs/build
+.eggs/
+.egg-info/
+HDDM.egg-info/

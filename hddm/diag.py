@@ -292,7 +292,7 @@ def test_acc_full_intrp(include=(), n_conds=6, use_db=False):
 
     return i_res
 
-
+# AF-comment: Import this from kabuki?
 def check_geweke(model, assert_=True):
     # Test for convergence using geweke method
     for param in model.group_params.values():

@@ -9,6 +9,10 @@
 
 """
 
+# AF - New:
+from hddm.simulators import *
+from hddm.model_config import model_config
+
 
 from collections import OrderedDict
 
@@ -23,9 +27,11 @@ import inspect
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
 
+# AF-TODO: This should be changed to use 
 try:
-    from IPython import parallel
-    from IPython.parallel.client.asyncresult import AsyncResult
+    import ipyparallel #as parallel
+    #from IPython import parallel
+    #from IPython.parallel.client.asyncresult import AsyncResult
 except ImportError:
     pass
 
@@ -33,9 +39,37 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
-        data = hddm.utils.flip_errors(data)
-        self.std_depends = kwargs.pop("std_depends", False)
+        #print("printing self.nn")
+        #print(self.nn)
+        if self.nn:
+            if model_config[self.model]['n_choices'] == 2:
+                #print("2-choice model --> passed through flip errors nn")
+                data = hddm.utils.flip_errors_nn(data, self.network_type)
+            else:
+                #print("More than 2-choice model --> don't flip any responses.")
+                #print("Make sure you supplied rt and choice data in appropriate format!")
+                data["response"] = data["response"].values.astype(np.float32)
+                data["rt"] = data["rt"].values.astype(np.float32)
+                pass
 
+        else:
+            data = hddm.utils.flip_errors(data)
+
+        # We attach a 'model' attribute to the class which is helpful to make
+        # some the of plotting functions in the 'graphs' module work for HDDM and HDDMnn
+        if not self.nn:
+            if (
+                ("sv" in self.include)
+                or ("st" in self.include)
+                or ("sz" in self.include)
+            ):
+                self.model = "full_ddm"
+                print("Set model to full_ddm")
+            else:
+                self.model = "ddm"
+                print("Set model to ddm")
+
+        self.std_depends = kwargs.pop("std_depends", False)
         super(AccumulatorModel, self).__init__(data, **kwargs)
 
     def _create_an_average_model(self):
@@ -172,7 +206,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         # prepare view for parallelization
         if parallel_profile is not None:  # create view
-            client = parallel.Client(profile=parallel_profile)
+            client = ipyparallel.Client(profile=parallel_profile)
             view = client.load_balanced_view()
             runs_list = [None] * n_bootstraps
         else:
@@ -606,22 +640,33 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_invlogit(
-        self, name, value, g_mu=None, g_tau=15 ** -2, std_std=0.2, std_value=0.1
+        self,
+        name,
+        value,
+        g_mu=None,
+        g_tau=15 ** -2,
+        std_std=0.2,
+        std_value=0.1,
+        lower=0.0,  # previously the lower and upper arguments were not there !
+        upper=1.0,
     ):
         """Similar to _create_family_normal_normal_hnormal() but adds a invlogit
         transform knode to the subject and group mean nodes. This is useful
         when the parameter space is restricted from [0, 1].
 
         See _create_family_normal_normal_hnormal() help for more information.
-
         """
 
         if g_mu is None:
             g_mu = value
 
         # logit transform values
-        value_trans = np.log(value) - np.log(1 - value)
-        g_mu_trans = np.log(g_mu) - np.log(1 - g_mu)
+        tmp_val = (value - lower) / (upper - lower)
+        tmp_g_mu = (g_mu - lower) / (upper - lower)
+
+        # logit transform values
+        value_trans = np.log(tmp_val) - np.log(1 - tmp_val)
+        g_mu_trans = np.log(tmp_g_mu) - np.log(1 - tmp_g_mu)
 
         knodes = OrderedDict()
 
@@ -637,9 +682,28 @@ class AccumulatorModel(kabuki.Hierarchical):
                 hidden=True,
             )
 
-            g = Knode(pm.InvLogit, name, ltheta=g_trans, plot=True, trace=True)
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
+            # g = Knode(pm.InvLogit,
+            #           name,
+            #           ltheta = g_trans,
+            #           plot = True,
+            #           trace = True
+            #           )
+
+            # Using pm.deterministic here, better would be something like pm.InvLogitGeneral
+            g = Knode(
+                pm.Deterministic,
+                name,
+                eval=lambda x: lower
+                + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                x=g_trans,
+                plot=True,
+                trace=True,
+            )
 
             depends_std = self.depends[name] if self.std_depends else ()
+
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
@@ -671,11 +735,22 @@ class AccumulatorModel(kabuki.Hierarchical):
                 hidden=True,
             )
 
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
+            # subj = Knode(pm.InvLogit,
+            #              '%s_subj'%name,
+            #              ltheta=subj_trans,
+            #              depends=('subj_idx',),
+            #              plot=self.plot_subjs,
+            #              trace=True,
+            #              subj=True)
+
             subj = Knode(
-                pm.InvLogit,
+                pm.Deterministic,
                 "%s_subj" % name,
-                ltheta=subj_trans,
-                depends=("subj_idx",),
+                eval=lambda x: lower
+                + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                x=subj_trans,
                 plot=self.plot_subjs,
                 trace=True,
                 subj=True,
@@ -701,8 +776,23 @@ class AccumulatorModel(kabuki.Hierarchical):
                 hidden=True,
             )
 
-            g = Knode(pm.InvLogit, "%s" % name, ltheta=g_trans, plot=True, trace=True)
+            # This needs some care, InvLogit should be applied on a transformed value here
+            # to properly accomodate the generalized invlogit
 
+            # Here my manual version
+            g = Knode(
+                pm.Deterministic,
+                "%s" % name,
+                eval=lambda x: lower
+                + ((upper - lower) * (np.exp(x)) / (1 + np.exp(x))),
+                x=g_trans,
+                plot=True,
+                trace=True,
+            )
+
+            # Original version
+            # g = Knode(pm.InvLogit, '%s'%name, ltheta=g_trans, plot=True,
+            #           trace=True )
             knodes["%s_trans" % name] = g_trans
             knodes["%s_bottom" % name] = g
 
@@ -1016,33 +1106,48 @@ class HDDMBase(AccumulatorModel):
         )
 
         self._kwargs = kwargs
-
-        self.include = set(["v", "a", "t"])
-        if include is not None:
-            if include == "all":
-                [
-                    self.include.add(param)
-                    for param in ("z", "st", "sv", "sz", "p_outlier")
-                ]
-            elif isinstance(include, str):
-                self.include.add(include)
+        #print(kwargs)
+        #print(include)
+        # Check if self has model attribute
+        if not hasattr(self, 'model'):
+            print('No model attribute --> setting up standard HDDM')
+            
+            if ('st' in include) or ('sz' in include) or ('sv' in include):
+                self.model = 'full_ddm'
             else:
-                [self.include.add(param) for param in include]
+                self.model = 'ddm'
 
-        if bias:
-            self.include.add("z")
+        # For 2-choice models adjust include statement
+        if model_config[self.model]["n_choices"] == 2:
+            print('Includes supplied: ', include)
+            self.include = set(["v", "a", "t"])
+            if include is not None:
+                if include == "all":
+                    [
+                        self.include.add(param)
+                        for param in ("z", "st", "sv", "sz", "p_outlier")
+                    ]
+                elif isinstance(include, str):
+                    self.include.add(include)
+                else:
+                    [self.include.add(param) for param in include]
 
-        possible_parameters = (
-            "v",
-            "a",
-            "t",
-            "z",
-            "st",
-            "sz",
-            "sv",
-            "p_outlier",
-            "alpha",
-        )
+            if bias:
+                self.include.add("z")
+
+        else:
+            self.include = set()
+            [self.include.add(param) for param in include]
+
+        # Automate possible_parameters
+        if self.nn:
+            possible_parameters = tuple(model_config[self.model]["params"]) + ("p_outlier",)
+        else:
+            possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "alpha",)
+        
+        # possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "dual_alpha",
+        #     "theta", "alpha", "beta", "g", "alpha_diff", "zh", "zl1", "zl2", "vh", "vl1", "vl2", "d")
+
         assert self.include.issubset(
             possible_parameters
         ), """Received an invalid parameter using the 'include' keyword.
@@ -1072,6 +1177,7 @@ class HDDMBase(AccumulatorModel):
         self.cdf_range = (-cdf_bound, cdf_bound)
 
         # set wfpt class
+        # AF-TODO: Add argument to allow changing sampling_method (mostly to test cssm vs. cdf)
         self.wfpt_class = hddm.likelihoods.generate_wfpt_stochastic_class(
             wp, cdf_range=self.cdf_range
         )
@@ -1081,7 +1187,6 @@ class HDDMBase(AccumulatorModel):
     def __getstate__(self):
         d = super(HDDMBase, self).__getstate__()
         del d["wfpt_class"]
-
         return d
 
     def __setstate__(self, d):
@@ -1092,31 +1197,53 @@ class HDDMBase(AccumulatorModel):
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = OrderedDict()
-        wfpt_parents["a"] = knodes["a_bottom"]
-        wfpt_parents["v"] = knodes["v_bottom"]
-        wfpt_parents["t"] = knodes["t_bottom"]
 
-        wfpt_parents["sv"] = (
-            knodes["sv_bottom"]
-            if "sv" in self.include
-            else self.default_intervars["sv"]
-        )
-        wfpt_parents["sz"] = (
-            knodes["sz_bottom"]
-            if "sz" in self.include
-            else self.default_intervars["sz"]
-        )
-        wfpt_parents["st"] = (
-            knodes["st_bottom"]
-            if "st" in self.include
-            else self.default_intervars["st"]
-        )
-        wfpt_parents["z"] = knodes["z_bottom"] if "z" in self.include else 0.5
-        wfpt_parents["p_outlier"] = (
-            knodes["p_outlier_bottom"]
-            if "p_outlier" in self.include
-            else self.p_outlier
-        )
+        if self.nn:
+            # Define parents for HDDMnn across included models
+            for tmp_param in model_config[self.model]["params"]:
+                wfpt_parents[tmp_param] = (
+                    knodes[tmp_param + "_bottom"]
+                    if tmp_param in self.include
+                    else model_config[self.model]["default_params"][
+                        model_config[self.model]["params"].index(tmp_param)
+                    ]
+                )
+
+            wfpt_parents["p_outlier"] = (
+                knodes["p_outlier_bottom"]
+                if "p_outlier" in self.include
+                else self.p_outlier
+            )
+            wfpt_parents["w_outlier"] = self.w_outlier  # likelihood of an outlier point
+
+        else:
+            # This defines parents for basic hddm
+            wfpt_parents["p_outlier"] = (
+                knodes["p_outlier_bottom"]
+                if "p_outlier" in self.include
+                else self.p_outlier
+            )
+
+            wfpt_parents["a"] = knodes["a_bottom"]
+            wfpt_parents["v"] = knodes["v_bottom"]
+            wfpt_parents["t"] = knodes["t_bottom"]
+
+            wfpt_parents["sv"] = (
+                knodes["sv_bottom"]
+                if "sv" in self.include
+                else self.default_intervars["sv"]
+            )
+            wfpt_parents["sz"] = (
+                knodes["sz_bottom"]
+                if "sz" in self.include
+                else self.default_intervars["sz"]
+            )
+            wfpt_parents["st"] = (
+                knodes["st_bottom"]
+                if "st" in self.include
+                else self.default_intervars["st"]
+            )
+            wfpt_parents["z"] = knodes["z_bottom"] if "z" in self.include else 0.5
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
@@ -1129,7 +1256,6 @@ class HDDMBase(AccumulatorModel):
     def create_knodes(self):
         knodes = self._create_stochastic_knodes(self.include)
         knodes["wfpt"] = self._create_wfpt_knode(knodes)
-
         return list(knodes.values())
 
     def plot_posterior_predictive(self, *args, **kwargs):

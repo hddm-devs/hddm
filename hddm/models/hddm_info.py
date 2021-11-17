@@ -1,3 +1,6 @@
+from hddm.simulators import *
+from hddm.model_config import model_config
+from hddm.simulators.basic_simulator import *
 from collections import OrderedDict
 import inspect
 import numpy as np
@@ -8,18 +11,19 @@ from kabuki.hierarchical import Knode
 
 
 class HDDM(HDDMBase):
-    """Create hierarchical drift-diffusion model in which each subject
+    """Create hierarchical drift-diffusion model in which each subject 
     has a set of parameters that are constrained by a group distribution.
 
     :Arguments:
         data : pandas.DataFrame
             Input data with a row for each trial.
+            
             Must contain the following columns:
-              * 'rt': Reaction time of trial in seconds.
-              * 'response': Binary response (e.g. 0->error, 1->correct)
-              * 'subj_idx': A unique ID (int) of each subject.
-              * Other user-defined columns that can be used in depends_on
-                keyword.
+            * 'rt': Reaction time of trial in seconds.
+            * 'response': Binary response (e.g. 0->error, 1->correct)
+            * 'subj_idx': A unique ID (int) of each subject.
+            * Other user-defined columns that can be used in depends_on keyword.
+
 
     :Optional:
         informative : bool <default=True>
@@ -60,12 +64,12 @@ class HDDM(HDDMBase):
             however, when the 'response' column codes
             correct/error.
 
-        p_outlier : double (default=0)
+        p_outlier : double <default=0>
             The probability of outliers in the data. if p_outlier is passed in the
             'include' argument, then it is estimated from the data and the value passed
             using the p_outlier argument is ignored.
 
-        default_intervars : dict (default = {'sz': 0, 'st': 0, 'sv': 0})
+        default_intervars : dict <default = {'sz': 0, 'st': 0, 'sv': 0}>
             Fix intertrial variabilities to a certain value. Note that this will only
             have effect for variables not estimated from the data.
 
@@ -77,7 +81,7 @@ class HDDM(HDDMBase):
              Save trace for subjs (needed for many
              statistics so probably a good idea.)
 
-        std_depends : bool (default=False)
+        std_depends : bool <default=False>
              Should the depends_on keyword affect the group std node.
              If True it means that both, group mean and std will be split
              by condition.
@@ -87,11 +91,11 @@ class HDDM(HDDMBase):
              numerical integration.
 
          :Parameters:
-             * err: Error bound for wfpt (default 1e-4)
-             * n_st: Maximum depth for numerical integration for st (default 2)
-             * n_sz: Maximum depth for numerical integration for Z (default 2)
-             * use_adaptive: Whether to use adaptive numerical integration (default True)
-             * simps_err: Error bound for Simpson integration (default 1e-3)
+             * err: Error bound for wfpt <default=1e-4>
+             * n_st: Maximum depth for numerical integration for st <default=2>
+             * n_sz: Maximum depth for numerical integration for Z <default=2>
+             * use_adaptive: Whether to use adaptive numerical integration <default=True>
+             * simps_err: Error bound for Simpson integration <default=1e-3>
 
     :Example:
         >>> data, params = hddm.generate.gen_rand_data() # gen data
@@ -101,22 +105,33 @@ class HDDM(HDDMBase):
     """
 
     def __init__(self, *args, **kwargs):
-        self.slice_widths = {
-            "a": 1,
-            "t": 0.01,
-            "a_std": 1,
-            "t_std": 0.15,
-            "sz": 1.1,
-            "v": 1.5,
-            "st": 0.1,
-            "sv": 3,
-            "z_trans": 0.2,
-            "z": 0.1,
-            "p_outlier": 1.0,
-            "v_std": 1,
-            "alpha": 1.5,
-            "pos_alpha": 1.5,
-        }
+        if hasattr(self, "nn"):
+            pass
+        else:
+            self.nn = False
+
+        if self.nn:
+            self.slice_widths = model_config[self.model]["slice_widths"]
+            self.slice_widths["p_outlier"] = 1.0
+        else:
+            self.slice_widths = {
+                                  "a": 1,
+                                  "t": 0.01,
+                                  "a_std": 1,
+                                  "t_std": 0.15,
+                                  "sz": 1.1,
+                                  "v": 1.5,
+                                  "st": 0.1,
+                                  "sv": 3,
+                                  "z_trans": 0.2,
+                                  "z": 0.1,
+                                  "p_outlier": 1.0,
+                                  "v_std": 1,
+                                  "alpha": 1.5,
+                                  "pos_alpha": 1.5,
+                                }
+
+        # AF-Q: Is emcee actually used or can this be deleted ?
         self.emcee_dispersions = {
             "a": 1,
             "t": 0.1,
@@ -134,15 +149,78 @@ class HDDM(HDDMBase):
             "pos_alpha": 1.5,
         }
 
-        self.is_informative = kwargs.pop("informative", True)
+
+        if self.nn:
+            self.is_informative = kwargs.pop("informative", False)
+        else:
+            self.is_informative = kwargs.pop("informative", True)
 
         super(HDDM, self).__init__(*args, **kwargs)
 
+        # -------------------------------------------------------------------------------------
+
     def _create_stochastic_knodes(self, include):
-        if self.is_informative:
-            return self._create_stochastic_knodes_info(include)
+        if self.nn:
+            if self.is_informative:
+                print("Informative Priors are not yet implemented")
+                return (
+                    "Informative Priors are not yet implementend for LANs, coming soon!"
+                )
+            else:
+                return self._create_stochastic_knodes_nn_noninfo(include)
+
         else:
-            return self._create_stochastic_knodes_noninfo(include)
+            if self.is_informative:
+                return self._create_stochastic_knodes_info(include)
+            else:
+                return self._create_stochastic_knodes_noninfo(include)
+
+    def _create_stochastic_knodes_nn_noninfo(self, include):
+        knodes = OrderedDict()
+
+        # Parameter bounds might be different depending on whether we use the MLP or the CNN
+        if self.network_type == "mlp" or self.network_type == "torch_mlp":
+            param_bnd_str = "param_bounds"
+        # elif self.network_type == "cnn":
+        #     param_bnd_str = "param_bounds_cnn"
+
+        # PARAMETERS COMMON TO ALL MODELS
+        if "p_outlier" in include:
+            knodes.update(
+                self._create_family_invlogit(
+                    "p_outlier", value=0.2, g_tau=10 ** -2, std_std=0.5
+                )
+            )
+
+        for tmp_param in model_config[self.model]["params"]:
+            if tmp_param in include:
+                param_id = model_config[self.model]["params"].index(tmp_param)
+                trans = model_config[self.model]["params_trans"][param_id]
+
+                if trans:
+                    knodes.update(
+                        self._create_family_invlogit(
+                            tmp_param,
+                            g_tau=10 ** -2,
+                            std_std=0.5,
+                            lower=model_config[self.model][param_bnd_str][0][param_id],
+                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
+                        )
+                    )
+                else:
+                    knodes.update(
+                        self._create_family_trunc_normal(
+                            tmp_param,
+                            lower=model_config[self.model][param_bnd_str][0][param_id],
+                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
+                            std_upper=model_config[self.model]["params_std_upper"][
+                                param_id
+                            ],  # added AF
+                        )
+                    )
+        return knodes
 
     def _create_stochastic_knodes_info(self, include):
         knodes = OrderedDict()
@@ -251,7 +329,6 @@ class HDDM(HDDMBase):
                 value=0.01,
                 depends=self.depends["p_outlier"],
             )
-
         return knodes
 
     def pre_sample(self, use_slice=True):

@@ -99,6 +99,9 @@ class KnodeWfptStimCoding(Knode):
         super(KnodeWfptStimCoding, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
+        # AF-COMMENT: Not fully clear how creat_node works !
+        # StimCoding more transparent via regressor ?
+
         # the addition of "depends=['stim']" in the call of
         # KnodeWfptInvZ in HDDMStimCoding makes that data are
         # submitted splitted by the values of the variable stim the
@@ -106,7 +109,10 @@ class KnodeWfptStimCoding(Knode):
         # value of stim for which z' = 1-z and transforms z if this is
         # the case (similar to v)
         dc = kwargs.pop("dc", None)
-        if all(data[self.stim_col] == self.stims[0]):
+        if all(
+            data[self.stim_col] == self.stims[0]
+        ):  # AF-COMMENT: Should this be reversed? -> self.stims[1]
+
             if self.split_param == "z":
                 kwargs["z"] = 1 - kwargs["z"]
             elif self.split_param == "v" and dc is None:

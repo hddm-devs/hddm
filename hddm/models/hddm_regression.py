@@ -12,10 +12,24 @@ from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
 import kabuki.step_methods as steps
 
+from hddm.simulators import *
+
+# To fix regression
+from hddm.model_config import model_config
+
+# AF TEMPORARY
+# def v_link_func(x, data):
+#     stim = pd.Series(1, index = x.index)
+#     data = data.loc[x.index]
+#     stim.loc[data.tar_trial_type == 'nontarget'] = -1.
+#     return x * stim
 
 def generate_wfpt_reg_stochastic_class(
-    wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
-):
+                                       wiener_params=None, 
+                                       sampling_method="cdf", 
+                                       cdf_range=(-5, 5), 
+                                       sampling_dt=1e-4
+                                       ):
 
     # set wiener_params
     if wiener_params is None:
@@ -49,43 +63,83 @@ def generate_wfpt_reg_stochastic_class(
             p_outlier=p_outlier,
         )
 
-    def random(self):
+    def random(self,
+               keep_negative_responses=True,
+               add_model_parameters=False,
+               keep_subj_idx=False
+               ):
+
+        assert sampling_method in ['drift', 'cssm'], 'Sampling method is invalid!'
+        # AF add: exchange this with new simulator
+        #print(self.parents.value)
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
         sampled_rts = self.value.copy()
+        
+        if sampling_method == 'drift':
+            for i in self.value.index:
+                # get current params
+                for p in self.parents["reg_outcomes"]:
+                    param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
+                # sample
+                samples = hddm.generate.gen_rts(
+                    method=sampling_method, size=1, dt=sampling_dt, **param_dict
+                )
 
-        for i in self.value.index:
-            # get current params
-            for p in self.parents["reg_outcomes"]:
-                param_dict[p] = np.asscalar(self.parents.value[p].loc[i])
-            # sample
-            samples = hddm.generate.gen_rts(
-                method=sampling_method, size=1, dt=sampling_dt, **param_dict
-            )
+                sampled_rts.loc[i, "rt"] = hddm.utils.flip_errors(samples).rt.iloc[0]
 
-            sampled_rts.loc[i, "rt"] = hddm.utils.flip_errors(samples).rt.iloc[0]
+            return sampled_rts
+        
+        if sampling_method == 'cssm':
+            param_data = np.zeros((self.value.shape[0],
+                                   model_config["full_ddm_vanilla"]["n_params"]), dtype =np.float32)
+            cnt = 0
+            for tmp_str in model_config["full_ddm_vanilla"]["params"]:
+                if tmp_str in self.parents["reg_outcomes"]:
+                    # print(param_dict[tmp_str])
+                    # print(param_dict[tmp_str].shape)
+                    # print(type(param_dict[tmp_str]))
+                    param_data[:, cnt] = param_dict[tmp_str].iloc[self.value.index]
+                else:
+                    param_data[:, cnt] = param_dict[tmp_str]
+                cnt += 1
+            
+            sim_out = simulator(theta=param_data, 
+                                model = "full_ddm_vanilla", 
+                                n_samples = 1, max_t=20)
 
-        return sampled_rts
+            sim_out_proc = hddm_preprocess(sim_out,
+                                           keep_negative_responses=keep_negative_responses,
+                                           add_model_parameters=add_model_parameters,
+                                           keep_subj_idx=keep_subj_idx)
+            
+            sim_out_proc = hddm.utils.flip_errors(sim_out_proc)
+
+            return sim_out_proc
+
 
     stoch = stochastic_from_dist("wfpt_reg", wiener_multi_like)
     stoch.random = random
 
     return stoch
 
-
-wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="drift")
-
+wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="cssm")  # "drift"
 
 ################################################################################################
 
 
 class KnodeRegress(kabuki.hierarchical.Knode):
+    #print('passing through Knoderegress')
     def __init__(self, *args, **kwargs):
+        # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)
+        # Initialize kabuki.hierarchical.Knode
+
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
         reg = kwargs["regressor"]
+
         # order parents according to user-supplied args
         args = []
         for arg in reg["params"]:
@@ -101,6 +155,8 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         # if math.isnan(dm.sum()):
         #    raise NotImplementedError('DesignMatrix contains NaNs.')
 
+        # AF-comment: The dmatrix seems to be hardcoded --> If you want to use post_pred_gen() later on other covariates, 
+        # you can't, because changing model.data doesn't affect func as defined here ?
         def func(
             args,
             design_matrix=dmatrix(
@@ -111,7 +167,6 @@ class KnodeRegress(kabuki.hierarchical.Knode):
         ):
             # convert parents to matrix
             params = np.matrix(args)
-            # import pdb; pdb.set_trace()
             design_matrix = design_matrix.loc[data.index]
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
@@ -236,8 +291,8 @@ class HDDMRegressor(HDDM):
             }
             self.model_descrs.append(model_descr)
 
-            print("Adding these covariates:")
-            print(model_descr["params"])
+            #print("Adding these covariates:")
+            #print(model_descr["params"])
             if group_only_regressors:
                 group_only_nodes += model_descr["params"]
                 kwargs["group_only_nodes"] = group_only_nodes
@@ -258,17 +313,19 @@ class HDDMRegressor(HDDM):
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d["wfpt_reg_class"]
-        for model in d["model_descrs"]:
-            if "link_func" in model:
-                print("WARNING: Will not save custom link functions.")
-                del model["link_func"]
+        #for model in d["model_descrs"]:
+            #if "link_func" in model:
+            #    print("From __get_state__ print:")
+            #    print("WARNING: Will not save custom link functions.")
+            #    del model["link_func"]
         return d
 
     def __setstate__(self, d):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
-        print("WARNING: Custom link functions will not be loaded.")
-        for model in d["model_descrs"]:
-            model["link_func"] = lambda x: x
+        #print("WARNING: Custom link functions will not be loaded.")
+        # for model in d["model_descrs"]:
+            # model["link_func"] = lambda x: x
+            # model["link_func"] = id_link
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
@@ -283,11 +340,14 @@ class HDDMRegressor(HDDM):
         )
 
     def _create_stochastic_knodes(self, include):
+        #print('passing through _create_stochastic_knodes')
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
+        # includes_remainder = set(include).difference(self.reg_outcomes)
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(
             include.difference(self.reg_outcomes)
         )
+        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
@@ -312,13 +372,58 @@ class HDDMRegressor(HDDM):
                     ]
                 )
 
+            # CHECK IF LINK FUNCTION IS IDENTITY
+            # ------
+            try:
+                link_is_identity = np.array_equal(reg['link_func'](np.arange(-1000, 1000, 0.1)), np.arange(-1000, 1000, 0.1))
+            except:
+                print('Reg Model: ')
+                print(reg)
+                print('Does not use Identity Link')
+                # print('exception raised that hints at the fact that your link function is not identity. \n' + \
+                #       'If all your link functions are identity this means trouble!')
+                link_is_identity = False
+
+            if link_is_identity:
+                print('Reg Model:')
+                print(reg)
+                print('Uses Identity Link')
+            # ------
+            
             for inter, param in zip(intercept, reg["params"]):
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[: param.find("_")]
-                    reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(
-                        [param_lookup]
-                    )
+                    
+                    # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
+                    trans = 0
+                    if self.nn:
+                        param_id = model_config[self.model]["params"].index(param_lookup)
+                        trans = model_config[self.model]["params_trans"][param_id]
+
+                        if trans:
+                            param_lower = model_config[self.model]["param_bounds"][0][param_id]
+                            param_upper = model_config[self.model]["param_bounds"][1][param_id]
+                            param_std_upper = model_config[self.model]["params_std_upper"][param_id]
+
+                    elif param_lookup == 'z':
+                        trans = 1
+                        if trans:
+                            param_lower = 0
+                            param_upper = 1
+                            param_std_upper = 100
+
+                    # If yes and link function is identity or if parameter is not trans --> apply usual prior
+                    if (trans and link_is_identity) or (not trans):
+                        reg_family = super(HDDMRegressor, self)._create_stochastic_knodes(
+                            [param_lookup]
+                        )                    
+                    else: # Otherwise apply normal prior family
+                        reg_family = self._create_family_trunc_normal(param, 
+                                                                      lower = param_lower,
+                                                                      upper = param_upper,
+                                                                      std_upper = param_std_upper)
+
                     # Rename nodes to avoid collissions
                     names = list(reg_family.keys())
                     for name in names:
@@ -355,3 +460,8 @@ class HDDMRegressor(HDDM):
             knodes["%s_bottom" % reg["outcome"]] = reg_knode
 
         return knodes
+
+# Some standard link functions
+
+def id_link(x):
+    return x

@@ -2,22 +2,92 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
 import hddm
-import sys
 import kabuki
 import pandas as pd
 import string
 from kabuki.analyze import post_pred_gen, post_pred_compare_stats
+import tqdm
+
 
 from scipy.stats import scoreatpercentile
 from scipy.stats.mstats import mquantiles
 
+# Simply alias for exec function, to make the function call more expressive for a 
+# single use case (define custom likelihoods)
+make_likelihood_fun_from_str = exec
+
+def make_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood'):
+    """Define string for a likelihood function that can be used as an mlp-likelihood 
+    in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
+    
+    :Arguments:
+        config : dict <default = None>
+            Config dictionary for the model for which you would like to construct a custom 
+            likelihood. In the style of what you find under hddm.model_config.
+    :Returns:
+        str: 
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    params_str = ', '.join(config["params"])
+
+    fun_str = 'def ' + fun_name + '(x, ' + params_str + \
+              ', p_outlier=0.0, w_outlier=0.1, network = None):\n    ' + \
+              'return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, ' + \
+              'np.array([' + params_str + '], dtype = np.float32), ' + \
+              'p_outlier=p_outlier, w_outlier=w_outlier, network=network)'
+    return fun_str
+
+def make_reg_likelihood_str_mlp(config = None, fun_name = 'custom_likelihood_reg'):
+    """Define string for a likelihood function that can be used as a 
+    mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
+    
+    :Arguments:
+        config : dict <default = None>
+            Config dictionary for the model for which you would like to construct a custom 
+            likelihood. In the style of what you find under hddm.model_config.
+    
+    :Returns:
+        str: 
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    
+    params_fun_def_str = ', '.join(config["params"])
+    upper_bounds_str = str(config["param_bounds"][1])
+    lower_bounds_str = str(config["param_bounds"][0])
+    n_params_str = str(config["n_params"])
+    data_frame_width_str = str(config["n_params"] + 2)
+    params_str = str(config["params"])
+
+    fun_str = 'def ' + fun_name + '(value, ' + params_fun_def_str + ', reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):' + \
+              '\n    params = locals()' + \
+              '\n    size = int(value.shape[0])' + \
+              '\n    data = np.zeros(((size, ' + data_frame_width_str + ')), dtype=np.float32)' + \
+              '\n    data[:, ' + n_params_str + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)' + \
+              '\n    cnt=0' + \
+              '\n    for tmp_str in ' + params_str + ':' + \
+              '\n        if tmp_str in reg_outcomes:' + \
+              '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values' + \
+              '\n            if (data[:, cnt].min() < ' + lower_bounds_str + '[cnt]) or (data[:, cnt].max() > ' + upper_bounds_str + '[cnt]):' + \
+              '\n                print("boundary violation of regressor part")' + \
+              '\n                return -np.inf' + \
+              '\n        else:' + \
+              '\n            data[:, cnt] = params[tmp_str]' + \
+              '\n        cnt += 1' + \
+              '\n    return hddm.wfpt.wiener_like_multi_nn_mlp(data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])'
+    return fun_str
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.
 
+
     :Arguments:
         data : numpy.recarray
             Input array with at least one column named 'RT' and one named 'response'
+
     :Returns:
         data : numpy.recarray
             Input array with RTs sign flipped where 'response' == 0
@@ -34,6 +104,60 @@ def flip_errors(data):
     idx = data["response"] == 0
     data.loc[idx, "rt"] = -data.loc[idx, "rt"]
 
+    return data
+
+
+def flip_errors_nn(data, network_type="mlp", nbins=None, max_rt=20):
+    """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
+
+    :Arguments:
+        data : numpy.recarray
+            Input array with at least one column named 'RT' and one named 'response'
+    :Returns:
+        data : numpy.recarray
+            Input array with RTs sign flipped where 'response' < 0
+
+    """
+    # if network_type == "cnn":
+    #     if np.any(data["response"] != 1.0):
+    #         idx = data["response"] < 0
+    #         data.loc[idx, "response"] = 0
+        # return bin_rts_pointwise(data, max_rt=max_rt, nbins=nbins)
+    
+    if network_type == "mlp" or network_type == "torch_mlp":
+        data = pd.DataFrame(data.copy())  # .values.astype(np.float32)
+
+        data["response"] = data["response"].values.astype(np.float32)
+        data["rt"] = data["rt"].values.astype(np.float32)
+
+        if np.any(data["response"] != 1.0):
+            idx = data["response"] < 1.0
+            data.loc[idx, "response"] = -1.0
+
+        # If flipped rt was supplied
+        # --> unflip it
+        idx = data["rt"] < 0.0
+        data.loc[idx, "rt"] = -data.loc[idx, "rt"]
+        return data
+
+
+def bin_rts_pointwise(data, max_rt=10.0, nbins=512):
+
+    data = pd.DataFrame(data.copy())
+    data["response_binned"] = data["response"].values.astype(np.int_)
+
+    bins = np.zeros(nbins + 1)
+    bins[:nbins] = np.linspace(0, max_rt, nbins)
+    bins[nbins] = np.inf
+
+    data["rt_binned"] = 0
+    data["rt_binned"].values.astype(np.int_)
+    rt_id = data.columns.get_loc("rt")
+    rt_binned_id = data.columns.get_loc("rt_binned")
+    for i in range(data.shape[0]):
+        for j in range(1, bins.shape[0], 1):
+            if data.iloc[i, rt_id] > bins[j - 1] and data.iloc[i, rt_id] < bins[j]:
+                data.iloc[i, rt_binned_id] = j - 1
     return data
 
 
@@ -538,21 +662,21 @@ def qp_plot(
     draw_lines=True,
     ax=None,
 ):
-    """
-    qp plot
-    Input:
-        x : either a HDDM model or data
-
-        grouby: <list>
+    """qp plot
+    
+    :Arguments:
+        x: either a HDDM model or data
+        
+        grouby: list
             a list of conditions to group the data. if x is a model then groupby is ignored.
 
-        quantiles : sequence
+        quantiles: sequence
             sequence of quantiles
 
-        ncols : int
+        ncols: int
             number of columns in output figure
 
-        draw_lines: boolean (default: True)
+        draw_lines: bool <default=True>
             draw lines to connect the same quantiles across conditions
     """
     # if x is a hddm model use _qp_plot_model
@@ -595,27 +719,6 @@ def qp_plot(
     _points_to_qp_plot(points, p, ax, draw_lines)
 
     return ax
-
-    # create axes for subjects
-    n_subjs = len(data.subj_idx.unique())
-    if ncols is None:
-        ncols = min(4, n_subjs)
-    nrows = int(np.ceil(n_subjs / ncols))
-    fig, axs = plt.subplots(nrows, ncols, sharex=True, sharey=False)
-
-    # plot single subject model
-    for i_subj, subj_idx in enumerate(data.subj_idx.unique()):
-        points = np.zeros((nq, len(stats) * 2))
-        p = np.zeros(len(stats) * 2)
-        for i_key, (key, cond_data) in enumerate(stats.items()):
-            points[:, i_key * 2] = cond_data[subj_idx][0]
-            points[:, i_key * 2 + 1] = cond_data[subj_idx][1]
-            p[i_key * 2] = 1 - cond_data[subj_idx][2]
-            p[i_key * 2 + 1] = cond_data[subj_idx][2]
-
-        ax = axs.item(i_subj)
-        _points_to_qp_plot(points, p, ax, draw_lines)
-        ax.set_title(subj_idx)
 
 
 def _points_to_qp_plot(points, p, ax, draw_lines):
@@ -727,6 +830,118 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
 
     return q_lower, q_upper, p_upper
 
+
+def posterior_predictive_dataprocessor_nn(x):
+    print(x)
+    return x[:, 1] * x[:, 0]
+
+
+# New methods for getting fast posterior predictive samples
+def _get_sample(bottom_node = None, sim_model = 'ddm_legacy'):
+    theta_array = np.zeros((bottom_node.value.shape[0], len(ssms.config.model_config[sim_model]['params'])))
+    cnt = 0
+    for param in hddm.model_config.model_config[sim_model]['params']:
+        theta_array[:, cnt] = bottom_node.parents.value[param]
+        cnt += 1
+    out = hddm.simulators.basic_simulator.simulator(theta = theta_array, model = sim_model, n_samples = 1)
+    out = pd.DataFrame(out[0] * out[1], columns = ['rt'])
+    return out
+
+def _parents_to_random_posterior_sample_fast(bottom_node, pos=None):
+    """Walks through parents and sets them to pos sample."""
+    for i, parent in enumerate(bottom_node.extended_parents):
+        if not isinstance(parent, pm.Node): # Skip non-stochastic nodes
+            continue
+
+        if pos is None:
+            # Set to random posterior position
+            pos = np.random.randint(0, len(parent.trace()))
+
+        assert len(parent.trace()) >= pos, "pos larger than posterior sample size"
+        parent.value = parent.trace()[pos]
+
+def _post_pred_generate_fast(bottom_node, sim_model = 'ddm_legacy', samples=500, data=None, append_data=False):
+    """Generate posterior predictive data from a single observed node."""
+    datasets = []
+
+    ##############################
+    # Sample and generate stats
+    for sample in tqdm(range(samples)):
+        _parents_to_random_posterior_sample_fast(bottom_node)
+        sampled_data = _get_sample(bottom_node, sim_model = sim_model)
+        
+        # Generate data from bottom node
+        #print(dir(bottom_node))
+        
+        #ipdb.set_trace()
+        #return bottom_node.parents.value # ADDED
+        #sampled_data = bottom_node.random()
+        
+        #return bottom_node.random()
+        if append_data and data is not None:
+            sampled_data = sampled_data.join(data.reset_index(), lsuffix='_sampled')
+        datasets.append(sampled_data)
+
+    return datasets
+
+def post_pred_gen_fast(model, groupby=None, samples=500, append_data=False, progress_bar=True, sim_model = 'ddm_legacy'):
+    """Run posterior predictive check on a model.
+
+    :Arguments:
+        model : kabuki.Hierarchical
+            Kabuki model over which to compute the ppc on.
+
+    :Optional:
+        samples : int
+            How many samples to generate for each node.
+        groupby : list
+            Alternative grouping of the data. If not supplied, uses splitting
+            of the model (as provided by depends_on).
+        append_data : bool (default=False)
+            Whether to append the observed data of each node to the replicatons.
+        progress_bar : bool (default=True)
+            Display progress bar
+
+    :Returns:
+        Hierarchical pandas.DataFrame with multiple sampled RT data sets.
+        1st level: wfpt node
+        2nd level: posterior predictive sample
+        3rd level: original data index
+
+    :See also:
+        post_pred_stats
+    """
+    results = {}
+
+    # Progress bar
+    if progress_bar:
+        n_iter = len(model.get_observeds())
+        bar = pbar.progress_bar(n_iter)
+        bar_iter = 0
+    else:
+        print("Sampling...")
+
+    if groupby is None:
+        iter_data = ((name, model.data.iloc[obs['node'].value.index]) for name, obs in model.iter_observeds())
+    else:
+        iter_data = model.data.groupby(groupby)
+
+    for name, data in iter_data:
+        node = model.get_data_nodes(data.index)
+
+        if progress_bar:
+            bar_iter += 1
+            bar.update(bar_iter)
+
+        if node is None or not hasattr(node, 'random'):
+            continue # Skip
+
+        ##############################
+        # Sample and generate stats
+        datasets = _post_pred_generate_fast(node, sim_model = sim_model, samples=samples, data=data, append_data=append_data)
+        results[name] = pd.concat(datasets, names=['sample'], keys=list(range(len(datasets))))
+
+    return pd.concat(results, names=['node'])
 
 if __name__ == "__main__":
     import doctest

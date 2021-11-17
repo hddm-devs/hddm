@@ -6,7 +6,10 @@ import inspect
 import textwrap
 import re
 import pydoc
-from StringIO import StringIO
+
+
+#from StringIO import StringIO
+from io import StringIO
 from warnings import warn
 
 class Reader(object):
@@ -113,7 +116,8 @@ class NumpyDocString(object):
         return self._parsed_data[key]
 
     def __setitem__(self,key,val):
-        if not self._parsed_data.has_key(key):
+        if not key in self._parsed_data.keys():
+        #if not self._parsed_data.has_key(key):
             warn("Unknown section %s" % key)
         else:
             self._parsed_data[key] = val
@@ -427,7 +431,7 @@ class FunctionDoc(NumpyDocString):
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*','\*')
                 signature = '%s%s' % (func_name, argspec)
-            except TypeError, e:
+            except TypeError: #, e:
                 signature = '%s()' % func_name
             self['Signature'] = signature
 
@@ -449,8 +453,9 @@ class FunctionDoc(NumpyDocString):
                  'meth': 'method'}
 
         if self._role:
-            if not roles.has_key(self._role):
-                print "Warning: invalid role %s" % self._role
+            #if not roles.has_key(self._role):
+            if not (self._role in roles.keys()):
+                print("Warning: invalid role %s" % self._role)
             out += '.. %s:: %s\n    \n\n' % (roles.get(self._role,''),
                                              func_name)
 

@@ -11,15 +11,14 @@ Documentation
 .. toctree::
     :maxdepth: 2
 
-    abstract
     intro
     methods
+    demos
     tutorial
     howto
-    manual
-
-
-
+    lan_extension
+    modules
+    references
 
 Indices and tables
 ==================

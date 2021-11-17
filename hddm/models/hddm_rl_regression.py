@@ -10,13 +10,11 @@ from hddm.models import HDDM
 import kabuki
 from kabuki import Knode
 from kabuki.utils import stochastic_from_dist
-import kabuki.step_methods as steps
 
 
 def generate_wfpt_rl_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
-
     # set wiener_params
     if wiener_params is None:
         wiener_params = {
@@ -93,7 +91,6 @@ def generate_wfpt_rl_reg_stochastic_class(
 
 
 wfpt_reg_like = generate_wfpt_rl_reg_stochastic_class(sampling_method="drift")
-
 
 ################################################################################################
 
@@ -276,13 +273,13 @@ class HDDMrlRegressor(HDDM):
         del d["wfpt_reg_class"]
         for model in d["model_descrs"]:
             if "link_func" in model:
-                print("WARNING: Will not save custom link functions.")
+                # print("WARNING: Will not save custom link functions.")
                 del model["link_func"]
         return d
 
     def __setstate__(self, d):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
-        print("WARNING: Custom link functions will not be loaded.")
+        # print("WARNING: Custom link functions will not be loaded.")
         for model in d["model_descrs"]:
             model["link_func"] = lambda x: x
         super(HDDMrlRegressor, self).__setstate__(d)

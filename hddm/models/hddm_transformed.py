@@ -7,9 +7,17 @@ from hddm.models import HDDMBase
 
 
 class HDDMTransformed(HDDMBase):
+    # AF-comment: Don't understand the purpose of this class !
+
     def __init__(self, *args, **kwargs):
         self.use_gibbs_for_mean = kwargs.pop("use_gibbs_for_mean", True)
         self.use_reject_for_std = kwargs.pop("use_reject_for_std", True)
+
+
+        if hasattr(self, "nn"):
+            pass
+        else:
+            self.nn = False
 
         super(HDDMTransformed, self).__init__(*args, **kwargs)
 
