@@ -98,7 +98,11 @@ class HDDMnnRegressor(HDDMRegressor):
 
         if self.network_type == "torch_mlp":
             if self.network is None:
-                self.network = load_torch_mlp(model=self.model)
+                try:
+                    self.network = load_torch_mlp(model=self.model)
+                except:
+                    return "Couldn't find load_torch_mlp()... pytorch not installed?"
+            
             network_dict = {"network": self.network}
 
             self.wfpt_nn_reg_class = (
