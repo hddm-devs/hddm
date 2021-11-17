@@ -1665,6 +1665,8 @@ def posterior_pair_plot(
     #print('data: ')
     #print(data)
     sns.set()
+    sns.set_theme(style = 'ticks', rc = {"axes.spines.right": False, 
+                                         "axes.spines.top": False})
     sns.set_context("notebook", font_scale = font_scale)
     plot_cnt = 0
     for c_tmp in data.keys():
