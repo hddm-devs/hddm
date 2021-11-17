@@ -7,8 +7,6 @@ __version__ = "0.9.0"
 from . import simulators
 from . import likelihoods
 from . import likelihoods_mlp
-#from . import likelihoods_cnn
-#from . import 
 from . import generate
 from . import utils
 from . import plotting

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pymc as pm
 import hddm
-import sys
 import kabuki
 import pandas as pd
 import string

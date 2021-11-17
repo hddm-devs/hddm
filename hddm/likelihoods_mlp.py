@@ -1,14 +1,12 @@
 import numpy as np
-import hddm
 from functools import partial
 from kabuki.utils import stochastic_from_dist
+from copy import deepcopy
+
+import hddm
 from hddm.simulators import *
 from hddm.model_config import model_config
 from hddm.utils import *
-
-
-# import data_simulators
-from copy import deepcopy
 
 def make_mlp_likelihood(model, **kwargs):
     """Defines the likelihoods for the MLP networks.

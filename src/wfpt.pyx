@@ -28,9 +28,6 @@ from cython.parallel import *
 # include "pdf.pxi"
 include 'integrate.pxi'
 
-# NEW WITH NN
-from tensorflow import keras 
-
 def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz,
               double t, double st, double err=1e-4, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1,
               double simps_err=1e-3, double p_outlier=0, double w_outlier=0):
