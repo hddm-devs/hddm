@@ -106,9 +106,6 @@ def make_trace_plotready_h_c(
         {}
     )  # will store a dictionary of dictionaries of dictionaries. Level-one keys specify conditions, level-two keys specify subject level data
     
-    #print('trace_dict: ')
-    #print(trace_dict)
-
     for key in trace_dict.keys():
         dat_h_c[key] = {}  # intialize condition level dict
         unique_subj_ids = trace_dict[key]["data"][
@@ -126,10 +123,6 @@ def make_trace_plotready_h_c(
 
             # Check if data contains ground truth parameters (once for the case where we supply 'model_ground_truth' and once where we didn't)
             # AF-TODO: Reorganize this so that we supply trial by trial parameters separately
-            #print("model_ground_truth")
-            #print(model_ground_truth)
-            #print("data_h_c[key][subj_id[data]")
-            #print(list(dat_h_c[key][subj_id]["data"].keys()))
 
             test_passed = 1
             if model_ground_truth is None:
@@ -183,9 +176,6 @@ def make_trace_plotready_h_c(
                     if not ("subj" in trace_key) and ("(" in trace_key):
                         key_param_only = trace_key.split("(")[0]
 
-                    #print('key_param_only')
-                    #print(key_param_only)
-
                     trace_names_param_only_tmp.append(key_param_only)
 
                     dat_h_c[key][subj_id]["traces"][
@@ -207,8 +197,6 @@ def make_trace_plotready_h_c(
 
             dat_h_c[key][subj_id]["trace_names"] = trace_names_tmp
 
-    #print('dat_h_c')
-    #print(dat_h_c)
     return dat_h_c
 
 
@@ -446,9 +434,6 @@ def filter_subject_condition_traces(
             is_group_model=is_group_model,
         )
 
-        #print('condition wise params dict: ')
-        #print(condition_wise_params_dict)
-
         for key_tmp in condition_wise_params_dict.keys():
             # Condition wise params carries all expected parameter names for a given condition
             # Some of these might not have been fit so for the tracees we want to set those to the 'default' as specified by the model config
@@ -476,8 +461,7 @@ def filter_subject_condition_traces(
             is_group_model=is_group_model,
             model_ground_truth=model_ground_truth,
         )
-        #print('plotready_traces')
-        #print(plotready_traces)
+
         return plotready_traces
 
     # Scenario 2: Single condition single subject model (or data collapsed across subjects)
@@ -770,9 +754,6 @@ def model_plot(
 
     # Some style settings
     sns.set(style="white", palette="muted", color_codes=True, font_scale=2)
-
-    #print("n_plots")
-    #print(n_plots)
 
     # Outer for loop loops over Figures
     for plot_n in range(n_plots):
@@ -1648,6 +1629,9 @@ def posterior_pair_plot(
             {'v': 1, 'a': 2, 'z': 0.5, 't': 2}
         model_fitted: str <default=None>
             String that supplies which model was fitted to the data.
+        font_scale: float <default= 1.5>
+            Scale of fonts. Not always predictable which is the best value, so 
+            the setting is left to the user.
         save: bool <default= False>
             Whether or not to save the figure.
     Return: plot object
@@ -1661,9 +1645,7 @@ def posterior_pair_plot(
     data = filter_subject_condition_traces(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
-    # return data
-    #print('data: ')
-    #print(data)
+
     sns.set()
     sns.set_theme(style = 'ticks', rc = {"axes.spines.right": False, 
                                          "axes.spines.top": False})
@@ -1676,21 +1658,13 @@ def posterior_pair_plot(
             gt_dict = {}
             for c_tmp in data.keys():
                 for s_tmp in data[c_tmp].keys():
-                    #print('moving across subjects')
                     sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
                     for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
-                        #print('trace_name_tmp')
-                        #print(trace_name_tmp)
-                        #print('after split')
-                        #print(trace_name_tmp.split("_")[0].split("(")[0])
                         if (
                             trace_name_tmp.split("_")[0].split("(")[0]
                             in model_config[model_fitted]["params"]
                         ):
-                            #print('trace_name_tmp_repeat')
-                            #print(trace_name_tmp)
                             tmp_param = trace_name_tmp.split("_")[0].split("(")[0]
-                            #print(tmp_param)
                             idx_tmp = model_config[model_fitted]["params"].index(tmp_param)
                             sorted_trace_names_tmp[idx_tmp] = trace_name_tmp
                             if model_ground_truth is not None:
@@ -1698,21 +1672,14 @@ def posterior_pair_plot(
                                     "gt_parameter_vector"
                                 ][idx_tmp]
                         else:
-                            pass #print("problem")
+                            pass
 
                     data[c_tmp][s_tmp]["trace_names"] = sorted_trace_names_tmp.copy()
-                    #print(data[c_tmp][s_tmp]["trace_names"])
 
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
             )
             
-            #print(data[c_tmp][s_tmp]["traces"].sample(n_subsample))
-            #print(type(data[c_tmp][s_tmp]["traces"].sample(n_subsample)))
-            #return data[c_tmp][s_tmp]["traces"].sample(n_subsample)
-            # g = sns.PairGrid(
-            #     data[c_tmp][s_tmp]["traces"].sample(n_subsample)
-            # )
             g = sns.PairGrid(
                 data[c_tmp][s_tmp]["traces"].sample(n_subsample),
                 height=height,
@@ -1799,11 +1766,10 @@ def posterior_pair_plot(
 
             for ax in g.axes.flat:
                 plt.setp(ax.get_xticklabels(), rotation=45)
-                # ax.set_yticklabels(ax.get_yticklabels(), size = 14)
-                # ax.set_xticklabels(ax.get_xticklabels(), size = 14)
-                #plt.setp(ax.get_xticklabels(), fontsize)
 
-            g.fig.suptitle(model_fitted.upper(), y=1.03, fontsize=24)
+            g.fig.suptitle(model_fitted.upper() + \
+                           ' , condition: ' + c_tmp + \
+                           ', subject: ' + s_tmp  , y=1.03, fontsize=24)
 
             # posterior_samples_key_set = np.sort(posterior_samples.keys())
             # If ground truth is available add it in:
@@ -1836,6 +1802,9 @@ def posterior_pair_plot(
                         color="red",
                         markersize=10,
                     )
+                    
+                    # AF-COMMENT: The yaxis ticks are supposed to be turned off only for the
+                    # diagonal, but seemingly this is applied across the board....
                     g.axes[i, i].yaxis.set_ticks([])
 
 
