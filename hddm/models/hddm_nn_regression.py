@@ -101,7 +101,8 @@ class HDDMnnRegressor(HDDMRegressor):
                 try:
                     self.network = load_torch_mlp(model=self.model)
                 except:
-                    return "Couldn't find load_torch_mlp()... pytorch not installed?"
+                    print("Couldn't find load_torch_mlp()... pytorch not installed?")
+                    return None
             
             network_dict = {"network": self.network}
 

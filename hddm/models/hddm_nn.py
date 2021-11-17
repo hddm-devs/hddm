@@ -131,8 +131,9 @@ class HDDMnn(HDDM):
                 try:
                     self.network = load_torch_mlp(model = self.model)
                 except:
-                    return "Couldn't find load_torch_mlp()... pytorch not installed?"
-                    
+                    print("Couldn't find load_torch_mlp()... pytorch not installed?")
+                    return None
+
             network_dict = {"network": self.network}
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
                 model = self.model, **network_dict
