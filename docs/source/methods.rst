@@ -2,16 +2,11 @@
 .. _chap_methods:
 
 
-*******
-Methods
-*******
-
-
+**************************
 Sequential Sampling Models
-##########################
+**************************
 
-
-SSMs generally fall into one of two classes: (i) diffusion models
+Sequential Sampling Models generally fall into one of two classes: (i) diffusion models
 which assume that *relative* evidence is accumulated over time
 and (ii) race models which assume independent evidence accumulation
 and response commitment once the first accumulator crossed a boundary

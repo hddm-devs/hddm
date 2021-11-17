@@ -1,46 +1,12 @@
 .. index:: LANs
-.. _chap_investigate_model_behav:
+.. _chap_new_models:
 
-LAN EXTENSION: NEW MODELS
+New Models
 -------------------------
 
 .. code:: ipython3
 
-    # MODULE IMPORTS ----
-    
-    # warning settings
-    import warnings
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-    
-    
-    # 
     import hddm
-    
-    # Make simulators visible
-    import sys
-    #sys.path.append('simulators')
-    
-    # Data management
-    import pandas as pd
-    import numpy as np
-    import pickle
-    
-    # Plotting
-    import matplotlib.pyplot as plt
-    import matplotlib
-    import seaborn as sns
-    
-    # Stats functionality
-    from statsmodels.distributions.empirical_distribution import ECDF
-
-
-.. parsed-literal::
-
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-
 
 From version HDDM >= 0.9.0, you have access to multiple **new sequential
 sampling models**. You can simulate from these models, perform parameter
@@ -48,8 +14,8 @@ estimation and moreover you have some extended plotting capabilities
 which can be useful to visualize model fits, or simply to investigate
 the behavior of models across parameter settings.
 
-1. METADATA
-~~~~~~~~~~~
+Metadata
+~~~~~~~~
 
 Lets take a look at the new ``hddm.model_config.model_config``
 dictionary, which allows you to investigate metadata for all the new
@@ -133,7 +99,7 @@ for the user):
 
 You can change these settings as you see fit.
 
-SIMULATE
+Simulate
 ~~~~~~~~
 
 The new ``simulator_h_c()`` function lets you generate complex datasets
@@ -146,8 +112,6 @@ example.
 
 .. code:: ipython3
 
-    # test regressors only False
-    # add p_outliers to the generator !
     model = 'angle'
     n_subjects = 1
     n_samples_by_subject = 500
@@ -167,7 +131,6 @@ example.
 .. code:: ipython3
 
     # A look at the data generated
-    
     data
 
 
@@ -206,58 +169,58 @@ example.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.879841</td>
+          <td>1.579309</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.977840</td>
+          <td>1.618309</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.691843</td>
+          <td>1.622309</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.616843</td>
-          <td>1.0</td>
+          <td>1.611309</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.608843</td>
+          <td>1.669309</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>...</th>
@@ -272,58 +235,58 @@ example.
         </tr>
         <tr>
           <th>95</th>
-          <td>1.571842</td>
-          <td>1.0</td>
+          <td>1.838306</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>96</th>
-          <td>1.675843</td>
-          <td>0.0</td>
+          <td>1.526309</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>97</th>
-          <td>1.734843</td>
-          <td>0.0</td>
+          <td>1.548309</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>98</th>
-          <td>1.712843</td>
+          <td>1.722308</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
         <tr>
           <th>99</th>
-          <td>1.549842</td>
+          <td>1.460309</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.702983</td>
+          <td>0.633137</td>
+          <td>0.519282</td>
+          <td>1.393309</td>
+          <td>0.415966</td>
         </tr>
       </tbody>
     </table>
@@ -332,12 +295,17 @@ example.
 
 
 
+Note
+^^^^
+
+The full_parameter_dict returned plays well with HDDM and some plots
+that give you the option to provide ground truth parameters. In our case
+the output is simple.
+
+More complicated datasets, will make this much more interesting.
+
 .. code:: ipython3
 
-    # The full_parameter_dict returned plays well with HDDM and some plots that give you the option
-    # to provide ground truth parameters. In our case the output is simple. More complicated
-    # datasets, will make this much more interesting.
-    
     full_parameter_dict
 
 
@@ -345,11 +313,10 @@ example.
 
 .. parsed-literal::
 
-    {'z': 0.4935347303966837,
-     't': 1.475842521721244,
-     'a': 0.6463614139071022,
-     'v': 0.4196711728599843,
-     'theta': 0.3724329086161189}
-
+    {'theta': 0.41596571495194185,
+     'v': 0.7029832446663296,
+     't': 1.3933086736547817,
+     'a': 0.6331370688655752,
+     'z': 0.5192818348445416}
 
 

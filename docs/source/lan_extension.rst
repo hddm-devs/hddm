@@ -8,4 +8,8 @@ LAN Extension
 .. toctree::
     :maxdepth: 2
 
-    investigate_model_behavior
+    lan_new_classes
+    lan_new_models
+    lan_visualizations
+    lan_add_custom_lans
+    lan_network_inspectors

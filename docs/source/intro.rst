@@ -2,7 +2,7 @@
 .. _chap_introduction:
 
 ************
-Introduction
+Package Introduction
 ************
 
 Sequential sampling models (SSMs) (:cite:`TownsendAshby83`) have

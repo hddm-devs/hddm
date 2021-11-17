@@ -2,7 +2,7 @@
 .. _chap_demos:
 
 *************
-LAN Extension
+Demos
 *************
 
 .. toctree::
