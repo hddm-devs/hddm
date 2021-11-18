@@ -155,7 +155,6 @@ If you are having installation problems please contact the `mailing list`_.
 
 And if you're a mac user, check out this `thread`_ for advice on installation.
 
-
 How to cite
 ===========
 
