@@ -51,7 +51,7 @@ Features
   model (RLDDM), including a module for estimating the impact of continuous regressors onto RLDDM parameters, and a reinforcement learning 
   (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/demo_RLHDDMtutorial.ipynb and in the paper here: https://rdcu.be/b4q6Z
   
-* HDDM 0.9.0 brings a host of new features. HDDM includes `likelihod approximation networks`_ via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
+* HDDM 0.9.0 brings a host of new features. HDDM includes `likelihood approximation networks`_ via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
   This allows fitting of a number of variants of sequential sampling models. You can now easily use custom likelihoods
   for model fitting. We included a range of new **simulators**, which allow data generation for a host of variants of sequential sampling models.
   There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
@@ -182,7 +182,7 @@ Check out the tutorial_ on how to get started. Further information can be found 
 Join our low-traffic `mailing list`_.
 
 .. _likelihood approximation networks: https://elifesciences.org/articles/65074
-.. _pytorch http://pytorch.org
+.. _pytorch: http://pytorch.org
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
 .. _PyMC: http://pymc-devs.github.com/pymc/

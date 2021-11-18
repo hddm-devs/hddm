@@ -1,9 +1,9 @@
 .. index:: Introduction
 .. _chap_introduction:
 
-************
+********************
 Package Introduction
-************
+********************
 
 Sequential sampling models (SSMs) (:cite:`TownsendAshby83`) have
 established themselves as the de-facto standard for modeling
