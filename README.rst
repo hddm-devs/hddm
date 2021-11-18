@@ -4,7 +4,7 @@ Introduction
 
 :Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Alexander Fengler, Michael J. Frank
 :Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, alexander_fengler@brown.edu, michael_frank@brown.edu
-:Web site: http://ski.clps.brown.edu/hddm_docs
+:Web site: https://hddm.readthedocs.io
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
@@ -188,9 +188,9 @@ Join our low-traffic `mailing list`_.
 .. _Cython: http://www.cython.org/
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
-.. _documentation: http://ski.clps.brown.edu/hddm_docs
-.. _tutorial: http://ski.clps.brown.edu/hddm_docs/tutorial.html
-.. _howto: http://ski.clps.brown.edu/hddm_docs/howto.html
+.. _documentation: https://hddm.readthedocs.io
+.. _tutorial: https://hddm.readthedocs.io/en/latest/tutorial.html
+.. _howto: https://hddm.readthedocs.io/en/latest/howto.html
 .. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _mailing list: https://groups.google.com/group/hddm-users/
