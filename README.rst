@@ -110,7 +110,7 @@ install via git. In a fresh environment type:
     # Optional
     pip install torch torchvision torchaudio
 
-To make use of the LAN fuctionalities, need actually need to install `pytorch`_.
+To make use of the LAN fuctionalities, need actually need to install `pytorch`_ .
 
 A common issue is that the installation of the **pymc** package (a necessary dependency),
 is hampered by issues with compiling its fortran code. Try downgrading you the version of your
