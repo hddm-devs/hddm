@@ -27,11 +27,12 @@ import inspect
 from kabuki.hierarchical import Knode
 from scipy.optimize import fmin_powell, fmin
 
-# AF-TODO: This should be changed to use 
+# AF-TODO: This should be changed to use
 try:
-    import ipyparallel #as parallel
-    #from IPython import parallel
-    #from IPython.parallel.client.asyncresult import AsyncResult
+    import ipyparallel  # as parallel
+
+    # from IPython import parallel
+    # from IPython.parallel.client.asyncresult import AsyncResult
 except ImportError:
     pass
 
@@ -39,15 +40,15 @@ except ImportError:
 class AccumulatorModel(kabuki.Hierarchical):
     def __init__(self, data, **kwargs):
         # Flip sign for lower boundary RTs
-        #print("printing self.nn")
-        #print(self.nn)
+        # print("printing self.nn")
+        # print(self.nn)
         if self.nn:
-            if model_config[self.model]['n_choices'] == 2:
-                #print("2-choice model --> passed through flip errors nn")
+            if model_config[self.model]["n_choices"] == 2:
+                # print("2-choice model --> passed through flip errors nn")
                 data = hddm.utils.flip_errors_nn(data, self.network_type)
             else:
-                #print("More than 2-choice model --> don't flip any responses.")
-                #print("Make sure you supplied rt and choice data in appropriate format!")
+                # print("More than 2-choice model --> don't flip any responses.")
+                # print("Make sure you supplied rt and choice data in appropriate format!")
                 data["response"] = data["response"].values.astype(np.float32)
                 data["rt"] = data["rt"].values.astype(np.float32)
                 pass
@@ -1106,20 +1107,20 @@ class HDDMBase(AccumulatorModel):
         )
 
         self._kwargs = kwargs
-        #print(kwargs)
-        #print(include)
+        # print(kwargs)
+        # print(include)
         # Check if self has model attribute
-        if not hasattr(self, 'model'):
-            print('No model attribute --> setting up standard HDDM')
-            
-            if ('st' in include) or ('sz' in include) or ('sv' in include):
-                self.model = 'full_ddm'
+        if not hasattr(self, "model"):
+            print("No model attribute --> setting up standard HDDM")
+
+            if ("st" in include) or ("sz" in include) or ("sv" in include):
+                self.model = "full_ddm"
             else:
-                self.model = 'ddm'
+                self.model = "ddm"
 
         # For 2-choice models adjust include statement
         if model_config[self.model]["n_choices"] == 2:
-            print('Includes supplied: ', include)
+            print("Includes supplied: ", include)
             self.include = set(["v", "a", "t"])
             if include is not None:
                 if include == "all":
@@ -1141,10 +1142,22 @@ class HDDMBase(AccumulatorModel):
 
         # Automate possible_parameters
         if self.nn:
-            possible_parameters = tuple(model_config[self.model]["params"]) + ("p_outlier",)
+            possible_parameters = tuple(model_config[self.model]["params"]) + (
+                "p_outlier",
+            )
         else:
-            possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "alpha",)
-        
+            possible_parameters = (
+                "v",
+                "a",
+                "t",
+                "z",
+                "st",
+                "sz",
+                "sv",
+                "p_outlier",
+                "alpha",
+            )
+
         # possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "dual_alpha",
         #     "theta", "alpha", "beta", "g", "alpha_diff", "zh", "zl1", "zl2", "vh", "vl1", "vl2", "d")
 

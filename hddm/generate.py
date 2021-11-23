@@ -84,7 +84,7 @@ def gen_rand_params(include=(), cond_dict=None, seed=None):
                 params: dictionary
                     A dictionary holding the parameters values
             else:
-                cond_params: 
+                cond_params:
                     A dictionary holding the parameters for each one of the conditions,
                     that has the form {'c1': params1, 'c2': params2, ...}
                     it can be used directly as an argument in gen_rand_data.
@@ -896,13 +896,10 @@ def gen_rand_rlddm_onestep_data(
     return df
 
 
-def add_outliers(data, 
-                 n_fast, 
-                 n_slow, 
-                 seed=None):
+def add_outliers(data, n_fast, n_slow, seed=None):
 
     """Add outliers to data, outliers are distrbuted randomly across conditions.
-    
+
     :Arguments:
          data: pd.DataFrame
             Reaction time and choice data

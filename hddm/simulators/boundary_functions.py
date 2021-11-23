@@ -2,7 +2,8 @@
 # import scipy as scp
 from scipy.stats import gamma
 import numpy as np
-#import hddm.simulators
+
+# import hddm.simulators
 
 
 # Collection of boundary functions
@@ -16,13 +17,13 @@ def constant(t=0):
 # Angle (additive)
 def angle(t=1, theta=1):
     """angle boundary
-    
-        :Arguments:
-            t: np.array or float <default = 1>
-                Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
-            theta: float <default = 1>
-                Angle of the bound in radians.
-            
+
+    :Arguments:
+        t: np.array or float <default = 1>
+            Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
+        theta: float <default = 1>
+            Angle of the bound in radians.
+
     """
     return np.multiply(t, (-np.sin(theta) / np.cos(theta)))
 
@@ -30,14 +31,14 @@ def angle(t=1, theta=1):
 # Generalized logistic bound (additive)
 def generalized_logistic_bnd(t=1, B=2.0, M=3.0, v=0.5):
     """generalized logistic bound
-    
-        :Arguments:
-            t: np.array or float <default = 1>
-                Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
-            B: float <default = 2.0>
-            M: float <default = 3.0>
-            v: float <default = 0.5>
-          
+
+    :Arguments:
+        t: np.array or float <default = 1>
+            Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
+        B: float <default = 2.0>
+        M: float <default = 3.0>
+        v: float <default = 0.5>
+
     """
     return 1 - (1 / np.power(1 + np.exp(-B * (t - M)), 1 / v))
 
@@ -45,18 +46,19 @@ def generalized_logistic_bnd(t=1, B=2.0, M=3.0, v=0.5):
 # Weibull survival fun (multiplicative)
 def weibull_cdf(t=1, alpha=1, beta=1):
     """generalized logistic bound
-    
-        :Arguments:
-            t: np.array or float <default = 1>
-                Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
-            alpha: float <default = 1.0>
-                Shape parameter
-            beta: float <default = 1.0>
-                Shape parameter
-                
+
+    :Arguments:
+        t: np.array or float <default = 1>
+            Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
+        alpha: float <default = 1.0>
+            Shape parameter
+        beta: float <default = 1.0>
+            Shape parameter
+
     """
 
     return np.exp(-np.power(np.divide(t, beta), alpha))
+
 
 # # Gamma shape: (additive)
 # def gamma_bnd(t = 1,

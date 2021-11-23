@@ -17,12 +17,14 @@ from data_simulators import ddm_flexbound_par2
 from data_simulators import ddm_flexbound_mic2_adj
 
 # import data_simulators as cds
-#import hddm.simulators.boundary_functions as bf
+# import hddm.simulators.boundary_functions as bf
 from . import boundary_functions as bf
 from hddm.model_config import model_config
+
 # import hddm.simulators
 
 # Basic simulators and basic preprocessing
+
 
 def bin_simulator_output_pointwise(
     out=[0, 0], bin_dt=0.04, nbins=0
@@ -65,6 +67,7 @@ def bin_simulator_output_pointwise(
     out_copy[1][out_copy[1] == -1] = 0
 
     return np.concatenate([out_copy[0], out_copy[1]], axis=-1).astype(np.int32)
+
 
 def bin_simulator_output(
     out=None, bin_dt=0.04, nbins=0, max_t=-1, freq_cnt=False
@@ -117,9 +120,10 @@ def bin_simulator_output(
 
     return counts
 
+
 def bin_arbitrary_fptd(
     out=None, bin_dt=0.04, nbins=256, nchoices=2, choice_codes=[-1.0, 1.0], max_t=10.0
-    ):  
+):
     """Takes in simulator output and returns a histogram of bin counts
 
     :Arguments:
@@ -162,6 +166,7 @@ def bin_arbitrary_fptd(
         cnt += 1
     return counts
 
+
 def simulator(
     theta,
     model="angle",
@@ -171,7 +176,7 @@ def simulator(
     no_noise=False,
     bin_dim=None,
     bin_pointwise=False,
-    ):
+):
     """Basic data simulator for the models included in HDDM.
 
     :Arguments:
@@ -262,32 +267,32 @@ def simulator(
 
     if model == "ddm_legacy" or model == "ddm_vanilla":
         x = ddm(
-                v=theta[:, 0],
-                a=theta[:, 1],
-                z=theta[:, 2],
-                t=theta[:, 3],
-                s=s,
-                n_samples=n_samples,
-                n_trials=n_trials,
-                delta_t=delta_t,
-                max_t=max_t,
-                )
+            v=theta[:, 0],
+            a=theta[:, 1],
+            z=theta[:, 2],
+            t=theta[:, 3],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+        )
 
     if model == "full_ddm_legacy" or model == "full_ddm_vanilla":
         x = full_ddm_vanilla(
-                             v=theta[:, 0],
-                             a=theta[:, 1],
-                             z=theta[:, 2],
-                             t=theta[:, 3],
-                             sz=theta[:, 4],
-                             sv=theta[:, 5],
-                             st=theta[:, 6],
-                             s=s,
-                             n_samples=n_samples,
-                             n_trials=n_trials,
-                             delta_t=delta_t,
-                             max_t=max_t,
-                             )
+            v=theta[:, 0],
+            a=theta[:, 1],
+            z=theta[:, 2],
+            t=theta[:, 3],
+            sz=theta[:, 4],
+            sv=theta[:, 5],
+            st=theta[:, 6],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+        )
 
     if model == "angle" or model == "angle2":
         x = ddm_flexbound(
@@ -397,430 +402,482 @@ def simulator(
             max_t=max_t,
         )
 
-# 3 Choice models
+    # 3 Choice models
     if no_noise:
-        s = np.tile(np.array([0.0, 0.0, 0.0], dtype = np.float32), (n_trials, 1))
+        s = np.tile(np.array([0.0, 0.0, 0.0], dtype=np.float32), (n_trials, 1))
     else:
-        s = np.tile(np.array([1.0, 1.0, 1.0], dtype = np.float32), (n_trials, 1))
+        s = np.tile(np.array([1.0, 1.0, 1.0], dtype=np.float32), (n_trials, 1))
 
-    if model == 'race_3':
-        x = race_model(v = theta[:, :3],
-                            a = theta[:, [3]],
-                            z = theta[:, 4:7],
-                            t = theta[:, [7]],
-                            s = s,
-                            boundary_fun = bf.constant,
-                            boundary_multiplicative = True,
-                            boundary_params = {},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
-    
-    if model == 'race_no_bias_3':
-        x = race_model(v = theta[:, :3],
-                            a = theta[:, [3]],
-                            z = np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
-                            t = theta[:, [5]],
-                            s = s,
-                            boundary_fun = bf.constant,
-                            boundary_multiplicative = True,
-                            boundary_params = {},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
+    if model == "race_3":
+        x = race_model(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=theta[:, 4:7],
+            t=theta[:, [7]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'race_no_bias_angle_3':
-        x = race_model(v = theta[:, :3],
-                            a = theta[:, [3]],
-                            z = np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
-                            t = theta[:, [5]],
-                            s = s,
-                            boundary_fun = bf.angle,
-                            boundary_multiplicative = False,
-                            boundary_params = {'theta': theta[:, 6]},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
-        
-    if model == 'lca_3':
-        x = lca(v = theta[:, :3],
-                     a = theta[:, [3]],
-                     z = theta[:, 4:7],
-                     g = theta[:, [7]],
-                     b = theta[:, [8]],
-                     t = theta[:, [9]],
-                     s = s,
-                     boundary_fun = bf.constant,
-                     boundary_multiplicative = True,
-                     boundary_params = {},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "race_no_bias_3":
+        x = race_model(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
+            t=theta[:, [5]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'lca_no_bias_3':
-        x = lca(v = theta[:, :3],
-                     a = theta[:, [3]],
-                     z = np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
-                     g = theta[:, [5]],
-                     b = theta[:, [6]],
-                     t = theta[:, [7]],
-                     s = s,
-                     boundary_fun = bf.constant,
-                     boundary_multiplicative = True,
-                     boundary_params = {},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "race_no_bias_angle_3":
+        x = race_model(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
+            t=theta[:, [5]],
+            s=s,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 6]},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'lca_no_bias_angle_3':
-        x = lca(v = theta[:, :3],
-                     a = theta[:, [3]],
-                     z = np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
-                     g = theta[:, [5]],
-                     b = theta[:, [6]],
-                     t = theta[:, [7]],
-                     s = s,
-                     boundary_fun = bf.angle,
-                     boundary_multiplicative = False,
-                     boundary_params = {'theta': theta[:, 8]},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "lca_3":
+        x = lca(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=theta[:, 4:7],
+            g=theta[:, [7]],
+            b=theta[:, [8]],
+            t=theta[:, [9]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
+
+    if model == "lca_no_bias_3":
+        x = lca(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
+            g=theta[:, [5]],
+            b=theta[:, [6]],
+            t=theta[:, [7]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
+
+    if model == "lca_no_bias_angle_3":
+        x = lca(
+            v=theta[:, :3],
+            a=theta[:, [3]],
+            z=np.column_stack([theta[:, [4]], theta[:, [4]], theta[:, [4]]]),
+            g=theta[:, [5]],
+            b=theta[:, [6]],
+            t=theta[:, [7]],
+            s=s,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 8]},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
     # 4 Choice models
     if no_noise:
-        s = np.tile(np.array([0.0, 0.0, 0.0, 0.0], dtype = np.float32), (n_trials, 1))
+        s = np.tile(np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32), (n_trials, 1))
     else:
-        s = np.tile(np.array([1.0, 1.0, 1.0, 1.0], dtype = np.float32), (n_trials, 1))
+        s = np.tile(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32), (n_trials, 1))
 
-    if model == 'race_4':
-        x = race_model(v = theta[:, :4],
-                            a = theta[:, [4]],
-                            z = theta[:, 5:9],
-                            t = theta[:, [9]],
-                            s = s,
-                            boundary_fun = bf.constant,
-                            boundary_multiplicative = True,
-                            boundary_params = {},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
+    if model == "race_4":
+        x = race_model(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=theta[:, 5:9],
+            t=theta[:, [9]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'race_no_bias_4':
-        x = race_model(v = theta[:, :4],
-                            a = theta[:, [4]],
-                            z = np.column_stack([theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]), 
-                            t = theta[:, [6]],
-                            s = s,
-                            boundary_fun = bf.constant,
-                            boundary_multiplicative = True,
-                            boundary_params = {},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
+    if model == "race_no_bias_4":
+        x = race_model(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=np.column_stack(
+                [theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]
+            ),
+            t=theta[:, [6]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'race_no_bias_angle_4':
-        x = race_model(v = theta[:, :4],
-                            a = theta[:, [4]],
-                            z = np.column_stack([theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]),
-                            t = theta[:, [6]],
-                            s = s,
-                            boundary_fun = bf.angle,
-                            boundary_multiplicative = False,
-                            boundary_params = {'theta': theta[:, 7]},
-                            delta_t = delta_t,
-                            n_samples = n_samples,
-                            n_trials = n_trials,
-                            max_t = max_t)
-        
-    if model == 'lca_4':
-        x = lca(v = theta[:, :4],
-                     a = theta[:, [4]],
-                     z = theta[:, 5:9],
-                     g = theta[:, [9]],
-                     b = theta[:, [10]],
-                     t = theta[:, [11]],
-                     s = s,
-                     boundary_fun = bf.constant,
-                     boundary_multiplicative = True,
-                     boundary_params = {},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "race_no_bias_angle_4":
+        x = race_model(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=np.column_stack(
+                [theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]
+            ),
+            t=theta[:, [6]],
+            s=s,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 7]},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'lca_no_bias_4':
-        x = lca(v = theta[:, :4],
-                     a = theta[:, [4]],
-                     z = np.column_stack([theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]),
-                     g = theta[:, [6]],
-                     b = theta[:, [7]],
-                     t = theta[:, [8]],
-                     s = s,
-                     boundary_fun = bf.constant,
-                     boundary_multiplicative = True,
-                     boundary_params = {},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "lca_4":
+        x = lca(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=theta[:, 5:9],
+            g=theta[:, [9]],
+            b=theta[:, [10]],
+            t=theta[:, [11]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
-    if model == 'lca_no_bias_angle_4':
-        x = lca(v = theta[:, :4],
-                     a = theta[:, [4]],
-                     z = np.column_stack([theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]),
-                     g = theta[:, [6]],
-                     b = theta[:, [7]],
-                     t = theta[:, [8]],
-                     s = s,
-                     boundary_fun = bf.angle,
-                     boundary_multiplicative = False,
-                     boundary_params = {'theta': theta[:, 9]},
-                     delta_t = delta_t,
-                     n_samples = n_samples,
-                     n_trials = n_trials,
-                     max_t = max_t)
+    if model == "lca_no_bias_4":
+        x = lca(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=np.column_stack(
+                [theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]
+            ),
+            g=theta[:, [6]],
+            b=theta[:, [7]],
+            t=theta[:, [8]],
+            s=s,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
+
+    if model == "lca_no_bias_angle_4":
+        x = lca(
+            v=theta[:, :4],
+            a=theta[:, [4]],
+            z=np.column_stack(
+                [theta[:, [5]], theta[:, [5]], theta[:, [5]], theta[:, [5]]]
+            ),
+            g=theta[:, [6]],
+            b=theta[:, [7]],
+            t=theta[:, [8]],
+            s=s,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 9]},
+            delta_t=delta_t,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            max_t=max_t,
+        )
 
     # Seq / Parallel models (4 choice)
     if no_noise:
         s = 0.0
-    else: 
+    else:
         s = 1.0
-    
+
     # Precompute z_vector for no_bias models
-    z_vec = np.tile(np.array([0.5], dtype = np.float32), reps = n_trials)
+    z_vec = np.tile(np.array([0.5], dtype=np.float32), reps=n_trials)
 
-    if model == 'ddm_seq2':
-        x = ddm_flexbound_seq2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = theta[:, 4],
-                                    z_l_1 = theta[:, 5],
-                                    z_l_2 = theta[:, 6],
-                                    t = theta[:, 7],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.constant,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {})
+    if model == "ddm_seq2":
+        x = ddm_flexbound_seq2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=theta[:, 4],
+            z_l_1=theta[:, 5],
+            z_l_2=theta[:, 6],
+            t=theta[:, 7],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_seq2_no_bias':
-        x = ddm_flexbound_seq2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.constant,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {})
+    if model == "ddm_seq2_no_bias":
+        x = ddm_flexbound_seq2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_seq2_angle_no_bias':
-        x = ddm_flexbound_seq2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.angle,
-                                    boundary_multiplicative = False,
-                                    boundary_params = {'theta': theta[:, 5]})
+    if model == "ddm_seq2_angle_no_bias":
+        x = ddm_flexbound_seq2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 5]},
+        )
 
-    if model == 'ddm_seq2_weibull_no_bias':
-        x = ddm_flexbound_seq2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.weibull_cdf,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {'alpha': theta[:, 5],
-                                                       'beta': theta[:, 6]})
+    if model == "ddm_seq2_weibull_no_bias":
+        x = ddm_flexbound_seq2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.weibull_cdf,
+            boundary_multiplicative=True,
+            boundary_params={"alpha": theta[:, 5], "beta": theta[:, 6]},
+        )
 
-    if model == 'ddm_par2':
-        x = ddm_flexbound_par2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = theta[:, 4],
-                                    z_l_1 = theta[:, 5],
-                                    z_l_2 = theta[:, 6],
-                                    t = theta[:, 7],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.constant,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {})
-    
-    if model == 'ddm_par2_no_bias':
-        x = ddm_flexbound_par2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.constant,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {})
+    if model == "ddm_par2":
+        x = ddm_flexbound_par2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=theta[:, 4],
+            z_l_1=theta[:, 5],
+            z_l_2=theta[:, 6],
+            t=theta[:, 7],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_par2_angle_no_bias':
-        x = ddm_flexbound_par2(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    t = theta[:, 4],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.angle,
-                                    boundary_multiplicative = False,
-                                    boundary_params = {'theta': theta[:, 5]})
+    if model == "ddm_par2_no_bias":
+        x = ddm_flexbound_par2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_par2_weibull_no_bias':
-        x = ddm_flexbound_par2(v_h = theta[:, 0],
-                               v_l_1 = theta[:, 1],
-                               v_l_2 = theta[:, 2],
-                               a = theta[:, 3],
-                               z_h = z_vec,
-                               z_l_1 = z_vec,
-                               z_l_2 = z_vec,
-                               t = theta[:, 4],
-                               s = s,
-                               n_samples = n_samples,
-                               n_trials = n_trials,
-                               delta_t = delta_t,
-                               max_t = max_t,
-                               boundary_fun = bf.weibull_cdf,
-                               boundary_multiplicative = True,
-                               boundary_params = {'alpha': theta[:, 5],
-                                                  'beta': theta[:, 6]})
+    if model == "ddm_par2_angle_no_bias":
+        x = ddm_flexbound_par2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 5]},
+        )
 
-    if model == 'ddm_mic2_adj':
-        x = ddm_flexbound_mic2_adj(v_h = theta[:, 0],
-                                   v_l_1 = theta[:, 1],
-                                   v_l_2 = theta[:, 2],
-                                   a = theta[:, 3],
-                                   z_h = theta[:, 4], #np.array([0.5], dtype = np.float32),
-                                   z_l_1 = theta[:, 5], #np.array([0.5], dtype = np.float32),
-                                   z_l_2 = theta[:, 6], #np.array([0.5], dtype = np.float32),
-                                   d = theta[:, 7],
-                                   t = theta[:, 8],
-                                   s = s,
-                                   n_samples = n_samples,
-                                   n_trials = n_trials,
-                                   delta_t = delta_t,
-                                   max_t = max_t,
-                                   boundary_fun = bf.constant,
-                                   boundary_multiplicative = True,
-                                   boundary_params = {})
+    if model == "ddm_par2_weibull_no_bias":
+        x = ddm_flexbound_par2(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            t=theta[:, 4],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.weibull_cdf,
+            boundary_multiplicative=True,
+            boundary_params={"alpha": theta[:, 5], "beta": theta[:, 6]},
+        )
 
-    if model == 'ddm_mic2_adj_no_bias':
-        x = ddm_flexbound_mic2_adj(v_h = theta[:, 0],
-                                        v_l_1 = theta[:, 1],
-                                        v_l_2 = theta[:, 2],
-                                        a = theta[:, 3],
-                                        z_h = z_vec[:],
-                                        z_l_1 = z_vec[:],
-                                        z_l_2 = z_vec[:],
-                                        d = theta[:, 4],
-                                        t = theta[:, 5],
-                                        s = s,
-                                        n_samples = n_samples,
-                                        n_trials = n_trials,
-                                        delta_t = delta_t,
-                                        max_t = max_t,
-                                        boundary_fun = bf.constant,
-                                        boundary_multiplicative = True,
-                                        boundary_params = {})
+    if model == "ddm_mic2_adj":
+        x = ddm_flexbound_mic2_adj(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=theta[:, 4],  # np.array([0.5], dtype = np.float32),
+            z_l_1=theta[:, 5],  # np.array([0.5], dtype = np.float32),
+            z_l_2=theta[:, 6],  # np.array([0.5], dtype = np.float32),
+            d=theta[:, 7],
+            t=theta[:, 8],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_mic2_adj_angle_no_bias':
-        x = ddm_flexbound_mic2_adj(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    d = theta[:, 4],
-                                    t = theta[:, 5],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.angle,
-                                    boundary_multiplicative = False,
-                                    boundary_params = {'theta': theta[:, 6]})
+    if model == "ddm_mic2_adj_no_bias":
+        x = ddm_flexbound_mic2_adj(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec[:],
+            z_l_1=z_vec[:],
+            z_l_2=z_vec[:],
+            d=theta[:, 4],
+            t=theta[:, 5],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.constant,
+            boundary_multiplicative=True,
+            boundary_params={},
+        )
 
-    if model == 'ddm_mic2_adj_weibull_no_bias':
-        x = ddm_flexbound_mic2_adj(v_h = theta[:, 0],
-                                    v_l_1 = theta[:, 1],
-                                    v_l_2 = theta[:, 2],
-                                    a = theta[:, 3],
-                                    z_h = z_vec,
-                                    z_l_1 = z_vec,
-                                    z_l_2 = z_vec,
-                                    d = theta[:, 4],
-                                    t = theta[:, 5],
-                                    s = s,
-                                    n_samples = n_samples,
-                                    n_trials = n_trials,
-                                    delta_t = delta_t,
-                                    max_t = max_t,
-                                    boundary_fun = bf.weibull_cdf,
-                                    boundary_multiplicative = True,
-                                    boundary_params = {'alpha': theta[:, 6],
-                                                        'beta': theta[:, 7]})
-    
+    if model == "ddm_mic2_adj_angle_no_bias":
+        x = ddm_flexbound_mic2_adj(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            d=theta[:, 4],
+            t=theta[:, 5],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.angle,
+            boundary_multiplicative=False,
+            boundary_params={"theta": theta[:, 6]},
+        )
+
+    if model == "ddm_mic2_adj_weibull_no_bias":
+        x = ddm_flexbound_mic2_adj(
+            v_h=theta[:, 0],
+            v_l_1=theta[:, 1],
+            v_l_2=theta[:, 2],
+            a=theta[:, 3],
+            z_h=z_vec,
+            z_l_1=z_vec,
+            z_l_2=z_vec,
+            d=theta[:, 4],
+            t=theta[:, 5],
+            s=s,
+            n_samples=n_samples,
+            n_trials=n_trials,
+            delta_t=delta_t,
+            max_t=max_t,
+            boundary_fun=bf.weibull_cdf,
+            boundary_multiplicative=True,
+            boundary_params={"alpha": theta[:, 6], "beta": theta[:, 7]},
+        )
 
     # Output compatibility
     if n_trials == 1:

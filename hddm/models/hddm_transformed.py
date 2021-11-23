@@ -13,7 +13,6 @@ class HDDMTransformed(HDDMBase):
         self.use_gibbs_for_mean = kwargs.pop("use_gibbs_for_mean", True)
         self.use_reject_for_std = kwargs.pop("use_reject_for_std", True)
 
-
         if hasattr(self, "nn"):
             pass
         else:

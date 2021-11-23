@@ -23,6 +23,7 @@ from hddm.model_config import model_config
 
 # PREPROCESSING FUNCTIONS ------------------------------------------------------------------------------------------------------------------
 
+
 def untransform_traces(traces=None, model=None, is_nn=False):
     """
     Check which traces are transformed and apply inverse logit transform to them. (This works only if the transformed variable was
@@ -100,7 +101,7 @@ def make_trace_plotready_h_c(
     dat_h_c = (
         {}
     )  # will store a dictionary of dictionaries of dictionaries. Level-one keys specify conditions, level-two keys specify subject level data
-    
+
     for key in trace_dict.keys():
         dat_h_c[key] = {}  # intialize condition level dict
         unique_subj_ids = trace_dict[key]["data"][
@@ -388,7 +389,7 @@ def filter_subject_condition_traces(
                             condition_list.append(tmp_depend)
                 else:
                     pass
-            
+
             # Make dataframe that holds all the unique conditions (via groupby and summarizing with size)
             condition_dataframe = (
                 data.groupby(condition_list)
@@ -518,6 +519,7 @@ def filter_subject_condition_traces(
         }
         return out_dict
 
+
 def extract_multi_cond_subj_plot_n(data=None):
     """
     Function expects as data the output of a call to filter_subject_condition_traces().
@@ -635,8 +637,8 @@ def model_plot(
     scale_x=1.0,  # styling
     scale_y=1.0,  # styling
     delta_t_graph=0.01,  # styling
-    legend_fontsize = 'medium', # styling
-    legend_shadow = False, # styling
+    legend_fontsize="medium",  # styling
+    legend_shadow=False,  # styling
 ):
 
     """The model plot is useful to illustrate model behavior graphically. It is quite a flexible
@@ -695,7 +697,7 @@ def model_plot(
         delta_t_graph: float <default=0.01>
             Timesteps to use for the simulation runs performed for plotting.
         legend_fontsize: str <default='medium>
-            Specify the fontsize of legends. Allowed are for example: 'x-small', 'small', 'medium', 'large', 'x-large'. 
+            Specify the fontsize of legends. Allowed are for example: 'x-small', 'small', 'medium', 'large', 'x-large'.
             See matplotlib documentation for further possible values.
         legend_shadown: bool <default=False>
             Should the legend have a box with shadow around it?
@@ -720,6 +722,7 @@ def model_plot(
                     .values
                 )
         return data_dict
+
     # ----------------------------------------
 
     if hddm_model is None and model_ground_truth is None:
@@ -728,7 +731,9 @@ def model_plot(
         return "Plesae provide either a dataset directly OR a fitted hddm_model object. You seem to have supplied both"
 
     if hddm_model is not None:
-        assert model_config[hddm_model.model]["n_choices"] == 2, "The model_plot() currently only works for 2-choice models"
+        assert (
+            model_config[hddm_model.model]["n_choices"] == 2
+        ), "The model_plot() currently only works for 2-choice models"
 
     # AF-TODO: Shape checks
     if hddm_model is not None:
@@ -988,7 +993,11 @@ def model_plot(
                 )
 
                 if row_tmp == 0 and col_tmp == 0:
-                    ax_tmp_twin_up.legend(loc="lower right", fontsize=legend_fontsize, shadow=legend_shadow)
+                    ax_tmp_twin_up.legend(
+                        loc="lower right",
+                        fontsize=legend_fontsize,
+                        shadow=legend_shadow,
+                    )
 
             # BOUNDS AND SLOPES (model)
             if show_model:
@@ -1149,7 +1158,11 @@ def model_plot(
                         and row_tmp == 0
                         and col_tmp == 0
                     ):
-                        ax_tmp.legend(loc="upper right", fontsize=legend_fontsize , shadow=legend_shadow)
+                        ax_tmp.legend(
+                            loc="upper right",
+                            fontsize=legend_fontsize,
+                            shadow=legend_shadow,
+                        )
 
                     if rows == 1 and cols == 1:
                         ax_tmp.patch.set_visible(False)
@@ -1258,6 +1271,7 @@ def model_plot(
 
     return plt.show()
 
+
 def posterior_predictive_plot(
     hddm_model=None,
     model_ground_truth="angle",
@@ -1271,9 +1285,9 @@ def posterior_predictive_plot(
     hist_linewidth=3,
     scale_x=0.5,
     scale_y=0.5,
-    legend_fontsize = 'medium',
-    legend_shadow = False,
-    legend_pos = 'best',
+    legend_fontsize="medium",
+    legend_shadow=False,
+    legend_pos="best",
     save=False,
     save_path=None,
     show=True,
@@ -1321,13 +1335,15 @@ def posterior_predictive_plot(
             Should the legend have a box with shadown around it?
         legend_position: str <default='best'>
             Position of the legend item. Amonst others (see matplotlib documentation for a full list) you can use,
-            'center', 'upper right', 'lower right', 'upper left', 'lower left'. 
+            'center', 'upper right', 'lower right', 'upper left', 'lower left'.
         delta_t_graph: float <default=0.01>
             Timesteps to use for the simulation runs performed for plotting.
     Return: plot object
     """
     if hddm_model is not None:
-        assert model_config[hddm_model.model]["n_choices"] == 2, "The posterior_predictive() plot currently only works for 2-choice models"
+        assert (
+            model_config[hddm_model.model]["n_choices"] == 2
+        ), "The posterior_predictive() plot currently only works for 2-choice models"
 
     if n_posterior_parameters <= 1:
         print("ERROR: n_posterior_parameters needs to be larger than 1")
@@ -1500,7 +1516,7 @@ def posterior_predictive_plot(
                     labels=["Posterior Predictive", label_0],
                     fontsize=legend_fontsize,
                     shadow=legend_shadow,
-                    loc=legend_pos, #"upper right",
+                    loc=legend_pos,  # "upper right",
                 )
 
             # rt x-axis label if we are dealing with the last row of a figure
@@ -1587,11 +1603,12 @@ def posterior_predictive_plot(
 
     return
 
+
 # Posterior Pair Plot
 def posterior_pair_plot(
     hddm_model=None,
     axes_limits="samples",  # 'samples' or dict({'parameter_name': [lower bound, upper bound]})
-    font_scale = 1.5,
+    font_scale=1.5,
     height=2,
     aspect_ratio=1,
     n_subsample=1000,
@@ -1625,7 +1642,7 @@ def posterior_pair_plot(
         model_fitted: str <default=None>
             String that supplies which model was fitted to the data.
         font_scale: float <default= 1.5>
-            Scale of fonts. Not always predictable which is the best value, so 
+            Scale of fonts. Not always predictable which is the best value, so
             the setting is left to the user.
         save: bool <default= False>
             Whether or not to save the figure.
@@ -1641,19 +1658,20 @@ def posterior_pair_plot(
         hddm_model=hddm_model, model_ground_truth=model_ground_truth
     )
 
-    #print(data)
+    # print(data)
 
     sns.set()
-    sns.set_theme(style = 'ticks', rc = {"axes.spines.right": False, 
-                                         "axes.spines.top": False})
-    sns.set_context("notebook", font_scale = font_scale)
+    sns.set_theme(
+        style="ticks", rc={"axes.spines.right": False, "axes.spines.top": False}
+    )
+    sns.set_context("notebook", font_scale=font_scale)
     plot_cnt = 0
     for c_tmp in data.keys():
         for s_tmp in data[c_tmp].keys():
             # Turn traces into dataframe:
             # Get all ground truths
             gt_dict = {}
-            
+
             # AF COMMENT: Is this sorting of trace names necessrary ?
             sorted_trace_names_tmp = data[c_tmp][s_tmp]["trace_names"].copy()
             for trace_name_tmp in data[c_tmp][s_tmp]["trace_names"]:
@@ -1676,7 +1694,6 @@ def posterior_pair_plot(
             data[c_tmp][s_tmp]["traces"] = pd.DataFrame(
                 data[c_tmp][s_tmp]["traces"], columns=data[c_tmp][s_tmp]["trace_names"]
             )
-
 
             g = sns.PairGrid(
                 data[c_tmp][s_tmp]["traces"].sample(n_subsample),
@@ -1765,9 +1782,15 @@ def posterior_pair_plot(
             for ax in g.axes.flat:
                 plt.setp(ax.get_xticklabels(), rotation=45)
 
-            g.fig.suptitle(model_fitted.upper() + \
-                           ' , condition: ' + str(c_tmp) + \
-                           ', subject: ' + str(s_tmp)  , y=1.03, fontsize=24)
+            g.fig.suptitle(
+                model_fitted.upper()
+                + " , condition: "
+                + str(c_tmp)
+                + ", subject: "
+                + str(s_tmp),
+                y=1.03,
+                fontsize=24,
+            )
 
             # posterior_samples_key_set = np.sort(posterior_samples.keys())
             # If ground truth is available add it in:
@@ -1790,7 +1813,7 @@ def posterior_pair_plot(
                     if i == 0:
                         y_lims_tmp = g.axes[i, i].get_ylim()
                         g.axes[i, i].set_ylim(0, y_lims_tmp[1])
-                    
+
                     g.axes[i, i].plot(
                         data[c_tmp][s_tmp]["gt_parameter_vector"][
                             i
@@ -1800,11 +1823,10 @@ def posterior_pair_plot(
                         color="red",
                         markersize=10,
                     )
-                    
+
                     # AF-COMMENT: The yaxis ticks are supposed to be turned off only for the
                     # diagonal, but seemingly this is applied across the board....
                     g.axes[i, i].yaxis.set_ticks([])
-
 
             if save == True:
                 if save_path is None:
@@ -1838,6 +1860,7 @@ def posterior_pair_plot(
 
     # Show
     return
+
 
 def caterpillar_plot(
     hddm_model=None,

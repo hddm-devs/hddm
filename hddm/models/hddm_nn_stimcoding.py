@@ -5,11 +5,15 @@ try:
     # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
-    print('It seems that you do not have pytorch installed.' + \
-          'The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding' + \
-          'classes will not work')
+    print(
+        "It seems that you do not have pytorch installed."
+        + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
+        + "classes will not work"
+    )
 
 import hddm
+
+
 class HDDMnnStimCoding(HDDMStimCoding):
     """HDDMnn model that can be used when stimulus coding and estimation
     of bias (i.e. displacement of starting point z) is required.
@@ -67,17 +71,17 @@ class HDDMnnStimCoding(HDDMStimCoding):
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
-        
+
         if self.network_type == "torch_mlp":
             if self.network is None:
                 try:
-                    self.network = load_torch_mlp(model = self.model)
+                    self.network = load_torch_mlp(model=self.model)
                 except:
                     print("Couldn't find load_torch_mlp()... pytorch not installed?")
                     return None
             network_dict = {"network": self.network}
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-                model = self.model, **network_dict
+                model=self.model, **network_dict
             )
 
         super(HDDMnnStimCoding, self).__init__(*args, **kwargs)
@@ -87,7 +91,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
         # Here we use a special Knode (see below) that either inverts v or z
         # depending on what the correct stimulus was for that trial type.
-        
+
         return KnodeWfptStimCoding(
             self.wfpt_nn,
             "wfpt",  # TD: ADD wfpt class we need
@@ -110,7 +114,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
         return d
 
     def __setstate__(self, d):
-        
+
         if d["network_type"] == "torch_mlp":
             d["network"] = load_torch_mlp(model=d["model"])
             network_dict = {"network": d["network"]}

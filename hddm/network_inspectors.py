@@ -13,11 +13,13 @@ import pandas as pd
 import seaborn as sns
 
 try:
-    #print('HDDM: Trying import of pytorch related classes.')
+    # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
-    print('It seems that you do not have pytorch installed.' + \
-          ' You cannot use the network_inspector module.')
+    print(
+        "It seems that you do not have pytorch installed."
+        + " You cannot use the network_inspector module."
+    )
 
 from hddm.simulators.basic_simulator import *
 
@@ -27,6 +29,7 @@ import os
 from hddm.model_config import model_config
 
 # NETWORK LOADERS -------------------------------------------------------------------------
+
 
 def get_torch_mlp(model="angle", nbin=512):
     """Returns the torch network which is the basis of the TORCH_MLP likelihoods
@@ -62,7 +65,7 @@ def _bandwidth_silverman(
     std_n_1=1e-1,  # HERE WE CAN ALLOW FOR SOMETHING MORE INTELLIGENT
 ):
     """Function returns a bandwidth for kernel density estimators from a sample of data
-    
+
     :Arguments:
             sample: np.array or list <default=[0, 0, 0]>
                 The dataset which to base the final bandwidth on.
@@ -97,7 +100,7 @@ def _bandwidth_silverman(
 
 class logkde:
     """Class that takes in simulator data and constructs a kernel density estimator from it.
-    
+
     :Arguments:
         simulator_data: tuple
             Output of a call to hddm.simulators.simulator
@@ -269,11 +272,11 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     model=None,
     n_samples=10,
     n_reps=10,
-    alpha = 0.1,
+    alpha=0.1,
     cols=3,
     save=False,
     show=True,
-    font_scale = 1.5,
+    font_scale=1.5,
 ):
     """Function creates a plot that compares kernel density estimates from simulation data with mlp output.
 
@@ -319,7 +322,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     sns.despine(right=True)
 
     # Data template
-    if model_config[model]['n_choices'] == 2:
+    if model_config[model]["n_choices"] == 2:
         plot_data = np.zeros((4000, 2))
         plot_data[:, 0] = np.concatenate(
             (
@@ -329,9 +332,16 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         )
         plot_data[:, 1] = np.concatenate((np.repeat(-1, 2000), np.repeat(1, 2000)))
     else:
-        plot_data = np.zeros((model_config[model]['n_choices'] * 1000, 2))
-        plot_data[:, 0] = np.concatenate([[i * 0.01 for i in range(1, 1001, 1)] for j in range(model_config[model]["n_choices"])])
-        plot_data[:, 1] = np.concatenate([np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])])
+        plot_data = np.zeros((model_config[model]["n_choices"] * 1000, 2))
+        plot_data[:, 0] = np.concatenate(
+            [
+                [i * 0.01 for i in range(1, 1001, 1)]
+                for j in range(model_config[model]["n_choices"])
+            ]
+        )
+        plot_data[:, 1] = np.concatenate(
+            [np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])]
+        )
 
     # Load Keras model and initialize batch container
     torch_model = get_torch_mlp(model=model)
@@ -367,7 +377,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
                 label = "KDE"
             else:
                 label = None
-            
+
             if model_config[model]["n_choices"] == 2:
                 sns.lineplot(
                     plot_data[:, 0] * plot_data[:, 1],
@@ -377,17 +387,19 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
                     label=label,
                     ax=ax[row_tmp, col_tmp],
                 )
-            
+
             else:
                 for k in range(model_config[model]["n_choices"]):
                     if k > 0:
                         label = None
-                    sns.lineplot(x = plot_data[1000*k:1000*(k+1), 0],
-                                 y = np.exp(ll_out_gt[1000*k:1000*(k+1)]),
-                                 color = 'black',
-                                 alpha = alpha, 
-                                 label = label,
-                                 ax = ax[row_tmp, col_tmp])
+                    sns.lineplot(
+                        x=plot_data[1000 * k : 1000 * (k + 1), 0],
+                        y=np.exp(ll_out_gt[1000 * k : 1000 * (k + 1)]),
+                        color="black",
+                        alpha=alpha,
+                        label=label,
+                        ax=ax[row_tmp, col_tmp],
+                    )
 
             if j == 0:
                 # Plot keras predictions
@@ -407,12 +419,14 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
                         else:
                             label = None
 
-                        sns.lineplot(x = plot_data[1000*k:1000*(k+1), 0], 
-                                    y = np.exp(ll_out_keras[1000*k:1000*(k+1), 0]),
-                                    color = 'green',
-                                    label = label,
-                                    alpha = 1,
-                                    ax = ax[row_tmp, col_tmp])        
+                        sns.lineplot(
+                            x=plot_data[1000 * k : 1000 * (k + 1), 0],
+                            y=np.exp(ll_out_keras[1000 * k : 1000 * (k + 1), 0]),
+                            color="green",
+                            label=label,
+                            alpha=1,
+                            ax=ax[row_tmp, col_tmp],
+                        )
 
         # Legend adjustments
         if row_tmp == 0 and col_tmp == 0:
@@ -461,6 +475,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
 
     return
 
+
 # Predict
 def lan_manifold(
     parameter_df=None,
@@ -502,7 +517,9 @@ def lan_manifold(
     # #matplotlib.rcParams['pdf.fonttype'] = 42
     # mpl.rcParams['svg.fonttype'] = 'none'
 
-    assert model_config[model]["n_choices"] == 2, "This plot works only for 2-choice models at the moment. Improvements coming!"
+    assert (
+        model_config[model]["n_choices"] == 2
+    ), "This plot works only for 2-choice models at the moment. Improvements coming!"
 
     if parameter_df.shape[0] > 0:
         parameters = parameter_df.iloc[0, :]
@@ -619,6 +636,7 @@ def lan_manifold(
 
     plt.close()
     return
+
 
 # -------------------------------------------------------------------------------------
 # def get_mlp(model="angle"):

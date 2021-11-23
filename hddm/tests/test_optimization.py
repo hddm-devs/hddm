@@ -13,6 +13,7 @@ from nose import SkipTest
 import hddm
 from hddm.diag import check_model
 
+
 def add_outliers(data, p_outlier):
     """add outliers to data. half of the outliers will be fast, and the rest will be slow
     Input:
@@ -26,14 +27,14 @@ def add_outliers(data, p_outlier):
     outliers = data[:n_outliers].copy()
 
     # fast outliers
-    outliers.iloc[: (n_outliers // 2), list(outliers.columns).index('rt')] = (
+    outliers.iloc[: (n_outliers // 2), list(outliers.columns).index("rt")] = (
         np.random.rand(n_outliers // 2) * (min(abs(data["rt"])) - 0.11) + 0.11
     )
 
     # slow outliers
-    outliers.iloc[(n_outliers // 2) :, list(outliers.columns).index('rt')] = np.random.rand(
-        n_outliers - n_outliers // 2
-    ) * 2 + max(abs(data["rt"]))
+    outliers.iloc[
+        (n_outliers // 2) :, list(outliers.columns).index("rt")
+    ] = np.random.rand(n_outliers - n_outliers // 2) * 2 + max(abs(data["rt"]))
     outliers.response = np.random.randint(0, 2, n_outliers)
 
     # combine data with outliers

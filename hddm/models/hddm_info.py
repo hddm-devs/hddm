@@ -11,13 +11,13 @@ from kabuki.hierarchical import Knode
 
 
 class HDDM(HDDMBase):
-    """Create hierarchical drift-diffusion model in which each subject 
+    """Create hierarchical drift-diffusion model in which each subject
     has a set of parameters that are constrained by a group distribution.
 
     :Arguments:
         data : pandas.DataFrame
             Input data with a row for each trial.
-            
+
             Must contain the following columns:
             * 'rt': Reaction time of trial in seconds.
             * 'response': Binary response (e.g. 0->error, 1->correct)
@@ -115,21 +115,21 @@ class HDDM(HDDMBase):
             self.slice_widths["p_outlier"] = 1.0
         else:
             self.slice_widths = {
-                                  "a": 1,
-                                  "t": 0.01,
-                                  "a_std": 1,
-                                  "t_std": 0.15,
-                                  "sz": 1.1,
-                                  "v": 1.5,
-                                  "st": 0.1,
-                                  "sv": 3,
-                                  "z_trans": 0.2,
-                                  "z": 0.1,
-                                  "p_outlier": 1.0,
-                                  "v_std": 1,
-                                  "alpha": 1.5,
-                                  "pos_alpha": 1.5,
-                                }
+                "a": 1,
+                "t": 0.01,
+                "a_std": 1,
+                "t_std": 0.15,
+                "sz": 1.1,
+                "v": 1.5,
+                "st": 0.1,
+                "sv": 3,
+                "z_trans": 0.2,
+                "z": 0.1,
+                "p_outlier": 1.0,
+                "v_std": 1,
+                "alpha": 1.5,
+                "pos_alpha": 1.5,
+            }
 
         # AF-Q: Is emcee actually used or can this be deleted ?
         self.emcee_dispersions = {
@@ -148,7 +148,6 @@ class HDDM(HDDMBase):
             "alpha": 1.5,
             "pos_alpha": 1.5,
         }
-
 
         if self.nn:
             self.is_informative = kwargs.pop("informative", False)

@@ -8,10 +8,10 @@ from kabuki.utils import stochastic_from_dist
 from hddm.model_config import model_config
 
 
-
 np.seterr(divide="ignore")
 
 import hddm
+
 
 def wiener_like_contaminant(
     value,
@@ -56,6 +56,7 @@ WienerContaminant = stochastic_from_dist(
     name="Wiener Simple Diffusion Process", logp=wiener_like_contaminant
 )
 
+
 def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3):
     _like = lambda value, cont_x, v, sv, a, z, sz, t, st, t_min, t_max, err=err, n_st=n_st, n_sz=n_sz, use_adaptive=use_adaptive, simps_err=simps_err: wiener_like_contaminant(
         value,
@@ -78,6 +79,7 @@ def general_WienerCont(err=1e-4, n_st=2, n_sz=2, use_adaptive=1, simps_err=1e-3)
     _like.__doc__ = wiener_like_contaminant.__doc__
     return stochastic_from_dist(name="Wiener Diffusion Contaminant Process", logp=_like)
 
+
 def generate_wfpt_stochastic_class(
     wiener_params=None, sampling_method="cssm", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
@@ -85,15 +87,15 @@ def generate_wfpt_stochastic_class(
     create a wfpt stochastic class by creating a pymc nodes and then adding quantile functions.
 
     :Arguments:
-        wiener_params: dict <default=None> 
+        wiener_params: dict <default=None>
             dictonary of wiener_params for wfpt likelihoods
         sampling_method: str <default='cssm'>
             an argument used by hddm.generate.gen_rts
         cdf_range: sequence <default=(-5,5)>
             an argument used by hddm.generate.gen_rts
-        sampling_dt: float <default=1e-4> 
+        sampling_dt: float <default=1e-4>
             an argument used by hddm.generate.gen_rts
-    
+
     :Output:
         wfpt: class
             the wfpt stochastic
@@ -147,15 +149,21 @@ def generate_wfpt_stochastic_class(
             return logp_resp + logp_noresp
 
     # create random function
-    def random(self,
-               keep_negative_responses = True, 
-               add_model_parameters = False,
-               keep_subj_idx = False):
-        #print(self.value)
-        #print(type(self.value))
-        assert sampling_method in ['cdf', 'drift', 'cssm'], 'Sampling method is invalid!'
+    def random(
+        self,
+        keep_negative_responses=True,
+        add_model_parameters=False,
+        keep_subj_idx=False,
+    ):
+        # print(self.value)
+        # print(type(self.value))
+        assert sampling_method in [
+            "cdf",
+            "drift",
+            "cssm",
+        ], "Sampling method is invalid!"
 
-        if sampling_method == 'cdf' or sampling_method == 'drift':
+        if sampling_method == "cdf" or sampling_method == "drift":
             return hddm.utils.flip_errors(
                 hddm.generate.gen_rts(
                     method=sampling_method,
@@ -166,24 +174,30 @@ def generate_wfpt_stochastic_class(
                     **self.parents.value
                 )
             )
-        elif sampling_method == 'cssm':
+        elif sampling_method == "cssm":
             keys_tmp = self.parents.value.keys()
-            cnt = 0 
-            theta = np.zeros(len(list(keys_tmp)), dtype = np.float32)
+            cnt = 0
+            theta = np.zeros(len(list(keys_tmp)), dtype=np.float32)
 
-            for param in model_config['full_ddm_vanilla']['params']:
+            for param in model_config["full_ddm_vanilla"]["params"]:
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
                 cnt += 1
-            
-            sim_out = simulator(theta=theta, model='full_ddm_vanilla', n_samples=self.shape[0], max_t=20)
-            sim_out_proc = hddm_preprocess(sim_out,
-                                           keep_negative_responses = keep_negative_responses,
-                                           keep_subj_idx = keep_subj_idx,
-                                           add_model_parameters = add_model_parameters)
-            sim_out_proc = hddm.utils.flip_errors(sim_out_proc) #['rt'] * sim_out_proc['response']
+
+            sim_out = simulator(
+                theta=theta, model="full_ddm_vanilla", n_samples=self.shape[0], max_t=20
+            )
+            sim_out_proc = hddm_preprocess(
+                sim_out,
+                keep_negative_responses=keep_negative_responses,
+                keep_subj_idx=keep_subj_idx,
+                add_model_parameters=add_model_parameters,
+            )
+            sim_out_proc = hddm.utils.flip_errors(
+                sim_out_proc
+            )  # ['rt'] * sim_out_proc['response']
 
             return sim_out_proc
-    
+
     # create pdf function
     def pdf(self, x):
         out = hddm.wfpt.pdf_array(x, **self.parents)

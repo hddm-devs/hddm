@@ -7,7 +7,7 @@ import hddm
 
 # simulator_h_c(data=None, n_subjects=10, n_trials_per_subject=100, model='ddm_vanilla', conditions={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}, depends_on={'v': ['c_one', 'c_two']}, regression_models=['z ~ covariate_name'], regression_covariates={'covariate_name': {'type': 'categorical', 'range': (0, 4)}}, group_only_regressors=True, group_only=['z'], fixed_at_default=['t'], p_outlier=0.0, outlier_max_t=10.0, **kwargs)
 #     Flexible simulator that allows specification of models very similar to the hddm model classes.
-    
+
 #     :Arguments:
 #         data: pd.DataFrame <default=None>
 #             Actual covariate dataset. If data is supplied its covariates are used instead of generated.
@@ -42,88 +42,119 @@ import hddm
 #         (pandas.DataFrame, dict): The Dataframe holds the generated dataset, ready for constuction of an hddm model. The dictionary holds the groundtruth parameter (values) and parameter names (keys). Keys match
 #                                   the names of traces when fitting the equivalent hddm model. The parameter dictionary is useful for some graphs, otherwise not neccessary.
 
+
 class SimulatorTests(unittest.TestCase):
     def setUp(self):
-        print('Passing setUp')
-        self.models = list(hddm.torch.torch_config.TorchConfig(model = 'ddm').network_files.keys()) + ['ddm_vanilla', 'full_ddm_vanilla']
+        print("Passing setUp")
+        self.models = list(
+            hddm.torch.torch_config.TorchConfig(model="ddm").network_files.keys()
+        ) + ["ddm_vanilla", "full_ddm_vanilla"]
         self.n_samples_per_subject = 100
         self.n_trials = 10
 
         self.n_subjects = 5
-        self.cav_data = hddm.load_csv(hddm.__path__[0] + '/examples/cavanagh_theta_nn.csv')
+        self.cav_data = hddm.load_csv(
+            hddm.__path__[0] + "/examples/cavanagh_theta_nn.csv"
+        )
         pass
 
     def tearDown(self):
-        print('Passing tearDown')
+        print("Passing tearDown")
         pass
 
     def test_basic_simulator(self):
         print("Testing basic simulators")
         for model in self.models:
-            print('Now testing model: ', model)
-            out = hddm.simulators.simulator(theta = np.tile(hddm.model_config.model_config[model]['default_params'], reps = (self.n_trials, 1)),
-                                            model = model,
-                                            n_samples = self.n_samples_per_subject)
-            
-            print('Testing output shapes')
+            print("Now testing model: ", model)
+            out = hddm.simulators.simulator(
+                theta=np.tile(
+                    hddm.model_config.model_config[model]["default_params"],
+                    reps=(self.n_trials, 1),
+                ),
+                model=model,
+                n_samples=self.n_samples_per_subject,
+            )
+
+            print("Testing output shapes")
             self.assertEqual(out[0].shape, out[1].shape)
-            self.assertEqual(out[0].shape, (self.n_samples_per_subject, self.n_trials, 1))
+            self.assertEqual(
+                out[0].shape, (self.n_samples_per_subject, self.n_trials, 1)
+            )
             self.assertEqual(type(out[2]), dict)
-            
-            print('Check if all parameters are in output dictionary of simulator')
-            for param in  hddm.model_config.model_config[model]['params']:
+
+            print("Check if all parameters are in output dictionary of simulator")
+            for param in hddm.model_config.model_config[model]["params"]:
                 self.assertTrue(param in out[2].keys())
 
             # Potentially add some simulator behavior tests
-    
+
     def test_simulator_h_c_depends(self):
-        #print(hddm.__path__ + '/examples/cavanagh_theta_nn.csv')
+        # print(hddm.__path__ + '/examples/cavanagh_theta_nn.csv')
 
         # Sample some metaparameters here
 
         for model in self.models:
-            print('Testing simulator_h_c() for model: ', model)
-            depends_param_id = np.random.choice(len(hddm.model_config.model_config[model]['params']))
-            depends_param_tmp = hddm.model_config.model_config[model]['params'][depends_param_id]
-            depends_on = {depends_param_tmp: ['stim']}
-            print('depends_on : ', depends_on)
-            conditions = {'stim': list(self.cav_data['stim'].unique())}
+            print("Testing simulator_h_c() for model: ", model)
+            depends_param_id = np.random.choice(
+                len(hddm.model_config.model_config[model]["params"])
+            )
+            depends_param_tmp = hddm.model_config.model_config[model]["params"][
+                depends_param_id
+            ]
+            depends_on = {depends_param_tmp: ["stim"]}
+            print("depends_on : ", depends_on)
+            conditions = {"stim": list(self.cav_data["stim"].unique())}
 
             fixed_at_default_id = depends_param_id
             while fixed_at_default_id == depends_param_id:
-                fixed_at_default_id = np.random.choice(len(hddm.model_config.model_config[model]['params']))
-                fixed_at_default_tmp = [hddm.model_config.model_config[model]['params'][fixed_at_default_id]]
+                fixed_at_default_id = np.random.choice(
+                    len(hddm.model_config.model_config[model]["params"])
+                )
+                fixed_at_default_tmp = [
+                    hddm.model_config.model_config[model]["params"][fixed_at_default_id]
+                ]
 
-            print('fixed_at_default_tmp: ', fixed_at_default_tmp)
-            
-            print('Testing simulator_h_c() with depends_on on: Cavanagh Data')
-            data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(data = self.cav_data.copy(),
-                                                                                              model = model,
-                                                                                              p_outlier = 0.00,
-                                                                                              conditions = None,
-                                                                                              depends_on = depends_on,
-                                                                                              regression_models = None,
-                                                                                              regression_covariates = None,
-                                                                                              group_only_regressors = False,
-                                                                                              group_only = None, #['vh', 'vl1', 'vl2', 'a', 't'],
-                                                                                              fixed_at_default = fixed_at_default_tmp) #['z'])
+            print("fixed_at_default_tmp: ", fixed_at_default_tmp)
+
+            print("Testing simulator_h_c() with depends_on on: Cavanagh Data")
+            (
+                data,
+                full_parameter_dict,
+            ) = hddm.simulators.hddm_dataset_generators.simulator_h_c(
+                data=self.cav_data.copy(),
+                model=model,
+                p_outlier=0.00,
+                conditions=None,
+                depends_on=depends_on,
+                regression_models=None,
+                regression_covariates=None,
+                group_only_regressors=False,
+                group_only=None,  # ['vh', 'vl1', 'vl2', 'a', 't'],
+                fixed_at_default=fixed_at_default_tmp,
+            )  # ['z'])
             self.assertTrue(np.unique(data[fixed_at_default_tmp]).shape[0], 1)
             self.assertEqual(data.shape[0], self.cav_data.shape[0])
-            
-            print('Testing simulator_h_c() with depends_on on: Artificial Data')
-            data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(data = None,
-                                                                                              n_subjects = self.n_subjects,
-                                                                                              n_trials_per_subject = self.n_smples_per_subject,
-                                                                                              model = model,
-                                                                                              p_outlier = 0.00,
-                                                                                              conditions = conditions,
-                                                                                              depends_on = depends_on,
-                                                                                              regression_models = None,
-                                                                                              regression_covariates = None,
-                                                                                              group_only_regressors = False,
-                                                                                              group_only = None, #['vh', 'vl1', 'vl2', 'a', 't'],
-                                                                                              fixed_at_default = fixed_at_default_tmp) #['z'])
+
+            print("Testing simulator_h_c() with depends_on on: Artificial Data")
+            (
+                data,
+                full_parameter_dict,
+            ) = hddm.simulators.hddm_dataset_generators.simulator_h_c(
+                data=None,
+                n_subjects=self.n_subjects,
+                n_trials_per_subject=self.n_smples_per_subject,
+                model=model,
+                p_outlier=0.00,
+                conditions=conditions,
+                depends_on=depends_on,
+                regression_models=None,
+                regression_covariates=None,
+                group_only_regressors=False,
+                group_only=None,  # ['vh', 'vl1', 'vl2', 'a', 't'],
+                fixed_at_default=fixed_at_default_tmp,
+            )  # ['z'])
             self.assertTrue(np.unique(data[fixed_at_default_tmp]).shape[0], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -137,5 +168,3 @@ if __name__ == "__main__":
 # Assert
 
 # Mocks, Fakes, Stubs
-
-

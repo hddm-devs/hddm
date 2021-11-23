@@ -4,7 +4,7 @@ import hddm
 
 from kabuki.hierarchical import (
     Knode,
-)  
+)
 
 # from kabuki.utils import stochastic_from_dist
 from hddm.models import HDDM
@@ -12,9 +12,12 @@ from hddm.models import HDDM
 try:
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
-    print('It seems that you do not have pytorch installed.' + \
-          'The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding' + \
-          'classes will not work')
+    print(
+        "It seems that you do not have pytorch installed."
+        + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
+        + "classes will not work"
+    )
+
 
 class HDDMnn(HDDM):
     """HDDM model class that uses neural network based likelihoods to include a variety of other models.
@@ -22,7 +25,7 @@ class HDDMnn(HDDM):
     :Arguments:
         data: pandas.DataFrame
             Input data with a row for each trial.
-            
+
             Must contain the following columns:
             * 'rt': Reaction time of trial in seconds.
             * 'response': Binary response (e.g. 0->error, 1->correct)
@@ -129,14 +132,14 @@ class HDDMnn(HDDM):
         if self.network_type == "torch_mlp":
             if self.network is None:
                 try:
-                    self.network = load_torch_mlp(model = self.model)
+                    self.network = load_torch_mlp(model=self.model)
                 except:
                     print("Couldn't find load_torch_mlp()... pytorch not installed?")
                     return None
 
             network_dict = {"network": self.network}
             self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-                model = self.model, **network_dict
+                model=self.model, **network_dict
             )
 
         # Initialize super class
@@ -172,17 +175,18 @@ class HDDMnn(HDDM):
 
         super(HDDMnn, self).__setstate__(d)
 
+
 # --------------------------------------------------------------------
 # Knode definition for previous cnn network
 
-        # elif self.network_type == "cnn":
-        #     return Knode(
-        #         self.wfpt_nn,
-        #         "wfpt",
-        #         observed=True,
-        #         col_name=[
-        #             "response_binned",
-        #             "rt_binned",
-        #         ],  # TODO: One could preprocess at initialization
-        #         **wfpt_parents
-        #     )
+# elif self.network_type == "cnn":
+#     return Knode(
+#         self.wfpt_nn,
+#         "wfpt",
+#         observed=True,
+#         col_name=[
+#             "response_binned",
+#             "rt_binned",
+#         ],  # TODO: One could preprocess at initialization
+#         **wfpt_parents
+#     )

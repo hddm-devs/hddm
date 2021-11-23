@@ -3,12 +3,14 @@ import hddm
 from hddm.models import HDDMRegressor
 
 try:
-    #print('HDDM: Trying import of pytorch related classes.')
+    # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
-    print('It seems that you do not have pytorch installed.' + \
-          'The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding' + \
-          'classes will not work')
+    print(
+        "It seems that you do not have pytorch installed."
+        + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
+        + "classes will not work"
+    )
 
 # import kabuki
 from kabuki import Knode
@@ -92,7 +94,7 @@ class HDDMnnRegressor(HDDMRegressor):
         self.network_type = kwargs.pop("network_type", "torch_mlp")
         self.network = kwargs.pop("network", None)
         self.non_centered = kwargs.pop("non_centered", False)
-        
+
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
 
@@ -103,13 +105,11 @@ class HDDMnnRegressor(HDDMRegressor):
                 except:
                     print("Couldn't find load_torch_mlp()... pytorch not installed?")
                     return None
-            
+
             network_dict = {"network": self.network}
 
-            self.wfpt_nn_reg_class = (
-                hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-                    model=self.model, **network_dict
-                )
+            self.wfpt_nn_reg_class = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
+                model=self.model, **network_dict
             )
 
         super(HDDMnnRegressor, self).__init__(
@@ -135,10 +135,11 @@ class HDDMnnRegressor(HDDMRegressor):
         return d
 
     def __setstate__(self, d):
-        if d['network_type'] == "torch_mlp":
-            d["network"] = load_torch_mlp(model = d["model"])
-            network_dict = {'network': d["network"]}
+        if d["network_type"] == "torch_mlp":
+            d["network"] = load_torch_mlp(model=d["model"])
+            network_dict = {"network": d["network"]}
             d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-                model = d["model"], **network_dict)
+                model=d["model"], **network_dict
+            )
 
         super(HDDMnnRegressor, self).__setstate__(d)
