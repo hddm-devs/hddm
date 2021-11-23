@@ -120,7 +120,7 @@ is hampered by issues with compiling its fortran code. Try downgrading you the v
 
     brew install gcc@9
 
-In case you do not have the **brew** command, install the `Homebrew <https://brew.sh/>`_ .
+In case you do not have the **brew** command, install `Homebrew <https://brew.sh/>`_ first.
 
 You usually do not run into problems with **linux** machines.
 
