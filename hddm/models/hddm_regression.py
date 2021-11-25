@@ -461,13 +461,17 @@ class HDDMRegressor(HDDM):
                 knodes.update(reg_family)
 
                 # AF-COMMENT Old slice_widths
-                self.slice_widths[param] = 0.05
+                # self.slice_widths[param] = 0.05
                 
-                # AF-COMMENT Now basing slice widths on model_config: 
-                # if trans:
-                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans']
-                # else:
-                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")]]
+                #AF-COMMENT Now basing slice widths on model_config: 
+                if trans:
+                    print('slice width for ', param)
+                    print(model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans'])
+                    self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans']
+                else:
+                    print('slice width for ', param)
+                    print(model_config[self.model]["slice_widths"][param[: param.find("_")]])
+                    self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")]]
 
             reg_knode = KnodeRegress(
                 pm.Deterministic,
