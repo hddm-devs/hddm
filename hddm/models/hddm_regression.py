@@ -397,12 +397,12 @@ class HDDMRegressor(HDDM):
             # ------
 
             for inter, param in zip(intercept, reg["params"]):
+                trans = 0
                 if inter:
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[: param.find("_")]
 
                     # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
-                    trans = 0
                     if self.nn:
                         param_id = model_config[self.model]["params"].index(
                             param_lookup
@@ -459,7 +459,15 @@ class HDDMRegressor(HDDM):
                         "%s_bottom" % param_lookup
                     )
                 knodes.update(reg_family)
+
+                # AF-COMMENT Old slice_widths
                 self.slice_widths[param] = 0.05
+                
+                # AF-COMMENT Now basing slice widths on model_config: 
+                # if trans:
+                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans']
+                # else:
+                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")]]
 
             reg_knode = KnodeRegress(
                 pm.Deterministic,
