@@ -2,14 +2,14 @@
 Introduction
 ************
 
-:Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Michael J. Frank
-:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, michael_frank@brown.edu
-:Web site: http://ski.clps.brown.edu/hddm_docs
+:Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Alexander Fengler, Michael J. Frank
+:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, alexander_fengler@brown.edu, michael_frank@brown.edu
+:Web site: https://hddm.readthedocs.io
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.7.8
+:Version: 0.9.0
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -49,9 +49,15 @@ Features
 
 * As of version 0.7.1 HDDM includes modules for analyzing reinforcement learning data with the reinforcement learning drift diffusion   
   model (RLDDM), including a module for estimating the impact of continuous regressors onto RLDDM parameters, and a reinforcement learning 
-  (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/RLHDDMtutorial.ipynb and in the paper here: https://rdcu.be/b4q6Z
+  (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/demo_RLHDDMtutorial.ipynb and in the paper here: https://rdcu.be/b4q6Z
   
-* NEW: HDDM extension to fitting arbitrary sequential sampling models beyond the DDM, using neural networks. Includes all the features of regular HDDM including regression etc, and more. For methods on how to use this extension, see tutorial https://github.com/lnccbrown/lans/tree/master/hddmnn_tutorial and in the paper here: https://elifesciences.org/articles/65074.
+* HDDM 0.9.0 brings a host of new features. HDDM includes `likelihood approximation networks`_ via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
+  This allows fitting of a number of variants of sequential sampling models. You can now easily use custom likelihoods
+  for model fitting. We included a range of new **simulators**, which allow data generation for a host of variants of sequential sampling models.
+  There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
+  Some sampler settings are now exposed to the user via a customizable **model_config dictionary**. Lastly you are now able to save and load **HDDMRegression** models with 
+  custom link functions. Please see the **documentation** (under **LAN Extension**) for illustrations on how to use the new features.
+
 
 Comparison to other packages
 ============================
@@ -93,6 +99,33 @@ please see the main `publication`_.
 Installation
 ============
 
+For **HDDM >= 0.9.0**, currently in beta release, the most convenient way to install HDDM, is to directly 
+install via git. In a fresh environment type:
+
+:: 
+    pip install cython
+    pip install pymc
+    pip install git+htpts://github.com/hddm-devs/kabuki
+    pip install git+https://github.com/hddm-devs/hddm
+    # Optional
+    pip install torch torchvision torchaudio
+
+To make use of the LAN fuctionalities, need actually need to install `pytorch`_ .
+
+A common issue is that the installation of the **pymc** package (a necessary dependency),
+is hampered by issues with compiling its fortran code. Try downgrading you the version of your
+**gcc* compiler. This can be done on a MAC (not the new M1 versions tragically), via 
+
+::
+
+    brew install gcc@9
+
+In case you do not have the **brew** command, install `Homebrew <https://brew.sh/>`_ first.
+
+You usually do not run into problems with **linux** machines.
+
+
+(Previous instructions for **HDDM <= 0.8.0**)
 As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
 
 The easiest way to install HDDM is through Anaconda (available for
@@ -122,7 +155,6 @@ If you are having installation problems please contact the `mailing list`_.
 
 And if you're a mac user, check out this `thread`_ for advice on installation.
 
-
 How to cite
 ===========
 
@@ -148,15 +180,17 @@ Check out the tutorial_ on how to get started. Further information can be found 
 
 Join our low-traffic `mailing list`_.
 
+.. _likelihood approximation networks: https://elifesciences.org/articles/65074
+.. _pytorch: http://pytorch.org
 .. _HDDM: http://code.google.com/p/hddm/
 .. _Python: http://www.python.org/
 .. _PyMC: http://pymc-devs.github.com/pymc/
 .. _Cython: http://www.cython.org/
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
-.. _documentation: http://ski.clps.brown.edu/hddm_docs
-.. _tutorial: http://ski.clps.brown.edu/hddm_docs/tutorial.html
-.. _howto: http://ski.clps.brown.edu/hddm_docs/howto.html
+.. _documentation: https://hddm.readthedocs.io
+.. _tutorial: https://hddm.readthedocs.io/en/latest/tutorial.html
+.. _howto: https://hddm.readthedocs.io/en/latest/howto.html
 .. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
 .. _mailing list: https://groups.google.com/group/hddm-users/

@@ -1,0 +1,11 @@
+numpy>=1.20.1
+ipython
+matplotlib
+sphinx_rtd_theme
+sphinxcontrib-bibtex
+myst-parser
+traits
+traitlets
+traitsui
+PyQt5
+#wxpython

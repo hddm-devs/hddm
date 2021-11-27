@@ -75,7 +75,8 @@ TODO
 
 """
 
-import sys, os, glob, shutil, imp, warnings, cStringIO, re, textwrap, traceback
+import sys, os, glob, shutil, imp, warnings, re, textwrap, traceback #cStringIO,
+import io
 import sphinx
 
 import warnings
@@ -257,7 +258,8 @@ def run(arguments, content, options, state_machine, state, lineno):
 
     # is it in doctest format?
     is_doctest = contains_doctest(code)
-    if options.has_key('format'):
+    # if options.has_key('format'):
+    if 'format' in options.keys():
         if options['format'] == 'python':
             is_doctest = False
         else:
@@ -448,7 +450,8 @@ def run_code(code, code_path, ns=None):
 
     # Redirect stdout
     stdout = sys.stdout
-    sys.stdout = cStringIO.StringIO()
+    sys.stdout = io.StringIO()
+    #sys.stdout = cStringIO.StringIO()
 
     # Reset sys.argv
     old_sys_argv = sys.argv

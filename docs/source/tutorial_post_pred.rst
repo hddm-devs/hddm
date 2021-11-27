@@ -35,6 +35,7 @@ Simulate data from known parameters and two conditions (easy and hard).
 
     data, params = hddm.generate.gen_rand_data(params={'easy': {'v': 1, 'a': 2, 't': .3},
                                                        'hard': {'v': 1, 'a': 2, 't': .3}})
+                                                       
 First, lets estimate the same model that was used to generate the data.
 
 .. code:: python

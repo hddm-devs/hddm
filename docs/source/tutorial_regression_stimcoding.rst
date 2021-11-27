@@ -123,28 +123,41 @@ Now we merge the data for stimulus A and B
 Setting up the HDDM regression model
 ************************************
 
-The parameter ``z`` is bound between ``0`` and ``1``, but the standard
-linear regression does not generate values between ``0`` and
-``1``. Therefore we use a link-function, here the inverse logit
-``1/(1+exp(-x))``, which transforms values between plus and minus
-infinity into values ranging from (just above) ``0`` to (nearly)
-``1``. [If this reminds you of link functions for logistic regressions,
-that’s correct].
-
-Next we need to insure that the bias is ``z`` for one stimulus and ``1-z``
-for the other stimulus. To achieve this, we can simply multiply the
-regression output for one stimulus with ``-1``. This is implemented here
-by dot-multiplying the regression output "x" (which is an array) with
-equally sized array "stim", which is 1 for all stimulus A trials
+Next we need to ensure that the bias is ``z`` for one stimulus and ``1-z``
+for the other stimulus.  This is implemented here for all stimulus A trials
 and -1 for stimulus B trials. We use the ``patsy`` command ``dmatrix`` to
 generate such an array from the stimulus column of our simulated data
 ::
 
     def z_link_func(x, data=mydata):
-        stim = (np.asarray(dmatrix('0 + C(s, [[1], [-1]])',
-	                           {'s': data.stimulus.ix[x.index]}))
-	)
-        return 1 / (1 + np.exp(-(x * stim)))
+        stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
+                                  {'s': data.stimulus.loc[x.index]}))
+        )
+        # Apply z = (1 - x) to flip them along 0.5
+        z_flip = stim - x
+        # The above inverts those values we do not want to flip,
+        # so invert them back
+        z_flip[stim == 0] *= -1
+        return z_flip
+
+(NOTE: earlier versions of this tutorial suggested applying an inverse logit
+link function to the regression, but this should no longer be used given changes to the prior 
+on the intercept.) 
+
+Also depending on your python version, the above code may give you errors and you can try this instead:
+::
+
+    def z_link_func(x, data=mydata):
+        stim = (np.asarray(dmatrix('0 + C(s, [[0], [1]])',
+                                  {'s': data.stimulus.loc[x.index]},return_type='dataframe'))
+        )
+        # Apply z = (1 - x) to flip them along 0.5
+        z_flip = np.subtract(stim, x.to_frame())
+        # The above inverts those values we do not want to flip,
+        # so invert them back
+        z_flip[stim == 0] *= -1
+        return z_flip
+
 
 Now we set up the regression models for ``z`` and ``v`` and also include the
 link functions The relevant string here used by ``patsy`` is '1 +
@@ -178,11 +191,7 @@ The last step before running the model is to construct the complete hddm regress
     m_reg = hddm.HDDMRegressor(mydata, reg_descr, include='z')
 
 Now we start the model, and wait for a while (you can go and get
-several coffees, or read a paper). Sampling 20000 samples for the
-example experiment described here took 77 minutes on a macbook pro
-with a 2.66 GHz Intel Core i7 (for a real experiment with data that
-are certainly noisier than the simulated data one should sample ca 10
-times as many samples).
+several coffees, or read a paper). 
 ::
 
     m_reg.sample(5000, burn=200)
@@ -195,40 +204,41 @@ First we print the model stats
 
     m_reg.print_stats()
 
-Here is the relevant output for our purposes:
+Here is the relevant output for our purposes (in this case I fit a single subject, ie. I set n_subjects =1 above)
+
 .. parsed-literal::
 
-    parameter			mean       std      2.5q       25q       50q       75q      97.5q
+                               mean        std       2.5q       25q        50q       75q     97.5q       mc err
+			        
+				
+     a                        2.01142  0.0326427    1.94747   1.98924    2.00941   2.03399   2.07567   0.00238618
 
-    z_Intercept			-0.04459  0.148731 -0.348728 -0.141392 -0.045055  0.046041  0.271
+     t                        0.296854  0.0077349   0.279701  0.291899   0.297717  0.302649  0.310614  0.000605895
+	
+     z_Intercept              0.480266  0.0167311   0.449494  0.469451   0.480738   0.49086  0.514289   0.00148616
+ 
+     z_C(condition)[T.level2] 0.120887  0.0233508  0.0740366  0.105916   0.122639  0.136614  0.168063   0.00180898
 
-    z_C(condition)[T.level2]	0.395524  0.049708  0.304394  0.354014  0.402072  0.426116  0.496
+     z_C(condition)[T.level3] 0.213324  0.0215305   0.165814  0.200958   0.213415  0.228675  0.250721   0.00190894
 
-    z_C(condition)[T.level3]	0.818458  0.049148  0.712337  0.788209  0.820972  0.850570  0.903
+     v_Intercept              0.283547  0.0542307   0.172041  0.246596   0.281602  0.321173  0.400883   0.00437291
 
-    v_Intercept			0.269770  0.058421  0.151004  0.237380  0.271991  0.303675  0.380
+     v_C(condition)[T.level2] 0.0774754  0.0811844 -0.0850003  0.024219  0.0756668  0.130212  0.244286   0.00642687
 
-    v_C(condition)[T.level2]	0.159221  0.051821  0.065206  0.123976  0.157030  0.192976  0.271
-
-    v_C(condition)[T.level3]	0.250912  0.059487  0.152756  0.203228  0.251347  0.290904  0.373
-
+     v_C(condition)[T.level3] 0.22311  0.0846739  0.0460032  0.160987     0.2271  0.290661  0.381936   0.00639282
+ 
+   
 Lets first look at ``v``. For ``level1`` this is just the
-intercept. The value of ``.27`` is in the ball park of the true value
+intercept. The value of ``.283`` is in the ball park of the true value
 of ``.3``. The fit is not perfect, but running a longer chain might
 help (we are ignoring sophisticated checks of model convergence for
 this example here). To get the values of ``v`` for levels 2 and 3, we
-have to add the respective parameters (``0.16`` and ``.25``) to the
-intercept value. The resulting values of ``.43`` and ``.52`` are again
-close enough to the true values of ``.4`` and ``.5``. To get the
-estimated ``z`` value we first need to "convert" the regression value
-with our link function. For level 1 this is ``1/(1+exp(-(-0.044))) =
-.48``, which is close to the true value of ``.5``. For level 2 this is
-``1/(1+exp(-(-0.044+0.396))) = .59``, again close to the true value of
-``.6``, as is the case for level 3 (``.68`` vs. ``.7``).  In sum,
+have to add the respective parameters (``0.077`` and ``.22``) to the
+intercept value. The resulting values of  are again
+close enough to the true values of ``.4`` and ``.5``. The ``z_Intercept``
+value of 0.48 is close tothe true value of ``.5``, and the level 2 and level 3
+offsets are also close (.48 + .12= 0.6 and .48+.21 = 0.69).   In sum,
 ``HDDMRegression`` easily recovered the right order of the parameters
 ``z``. The recovered parameter values are also close to the true
-parameter values. The deviations show that (a) we should maybe run
-longer MCMC chains and, more importantly, (b) that for the relatively
-small differences in DDM parameters we tested here a larger experiment
-(i.e. more trials per conditions or more participants) would be
-better.
+parameter values, and this was only for a single subject fit
+- parameter estimates are improved with more subjects.  

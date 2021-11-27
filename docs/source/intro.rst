@@ -1,14 +1,14 @@
 .. index:: Introduction
 .. _chap_introduction:
 
-************
-Introduction
-************
+********************
+Package Introduction
+********************
 
 Sequential sampling models (SSMs) (:cite:`TownsendAshby83`) have
 established themselves as the de-facto standard for modeling
 reaction-time data from simple two-alternative forced choice decision
-making tasks (:cite:`SmithRatcliff04`). Each decision is modeled as an
+making tasks (:cite:`SmithRatcliff04`). SSMs model each decision as an
 accumulation of noisy information indicative of one choice or the
 other, with sequential evaluation of the accumulated evidence at each
 time step. Once this evidence crosses a threshold, the corresponding
@@ -114,3 +114,4 @@ trials (:cite: `SoferWieckiFrank`).
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _IPython: http://ipython.org
+
