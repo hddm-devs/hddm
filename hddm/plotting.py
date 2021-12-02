@@ -699,7 +699,7 @@ def model_plot(
         legend_fontsize: str <default='medium>
             Specify the fontsize of legends. Allowed are for example: 'x-small', 'small', 'medium', 'large', 'x-large'.
             See matplotlib documentation for further possible values.
-        legend_shadown: bool <default=False>
+        legend_shadow: bool <default=False>
             Should the legend have a box with shadow around it?
     Return: plot object
     """
@@ -1010,6 +1010,7 @@ def model_plot(
                     # If we didn't supply posterior_samples but want to show model
                     # we set n_posterior_parameters to 0
                     n_posterior_parameters = 0
+                
                 for j in range(n_posterior_parameters + 1):
                     tmp_label = ""
                     if j == (
@@ -1209,20 +1210,20 @@ def model_plot(
             if "cond_subj_label" in list(sub_data[i].keys()):
                 fig.suptitle(
                     fig_title_tmp,
-                    fontsize=30
+                    fontsize=26
                     / (0.5 * len(list(sub_data[i]["cond_subj_label"].keys()))),
-                )
+                    y = 0.9)
             else:
                 pass
 
             # Set x and y axis labels
             if row_tmp == (rows - 1):
-                ax_tmp.set_xlabel("rt", fontsize=20)
-            ax_tmp.set_ylabel("", fontsize=20)
+                ax_tmp.set_xlabel("rt", fontdict = {'fontsize': 24 * ((scale_x + scale_y) / 2)})
+            ax_tmp.set_ylabel("", fontdict = {'fontsize': 24 * ((scale_x + scale_y) / 2)})
 
-            ax_tmp.set_title(title_tmp, fontsize=title_size)
-            ax_tmp.tick_params(axis="y", size=20)
-            ax_tmp.tick_params(axis="x", size=20)
+            ax_tmp.set_title(title_tmp, fontdict = {'fontsize': 24 * ((scale_x + scale_y) / 2)})
+            ax_tmp.tick_params(axis="y", labelsize=20 * ((scale_x + scale_y) / 2))
+            ax_tmp.tick_params(axis="x", labelsize=20 * ((scale_x + scale_y) / 2))
 
             # Some extra styling:
             if (model_ground_truth is not None) and (not grouped):
@@ -1270,7 +1271,6 @@ def model_plot(
             plt.show()
 
     return plt.show()
-
 
 def posterior_predictive_plot(
     hddm_model=None,

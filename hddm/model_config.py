@@ -2,59 +2,8 @@ from .simulators import boundary_functions as bf
 import numpy as np
 
 model_config = {
-    "test": {
-        "params": ["v", "a", "z", "t"],
-        "params_trans": [0, 0, 1, 0],
-        "params_std_upper": [1.5, 1.0, None, 1.0],
-        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
-        "param_bounds_cnn": [
-            [-2.5, 0.5, 0.25, 1e-3],
-            [2.5, 2.2, 0.75, 1.95],
-        ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
-        "boundary": bf.constant,
-        "n_params": 4,
-        "default_params": [0.0, 1.0, 0.5, 1e-3],
-        "hddm_include": ["z"],
-        "n_choices": 2,
-        "choices": [-1, 1],
-        "slice_widths": {
-            "v": 1.5,
-            "v_std": 1,
-            "a": 1,
-            "a_std": 1,
-            "z": 0.1,
-            "z_trans": 0.2,
-            "t": 0.01,
-            "t_std": 0.15,
-        },
-    },
-    "ddm": {
-        "params": ["v", "a", "z", "t"],
-        "params_trans": [0, 0, 1, 0],
-        "params_std_upper": [1.5, 1.0, None, 1.0],
-        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
-        "param_bounds_cnn": [
-            [-2.5, 0.5, 0.25, 1e-3],
-            [2.5, 2.2, 0.75, 1.95],
-        ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
-        "boundary": bf.constant,
-        "n_params": 4,
-        "default_params": [0.0, 1.0, 0.5, 1e-3],
-        "hddm_include": ["z"],
-        "n_choices": 2,
-        "choices": [-1, 1],
-        "slice_widths": {
-            "v": 1.5,
-            "v_std": 1,
-            "a": 1,
-            "a_std": 1,
-            "z": 0.1,
-            "z_trans": 0.2,
-            "t": 0.01,
-            "t_std": 0.15,
-        },
-    },
     "ddm_vanilla": {
+        "doc": "Model used internally for simulation purposes. Do NOT use with the LAN extension.",
         "params": ["v", "a", "z", "t"],
         "params_trans": [0, 0, 1, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0],
@@ -76,7 +25,71 @@ model_config = {
             "t_std": 0.15,
         },
     },
+    "full_ddm_vanilla": {
+        "doc": "Model used internally for simulation purposes. Do NOT use with the LAN extension.",
+        "params": ["v", "a", "z", "t", "sz", "sv", "st"],
+        "params_trans": [0, 0, 1, 0, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
+        "param_bounds": [
+            [-5.0, 0.1, 0.3, 0.25, 0, 0, 0],
+            [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
+        ],
+        "boundary": bf.constant,
+        "n_params": 7,
+        "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
+        "hddm_include": ["z", "st", "sv", "sz"],
+        "n_choices": 2,
+        "choices": [0, 1],
+        "slice_widths": {
+            "v": 1.5,
+            "v_std": 1,
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "t": 0.01,
+            "t_std": 0.15,
+            "sz": 1.1,  # AF-TODO: Might be worth downregulating and adding _std widths
+            "st": 0.1,
+            "sv": 0.5,
+        },
+    },
+    "ddm": {
+        "doc": "Basic DDM. Meant for use with the LAN extension. \n" + \
+               "Note that the boundaries here are coded as -a, and a in line with all other models meant for the LAN extension. \n" + \
+               "To compare model fits between standard HDDM and HDDMnn when using the DDM model, multiply the boundary " + \
+               "(a) parameter by 2. \n" + \
+               "We recommend using standard HDDM if you are interested in the basic DDM, but you might want to " + \
+               "use this for testing.",
+        "params": ["v", "a", "z", "t"],
+        "params_trans": [0, 0, 1, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0],
+        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
+        "param_bounds_cnn": [
+            [-2.5, 0.5, 0.25, 1e-3],
+            [2.5, 2.2, 0.75, 1.95],
+        ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
+        "boundary": bf.constant,
+        "n_params": 4,
+        "default_params": [0.0, 1.0, 0.5, 1e-3],
+        "hddm_include": ["z"],
+        "n_choices": 2,
+        "choices": [-1, 1],
+        "slice_widths": {
+            "v": 1.5,
+            "v_std": 1,
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "t": 0.01,
+            "t_std": 0.15,
+        },
+    },
+
     "angle": {
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
+               "Meant for use with the extension.",
         "params": ["v", "a", "z", "t", "theta"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -105,6 +118,8 @@ model_config = {
         },
     },
     "weibull": {
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
+               "Meant for use with the extension.",
         "params": ["v", "a", "z", "t", "alpha", "beta"],
         "params_trans": [0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 2.0, 2.0],
@@ -138,6 +153,8 @@ model_config = {
         },
     },
     "levy": {
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
+               "Meant for use with the extension.",
         "params": ["v", "a", "z", "alpha", "t"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -166,6 +183,8 @@ model_config = {
         },
     },
     "full_ddm": {
+        "doc": "Currently unavailable, for LANs after switch to pytorch. \n" + \
+               "Coming soon... Please use standard HDDM if you want to fit this model to your data.",
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
         "params_trans": [0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
@@ -197,35 +216,9 @@ model_config = {
             "sv": 0.5,
         },
     },
-    "full_ddm_vanilla": {
-        "params": ["v", "a", "z", "t", "sz", "sv", "st"],
-        "params_trans": [0, 0, 1, 0, 0, 0, 0],
-        "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
-        "param_bounds": [
-            [-5.0, 0.1, 0.3, 0.25, 0, 0, 0],
-            [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
-        ],
-        "boundary": bf.constant,
-        "n_params": 7,
-        "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
-        "hddm_include": ["z", "st", "sv", "sz"],
-        "n_choices": 2,
-        "choices": [0, 1],
-        "slice_widths": {
-            "v": 1.5,
-            "v_std": 1,
-            "a": 1,
-            "a_std": 1,
-            "z": 0.1,
-            "z_trans": 0.2,
-            "t": 0.01,
-            "t_std": 0.15,
-            "sz": 1.1,  # AF-TODO: Might be worth downregulating and adding _std widths
-            "st": 0.1,
-            "sv": 0.5,
-        },
-    },
     "ornstein": {
+        "doc": "Model formulation is described in the documentation under LAN Extension." + \
+               "Meant for use with the extension.",
         "params": ["v", "a", "z", "g", "t"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -255,6 +248,8 @@ model_config = {
         },
     },
     "ddm_sdv": {
+        "doc": "Currently unavailable, for LANs after switch to pytorch. Coming soon..." + \
+               "Please use standard HDDM if you want to fit this model to your data.",
         "params": ["v", "a", "z", "t", "sv"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -282,6 +277,7 @@ model_config = {
         },
     },
     "ddm_par2": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "params_trans": [0, 0, 0, 0, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, 1.0],
@@ -319,6 +315,7 @@ model_config = {
         },
     },
     "ddm_par2_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t"],
         "param_bounds": [[-2.5, -2.5, -2.5, 0.3, 0.0], [2.5, 2.5, 2.5, 2.0, 2.0]],
         "params_trans": [0, 0, 0, 0, 0],
@@ -343,6 +340,7 @@ model_config = {
         },
     },
     "ddm_par2_angle_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t", "theta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, -0.1],
@@ -373,6 +371,7 @@ model_config = {
         },
     },
     "ddm_par2_weibull_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, 0.31, 0.31],
@@ -407,6 +406,7 @@ model_config = {
         },
     },
     "ddm_seq2": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "params_trans": [0, 0, 0, 0, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, 1.0],
@@ -444,6 +444,7 @@ model_config = {
         },
     },
     "ddm_seq2_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t"],
         "param_bounds": [[-2.5, -2.5, -2.5, 0.3, 0.0], [2.5, 2.5, 2.5, 2.0, 2.0]],
         "params_trans": [0, 0, 0, 0, 0],
@@ -468,6 +469,7 @@ model_config = {
         },
     },
     "ddm_seq2_angle_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t", "theta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, -0.1],
@@ -498,6 +500,7 @@ model_config = {
         },
     },
     "ddm_seq2_weibull_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, 0.31, 0.31],
@@ -530,6 +533,7 @@ model_config = {
         },
     },
     "ddm_mic2_adj": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
         "params_trans": [0, 0, 0, 0, 1, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, None, 1.0],
@@ -571,6 +575,7 @@ model_config = {
         },
     },
     "ddm_mic2_adj_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, 0.0],
@@ -600,6 +605,7 @@ model_config = {
         },
     },
     "ddm_mic2_adj_angle_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t", "theta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, 0.0, -0.1],
@@ -632,6 +638,7 @@ model_config = {
         },
     },
     "ddm_mic2_adj_weibull_no_bias": {
+        "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
         "param_bounds": [
             [-2.5, -2.5, -2.5, 0.3, 0.0, 0.0, 0.31, 0.31],
@@ -666,6 +673,8 @@ model_config = {
         },
     },
     "race_no_bias_3": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "t"],
         "params_trans": [0, 0, 0, 0, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0],
@@ -695,6 +704,8 @@ model_config = {
         },
     },
     "race_no_bias_angle_3": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -0.1],
@@ -726,6 +737,8 @@ model_config = {
         },
     },
     "race_no_bias_4": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -757,6 +770,8 @@ model_config = {
         },
     },
     "race_no_bias_angle_4": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -0.1],
@@ -790,6 +805,8 @@ model_config = {
         },
     },
     "lca_no_bias_3": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "g", "b", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0],
@@ -823,6 +840,8 @@ model_config = {
         },
     },
     "lca_no_bias_angle_3": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "g", "b", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0, -1.0],
@@ -858,6 +877,8 @@ model_config = {
         },
     },
     "lca_no_bias_4": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0],
@@ -893,6 +914,8 @@ model_config = {
         },
     },
     "lca_no_bias_angle_4": {
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
+               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0, -0.1],

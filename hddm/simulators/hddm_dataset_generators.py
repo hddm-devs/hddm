@@ -47,8 +47,8 @@ def hddm_preprocess(
             if len(simulator_data[2][param]) > 1:
                 df[param] = simulator_data[2][param]
             else:
-                print(param)
-                print(simulator_data[2][param][0])
+                #print(param)
+                #print(simulator_data[2][param][0])
                 df[param] = simulator_data[2][param][0]
     return df
 
@@ -528,6 +528,7 @@ def simulator_h_c(
                                   the names of traces when fitting the equivalent hddm model. The parameter dictionary is useful for some graphs, otherwise not neccessary.
     """
 
+    #print('starting data generation')
     meta_params = {
         "group_param_dist": "normal",
         "gen_norm_std": 1 / 3,
@@ -676,7 +677,7 @@ def simulator_h_c(
             n_conditions = conditions_df.shape[0]
 
         for condition_id in range(n_conditions):
-            remainder_set = 0
+            #remainder_set = 0
             regressor_set = 0
 
             for subj_idx in range(n_subjects):
@@ -702,22 +703,23 @@ def simulator_h_c(
                 # Remainder part
                 if remainder is not None:
                     for remainder_tmp in remainder:
-                        if not remainder_set:
-                            # print('group_level_parameter_dict')
-                            # print(group_level_parameter_dict)
-                            tmp_mean = group_level_parameter_dict[remainder_tmp]
-                            tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
+                        tmp_mean = group_level_parameter_dict[remainder_tmp]
+                        tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
+                        
+                        # If the subject has been seen before, we use the parameters from 
+                        # the previous condition, since the remainder parameters do not change
+                        # across conditions
+                        if remainder_tmp + "_subj." + str(subj_idx) in full_parameter_dict.keys():
+                            pass
+                        else: 
+                            # Otherwise, generate new parameter for this subject (really only relevant first condition for remainder parameters)
                             full_parameter_dict[
                                 remainder_tmp + "_subj." + str(subj_idx)
                             ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
-                            subj_data[remainder_tmp] = full_parameter_dict[
-                                remainder_tmp + "_subj." + str(subj_idx)
-                            ]
-
-                        if remainder_set:
-                            subj_data[remainder_tmp] = full_parameter_dict[
-                                remainder_tmp + "_subj." + str(subj_idx)
-                            ]
+                        
+                        subj_data[remainder_tmp] = full_parameter_dict[
+                            remainder_tmp + "_subj." + str(subj_idx)
+                        ]
 
                 # Depends on part
                 if depends_on is not None:
@@ -728,20 +730,24 @@ def simulator_h_c(
                         ]
                         condition_elem = ".".join(conditions_df_tmp)
 
+                        # Add parameters to subject dataframe
                         if depends_tmp not in group_only:
                             tmp_mean = group_level_parameter_dict[
                                 depends_tmp + "(" + condition_elem + ")"
                             ]
                             tmp_std = group_level_parameter_dict[depends_tmp + "_std"]
+                            tmp_param_name = depends_tmp + "_subj(" \
+                                             + condition_elem + ")." + str(subj_idx)
+                            
+                            # If the subject / condition combination has been see before
+                            # we do not reassign a new parameter here !
+                            
+                            if tmp_param_name in full_parameter_dict.keys():
+                                pass
+                            else: # Otherwise assign new parameter
+                                full_parameter_dict[tmp_param_name] = np.random.normal(loc=tmp_mean, scale=tmp_std)
 
-                            full_parameter_dict[
-                                depends_tmp
-                                + "_subj("
-                                + condition_elem
-                                + ")."
-                                + str(subj_idx)
-                            ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
-
+                            # Assign the parameter to subject data
                             subj_data[depends_tmp] = full_parameter_dict[
                                 depends_tmp
                                 + "_subj("
@@ -754,10 +760,11 @@ def simulator_h_c(
                                 depends_tmp + "(" + condition_elem + ")"
                             ]
 
+                        # Add the respective stimulus columns 
                         for condition_key_tmp in conditions_df_tmp.keys():
                             subj_data[condition_key_tmp] = conditions_df_tmp[
                                 condition_key_tmp
-                            ]  ##############################################################
+                            ]
 
                 # Regressor part
                 if regression_covariates is not None:
@@ -934,7 +941,6 @@ def simulator_h_c(
         model,
         group_level_parameter_dict,
     ):
-        # print('hello')
         # Construct subject data
         full_parameter_dict = group_level_parameter_dict.copy()
 
@@ -946,18 +952,7 @@ def simulator_h_c(
         for param in model_config[model]["params"]:
             data[param] = 0
 
-        # if conditions_df is None:
-        #     n_conditions = 1
-        # else:
-        #     n_conditions = conditions_df.shape[0]
-
         for subj_idx in data["subj_idx"].unique():  # range(n_subjects):
-            # ipdb.set_trace()
-            # print('subj_idx ', str(subj_idx))
-            # Parameter vector
-
-            # subj_data = pd.DataFrame(index = np.arange(0, n_trials_per_subject, 1))
-            # subj_data["subj_idx"] = str(subj_idx)
 
             # Fixed part
             if fixed_at_default is not None:
@@ -992,50 +987,30 @@ def simulator_h_c(
                         data["subj_idx"] == int(subj_idx), [remainder_tmp]
                     ] = full_parameter_dict[remainder_tmp + "_subj." + str(subj_idx)]
 
-            # AF CONTINUE HERE !
             # Depends on part
-
             if depends_on is not None:
-                # conditions_tmp = conditions_df.iloc[condition_id]
                 # Go through depends_on variables:
                 for depends_tmp in depends_on.keys():
                     conditions_df_tmp = conditions_df[
                         depends_on[depends_tmp]
                     ].drop_duplicates()
+
                     for condition_id in range(conditions_df_tmp.shape[0]):
-                        # conditions_df_tmp = conditions_df[depends_on[depends_tmp]].iloc[
-                        #     condition_id
-                        # ]
 
                         condition_elem = ".".join(conditions_df_tmp.iloc[condition_id])
-                        # print(type(subj_idx))
                         bool_ = data["subj_idx"] == int(subj_idx)
-                        # print(np.sum(bool_))
 
                         for key_ in conditions_df_tmp.keys():
-                            # print('before')
-                            # print(conditions_df_tmp.iloc[condition_id][key_])
-                            # print(type(conditions_df_tmp.iloc[condition_id][key_]))
-                            # print(key_)
-                            # print(type(conditions_df_tmp.iloc[condition_id][key_]))
-                            # print(data[key_].dtype)
-                            # if data[key_]
                             bool_ = (bool_) & (
                                 data[key_].astype(str)
                                 == conditions_df_tmp.iloc[condition_id][key_]
                             )
-                            # print(bool_)
-                            # print('after')
 
                         # Check if there is data which adheres to the condition currently active
                         # Otherwise there is nothing to update
                         # AF COMMENT: This check should already be applied at the point of generating the condition_df dataframe
-                        # print(np.sum(bool_))
                         if np.sum(bool_) > 0:
-                            # print('passed')
                             if depends_tmp not in group_only:
-                                # print('passed here (not_group_only) with depends_tmp: ', depends_tmp)
-
                                 tmp_mean = group_level_parameter_dict[
                                     depends_tmp + "(" + condition_elem + ")"
                                 ]
@@ -1059,42 +1034,23 @@ def simulator_h_c(
                                     + str(subj_idx)
                                 ]
 
-                                # subj_data[depends_tmp] = full_parameter_dict[
-                                #     depends_tmp
-                                #     + "_subj("
-                                #     + condition_elem
-                                #     + ")."
-                                #     + str(subj_idx)
-                                # ]
                             else:
                                 # print('passed here (group_only) with depends_tmp: ', depends_tmp)
                                 data.loc[bool_, depends_tmp] = full_parameter_dict[
                                     depends_tmp + "(" + condition_elem + ")"
                                 ]
-                                # subj_data[depends_tmp] = full_parameter_dict[
-                                #     depends_tmp + "(" + condition_elem + ")"
-                                # ]
-
-                            # AF COMMENT: This assigns the actual condition columns to the data
-                            # Not necessary when data is supplied instead
-                            #
-                            # for condition_key_tmp in conditions_df_tmp.keys():
-                            #     subj_data[condition_key_tmp] = conditions_df_tmp[
-                            #         condition_key_tmp
-                            #     ]
 
             # Regressor part
-            if regression_covariates is not None:
-                cov_df = make_covariate_df(regression_covariates, n_trials_per_subject)
+            # if regression_covariates is not None:
+            #     cov_df = make_covariate_df(regression_covariates, n_trials_per_subject)
 
-                # Add cov_df to subject data
-                # AF COMMENT: Not necessary if
-                # for key_tmp in cov_df.keys():
-                #     subj_data[key_tmp] = cov_df[key_tmp].copy()
+            #     # Add cov_df to subject data
+            #     # AF COMMENT: Not necessary if
+            #     # for key_tmp in cov_df.keys():
+            #     #     subj_data[key_tmp] = cov_df[key_tmp].copy()
 
             if regression_models is not None:
                 for reg_model in regression_models:
-
                     # Make Design Matrix
                     separator = reg_model.find("~")
                     outcome = reg_model[:separator].strip(" ")
@@ -1158,32 +1114,21 @@ def simulator_h_c(
                         axis=1
                     )  # AF-TD: This should probably include a noise term here (parameter really defined as coming from a linear model + noise)
 
-                    # subj_data[outcome] = (design_matrix * reg_params_tmp).sum(
-                    #     axis=1
-                    # ) # AF-TD: This should probably include a noise term here (parameter really defined as coming from a linear model + noise)
 
-            # Append full data:
-            # full_data.append(subj_data.copy())
-
-            remainder_set = 1
             regressor_set = 1
 
-        # full_data = pd.concat(full_data)
         parameters = data[model_config[model]["params"]]
 
-        # Run the actual simulations
-        # print(parameters)
-
         sim_data = simulator(
-            theta=parameters.values,
-            model=model,
-            n_samples=1,
-            delta_t=0.001,
-            max_t=20,
-            no_noise=False,
-            bin_dim=None,
-            bin_pointwise=False,
-        )
+                             theta=parameters.values,
+                             model=model,
+                             n_samples=1,
+                             delta_t=0.001,
+                             max_t=20,
+                             no_noise=False,
+                             bin_dim=None,
+                             bin_pointwise=False,
+                            )
 
         # Post-processing
         data["rt"] = sim_data[0].astype(np.float64)
@@ -1215,18 +1160,6 @@ def simulator_h_c(
             # Identify outliers in dataframe
             data["outlier"] = 0
             data.loc[outlier_idx, [list(full_data.keys()).index("outlier")]] = 1
-
-        # AF COMMENT: Prob not useful
-        # data_cols = ["rt", "response", "subj_idx"]
-
-        # if regression_covariates is not None:
-        #     data_cols += [key for key in regression_covariates.keys()]
-        # if conditions is not None:
-        #     data_cols += [key for key in conditions.keys()]
-
-        # data_cols += model_config[model]["params"]
-        # data = data[data_cols]
-        # data.reset_index(drop=True, inplace=True)
 
         # AF-Comment: Does this cover all corner cases?
         # If n_subjects is 1 --> we overwrite the group parameters with the subj.0 parameters
@@ -1373,8 +1306,6 @@ def simulator_h_c(
                         remainder_tmp
                     ]["std_rv"]()
 
-                    # np.random.uniform(low=0, high=(1 / 10) * bound_to_bound_tmp)
-
         # Regressor part ------------------------------------------------------
         if regression_covariates is not None:
             # AF ADDED:
@@ -1406,8 +1337,6 @@ def simulator_h_c(
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[
                             outcome
                         ]["rv"]()
-
-                        # print(reg_trace_dict[outcome + "_" + covariate])
 
                         # Intercept is always fit subject wise
                         reg_std_trace_dict[
@@ -1447,8 +1376,6 @@ def simulator_h_c(
         depends_on=depends_on,
         fixed_at_default=fixed_at_default,
     )
-    # print(fixed_at_default)
-    # print(remainder)
 
     # Make conditions df
     if depends_on is not None:
@@ -1463,19 +1390,13 @@ def simulator_h_c(
                     for key_ in depends_on.keys():
                         for col in depends_on[key_]:
                             conditions[col] = np.sort(data[col].unique()).astype(str)
-                    # print(conditions)
                     conditions_df = make_conditions_df(conditions=conditions)
-                # print("Conditions created...")
-                # print(conditions_df)
             else:
                 conditions_df = None
         else:
             conditions_df = None
     else:
         conditions_df = None
-
-    # print('conditions df')
-    # print(conditions_df)
 
     params_ok_all = 0
     cnt = 0
@@ -1519,8 +1440,6 @@ def simulator_h_c(
                 n_subjects=n_subjects,
             )
         else:
-            # import ipdb
-            # ipdb.set_trace()
             data_, full_parameter_dict = make_single_sub_cond_df_from_gt(
                 data=data,
                 conditions_df=conditions_df,
@@ -1539,1144 +1458,3 @@ def simulator_h_c(
         cnt += 1
 
     return data_, full_parameter_dict
-
-
-# def simulator_h_c(
-#     n_subjects=10,
-#     n_trials_per_subject=100,
-#     model="ddm_vanilla",
-#     conditions={
-#         "c_one": ["high", "low"],
-#         "c_two": ["high", "low"],
-#         "c_three": ["high", "medium", "low"],
-#     },
-#     depends_on={"v": ["c_one", "c_two"]},
-#     regression_models=["z ~ covariate_name"],
-#     regression_covariates={
-#         "covariate_name": {"type": "categorical", "range": (0, 4)}
-#     },  # need this to make initial covariate matrix from which to use dmatrix (patsy)
-#     group_only_regressors=True,
-#     group_only=["z"],
-#     fixed_at_default=["t"],
-#     p_outlier=0.0,
-#     outlier_max_t=10.0,
-#     **kwargs,
-# ):
-
-#     """Flexible simulator that allows specification of models very similar to the hddm model classes.
-
-#     :Arguments:
-#         n_subjects: int <default=5>
-#             Number of subjects in the datasets
-#         n_trials_per_subject: int <default=500>
-#             Number of trials for each subject
-#         model: str <default = 'ddm_vanilla'>
-#             Model to sample from. For traditional hddm supported models, append '_vanilla' to the model. Omitting 'vanilla'
-#             imposes constraints on the parameter sets to not violate the trained parameter space of our LANs.
-#         conditions: dict <default={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}>
-#             Keys represent condition relevant columns, and values are lists of unique items for each condition relevant column.
-#         depends_on: dict <default={'v': ['c_one', 'c_two']}>
-#             Keys specify model parameters that depend on the values --> lists of condition relevant columns.
-#         regression_models: list or strings <default = ['z ~ covariate_name']>
-#             Specify regression model formulas for one or more dependent parameters in a list.
-#         regression_covariates: dict <default={'covariate_name': {'type': 'categorical', 'range': (0, 4)}}>
-#             Dictionary in dictionary. Specify the name of the covariate column as keys, and for each key supply the 'type' (categorical, continuous) and
-#             'range' ((lower bound, upper bound)) of the covariate.
-#         group_only_regressors: bin <default=True>
-#             Should regressors only be specified at the group level? If true then only intercepts are specified subject wise.
-#             Other covariates act globally.
-#         group_only: list <default = ['z']>
-#             List of parameters that are specified only at the group level.
-#         fixed_at_default: list <default=['t']>
-#             List of parameters for which defaults are to be used. These defaults are specified in the model_config dictionary, which you can access via: hddm.simulators.model_config.
-#         p_outlier: float <default = 0.0>
-#             Specifies the proportion of outliers in the data.
-#         outlier_max_t: float <default = 10.0>
-#             Outliers are generated from np.random.uniform(low = 0, high = outlier_max_t) with random choices.
-#     Returns:
-#         (pandas.DataFrame, dict): The Dataframe holds the generated dataset, ready for constuction of an hddm model. The dictionary holds the groundtruth parameter (values) and parameter names (keys). Keys match
-#                                   the names of traces when fitting the equivalent hddm model. The parameter dictionary is useful for some graphs, otherwise not neccessary.
-#     """
-
-#     meta_params = {'group_param_dist': 'normal',
-#                    'gen_norm_std': 1 / 3,
-#                    'uniform_buffer': 1 / 5,
-#                    'gen_std_std': 1 / 8,
-#                    'covariate_range': 1 / 4
-#                   }
-
-#     for key_ in kwargs.keys():
-#         meta_params[key] = kwargs[key]
-
-
-#     def check_params(data=None, model=None, is_nn=True):
-#         """
-#         Function checks if parameters are within legal bounds
-#         """
-#         for key in data.keys():
-#             if key in model_config[model]["params"]:
-#                 if (
-#                     np.sum(
-#                         data[key]
-#                         < model_config[model]["param_bounds"][0][
-#                             model_config[model]["params"].index(key)
-#                         ]
-#                     )
-#                     > 0
-#                 ):
-#                     return 0
-#                 elif (
-#                     np.sum(
-#                         data[key]
-#                         > model_config[model]["param_bounds"][1][
-#                             model_config[model]["params"].index(key)
-#                         ]
-#                     )
-#                     > 0
-#                 ):
-#                     return 0
-#         return 1
-
-#     def get_parameter_remainder(
-#         regression_models=None, group_only=None, depends_on=None, fixed_at_default=None
-#     ):
-
-#         """
-#         The arguments supplied to the simulator implicitly specify how we should handle a bunch of model parameters.
-#         If there remain model parameters that did not receive implicit instructions, we call these 'remainder' parameters
-#         and sample them randomly for our simulations.
-#         """
-
-#         # Add subject parameters to full_parameter_dict
-#         total_param_list = model_config[model]["params"]
-#         params_utilized = []
-
-#         # Regression Part
-#         # reg_df = make_covariate_df(regression_covariates, n_trials_per_subject)
-#         if regression_models is not None:
-#             for regression_model in regression_models:
-#                 separator = regression_model.find("~")
-#                 assert separator != -1, "No outcome variable specified."
-#                 params_utilized += regression_model[:separator].strip(" ")
-
-#         # Group only Part
-#         if group_only is not None:
-#             params_utilized += group_only
-
-#         # Fixed Part
-#         if fixed_at_default is not None:
-#             params_utilized += fixed_at_default
-
-#         # Depends on Part
-#         if depends_on is not None:
-#             for depends_on_key in depends_on.keys():
-#                 params_utilized += [depends_on_key]
-
-#         params_utilized = list(set(params_utilized))
-
-#         # Rest of Params
-#         remainder = set(total_param_list) - set(params_utilized)
-
-#         return remainder
-
-#     def make_covariate_df(regression_covariates, n_trials_per_subject):
-#         """
-#         Goes through the supplied covariate data, and turns it into a dataframe, with randomly generated covariate values.
-#         Each column refers to one covariate.
-#         """
-
-#         cov_df = pd.DataFrame(
-#             np.zeros((n_trials_per_subject, len(list(regression_covariates.keys())))),
-#             columns=[key for key in regression_covariates.keys()],
-#         )
-
-#         for covariate in regression_covariates.keys():
-#             tmp = regression_covariates[covariate]
-#             if tmp["type"] == "categorical":
-#                 cov_df[covariate] = (
-#                     np.random.choice(
-#                         np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
-#                         replace = True,
-#                         size = n_trials_per_subject,
-#                     )
-#                     / (tmp["range"][1])
-#                 )
-#             else:
-#                 cov_df[covariate] = np.random.uniform(
-#                     low=tmp["range"][0], high=tmp["range"][1], size=n_trials_per_subject
-#                 ) / (tmp["range"][1] - tmp["range"][0])
-
-#         return cov_df
-
-#     def make_conditions_df(conditions=None):
-#         """
-#         Makes a dataframe out of the supplied condition dictionary, that stores each combination as a row.
-#         """
-#         arg_tuple = tuple([conditions[key] for key in conditions.keys()])
-#         condition_rows = np.meshgrid(*arg_tuple)
-#         return pd.DataFrame(
-#                             np.column_stack([x_tmp.flatten() for x_tmp in condition_rows]),
-#                             columns=[key for key in conditions.keys()],
-#                             )
-
-#     def make_single_sub_cond_df(
-#         conditions_df,
-#         depends_on,
-#         regression_models,
-#         regression_covariates,
-#         group_only_regressors,
-#         group_only,
-#         fixed_at_default,
-#         remainder,
-#         model,
-#         group_level_parameter_dict,
-#         n_subjects,
-#         n_trials_per_subject,
-#     ):
-
-#         # Construct subject data
-#         full_parameter_dict = group_level_parameter_dict.copy()
-
-#         # Subject part -----------------------
-#         full_data = []
-#         # Condition --------------------------
-#         if conditions_df is None:
-#             n_conditions = 1
-#         else:
-#             n_conditions = conditions_df.shape[0]
-
-#         for condition_id in range(n_conditions):
-#             remainder_set = 0
-#             regressor_set = 0
-
-#             for subj_idx in range(n_subjects):
-#                 # Parameter vector
-#                 subj_data = pd.DataFrame(index = np.arange(0, n_trials_per_subject, 1))
-#                 subj_data["subj_idx"] = str(subj_idx)
-
-#                 # Fixed part
-#                 if fixed_at_default is not None:
-#                     for fixed_tmp in fixed_at_default:
-#                         subj_data[fixed_tmp] = group_level_parameter_dict[fixed_tmp]
-
-#                 # Group only part
-#                 if group_only is not None:
-#                     for group_only_tmp in group_only:
-#                         if group_only_tmp in list(depends_on.keys()):
-#                             pass
-#                         else:
-#                             subj_data[group_only_tmp] = group_level_parameter_dict[
-#                                 group_only_tmp
-#                             ]
-
-#                 # Remainder part
-#                 if remainder is not None:
-#                     for remainder_tmp in remainder:
-#                         if not remainder_set:
-#                             #print('group_level_parameter_dict')
-#                             #print(group_level_parameter_dict)
-#                             tmp_mean = group_level_parameter_dict[remainder_tmp]
-#                             tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
-#                             full_parameter_dict[
-#                                 remainder_tmp + "_subj." + str(subj_idx)
-#                             ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
-#                             subj_data[remainder_tmp] = full_parameter_dict[
-#                                 remainder_tmp + "_subj." + str(subj_idx)
-#                             ]
-
-#                         if remainder_set:
-#                             subj_data[remainder_tmp] = full_parameter_dict[
-#                                 remainder_tmp + "_subj." + str(subj_idx)
-#                             ]
-
-#                 # Depends on part
-#                 if depends_on is not None:
-#                     # conditions_tmp = conditions_df.iloc[condition_id]
-#                     for depends_tmp in depends_on.keys():
-#                         conditions_df_tmp = conditions_df[depends_on[depends_tmp]].iloc[
-#                             condition_id
-#                         ]
-#                         condition_elem = ".".join(conditions_df_tmp)
-
-#                         if depends_tmp not in group_only:
-#                             tmp_mean = group_level_parameter_dict[
-#                                 depends_tmp + "(" + condition_elem + ")"
-#                             ]
-#                             tmp_std = group_level_parameter_dict[depends_tmp + "_std"]
-
-#                             full_parameter_dict[
-#                                 depends_tmp
-#                                 + "_subj("
-#                                 + condition_elem
-#                                 + ")."
-#                                 + str(subj_idx)
-#                             ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
-#                             subj_data[depends_tmp] = full_parameter_dict[
-#                                 depends_tmp
-#                                 + "_subj("
-#                                 + condition_elem
-#                                 + ")."
-#                                 + str(subj_idx)
-#                             ]
-#                         else:
-#                             subj_data[depends_tmp] = full_parameter_dict[
-#                                 depends_tmp + "(" + condition_elem + ")"
-#                             ]
-
-#                         for condition_key_tmp in conditions_df_tmp.keys():
-#                             subj_data[condition_key_tmp] = conditions_df_tmp[
-#                                 condition_key_tmp
-#                             ]  ##############################################################
-
-#                 # Regressor part
-#                 if regression_covariates is not None:
-#                     cov_df = make_covariate_df(
-#                         regression_covariates, n_trials_per_subject
-#                     )
-
-#                     # Add cov_df to subject data
-#                     for key_tmp in cov_df.keys():
-#                         subj_data[key_tmp] = cov_df[key_tmp].copy()
-
-#                 if regression_models is not None:
-#                     for reg_model in regression_models:
-
-#                         # Make Design Matrix
-#                         separator = reg_model.find("~")
-#                         outcome = reg_model[:separator].strip(" ")
-#                         reg_model_stripped = reg_model[(separator + 1) :]
-#                         design_matrix = dmatrix(reg_model_stripped, cov_df)
-
-#                         reg_params_tmp = []
-#                         reg_param_names_tmp = []
-#                         for reg_param_key in group_level_parameter_dict[
-#                             outcome + "_reg"
-#                         ].keys():
-#                             if (
-#                                 group_only_regressors and "Intercept" in reg_param_key
-#                             ) or (not group_only_regressors):
-#                                 reg_params_tmp.append(
-#                                     np.random.normal(
-#                                         loc=group_level_parameter_dict[
-#                                             outcome + "_reg"
-#                                         ][reg_param_key],
-#                                         scale=group_level_parameter_dict[
-#                                             outcome + "_reg_std"
-#                                         ][reg_param_key + "_std"],
-#                                     )
-#                                 )
-
-#                                 reg_param_names_tmp.append(
-#                                     reg_param_key + "_subj." + str(subj_idx)
-#                                 )
-#                             else:
-#                                 reg_params_tmp.append(
-#                                     group_level_parameter_dict[outcome + "_reg"][
-#                                         reg_param_key
-#                                     ]
-#                                 )
-#                                 reg_param_names_tmp.append(reg_param_key)
-
-#                         reg_params_tmp = np.array(reg_params_tmp)
-
-#                         for key in group_level_parameter_dict[outcome + "_reg"].keys():
-#                             full_parameter_dict[key] = group_level_parameter_dict[
-#                                 outcome + "_reg"
-#                             ][key]
-#                         for key in group_level_parameter_dict[
-#                             outcome + "_reg_std"
-#                         ].keys():
-#                             full_parameter_dict[key] = group_level_parameter_dict[
-#                                 outcome + "_reg_std"
-#                             ][key]
-
-#                         if not regressor_set:
-#                             for k in range(len(reg_param_names_tmp)):
-#                                 full_parameter_dict[
-#                                     reg_param_names_tmp[k]
-#                                 ] = reg_params_tmp[k]
-
-#                         subj_data[outcome] = (design_matrix * reg_params_tmp).sum(
-#                             axis=1
-#                         )
-
-#                 # Append full data:
-#                 full_data.append(subj_data.copy())
-
-#             remainder_set = 1
-#             regressor_set = 1
-
-#         full_data = pd.concat(full_data)
-#         parameters = full_data[model_config[model]["params"]]
-
-#         # Run the actual simulations
-#         # print(parameters)
-
-#         sim_data = simulator(
-#             theta=parameters.values,
-#             model=model,
-#             n_samples=1,
-#             delta_t=0.001,
-#             max_t=20,
-#             no_noise=False,
-#             bin_dim=None,
-#             bin_pointwise=False,
-#         )
-
-#         # Post-processing
-#         full_data["rt"] = sim_data[0].astype(np.float64)
-#         full_data["response"] = sim_data[1].astype(np.float64)
-#         full_data.loc[full_data["response"] < 0, ["response"]] = 0.0
-
-#         # Add in outliers
-#         if p_outlier > 0:
-#             # print('passing through outlier creation')
-#             outlier_idx = np.random.choice(
-#                 list(data.index),
-#                 replace=False,
-#                 size=int(p_outlier * len(list(data.index))),
-#             )
-#             outlier_data = np.zeros((outlier_idx.shape[0], 2))
-
-#             # Outlier rts
-#             outlier_data[:, 0] = np.random.uniform(
-#                 low=0.0, high=outlier_max_t, size=outlier_data.shape[0]
-#             )
-
-#             # Outlier choices
-#             outlier_data[:, 1] = np.random.choice(
-#                 sim_data[2]["possible_choices"], size=outlier_data.shape[0]
-#             )
-
-#             # Exchange data for outliers
-#             full_data.iloc[
-#                 outlier_idx,
-#                 [
-#                     list(full_data.keys()).index("rt"),
-#                     list(full_data.keys()).index("response"),
-#                 ],
-#             ] = outlier_data
-
-#             # Identify outliers in dataframe
-#             full_data["outlier"] = 0
-#             full_data[outlier_idx, [list(full_data.keys()).index("outlier")]] = 1
-
-#         full_data_cols = ["rt", "response", "subj_idx"]
-
-#         if regression_covariates is not None:
-#             full_data_cols += [key for key in regression_covariates.keys()]
-#         if conditions is not None:
-#             full_data_cols += [key for key in conditions.keys()]
-
-#         full_data_cols += model_config[model]["params"]
-#         full_data = full_data[full_data_cols]
-#         full_data.reset_index(drop=True, inplace=True)
-
-#         # AF-Comment: Does this cover all corner cases?
-#         # If n_subjects is 1 --> we overwrite the group parameters with the subj.0 parameters
-#         if n_subjects == 1:
-#             new_param_dict = {}
-#             for key, value in full_parameter_dict.items():
-#                 if "subj" in key:
-#                     new_key = key
-#                     new_key = new_key.replace("_subj", "")
-#                     new_key = new_key[: new_key.find(".")]
-#                     new_param_dict[new_key] = value
-#                 elif "_std" in key:
-#                     pass
-#                 else:
-#                     new_param_dict[key] = value
-#             full_parameter_dict = new_param_dict
-
-#         return full_data, full_parameter_dict
-
-#     def make_group_level_params(
-#         conditions_df,
-#         group_only,
-#         depends_on,
-#         model,
-#         fixed_at_default,
-#         remainder,
-#         group_only_regressors,
-#         regression_models,
-#         regression_covariates,
-#         group_param_dist = 'normal',
-#         gen_norm_std = 1/4,
-#         uniform_buffer = 1/5,
-#         gen_std_std = 1/8,
-#         covariate_range = 1/4, # multiplied by range of parameter bounds to give size of covariate
-#     ):
-#         """
-#         Make group level parameters from the information supplied.
-#         """
-
-#         group_level_parameter_dict = {}
-
-#         param_gen_info = {}
-#         for param_name in model_config[model]["params"]:
-#             idx = model_config[model]["params"].index(param_name)
-
-#             param_gen_info[param_name] = {}
-#             param_gen_info[param_name]['range'] = model_config[model]["param_bounds"][1][idx] - \
-#                 model_config[model]["param_bounds"][0][idx]
-
-#             param_gen_info[param_name]['mid'] = model_config[model]["param_bounds"][0][idx] + (param_gen_info[param_name]['range'] / 2)
-#             param_gen_info[param_name]['gen_norm_std'] = gen_norm_std * (param_gen_info[param_name]['range'] / 2)
-#             param_gen_info[param_name]['uniform_buffer'] = uniform_buffer * (param_gen_info[param_name]['range'] / 2)
-#             param_gen_info[param_name]['std_gen_std'] = gen_std_std * param_gen_info[param_name]['range']
-#             param_gen_info[param_name]['covariate_range'] = covariate_range * param_gen_info[param_name]['range']
-
-#             if  group_param_dist == 'normal':
-#                 param_gen_info[param_name]['rv'] = partial(np.random.normal,
-#                                                               loc = param_gen_info[param_name]['mid'],
-#                                                               scale = param_gen_info[param_name]['gen_norm_std'])
-#             elif group_param_dist == 'uniform':
-#                 param_gen_info[param_name]['rv'] = partial(np.random.uniform,
-#                                                            low = model_config[model]["param_bounds"][0][param_name] + \
-#                                                                param_gen_info[param_name]['uniform_buffer'],
-#                                                            high = model_config[model]["param_bounds"][1][param_name] - \
-#                                                                param_gen_info[param_name]['uniform_buffer'])
-
-#             param_gen_info[param_name]['std_rv'] = partial(np.random.uniform,
-#                                                            low = 0,
-#                                                            high = param_gen_info[param_name]['std_gen_std'])
-
-#             param_gen_info[param_name]['covariate_rv'] = partial(np.random.uniform,
-#                                                                  low = - param_gen_info[param_name]['covariate_range'],
-#                                                                  high = param_gen_info[param_name]['covariate_range'])
-
-#         # Fixed part
-#         if fixed_at_default is not None:
-#             for fixed_tmp in fixed_at_default:
-#                 group_level_parameter_dict[fixed_tmp] = model_config[model]["default_params"][model_config[model]["params"].index(fixed_tmp)]
-
-#         # Group only part (excluding depends on)
-#         if len(group_only) > 0:
-#             for group_only_tmp in group_only:
-#                 if group_only_tmp in list(depends_on.keys()):
-#                     pass
-#                 else:
-#                     group_level_parameter_dict[group_only_tmp] = param_gen_info[group_only_tmp]['rv']()
-
-#         # Remainder part
-#         if remainder is not None:
-#             for remainder_tmp in remainder:
-#                 group_level_parameter_dict[remainder_tmp] = param_gen_info[remainder_tmp]['rv']()
-#                 group_level_parameter_dict[remainder_tmp + "_std"] = param_gen_info[remainder_tmp]['std_rv']()
-
-#         # Depends on part
-#         if depends_on is not None:
-#             for depends_tmp in depends_on.keys():
-#                 conditions_df_tmp = conditions_df[depends_on[depends_tmp]]
-
-#                 # Get unique elements:
-#                 unique_elems = []
-#                 for i in range(conditions_df_tmp.shape[0]):
-#                     unique_elems.append(".".join(conditions_df_tmp.iloc[i]))
-#                 unique_elems = np.unique(np.array(unique_elems))
-
-#                 for unique_elem in unique_elems:
-#                     group_level_parameter_dict[
-#                         depends_tmp + "(" + unique_elem + ")"
-#                     ] = param_gen_info[depends_tmp]['rv']()
-
-#                 if depends_tmp not in group_only:
-#                     group_level_parameter_dict[
-#                         depends_tmp + "_std"
-#                     ] = param_gen_info[remainder_tmp]['std_rv']()
-
-#                     #np.random.uniform(low=0, high=(1 / 10) * bound_to_bound_tmp)
-
-#         # Regressor part
-#         if regression_covariates is not None:
-#             cov_df = make_covariate_df(regression_covariates, n_trials_per_subject)
-
-#         if regression_models is not None:
-#             for reg_model in regression_models:
-#                 separator = reg_model.find("~")
-#                 outcome = reg_model[:separator].strip(" ")
-#                 reg_model_stripped = reg_model[(separator + 1) :]
-
-#                 # Run through patsy dmatrix to get the covariate names
-#                 # that patsy assigns !
-#                 covariate_names = dmatrix(
-#                     reg_model_stripped, cov_df
-#                 ).design_info.column_names
-
-#                 reg_trace_dict = OrderedDict()
-#                 reg_std_trace_dict = OrderedDict()
-
-#                 for covariate in covariate_names:
-#                     if ("Intercept" in covariate) or (covariate == '1'):
-
-#                         # AF-COMMENT: Here instead of covariate_rv --> just use
-#                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[outcome]['rv']()
-
-#                         # print(reg_trace_dict[outcome + "_" + covariate])
-
-#                         # Intercept is always fit subject wise
-#                         reg_std_trace_dict[
-#                             outcome + "_" + covariate + "_" + "std"
-#                         ] = param_gen_info[outcome]['std_rv']()
-
-#                     else:
-#                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[outcome]['covariate_rv']()
-
-#                         if not group_only_regressors:
-#                             reg_std_trace_dict[
-#                                 outcome + "_" + covariate + "_" + "std"
-#                             ] = param_gen_info[outcome]['std_rv']()
-
-#                 group_level_parameter_dict[outcome + "_reg"] = reg_trace_dict.copy()
-
-#                 # AF-COMMENT: Is this necessary ?
-#                 # if not group_only_regressors:
-#                 group_level_parameter_dict[
-#                     outcome + "_reg" + "_std"
-#                 ] = reg_std_trace_dict.copy()
-
-#         return group_level_parameter_dict
-
-#     # MAIN PART OF THE FUNCTION -----------------------------------------------------------------
-
-#     # Some checks
-#     if group_only is None:
-#         group_only = []
-
-#     # Specify 'remainder' parameters --> will be sampled randomly from the allowed range
-#     remainder = get_parameter_remainder(
-#         regression_models=regression_models,
-#         group_only=group_only,
-#         depends_on=depends_on,
-#         fixed_at_default=fixed_at_default,
-#     )
-#     #print(fixed_at_default)
-#     #print(remainder)
-
-#     # Make conditions df
-#     if depends_on is not None:
-#         conditions_df = make_conditions_df(conditions=conditions)
-#         #print("Conditions created...")
-#         #print(conditions_df)
-#     else:
-#         conditions_df = None
-
-#     params_ok_all = 0
-#     cnt = 0
-#     while params_ok_all == 0:
-#         if cnt > 0:
-#             print(
-#                 "new round of data simulation because parameter bounds where violated"
-#             )
-
-#         group_level_param_dict = make_group_level_params(
-#             conditions_df=conditions_df,
-#             group_only=group_only,
-#             depends_on=depends_on,
-#             model=model,
-#             fixed_at_default=fixed_at_default,
-#             remainder=remainder,
-#             group_only_regressors=group_only_regressors,
-#             regression_models=regression_models,
-#             regression_covariates=regression_covariates,
-#             group_param_dist = meta_params['group_param_dist'],
-#             gen_norm_std = meta_params['gen_norm_std'],
-#             uniform_buffer = meta_params['uniform_buffer'],
-#             gen_std_std = meta_params['gen_std_std'],
-#             covariate_range = meta_params['covariate_range'],
-#             )
-
-#         data, full_parameter_dict = make_single_sub_cond_df(
-#             conditions_df=conditions_df,
-#             group_only=group_only,
-#             depends_on=depends_on,
-#             model=model,
-#             fixed_at_default=fixed_at_default,
-#             remainder=remainder,
-#             regression_models=regression_models,
-#             regression_covariates=regression_covariates,
-#             group_only_regressors=group_only_regressors,
-#             group_level_parameter_dict=group_level_param_dict,
-#             n_trials_per_subject=n_trials_per_subject,
-#             n_subjects=n_subjects,
-#         )
-
-#         params_ok_all = check_params(data=data,
-#                                      model=model)
-#         cnt += 1
-
-#     return data, full_parameter_dict
-
-
-# DEPRECATED
-# def simulator_condition_effects(
-#     n_conditions=4,
-#     n_samples_by_condition=1000,
-#     condition_effect_on_param=None,
-#     prespecified_params=None,
-#     p_outlier=0.0,
-#     max_rt_outlier=10.0,
-#     model="angle",
-#     bin_dim=None,
-#     bin_pointwise=False,
-#     max_t=20.0,
-#     delta_t=0.001,
-# ):
-
-#     """Generate a dataset with multiple conditions.
-
-#     :Arguments:
-#         n_conditions: int <default=4>
-
-#         parameters: list or numpy array
-#             Model parameters with which to simulate.
-#         model: str <default='angle'>
-#             String that specifies the model to be simulated.
-#             Current options include, 'angle', 'ornstein', 'levy', 'weibull', 'full_ddm'
-#         n_samples_by_condition: int <default=1000>
-#             Number of samples to simulate per condition (here 2 condition by design).
-#         condition_effect_on_param: list of strings <default=None>
-#             List containing the parameters which will be affected by the condition.
-#         delta_t: float <default=0.001>
-#             Size fo timesteps in simulator (conceptually measured in seconds)
-#         prespecified_params: dict <default = {}>
-#             A dictionary with parameter names keys. Values are list of either length 1, or length equal to the number of conditions.
-#         p_outlier: float between 0 and 1 <default=0>
-#             Probability of generating outlier datapoints. An outlier is defined
-#             as a random choice from a uniform RT distribution
-#         max_rt_outlier: float > 0 <default=10.0>
-#             Using max_rt_outlier (which is commonly defined for hddm models) here as an imlicit maximum
-#             on the RT of outliers. Outlier RTs are sampled uniformly from [0, max_rt_outlier]
-#         max_t: float <default=20>
-#             Maximum reaction the simulator can reach
-#         bin_dim: int <default=None>
-#             If simulator output should be binned, this specifies the number of bins to use
-#         bin_pointwise: bool <default=False>
-#             Determines whether to bin simulator output pointwise. Pointwise here is in contrast to producing binned output
-#             in the form of a histogram. Binning pointwise gives each trial's RT and index which is the respective bin-number.
-#             This is expected when you are using the 'cnn' network to fit the dataset later. If pointwise is not chosen,
-#             then the takes the form of a histogram, with bin-wise frequencies.
-
-#     Returns:
-#        tuple (pandas.DataFrame, dictionary): The DataFrame holds 'reaction time', 'response', 'stim' columns as well as trial by trial parameters. Ready to be fit with hddm.
-#        The dictionary holds the ground truth parameters with names as one expects from hddm model traces.
-#     """
-
-#     # Sanity checks
-#     assert p_outlier >= 0 and p_outlier <= 1, "p_outlier is not between 0 and 1"
-#     assert max_rt_outlier > 0, "max_rt__outlier needs to be > 0"
-
-#     # Get list of keys in prespecified_params and return if it is not a dict when it is in fact not None
-#     if prespecified_params is not None:
-#         if type(prespecified_params) == dict:
-#             prespecified_params_names = list(prespecified_params.keys())
-#         else:
-#             print("prespecified_params is not a dictionary")
-#             return
-
-#     # Randomly assign values to every parameter and then copy across rows = number of conditions
-#     param_base = np.tile(
-#         np.random.uniform(
-#             low=model_config[model]["param_bounds"][0],
-#             high=model_config[model]["param_bounds"][1],
-#             size=(1, len(model_config[model]["params"])),
-#         ),
-#         (n_conditions, 1),
-#     )
-
-#     # Reassign parameters according to the information in prespecified params and condition_effect_on_param
-#     gt = {}
-
-#     # Loop over valid model parameters
-#     for param in model_config[model]["params"]:
-#         id_tmp = model_config[model]["params"].index(param)
-
-#         # Check if parameter is affected by condition
-#         if param in condition_effect_on_param:
-
-#             # If parameter is affected by condition we loop over conditions
-#             for i in range(n_conditions):
-#                 # Assign randomly
-#                 param_base[i, id_tmp] = np.random.uniform(
-#                     low=model_config[model]["param_bounds"][0][id_tmp],
-#                     high=model_config[model]["param_bounds"][1][id_tmp],
-#                 )
-
-#                 # But if we actually specified it for each condition
-#                 if prespecified_params is not None:
-#                     if param in prespecified_params_names:
-#                         # We assign it from prespecified dictionary
-#                         param_base[i, id_tmp] = prespecified_params[param][i]
-
-#                 # Add info to ground truth dictionary
-#                 gt[param + "(" + str(i) + ")"] = param_base[i, id_tmp]
-
-#         # If the parameter is not affected by condition
-#         else:
-#             # But prespecified
-#             if prespecified_params is not None:
-
-#                 if param in prespecified_params_names:
-#                     # We assign prespecifided param
-#                     tmp_param = prespecified_params[param]
-#                     param_base[:, id_tmp] = tmp_param
-
-#             # If it wasn't prespecified we just keep the random assignment that was generated above before the loops
-#             gt[param] = param_base[0, id_tmp]
-
-#     dataframes = []
-#     for i in range(n_conditions):
-#         sim_out = simulator(
-#             param_base[i, :],
-#             model=model,
-#             n_samples=n_samples_by_condition,
-#             bin_dim=bin_dim,
-#             bin_pointwise=bin_pointwise,
-#             max_t=max_t,
-#             delta_t=delta_t,
-#         )
-
-#         sim_out = _add_outliers(
-#             sim_out=sim_out,
-#             p_outlier=p_outlier,
-#             max_rt_outlier=max_rt_outlier,
-#         )
-
-#         dataframes.append(
-#             hddm_preprocess(
-#                 simulator_data=sim_out, subj_id=i, add_model_parameters=True
-#             )
-#         )
-
-#     data_out = pd.concat(dataframes)
-
-#     # Change 'subj_idx' column name to 'condition' ('subj_idx' is assigned automatically by hddm_preprocess() function)
-#     data_out = data_out.rename(columns={"subj_idx": "condition"})
-#     data_out["subj_idx"] = 0
-#     data_out.reset_index(drop=True, inplace=True)
-
-#     if bin_pointwise:
-#         data_out["rt"] = data_out["rt"].astype(np.int_)
-#         data_out["response"] = data_out["response"].astype(np.int_)
-#         # data_out['nn_response'] = data_out['nn_response'].astype(np.int_)
-
-#     return (data_out, gt)
-
-
-# def simulator_covariate(
-#     dependent_params=("v",),
-#     model="angle",
-#     n_samples=1000,
-#     betas=None,
-#     covariate_magnitudes=None,
-#     prespecified_params=None,
-#     p_outlier=0.0,
-#     max_rt_outlier=10.0,
-#     subj_id="none",
-#     bin_dim=None,
-#     bin_pointwise=False,
-#     max_t=20.0,
-#     delta_t=0.001,
-# ):
-
-#     """Generate a dataset which includes covariates. Some parameters are now a function (regression) covariates.
-
-#     :Arguments:
-#         dependent_params: list of strings <default=['v']>
-#             Parameters which will be treated as a deterministic function of a covariate
-#         prespecified_params: dict <default=None>
-#             Dictionary of parameters to prespecify. These parameters can not be functions of covariates.
-#             Example (e.g. for 'ddm' model): {'v': 0, 'a': 1.5, 'z': 0.5, 't':1.0}
-#         p_outlier: float between 0 and 1 <default=0>
-#             Probability of generating outlier datapoints. An outlier is defined
-#             as a random choice from a uniform RT distribution
-#         max_rt_outlier: float > 0 <default=10.0>
-#             Using max_rt_outlier (which is commonly defined for hddm models) here as an imlicit maximum
-#             on the RT of outliers. Outlier RTs are sampled uniformly from [0, max_rt_outlier]
-#         model: str <default='angle'>
-#             String that specifies the model to be simulated.
-#             Current options include, 'angle', 'ornstein', 'levy', 'weibull', 'full_ddm'
-#         betas: dict <default={'v': 0.1}>
-#             Ground truth regression betas for the parameters which are functions of covariates.
-#         covariates_magnitudes: dict <default=None>
-#             A dict which holds magnitudes of the covariate vectors (value), by for each parameters (key).
-#         subj_id: str <default='none'>
-#             Hddm expects a subject column in the dataset. This supplies a specific label if so desired.
-#         delta_t: float <default=0.001>
-#             Size fo timesteps in simulator (conceptually measured in seconds)
-#         max_t: float <default=20>
-#             Maximum reaction the simulator can reach
-#         bin_dim: int <default=None>
-#             If simulator output should be binned, this specifies the number of bins to use
-#         bin_pointwise: bool <default=False>
-#             Determines whether to bin simulator output pointwise. Pointwise here is in contrast to producing binned output
-#             in the form of a histogram. Binning pointwise gives each trial's RT and index which is the respective bin-number.
-#             This is expected when you are using the 'cnn' network to fit the dataset later. If pointwise is not chosen,
-#             then the takes the form of a histogram, with bin-wise frequencies.
-
-#     Returns:
-#       tuple (pandas.DataFrame, dictionary): The DataFrame holds 'reaction time', 'response', 'BOLD' (the covariate) columns as well as trial by trial parameters. Ready to be fit with hddm.
-#        The dictionary holds the ground truth parameters with names as one expects from hddm model traces.
-#     """
-#     # Initialize defaults for None supplies
-#     if covariate_magnitudes == None:
-#         print("Using default covariance magnitudes, v set to 1")
-#         covariate_magnitudes = {"v": 1.0}
-#     if betas == None:
-#         print("Using default betas, v_beta set to 0.1")
-#         betas = {"v": 0.1}
-
-#     # Sanity checks
-#     assert p_outlier >= 0 and p_outlier <= 1, "p_outlier is not between 0 and 1"
-#     assert max_rt_outlier > 0, "max_rt__outlier needs to be > 0"
-
-#     if betas == None:
-#         betas = {}
-#     if covariate_magnitudes == None:
-#         covariate_magnitudes = {}
-#     if len(dependent_params) < 1:
-#         print(
-#             "If there are no dependent variables, no need for the simulator which includes covariates"
-#         )
-#         return
-
-#     # sanity check that prespecified parameters do not clash with parameters that are supposed to derive from trial-wise regression
-#     if prespecified_params is not None:
-#         for param in prespecified_params:
-#             if param in covariate_magnitudes.keys() or param in betas.keys():
-#                 "Parameters that have covariates are Prespecified, this should not be intented"
-#                 return
-
-#     # Fill parameter matrix
-#     param_base = np.tile(
-#         np.random.uniform(
-#             low=model_config[model]["param_bounds"][0],
-#             high=model_config[model]["param_bounds"][1],
-#             size=(1, len(model_config[model]["params"])),
-#         ),
-#         (n_samples, 1),
-#     )
-
-#     # Adjust any parameters that where prespecified
-#     if prespecified_params is not None:
-#         for param in prespecified_params.keys():
-#             id_tmp = model_config[model]["params"].index(param)
-#             param_base[:, id_tmp] = prespecified_params[param]
-
-#     # TD: Be more clever about covariate magnitude (maybe supply?)
-#     # Parameters that have a
-#     param_base_before_adj = param_base.copy()
-
-#     for covariate in dependent_params:
-#         id_tmp = model_config[model]["params"].index(covariate)
-
-#         if covariate in covariate_magnitudes.keys():
-#             tmp_covariate_by_sample = np.random.uniform(
-#                 low=-covariate_magnitudes[covariate],
-#                 high=covariate_magnitudes[covariate],
-#                 size=n_samples,
-#             )
-#         else:
-#             tmp_covariate_by_sample = np.random.uniform(low=-1, high=1, size=n_samples)
-
-#         # If the current covariate has a beta parameter attached to it
-#         if covariate in betas.keys():
-
-#             param_base[:, id_tmp] = param_base[:, id_tmp] + (
-#                 betas[covariate] * tmp_covariate_by_sample
-#             )
-#         else:
-#             param_base[:, id_tmp] = param_base[:, id_tmp] + (
-#                 0.1 * tmp_covariate_by_sample
-#             )
-
-#     # TD: IMPROVE THIS SIMULATOR SO THAT WE CAN PASS MATRICES OF PARAMETERS
-#     # WAY TOO SLOW RIGHT NOW
-
-#     sim_out = simulator(
-#         param_base,
-#         model=model,
-#         n_samples=1,
-#         n_trials=n_samples,
-#         bin_dim=bin_dim,
-#         bin_pointwise=bin_pointwise,
-#         max_t=max_t,
-#         delta_t=delta_t,
-#     )
-
-#     sim_out = _add_outliers(
-#         sim_out=sim_out,
-#         p_outlier=p_outlier,
-#         max_rt_outlier=max_rt_outlier,
-#     )
-
-#     # Preprocess
-#     data = hddm_preprocess(sim_out, subj_id, add_model_parameters=True)
-#     # data = hddm_preprocess([rts, choices], subj_id)
-
-#     # Call the covariate BOLD (unnecessary but in style)
-#     data["BOLD"] = tmp_covariate_by_sample
-
-#     # Make ground truth dict
-#     gt = {}
-
-#     for param in model_config[model]["params"]:
-#         id_tmp = model_config[model]["params"].index(param)
-
-#         # If a parameter actually had a covariate attached then we add the beta coefficient as a parameter as well
-#         # Now intercept, beta
-#         if param in dependent_params:
-#             if param in betas.keys():
-#                 # gt[param + '_Intercept'] = param_base[:, ]
-#                 gt[param + "_BOLD"] = betas[param]
-#             else:
-#                 gt[param + "_BOLD"] = 0.1
-#             gt[param + "_Intercept"] = param_base_before_adj[0, id_tmp]
-
-#         else:
-#             gt[param] = param_base[0, id_tmp]
-
-#     return (data, gt)
-
-
-# # ALEX TD: Change n_trials_by_subject --> n_trials_per_subject (but apply consistently)
-# def simulator_hierarchical(
-#     n_subjects=5,
-#     n_trials_per_subject=500,
-#     prespecified_param_means=None,  # {'v': 2},
-#     prespecified_param_stds=None,  # {'v': 0.3},
-#     p_outlier=0.0,
-#     max_rt_outlier=10.0,
-#     model="angle",
-#     bin_dim=None,
-#     bin_pointwise=True,
-#     max_t=20.0,
-#     delta_t=0.001,
-# ):
-
-#     """Generate a dataset which includes covariates. Some parameters are now a function (regression) covariates.
-
-#     :Arguments:
-#         n_subjects: int <default=5>
-#             Number of subjects in the datasets
-#         n_trials_per_subject: int <default=500>
-#             Number of trials for each subject
-#         prspecified_param_means: dict <default={'v': 2}>
-#             Prespeficied group means
-#         prespecified_param_stds: dict <default={'v': 0.3}
-#             Prespeficied group standard deviations
-#         p_outlier: float between 0 and 1 <default=0>
-#             Probability of generating outlier datapoints. An outlier is defined
-#             as a random choice from a uniform RT distribution
-#         max_rt_outlier: float > 0 <default=10.0>
-#             Using max_rt_outlier (which is commonly defined for hddm models) here as an imlicit maximum
-#             on the RT of outliers. Outlier RTs are sampled uniformly from [0, max_rt_outlier]
-#         model: str <default='angle'>
-#             String that specifies the model to be simulated.
-#             Current options include, 'angle', 'ornstein', 'levy', 'weibull', 'full_ddm'
-#         delta_t: float <default=0.001>
-#             Size fo timesteps in simulator (conceptually measured in seconds)
-#         max_t: float <default=20>
-#             Maximum reaction the simulator can reach
-#         bin_dim: int <default=None>
-#             If simulator output should be binned, this specifies the number of bins to use
-#         bin_pointwise: bool <default=False>
-#             Determines whether to bin simulator output pointwise. Pointwise here is in contrast to producing binned output
-#             in the form of a histogram. Binning pointwise gives each trial's RT and index which is the respective bin-number.
-#             This is expected when you are using the 'cnn' network to fit the dataset later. If pointwise is not chosen,
-#             then the takes the form of a histogram, with bin-wise frequencies.
-
-#     Returns:
-#         (pandas.DataFrame, dict, np.array): The Dataframe holds a 'reaction time' column, a 'response' column and a 'BOLD' column (for the covariate). The dictionary holds the groundtruth parameter (values) and parameter names (keys).
-#                                            Ready to be fit with hddm.
-#     """
-
-#     # Sanity checks
-#     assert p_outlier >= 0 and p_outlier <= 1, "p_outlier is not between 0 and 1"
-#     assert max_rt_outlier > 0, "max_rt__outlier needs to be > 0"
-
-#     # AF TD: Why is this unused ?!
-#     # param_ranges_half = (np.array(model_config[model]['param_bounds'][1]) - np.array(model_config[model]['param_bounds'][0])) / 2
-#     # Fill in some global parameter vectors
-#     global_means = np.random.uniform(
-#         low=model_config[model]["param_bounds"][0],
-#         high=model_config[model]["param_bounds"][1],
-#         size=(1, len(model_config[model]["param_bounds"][0])),
-#     )
-
-#     global_stds = np.random.uniform(
-#         low=0.001,
-#         high=np.minimum(
-#             abs(global_means - model_config[model]["param_bounds"][0]),
-#             abs(model_config[model]["param_bounds"][1] - global_means),
-#         )
-#         / 3,  # previously param_ranges_half / 6,
-#         size=(1, len(model_config[model]["param_bounds"][0])),
-#     )
-
-#     dataframes = []
-#     subject_parameters = np.zeros(
-#         (n_subjects, len(model_config[model]["param_bounds"][0]))
-#     )
-#     gt = {}
-
-#     # Update global parameter vectors according to what was pre-specified
-#     for param in model_config[model]["params"]:
-#         id_tmp = model_config[model]["params"].index(param)
-#         if prespecified_param_means is not None:
-#             if param in prespecified_param_means.keys():
-#                 global_means[0, id_tmp] = prespecified_param_means[param]
-
-#         if prespecified_param_stds is not None:
-#             if param in prespecified_param_stds.keys():
-#                 global_stds[0, id_tmp] = prespecified_param_stds[param]
-
-#         gt[param] = global_means[0, id_tmp]
-#         gt[param + "_std"] = global_stds[0, id_tmp]
-
-#     # For each subject get subject level parameters by sampling from a truncated gaussian as speficied by the global parameters above
-#     for i in range(n_subjects):
-#         subj_id = num_to_str(i)
-
-#         # Get subject parameters
-#         a = (model_config[model]["param_bounds"][0] - global_means[0, :]) / global_stds[
-#             0, :
-#         ]
-#         b = (model_config[model]["param_bounds"][1] - global_means[0, :]) / global_stds[
-#             0, :
-#         ]
-
-#         subject_parameters[i, :] = np.float32(
-#             global_means[0, :]
-#             + (truncnorm.rvs(a, b, size=global_stds.shape[1]) * global_stds[0, :])
-#         )
-
-#         sim_out = simulator(
-#             subject_parameters[i, :],
-#             model=model,
-#             n_samples=n_trials_per_subject,
-#             bin_dim=bin_dim,
-#             bin_pointwise=bin_pointwise,
-#             max_t=max_t,
-#             delta_t=delta_t,
-#         )
-
-#         sim_out = _add_outliers(
-#             sim_out=sim_out,
-#             p_outlier=p_outlier,
-#             max_rt_outlier=max_rt_outlier,
-#         )
-
-#         dataframes.append(
-#             hddm_preprocess(
-#                 simulator_data=sim_out, subj_id=subj_id, add_model_parameters=True
-#             )
-#         )
-
-#         for param in model_config[model]["params"]:
-#             id_tmp = model_config[model]["params"].index(param)
-#             gt[param + "_subj." + subj_id] = subject_parameters[i, id_tmp]
-
-#     data_out = pd.concat(dataframes)
-
-#     return (data_out, gt)

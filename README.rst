@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.0
+:Version: 0.9.1
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -57,6 +57,8 @@ Features
   There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
   Some sampler settings are now exposed to the user via a customizable **model_config dictionary**. Lastly you are now able to save and load **HDDMRegression** models with 
   custom link functions. Please see the **documentation** (under **LAN Extension**) for illustrations on how to use the new features.
+
+* HDDM 0.9.1 improved documentation for LAN models. Comprehensive tutorial using LAN included. Bugfixes for ``simulator_h_c()`` function. 
 
 
 Comparison to other packages
