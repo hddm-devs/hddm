@@ -1,5 +1,5 @@
 .. index:: LANs
-.. _chap_tutorial
+.. _chap_lan_tutorial
 
 Welcome to the HDMM-LAN TUTORIAL!
 =================================
