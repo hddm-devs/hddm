@@ -36,8 +36,11 @@ def generalized_logistic_bnd(t=1, B=2.0, M=3.0, v=0.5):
         t: np.array or float <default = 1>
             Time/s (with arbitrary measure, but in HDDM it is used as seconds) at which to evaluate the bound.
         B: float <default = 2.0>
+            Scale parameter
         M: float <default = 3.0>
+            Mean shift parameter
         v: float <default = 0.5>
+            Shape parameter
 
     """
     return 1 - (1 / np.power(1 + np.exp(-B * (t - M)), 1 / v))

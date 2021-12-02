@@ -7,6 +7,7 @@ LAN Extension
 
 .. toctree::
     :maxdepth: 2
+    
     lan_tutorial
     lan_new_classes
     lan_new_models

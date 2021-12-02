@@ -30,7 +30,7 @@ Things to look out for:
 
 
 SECTION 0.1: IMPORTS
-====================
+''''''''''''''''''''
 
 .. code:: ipython3
 
@@ -70,7 +70,7 @@ SECTION 0.1: IMPORTS
     import hddm
 
 SECTION 1: MODEL INFO / SIMULATION / BASIC PLOTTING
-===================================================
+'''''''''''''''''''''''''''''''''''''''''''''''''''
 
 The main concern of this notebook is to present the extended
 capabilities of the HDDM toolbox as a result of the new ``HDDMnn``
@@ -156,11 +156,11 @@ implemented in HDDM. It lists,
 
 -  A little ``doc`` string that informs about the status of the model. 
    Please read the ``doc`` string before using any of the new models.
--  Ahe parameter names under ``params``,
--  Ahe parameter bounds that where used for training the network under
+-  The parameter names under ``params``,
+-  The parameter bounds that where used for training the network under
    ``param_bounds``
--  Ahe number of parameters (``n_params``)
--  Ahe boundary_function (``boundary``)
+-  The number of parameters (``n_params``)
+-  The boundary_function (``boundary``)
 -  Default parameter values (``default_params``).
 -  Slice sampler settings by parameter (``slice_widths``)
 -  Under ``params_trans`` you can choose parameters which will be logit
@@ -462,7 +462,7 @@ it in the docs). We get back a ``tuple`` of two:
 
 
 1.2 First Plot
-~~~~~~~~~~~~~~
+--------------
 
 Now that we have our simulated data, we look to visualise it. Let’s look
 at a couple of plots that we can use for this purpose.
@@ -550,15 +550,15 @@ If you are interested, you can use this plot to investigate the behavior
 of models across different parameters setups.
 
 SECTION 2: SINGLE SUBJECT (OR COLLAPSED) DATA
-=============================================
+'''''''''''''''''''''''''''''''''''''''''''''
 
 Now, we try to fit these models to data! Let’s start with an simple
 dataset. In other words, we have one single participant who provides
 :math:`n` datatpoints (reaction times and choices) from some *two
 alternative forced choice* task paradigm.
 
-Note
-^^^^
+**Note**
+
 
 In this demo we fit to simulated data. This serves as a template, and
 you can easily adapt it to your needs.
@@ -571,8 +571,8 @@ you can easily adapt it to your needs.
     n_samples = 1000
     includes = hddm.model_config.model_config[model]['hddm_include']
 
-Note
-^^^^
+**Note**
+
 
 When defining ``includes``, you can also pick only as subset of the
 parameters suggested under ``hddm.model_config.model_config``.
@@ -795,7 +795,7 @@ parameters suggested under ``hddm.model_config.model_config``.
 
 
 2.1 VISUALIZATION
-~~~~~~~~~~~~~~~~~
+-----------------
 
 The ``caterpillar_plot()`` function below displays *parameterwise*,
 
@@ -918,7 +918,7 @@ convergence statistics you want of course.
 
 
 SECTION 3: HIERARCHICAL MODELS
-==============================
+''''''''''''''''''''''''''''''
 
 The ‘h’ in ``hddm`` stands for hierarchical, so let’s do it! If we have
 data from multiple participants and we assume that the parameters of
@@ -1058,7 +1058,7 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 
 SECTION 4: PARAMETER VARIES BY CONDITION
-========================================
+''''''''''''''''''''''''''''''''''''''''
 
 An important aspect of these posterior analysis, is the consideration of
 experiment design. We may have an experiment in which subject are
@@ -1360,7 +1360,7 @@ subplots corresponding to single subjects.
 
 
 SECTION 5: REGRESSORS
-=====================
+'''''''''''''''''''''
 
 This section provides a simple working example using the Neural Networks
 with the Regression backend. The regression back-end allows linking
@@ -1456,7 +1456,7 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 
 SECTION 6: STIM CODING
-======================
+''''''''''''''''''''''
 
 You can read more about **stimulus coding** in the
 `documentation <https://hddm.readthedocs.io/en/latest/howto.html?highlight=stimulus%20coding#code-subject-responses>`__.
@@ -1808,13 +1808,13 @@ Here just an example.
 
 
 NOTE:
-~~~~~
+-----
 
 The ``hddm.plotting.model_plot()`` does not yet accept *stimcoding*
 data. This will be updated as soon as possible.
 
 SECTION 7: MODEL RECOVERY
-=========================
+'''''''''''''''''''''''''
 
 A crucial exercise in statistical modeling concern **model comparison**.
 
@@ -2091,8 +2091,8 @@ the **true** model.
 
 
 
-CHECKING THE MODEL FITS VISUALLY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+7.1 CHECKING THE MODEL FITS VISUALLY
+------------------------------------
 
 Posterior Predictive: Do the ‘Posterior Models’ also make sense?
 
@@ -2218,7 +2218,7 @@ gives us a result that conforms with the intuition we get from looking
 at the model plots.
 
 SECTION 8: REAL DATA?
-=====================
+'''''''''''''''''''''
 
 .. code:: ipython3
 
@@ -2228,7 +2228,7 @@ SECTION 8: REAL DATA?
     model = 'angle'
 
 Load and Pre-process dataset
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 
 .. code:: ipython3
 
@@ -2390,7 +2390,7 @@ Load and Pre-process dataset
 
 
 Basic Condition Split Model
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 .. code:: ipython3
 
@@ -2470,7 +2470,7 @@ Basic Condition Split Model
 
 
 Basic Hierarchical Model
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 .. code:: ipython3
 
@@ -2545,13 +2545,13 @@ This is just an example. The angle model might not be the best choice
 here, and we are moreover ignoring the supplied conditions.
 
 9. ACCESSING THE NEURAL NETWORK DIRECTLY
-========================================
+''''''''''''''''''''''''''''''''''''''''
 
 The ``network_inspectors`` module allows you to inspect the LANs
 directly.
 
 9.1 Direct access to batch predictions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 You can use the ``hddm.network_inspectors.get_torch_mlp()`` function to
 access network predictions.
@@ -2606,14 +2606,14 @@ Let’s predict some likelihoods !
 
 
 9.2 Plotting Utilities
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 HDDM provides two plotting function to investigate the network outputs
 directly. The ``kde_vs_lan_likelihoods()`` plot and the
 ``lan_manifold()`` plot.
 
 9.2.1 ``kde_vs_lan_likelihoods()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 The ``kde_vs_lan_likelihoods()`` plot allows you to check the
 likelihoods produced by a LAN against Kernel Density Estimates (KDEs)
@@ -2777,7 +2777,7 @@ parameter vectors as rows.
 
 
 9.2.2 ``lan_manifold()``
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Lastly, you can use the ``lan_manifold()`` plot to investigate the LAN
 likelihoods over a range of parameters.
@@ -2869,7 +2869,7 @@ a parameter affects model behavior.
 
 
 END
-===
+'''
 
 Hopefully this tutorial proves as a useful starting point for your
 application.
