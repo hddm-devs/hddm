@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.1
+:Version: 0.9.2
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -60,6 +60,10 @@ Features
 
 * HDDM 0.9.1 improved documentation for LAN models. Comprehensive tutorial using LAN included. Bugfixes for ``simulator_h_c()`` function. 
 
+* HDDM 0.9.2 Major overhaul of the plotting functions under hddm.plotting. Old capabilities are preserved under hddm.plotting_old, but will be deprecated. 
+             The new plotting functions replicate the existing functionality, but improve on various aspects of the plot and provide a more abstracted and extensible interface.
+             Fixes an error with posterior predictive sampling using hierarchical regression models based on LANs with ``HDDMnnRegressor()``. ``HDDMnnRegressor()`` now issues a 
+             single warning for boundary condition violations instead of flagging all occurences.
 
 Comparison to other packages
 ============================
@@ -107,7 +111,7 @@ install via git. In a fresh environment type:
 :: 
     pip install cython
     pip install pymc
-    pip install git+htpts://github.com/hddm-devs/kabuki
+    pip install git+https://github.com/hddm-devs/kabuki
     pip install git+https://github.com/hddm-devs/hddm
     # Optional
     pip install torch torchvision torchaudio

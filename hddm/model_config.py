@@ -55,12 +55,12 @@ model_config = {
         },
     },
     "ddm": {
-        "doc": "Basic DDM. Meant for use with the LAN extension. \n" + \
-               "Note that the boundaries here are coded as -a, and a in line with all other models meant for the LAN extension. \n" + \
-               "To compare model fits between standard HDDM and HDDMnn when using the DDM model, multiply the boundary " + \
-               "(a) parameter by 2. \n" + \
-               "We recommend using standard HDDM if you are interested in the basic DDM, but you might want to " + \
-               "use this for testing.",
+        "doc": "Basic DDM. Meant for use with the LAN extension. \n"
+        + "Note that the boundaries here are coded as -a, and a in line with all other models meant for the LAN extension. \n"
+        + "To compare model fits between standard HDDM and HDDMnn when using the DDM model, multiply the boundary "
+        + "(a) parameter by 2. \n"
+        + "We recommend using standard HDDM if you are interested in the basic DDM, but you might want to "
+        + "use this for testing.",
         "params": ["v", "a", "z", "t"],
         "params_trans": [0, 0, 1, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0],
@@ -86,10 +86,9 @@ model_config = {
             "t_std": 0.15,
         },
     },
-
     "angle": {
-        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
-               "Meant for use with the extension.",
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n"
+        + "Meant for use with the extension.",
         "params": ["v", "a", "z", "t", "theta"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -118,8 +117,8 @@ model_config = {
         },
     },
     "weibull": {
-        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
-               "Meant for use with the extension.",
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n"
+        + "Meant for use with the extension.",
         "params": ["v", "a", "z", "t", "alpha", "beta"],
         "params_trans": [0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 2.0, 2.0],
@@ -153,8 +152,8 @@ model_config = {
         },
     },
     "levy": {
-        "doc": "Model formulation is described in the documentation under LAN Extension.\n" + \
-               "Meant for use with the extension.",
+        "doc": "Model formulation is described in the documentation under LAN Extension.\n"
+        + "Meant for use with the extension.",
         "params": ["v", "a", "z", "alpha", "t"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -183,8 +182,8 @@ model_config = {
         },
     },
     "full_ddm": {
-        "doc": "Currently unavailable, for LANs after switch to pytorch. \n" + \
-               "Coming soon... Please use standard HDDM if you want to fit this model to your data.",
+        "doc": "Currently unavailable, for LANs after switch to pytorch. \n"
+        + "Coming soon... Please use standard HDDM if you want to fit this model to your data.",
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
         "params_trans": [0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 0.1, 0.5, 0.1],
@@ -217,8 +216,8 @@ model_config = {
         },
     },
     "ornstein": {
-        "doc": "Model formulation is described in the documentation under LAN Extension." + \
-               "Meant for use with the extension.",
+        "doc": "Model formulation is described in the documentation under LAN Extension."
+        + "Meant for use with the extension.",
         "params": ["v", "a", "z", "g", "t"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -248,8 +247,8 @@ model_config = {
         },
     },
     "ddm_sdv": {
-        "doc": "Currently unavailable, for LANs after switch to pytorch. Coming soon..." + \
-               "Please use standard HDDM if you want to fit this model to your data.",
+        "doc": "Currently unavailable, for LANs after switch to pytorch. Coming soon..."
+        + "Please use standard HDDM if you want to fit this model to your data.",
         "params": ["v", "a", "z", "t", "sv"],
         "params_trans": [0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.0, None, 1.0, 1.0],
@@ -673,8 +672,8 @@ model_config = {
         },
     },
     "race_no_bias_3": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "t"],
         "params_trans": [0, 0, 0, 0, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0],
@@ -704,8 +703,8 @@ model_config = {
         },
     },
     "race_no_bias_angle_3": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -0.1],
@@ -737,8 +736,8 @@ model_config = {
         },
     },
     "race_no_bias_4": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -770,8 +769,8 @@ model_config = {
         },
     },
     "race_no_bias_angle_4": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -0.1],
@@ -805,8 +804,8 @@ model_config = {
         },
     },
     "lca_no_bias_3": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "g", "b", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0],
@@ -840,8 +839,8 @@ model_config = {
         },
     },
     "lca_no_bias_angle_3": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "a", "z", "g", "b", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0, -1.0],
@@ -877,8 +876,8 @@ model_config = {
         },
     },
     "lca_no_bias_4": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0],
@@ -914,8 +913,8 @@ model_config = {
         },
     },
     "lca_no_bias_angle_4": {
-        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n" + \
-               "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
+        "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
+        + "redundant with the boundary separation parameter a. Future versions will drop z altogether.",
         "params": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t", "theta"],
         "param_bounds": [
             [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, -1.0, 0.0, -0.1],

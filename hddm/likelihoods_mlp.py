@@ -31,6 +31,7 @@ def make_mlp_likelihood(model, **kwargs):
     def random(
         self,
         keep_negative_responses=True,
+        add_model=False,
         add_model_parameters=False,
         keep_subj_idx=False,
     ):
@@ -38,7 +39,7 @@ def make_mlp_likelihood(model, **kwargs):
         Generate random samples from a given model (the dataset matches the size of the respective observated dataset supplied as an attribute of self).
         """
 
-        # this can be simplified so that we pass parameters directly to the simulator ...
+        # This can be simplified so that we pass parameters directly to the simulator ...
         theta = np.array(model_config[model]["default_params"], dtype=np.float32)
         keys_tmp = self.parents.value.keys()
         cnt = 0
@@ -56,21 +57,32 @@ def make_mlp_likelihood(model, **kwargs):
             add_model_parameters=add_model_parameters,
         )
 
-        if model_config[model]["n_choices"] == 2:
-            sim_out_proc["rt"] = sim_out_proc["rt"] * sim_out_proc["response"]
+        if add_model:
+            sim_out_proc["model"] = model
 
         return sim_out_proc
 
     def pdf(self, x):
-        rt = np.array(x, dtype=np.float32)
-        response = rt / np.abs(rt)
-        rt = np.abs(rt)
+        # Check if model supplied has only two choice options
+        # If yes --> check if two-dimensional input (rt, response) or one-dimensional input (rt) --> processing depends on it
+        # If not --> input x has to be two dimensional (rt, response) becasuse we can't deduce response from rt
+        x = np.array(x, dtype=np.float32)
+
+        if len(x.shape) == 1 or x.shape[1] == 1:
+            rt = x
+            response = rt / np.abs(rt)
+            rt = np.abs(rt)
+        elif x.shape[1] == 2:
+            rt = x[:, 0]
+            response = x[:, 1]
+
         params = np.array(
             [self.parents[param] for param in model_config[model]["params"]]
         ).astype(np.float32)
+
         return hddm.wfpt.wiener_like_nn_mlp_pdf(
-            rt, response, params, network=kwargs["network"], **self.parents
-        )  # **kwargs) # This may still be buggy !
+            rt, response, params, network=kwargs["network"]
+        )
 
     def cdf(self, x):
         # TODO: Implement the CDF method for neural networks
@@ -78,11 +90,8 @@ def make_mlp_likelihood(model, **kwargs):
 
     def make_likelihood(model=model):
         likelihood_str = make_likelihood_str_mlp(config=model_config[model])
-        # print(likelihood_str)
         exec(likelihood_str)
-        # print(locals())
         my_fun = locals()["custom_likelihood"]
-        # print(my_fun)
         return my_fun
 
     likelihood_ = make_likelihood(model=model)
@@ -116,18 +125,11 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         model in model_config.keys()
     ), "Model supplied does not have an entry in the model_config dictionary"
 
-    # Model specific inits ------------------------------------------
-    # n_params = model_config[model]["n_params"]
-    # data_frame_width = n_params + 2
-    # model_parameter_names = model_config[model]["params"]
-    # model_parameter_lower_bounds = model_config[model]["param_bounds"][0]
-    # model_parameter_upper_bounds = model_config[model]["param_bounds"][1]
-    # ---------------------------------------------------------------
-
     # Need to rewrite these random parts !
     def random(
         self,
         keep_negative_responses=True,
+        add_model=False,
         add_model_parameters=False,
         keep_subj_idx=False,
     ):
@@ -144,9 +146,9 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         cnt = 0
         for tmp_str in model_config[model]["params"]:  # ['v', 'a', 'z', 't']:
             if tmp_str in self.parents["reg_outcomes"]:
-                param_data[:, cnt] = param_dict[tmp_str].iloc[
-                    self.value.index
-                ]  # changed from iloc[self.value.index][0]
+                param_data[:, cnt] = param_dict[tmp_str].values
+                # previously iloc[self.value.index]
+                # changed from iloc[self.value.index][0]
             else:
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
@@ -162,8 +164,8 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
             keep_subj_idx=keep_subj_idx,
         )
 
-        if model_config[model]["n_choices"] == 2:
-            sim_out_proc["rt"] = sim_out_proc["rt"] * sim_out_proc["response"]
+        if add_model:
+            sim_out_proc["model"] = model
 
         return sim_out_proc
 

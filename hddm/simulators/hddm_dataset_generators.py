@@ -47,8 +47,8 @@ def hddm_preprocess(
             if len(simulator_data[2][param]) > 1:
                 df[param] = simulator_data[2][param]
             else:
-                #print(param)
-                #print(simulator_data[2][param][0])
+                # print(param)
+                # print(simulator_data[2][param][0])
                 df[param] = simulator_data[2][param][0]
     return df
 
@@ -528,7 +528,7 @@ def simulator_h_c(
                                   the names of traces when fitting the equivalent hddm model. The parameter dictionary is useful for some graphs, otherwise not neccessary.
     """
 
-    #print('starting data generation')
+    # print('starting data generation')
     meta_params = {
         "group_param_dist": "normal",
         "gen_norm_std": 1 / 3,
@@ -677,7 +677,7 @@ def simulator_h_c(
             n_conditions = conditions_df.shape[0]
 
         for condition_id in range(n_conditions):
-            #remainder_set = 0
+            # remainder_set = 0
             regressor_set = 0
 
             for subj_idx in range(n_subjects):
@@ -705,18 +705,21 @@ def simulator_h_c(
                     for remainder_tmp in remainder:
                         tmp_mean = group_level_parameter_dict[remainder_tmp]
                         tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
-                        
-                        # If the subject has been seen before, we use the parameters from 
+
+                        # If the subject has been seen before, we use the parameters from
                         # the previous condition, since the remainder parameters do not change
                         # across conditions
-                        if remainder_tmp + "_subj." + str(subj_idx) in full_parameter_dict.keys():
+                        if (
+                            remainder_tmp + "_subj." + str(subj_idx)
+                            in full_parameter_dict.keys()
+                        ):
                             pass
-                        else: 
+                        else:
                             # Otherwise, generate new parameter for this subject (really only relevant first condition for remainder parameters)
                             full_parameter_dict[
                                 remainder_tmp + "_subj." + str(subj_idx)
                             ] = np.random.normal(loc=tmp_mean, scale=tmp_std)
-                        
+
                         subj_data[remainder_tmp] = full_parameter_dict[
                             remainder_tmp + "_subj." + str(subj_idx)
                         ]
@@ -736,16 +739,23 @@ def simulator_h_c(
                                 depends_tmp + "(" + condition_elem + ")"
                             ]
                             tmp_std = group_level_parameter_dict[depends_tmp + "_std"]
-                            tmp_param_name = depends_tmp + "_subj(" \
-                                             + condition_elem + ")." + str(subj_idx)
-                            
+                            tmp_param_name = (
+                                depends_tmp
+                                + "_subj("
+                                + condition_elem
+                                + ")."
+                                + str(subj_idx)
+                            )
+
                             # If the subject / condition combination has been see before
                             # we do not reassign a new parameter here !
-                            
+
                             if tmp_param_name in full_parameter_dict.keys():
                                 pass
-                            else: # Otherwise assign new parameter
-                                full_parameter_dict[tmp_param_name] = np.random.normal(loc=tmp_mean, scale=tmp_std)
+                            else:  # Otherwise assign new parameter
+                                full_parameter_dict[tmp_param_name] = np.random.normal(
+                                    loc=tmp_mean, scale=tmp_std
+                                )
 
                             # Assign the parameter to subject data
                             subj_data[depends_tmp] = full_parameter_dict[
@@ -760,7 +770,7 @@ def simulator_h_c(
                                 depends_tmp + "(" + condition_elem + ")"
                             ]
 
-                        # Add the respective stimulus columns 
+                        # Add the respective stimulus columns
                         for condition_key_tmp in conditions_df_tmp.keys():
                             subj_data[condition_key_tmp] = conditions_df_tmp[
                                 condition_key_tmp
@@ -1114,21 +1124,20 @@ def simulator_h_c(
                         axis=1
                     )  # AF-TD: This should probably include a noise term here (parameter really defined as coming from a linear model + noise)
 
-
             regressor_set = 1
 
         parameters = data[model_config[model]["params"]]
 
         sim_data = simulator(
-                             theta=parameters.values,
-                             model=model,
-                             n_samples=1,
-                             delta_t=0.001,
-                             max_t=20,
-                             no_noise=False,
-                             bin_dim=None,
-                             bin_pointwise=False,
-                            )
+            theta=parameters.values,
+            model=model,
+            n_samples=1,
+            delta_t=0.001,
+            max_t=20,
+            no_noise=False,
+            bin_dim=None,
+            bin_pointwise=False,
+        )
 
         # Post-processing
         data["rt"] = sim_data[0].astype(np.float64)

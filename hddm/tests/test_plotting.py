@@ -51,7 +51,6 @@ class NetworkInspectorTest(unittest.TestCase):
                 is_group_model=False,
                 depends_on={},
                 p_outlier=0.00,
-                network_type="torch_mlp",
             )
 
             model_.sample(self.nmcmc, burn=self.nburn)
@@ -75,18 +74,3 @@ class NetworkInspectorTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-# def caterpillar_plot(
-#     hddm_model=None,
-#     ground_truth_parameter_dict=None,
-#     drop_sd=True,
-#     keep_key=None,
-#     x_limits=[-2, 2],
-#     aspect_ratio=2,
-#     figure_scale=1.0,
-#     save=False,
-#     show=True,
-#     tick_label_size_x=22,
-#     tick_label_size_y=14,
-# ):

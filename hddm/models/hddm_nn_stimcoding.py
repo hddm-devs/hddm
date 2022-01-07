@@ -32,10 +32,6 @@ class HDDMnnStimCoding(HDDMStimCoding):
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
 
-        network_type: str <default='mlp'>
-            String that defines which kind of network to use for the likelihoods. There are currently two
-            options: 'mlp', 'cnn'. CNNs should be treated as experimental at this point.
-
         nbin: int <default=512>
             Relevant only if network type was chosen to be 'cnn'. CNNs can be trained on coarser or
             finer binnings of RT space. At this moment only networks with 512 bins are available.
@@ -62,27 +58,32 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
     def __init__(self, *args, **kwargs):
         self.nn = True
-        print(
-            "Setting priors uninformative (LANs only work with uninformative priors for now)"
-        )
-        kwargs["informative"] = False
-        self.network_type = kwargs.pop("network_type", "torch_mlp")
+
+        if "informative" in kwargs.keys():
+            pass
+        else:
+            print("Setting priors to default: Uninformative")
+            kwargs["informative"] = False
+
         self.network = kwargs.pop("network", None)
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
 
-        if self.network_type == "torch_mlp":
-            if self.network is None:
-                try:
-                    self.network = load_torch_mlp(model=self.model)
-                except:
-                    print("Couldn't find load_torch_mlp()... pytorch not installed?")
-                    return None
-            network_dict = {"network": self.network}
-            self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-                model=self.model, **network_dict
-            )
+        if self.network is None:
+            try:
+                self.network = load_torch_mlp(model=self.model)
+            except:
+                print("Couldn't execute load_torch_mlp()...")
+                print("Option 1: pytorch not installed or version older than 1.7?")
+                print(
+                    "Option 2: pytorch model for your model string is not yet available"
+                )
+                return None
+        network_dict = {"network": self.network}
+        self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
+            model=self.model, **network_dict
+        )
 
         super(HDDMnnStimCoding, self).__init__(*args, **kwargs)
 
@@ -114,12 +115,10 @@ class HDDMnnStimCoding(HDDMStimCoding):
         return d
 
     def __setstate__(self, d):
-
-        if d["network_type"] == "torch_mlp":
-            d["network"] = load_torch_mlp(model=d["model"])
-            network_dict = {"network": d["network"]}
-            d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
-                model=d["model"], **network_dict
-            )
+        d["network"] = load_torch_mlp(model=d["model"])
+        network_dict = {"network": d["network"]}
+        d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
+            model=d["model"], **network_dict
+        )
 
         super(HDDMnnStimCoding, self).__setstate__(d)

@@ -45,7 +45,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         if self.nn:
             if model_config[self.model]["n_choices"] == 2:
                 # print("2-choice model --> passed through flip errors nn")
-                data = hddm.utils.flip_errors_nn(data, self.network_type)
+                data = hddm.utils.flip_errors_nn(data)
             else:
                 # print("More than 2-choice model --> don't flip any responses.")
                 # print("Make sure you supplied rt and choice data in appropriate format!")
@@ -499,6 +499,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         knodes = OrderedDict()
 
         if self.is_group_model and name not in self.group_only_nodes:
+
             g = Knode(
                 pm.Uniform,
                 "%s" % name,
@@ -546,9 +547,182 @@ class AccumulatorModel(kabuki.Hierarchical):
             knodes["%s_bottom" % name] = subj
 
         else:
+            # If not group model or current node is group only --> Uniform Prior
             subj = Knode(
                 pm.Uniform,
                 name,
+                lower=lower,
+                upper=upper,
+                value=value,
+                depends=self.depends[name],
+            )
+            knodes["%s_bottom" % name] = subj
+
+        return knodes
+
+    def _create_family_trunc_normal_trunc_normal(
+        self,
+        name,
+        value=0,
+        lower=None,
+        upper=None,
+        std_lower=1e-10,
+        std_upper=100,
+        g_mu=None,
+        g_std=10,
+        std_value=0.1,
+    ):
+
+        """Similar to _create_family_normal() but creates a Uniform
+        group distribution and a truncated subject distribution.
+
+        See _create_family_normal() help for more information.
+
+        """
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+
+            g = Knode(
+                pm.TruncatedNormal,
+                "%s" % name,
+                mu=g_mu,
+                tau=1 / (g_std ** 2),
+                lower=lower,
+                upper=upper,
+                value=value,
+                depends=self.depends[name],
+            )
+
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(
+                pm.Uniform,
+                "%s_std" % name,
+                lower=std_lower,
+                upper=std_upper,
+                value=std_value,
+                depends=depends_std,
+            )
+            tau = Knode(
+                pm.Deterministic,
+                "%s_tau" % name,
+                doc="%s_tau" % name,
+                eval=lambda x: x ** -2,
+                x=std,
+                plot=False,
+                trace=False,
+                hidden=True,
+            )
+            subj = Knode(
+                pm.TruncatedNormal,
+                "%s_subj" % name,
+                mu=g,
+                tau=tau,
+                a=lower,
+                b=upper,
+                value=value,
+                depends=("subj_idx",),
+                subj=True,
+                plot=self.plot_subjs,
+            )
+
+            knodes["%s" % name] = g
+            knodes["%s_std" % name] = std
+            knodes["%s_tau" % name] = tau
+            knodes["%s_bottom" % name] = subj
+
+        else:
+            # If not group model or current node is group only --> Uniform Prior
+            subj = Knode(
+                pm.TruncatedNormal,
+                name,
+                mu=g_mu,
+                tau=1 / (g_std ** 2),
+                lower=lower,
+                upper=upper,
+                value=value,
+                depends=self.depends[name],
+            )
+            knodes["%s_bottom" % name] = subj
+
+        return knodes
+
+    def _create_family_trunc_normal_trunc_normal_hnormal(
+        self,
+        name,
+        value=0,
+        lower=None,
+        upper=None,
+        std_std=None,
+        g_mu=None,
+        g_std=10,
+        std_value=0.1,
+    ):
+
+        """Similar to _create_family_normal() but creates a Uniform
+        group distribution and a truncated subject distribution.
+
+        See _create_family_normal() help for more information.
+
+        """
+        knodes = OrderedDict()
+
+        if self.is_group_model and name not in self.group_only_nodes:
+
+            g = Knode(
+                pm.TruncatedNormal,
+                "%s" % name,
+                mu=g_mu,
+                tau=1 / (g_std ** 2),
+                lower=lower,
+                upper=upper,
+                value=value,
+                depends=self.depends[name],
+            )
+
+            depends_std = self.depends[name] if self.std_depends else ()
+            std = Knode(
+                pm.HalfNormal,
+                "%s_std" % name,
+                tau=std_std ** -2,
+                value=std_value,
+                depends=depends_std,
+            )
+            tau = Knode(
+                pm.Deterministic,
+                "%s_tau" % name,
+                doc="%s_tau" % name,
+                eval=lambda x: x ** -2,
+                x=std,
+                plot=False,
+                trace=False,
+                hidden=True,
+            )
+            subj = Knode(
+                pm.TruncatedNormal,
+                "%s_subj" % name,
+                mu=g,
+                tau=tau,
+                a=lower,
+                b=upper,
+                value=value,
+                depends=("subj_idx",),
+                subj=True,
+                plot=self.plot_subjs,
+            )
+
+            knodes["%s" % name] = g
+            knodes["%s_std" % name] = std
+            knodes["%s_tau" % name] = tau
+            knodes["%s_bottom" % name] = subj
+
+        else:
+            # If not group model or current node is group only --> Uniform Prior
+            subj = Knode(
+                pm.TruncatedNormal,
+                name,
+                mu=g_mu,
+                tau=1 / (g_std ** 2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -611,7 +785,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             subj = Knode(
                 pm.Deterministic,
                 "%s_subj" % name,
-                eval=lambda x, y, z: x + y * z,
+                eval=lambda x, y, z: x + y * z,  # Is this correct transform ?
                 x=g,
                 y=offset_subj,
                 z=std,
@@ -1010,7 +1184,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_gamma_gamma_hnormal(
-        self, name, value=1, g_mean=1, g_std=1, std_std=2, std_value=0.1
+        self, name, value=1, g_mean=1, g_std=1, std_std=0.1, std_value=1
     ):
         """Similar to _create_family_normal_normal_hnormal() but adds an exponential
         transform knode to the subject and group mean nodes. This is useful
@@ -1019,6 +1193,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         See _create_family_normal_normal_hnormal() help for more information.
 
         """
+
+        # AF-Comment: previously std_std = 2, std_value = 0.1 --> inconsistent with paper ?
 
         knodes = OrderedDict()
         g_shape = (g_mean ** 2) / (g_std ** 2)
@@ -1032,6 +1208,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 value=g_mean,
                 depends=self.depends[name],
             )
+
             depends_std = self.depends[name] if self.std_depends else ()
             std = Knode(
                 pm.HalfNormal,

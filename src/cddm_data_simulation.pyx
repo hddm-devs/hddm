@@ -1533,7 +1533,7 @@ def ddm_flexbound_seq2(np.ndarray[float, ndim = 1] v_h,
 # Simulate (rt, choice) tuples from: DDM WITH FLEXIBLE BOUNDARIES ------------------------------------
 # @cythonboundscheck(False)
 # @cythonwraparound(False)
-def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h, 
+def ddm_flexbound_par2(np.ndarray[float, ndim = 1] v_h,
                        np.ndarray[float, ndim = 1] v_l_1,
                        np.ndarray[float, ndim = 1] v_l_2,
                        np.ndarray[float, ndim = 1] a,

@@ -458,13 +458,49 @@ def wiener_like_nn_mlp(np.ndarray[float, ndim = 1] rt,
 
     return log_p
 
-def wiener_like_nn_mlp_pdf(np.ndarray[float, ndim = 1] rt,
+# Basic MLP Likelihoods
+def wiener_like_nn_mlp_info(np.ndarray[float, ndim = 1] rt,
                             np.ndarray[float, ndim = 1] response,
                             np.ndarray[float, ndim = 1] params,
-                            double p_outlier = 0, 
+                            np.ndarray[float, ndim = 1] upper_bounds,
+                            np.ndarray[float, ndim = 1] lower_bounds,
+                            double p_outlier = 0,
                             double w_outlier = 0,
-                            bint logp = 0,
                             network = None):
+
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t n_params = params.shape[0]
+    cdef float log_p = 0
+    cdef float ll_min = -16.11809
+    cdef float[:] upper_bounds_view = upper_bounds
+    cdef float[:] lower_bounds_view = lower_bounds
+    cdef float[:] params_view = params
+
+    cdef np.ndarray[float, ndim = 2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+    data[:, :n_params] = np.tile(params, (size, 1)).astype(np.float32)
+    data[:, n_params:] = np.stack([rt, response], axis = 1)
+
+    for i in range(n_params):
+        if params_view[i] > upper_bounds_view[i]:
+            return -np.inf
+        elif params_view[i] < lower_bounds_view[i]:
+            return -np.inf
+
+    # Call to network:
+    if p_outlier == 0:
+        log_p = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    else:
+        log_p = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+
+    return log_p
+
+def wiener_like_nn_mlp_pdf(np.ndarray[float, ndim = 1] rt,
+                           np.ndarray[float, ndim = 1] response,
+                           np.ndarray[float, ndim = 1] params,
+                           double p_outlier = 0, 
+                           double w_outlier = 0,
+                           bint logp = 0,
+                           network = None):
     
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t n_params = params.shape[0]

@@ -161,10 +161,7 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes(self, include):
         if self.nn:
             if self.is_informative:
-                print("Informative Priors are not yet implemented")
-                return (
-                    "Informative Priors are not yet implementend for LANs, coming soon!"
-                )
+                return self._create_stochastic_knodes_nn_info(include)
             else:
                 return self._create_stochastic_knodes_nn_noninfo(include)
 
@@ -177,18 +174,15 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()
 
-        # Parameter bounds might be different depending on whether we use the MLP or the CNN
-        if self.network_type == "mlp" or self.network_type == "torch_mlp":
-            param_bnd_str = "param_bounds"
-        # elif self.network_type == "cnn":
-        #     param_bnd_str = "param_bounds_cnn"
-
         # PARAMETERS COMMON TO ALL MODELS
         if "p_outlier" in include:
-            knodes.update(
-                self._create_family_invlogit(
-                    "p_outlier", value=0.2, g_tau=10 ** -2, std_std=0.5
-                )
+            knodes["p_outlier_bottom"] = Knode(
+                pm.Beta,
+                "p_outlier",
+                alpha=1,
+                beta=1,
+                value=0.01,
+                depends=self.depends["p_outlier"],
             )
 
         for tmp_param in model_config[self.model]["params"]:
@@ -202,8 +196,8 @@ class HDDM(HDDMBase):
                             tmp_param,
                             g_tau=10 ** -2,
                             std_std=0.5,
-                            lower=model_config[self.model][param_bnd_str][0][param_id],
-                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            lower=model_config[self.model]["param_bounds"][0][param_id],
+                            upper=model_config[self.model]["param_bounds"][1][param_id],
                             value=model_config[self.model]["default_params"][param_id],
                         )
                     )
@@ -211,8 +205,55 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_trunc_normal(
                             tmp_param,
-                            lower=model_config[self.model][param_bnd_str][0][param_id],
-                            upper=model_config[self.model][param_bnd_str][1][param_id],
+                            lower=model_config[self.model]["param_bounds"][0][param_id],
+                            upper=model_config[self.model]["param_bounds"][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
+                            std_upper=model_config[self.model]["params_std_upper"][
+                                param_id
+                            ],  # added AF
+                        )
+                    )
+        return knodes
+
+    def _create_stochastic_knodes_nn_info(self, include):
+        print(
+            "Note: Currently for HDDMnn, HDDMnnRegressor, HDDMnnStimCoding setting informative priors has no effect!"
+        )
+        knodes = OrderedDict()
+
+        # PARAMETERS COMMON TO ALL MODELS
+        if "p_outlier" in include:
+            knodes["p_outlier_bottom"] = Knode(
+                pm.Beta,
+                "p_outlier",
+                alpha=1,
+                beta=1,
+                value=0.01,
+                depends=self.depends["p_outlier"],
+            )
+
+        for tmp_param in model_config[self.model]["params"]:
+            if tmp_param in include:
+                param_id = model_config[self.model]["params"].index(tmp_param)
+                trans = model_config[self.model]["params_trans"][param_id]
+
+                if trans:
+                    knodes.update(
+                        self._create_family_invlogit(
+                            tmp_param,
+                            g_tau=10 ** -2,
+                            std_std=0.5,
+                            lower=model_config[self.model]["param_bounds"][0][param_id],
+                            upper=model_config[self.model]["param_bounds"][1][param_id],
+                            value=model_config[self.model]["default_params"][param_id],
+                        )
+                    )
+                else:
+                    knodes.update(
+                        self._create_family_trunc_normal(
+                            tmp_param,
+                            lower=model_config[self.model]["param_bounds"][0][param_id],
+                            upper=model_config[self.model]["param_bounds"][1][param_id],
                             value=model_config[self.model]["default_params"][param_id],
                             std_upper=model_config[self.model]["params_std_upper"][
                                 param_id

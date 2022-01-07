@@ -63,42 +63,20 @@ def weibull_cdf(t=1, alpha=1, beta=1):
     return np.exp(-np.power(np.divide(t, beta), alpha))
 
 
-# # Gamma shape: (additive)
-# def gamma_bnd(t = 1,
-#               node = 1,
-#               shape = 1.01,
-#               scale = 1,
-#               theta = 0):
-#     return gamma.pdf(t - node, a = shape, scale = scale)
+# Gamma shape: (additive)
+def gamma_bnd(t=1, node=1, shape=1.01, scale=1, theta=0):
+    return gamma.pdf(t - node, a=shape, scale=scale)
 
-# Exponential decay with decay starting point (multiplicative)
-# def exp_c1_c2(t = 1,
-#               c1 = 1,
-#               c2 = 1):
-#
-#     b = np.exp(- c2*(t-c1))
-#
-#     if t >= c1:
-#
-#         return b
-#
-#     else:
-#         return 1
 
-# # Logistic (additive)
-# def logistic_bound(t = 1,
-#                    node = 1,
-#                    k = 1,
-#                    midpoint = 1,
-#                    max_val  = 3):
+# Logistic (additive)
+def logistic_bound(t=1, node=1, k=1, midpoint=1, max_val=3):
 
-#     return - (max_val / (1 + np.exp(- k * ((t - midpoint)))))
+    return -(max_val / (1 + np.exp(-k * ((t - midpoint)))))
 
-# # Linear collapse (additive)
-# def linear_collapse(t = 1,
-#                     node = 1,
-#                     theta = 1):
-#     if t >= node:
-#         return (t - node) * (- np.sin(theta) / np.cos(theta))
-#     else:
-#         return 0
+
+# Linear collapse (additive)
+def linear_collapse(t=1, node=1, theta=1):
+    if t >= node:
+        return (t - node) * (-np.sin(theta) / np.cos(theta))
+    else:
+        return 0

@@ -462,8 +462,8 @@ class HDDMRegressor(HDDM):
 
                 # AF-COMMENT Old slice_widths
                 self.slice_widths[param] = 0.05
-                
-                # AF-COMMENT Now basing slice widths on model_config: 
+
+                # AF-COMMENT Now basing slice widths on model_config:
                 # if trans:
                 #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans']
                 # else:

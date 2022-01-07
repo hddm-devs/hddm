@@ -54,7 +54,6 @@ class ModelLoad(unittest.TestCase):
                 is_group_model=False,
                 depends_on={},
                 p_outlier=0.00,
-                network_type="torch_mlp",
             )
 
             # Sample
@@ -91,7 +90,6 @@ class ModelLoad(unittest.TestCase):
                 model_ = hddm.HDDMnnStimCoding(
                     data,
                     model=model,
-                    network_type="torch_mlp",
                     split_param="v",
                     drift_criterion=True,
                     stim_col="stim",

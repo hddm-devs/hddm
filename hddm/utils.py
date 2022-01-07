@@ -5,9 +5,11 @@ import hddm
 import kabuki
 import pandas as pd
 import string
-from kabuki.analyze import post_pred_gen, post_pred_compare_stats
-import pymc.progressbar as pbar
-import tqdm
+
+# from kabuki.analyze import post_pred_gen, post_pred_compare_stats
+# import pymc.progressbar as pbar
+# import tqdm
+import warnings
 
 
 from scipy.stats import scoreatpercentile
@@ -46,6 +48,52 @@ def make_likelihood_str_mlp(config=None, fun_name="custom_likelihood"):
         + "], dtype = np.float32), "
         + "p_outlier=p_outlier, w_outlier=w_outlier, network=network)"
     )
+    return fun_str
+
+
+def make_likelihood_str_mlp_info(config=None, fun_name="custom_likelihood"):
+    """Define string for a likelihood function that can be used as an mlp-likelihood
+    in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
+
+    :Arguments:
+        config : dict <default = None>
+            Config dictionary for the model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+    :Returns:
+        str:
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    params_str = ", ".join(config["params"])
+    upper_bounds_str = (
+        "np.array(" + str(config["param_bounds"][1]) + ", dtype = np.float32)"
+    )
+    lower_bounds_str = (
+        "np.array(" + str(config["param_bounds"][0]) + ", dtype = np.float32)"
+    )
+
+    fun_str = (
+        "def "
+        + fun_name
+        + "(x, "
+        + params_str
+        + ", p_outlier=0.0, w_outlier=0.1, network = None):"
+        + '\n    return hddm.wfpt.wiener_like_nn_mlp_info(x["rt"].values, x["response"].values, '
+        + "np.array(["
+        + params_str
+        + "], dtype = np.float32), "
+        + "upper_bounds = "
+        + upper_bounds_str
+        + ", "
+        + "lower_bounds = "
+        + lower_bounds_str
+        + ", "
+        + "p_outlier=p_outlier, w_outlier=w_outlier, "
+        + "network=network)"
+    )
+
+    print(fun_str)
     return fun_str
 
 
@@ -97,7 +145,7 @@ def make_reg_likelihood_str_mlp(config=None, fun_name="custom_likelihood_reg"):
         + "[cnt]) or (data[:, cnt].max() > "
         + upper_bounds_str
         + "[cnt]):"
-        + '\n                print("boundary violation of regressor part")'
+        + '\n                warnings.warn("boundary violation of regressor part")'
         + "\n                return -np.inf"
         + "\n        else:"
         + "\n            data[:, cnt] = params[tmp_str]"
@@ -128,13 +176,17 @@ def flip_errors(data):
     data = pd.DataFrame(data.copy())
 
     # Flip sign for lower boundary response
-    idx = data["response"] == 0
+    # If the response is not 1, we flip the sign of rt
+    idx = data["response"] != 1
     data.loc[idx, "rt"] = -data.loc[idx, "rt"]
 
+    # # In case responses were supplied as [-1, 1]
+    # idx = data["response"] == -1
+    # data.loc[idx, "rt"] = -data.loc[idx, "rt"]
     return data
 
 
-def flip_errors_nn(data, network_type="mlp", nbins=None, max_rt=20):
+def flip_errors_nn(data):
     """Flip sign for lower boundary responses in case they were supplied ready for standard hddm.
 
     :Arguments:
@@ -145,27 +197,20 @@ def flip_errors_nn(data, network_type="mlp", nbins=None, max_rt=20):
             Input array with RTs sign flipped where 'response' < 0
 
     """
-    # if network_type == "cnn":
-    #     if np.any(data["response"] != 1.0):
-    #         idx = data["response"] < 0
-    #         data.loc[idx, "response"] = 0
-    # return bin_rts_pointwise(data, max_rt=max_rt, nbins=nbins)
+    data = pd.DataFrame(data.copy())  # .values.astype(np.float32)
 
-    if network_type == "mlp" or network_type == "torch_mlp":
-        data = pd.DataFrame(data.copy())  # .values.astype(np.float32)
+    data["response"] = data["response"].values.astype(np.float32)
+    data["rt"] = data["rt"].values.astype(np.float32)
 
-        data["response"] = data["response"].values.astype(np.float32)
-        data["rt"] = data["rt"].values.astype(np.float32)
+    if np.any(data["response"] != 1.0):
+        idx = data["response"] < 1.0
+        data.loc[idx, "response"] = -1.0
 
-        if np.any(data["response"] != 1.0):
-            idx = data["response"] < 1.0
-            data.loc[idx, "response"] = -1.0
-
-        # If flipped rt was supplied
-        # --> unflip it
-        idx = data["rt"] < 0.0
-        data.loc[idx, "rt"] = -data.loc[idx, "rt"]
-        return data
+    # If flipped rt was supplied
+    # --> unflip it
+    idx = data["rt"] < 0.0
+    data.loc[idx, "rt"] = -data.loc[idx, "rt"]
+    return data
 
 
 def bin_rts_pointwise(data, max_rt=10.0, nbins=512):
@@ -862,145 +907,8 @@ def posterior_predictive_dataprocessor_nn(x):
     print(x)
     return x[:, 1] * x[:, 0]
 
+
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
-
-
-# UNUSE NOW
-# New methods for getting fast posterior predictive samples
-# def _get_sample(bottom_node=None, sim_model="ddm_legacy"):
-#     theta_array = np.zeros(
-#         (bottom_node.value.shape[0], len(ssms.config.model_config[sim_model]["params"]))
-#     )
-#     cnt = 0
-#     for param in hddm.model_config.model_config[sim_model]["params"]:
-#         theta_array[:, cnt] = bottom_node.parents.value[param]
-#         cnt += 1
-#     out = hddm.simulators.basic_simulator.simulator(
-#         theta=theta_array, model=sim_model, n_samples=1
-#     )
-#     out = pd.DataFrame(out[0] * out[1], columns=["rt"])
-#     return out
-
-
-# def _parents_to_random_posterior_sample_fast(bottom_node, pos=None):
-#     """Walks through parents and sets them to pos sample."""
-#     for i, parent in enumerate(bottom_node.extended_parents):
-#         if not isinstance(parent, pm.Node):  # Skip non-stochastic nodes
-#             continue
-
-#         if pos is None:
-#             # Set to random posterior position
-#             pos = np.random.randint(0, len(parent.trace()))
-
-#         assert len(parent.trace()) >= pos, "pos larger than posterior sample size"
-#         parent.value = parent.trace()[pos]
-
-
-# def _post_pred_generate_fast(
-#     bottom_node, sim_model="ddm_legacy", samples=500, data=None, append_data=False
-# ):
-#     """Generate posterior predictive data from a single observed node."""
-#     datasets = []
-
-#     ##############################
-#     # Sample and generate stats
-#     for sample in tqdm(range(samples)):
-#         _parents_to_random_posterior_sample_fast(bottom_node)
-#         sampled_data = _get_sample(bottom_node, sim_model=sim_model)
-
-#         # Generate data from bottom node
-#         # print(dir(bottom_node))
-
-#         # ipdb.set_trace()
-#         # return bottom_node.parents.value # ADDED
-#         # sampled_data = bottom_node.random()
-
-#         # return bottom_node.random()
-#         if append_data and data is not None:
-#             sampled_data = sampled_data.join(data.reset_index(), lsuffix="_sampled")
-#         datasets.append(sampled_data)
-
-#     return datasets
-
-
-# def post_pred_gen_fast(
-#     model,
-#     groupby=None,
-#     samples=500,
-#     append_data=False,
-#     progress_bar=True,
-#     sim_model="ddm_legacy",
-# ):
-#     """Run posterior predictive check on a model.
-
-#     :Arguments:
-#         model : kabuki.Hierarchical
-#             Kabuki model over which to compute the ppc on.
-
-#     :Optional:
-#         samples : int
-#             How many samples to generate for each node.
-#         groupby : list
-#             Alternative grouping of the data. If not supplied, uses splitting
-#             of the model (as provided by depends_on).
-#         append_data : bool (default=False)
-#             Whether to append the observed data of each node to the replicatons.
-#         progress_bar : bool (default=True)
-#             Display progress bar
-
-#     :Returns:
-#         Hierarchical pandas.DataFrame with multiple sampled RT data sets.
-#         1st level: wfpt node
-#         2nd level: posterior predictive sample
-#         3rd level: original data index
-
-#     :See also:
-#         post_pred_stats
-#     """
-#     results = {}
-
-#     # Progress bar
-#     if progress_bar:
-#         n_iter = len(model.get_observeds())
-#         bar = pbar.progress_bar(n_iter)
-#         bar_iter = 0
-#     else:
-#         print("Sampling...")
-
-#     if groupby is None:
-#         iter_data = (
-#             (name, model.data.iloc[obs["node"].value.index])
-#             for name, obs in model.iter_observeds()
-#         )
-#     else:
-#         iter_data = model.data.groupby(groupby)
-
-#     for name, data in iter_data:
-#         node = model.get_data_nodes(data.index)
-
-#         if progress_bar:
-#             bar_iter += 1
-#             bar.update(bar_iter)
-
-#         if node is None or not hasattr(node, "random"):
-#             continue  # Skip
-
-#         ##############################
-#         # Sample and generate stats
-#         datasets = _post_pred_generate_fast(
-#             node,
-#             sim_model=sim_model,
-#             samples=samples,
-#             data=data,
-#             append_data=append_data,
-#         )
-#         results[name] = pd.concat(
-#             datasets, names=["sample"], keys=list(range(len(datasets)))
-#         )
-
-#     return pd.concat(results, names=["node"])
-
-

@@ -16,12 +16,8 @@ from data_simulators import ddm_flexbound_seq2
 from data_simulators import ddm_flexbound_par2
 from data_simulators import ddm_flexbound_mic2_adj
 
-# import data_simulators as cds
-# import hddm.simulators.boundary_functions as bf
 from . import boundary_functions as bf
 from hddm.model_config import model_config
-
-# import hddm.simulators
 
 # Basic simulators and basic preprocessing
 
@@ -249,7 +245,7 @@ def simulator(
             max_t=max_t,
         )
 
-    if model == "ddm" or model == "ddm_elife" or model == "ddm_analytic":
+    if model == "ddm":
         x = ddm_flexbound(
             v=theta[:, 0],
             a=theta[:, 1],
@@ -294,7 +290,7 @@ def simulator(
             max_t=max_t,
         )
 
-    if model == "angle" or model == "angle2":
+    if model == "angle":
         x = ddm_flexbound(
             v=theta[:, 0],
             a=theta[:, 1],
@@ -310,13 +306,7 @@ def simulator(
             max_t=max_t,
         )
 
-    if (
-        model == "weibull_cdf"
-        or model == "weibull_cdf2"
-        or model == "weibull_cdf_ext"
-        or model == "weibull_cdf_concave"
-        or model == "weibull"
-    ):
+    if model == "weibull":
         x = ddm_flexbound(
             v=theta[:, 0],
             a=theta[:, 1],
@@ -349,7 +339,7 @@ def simulator(
             max_t=max_t,
         )
 
-    if model == "full_ddm" or model == "full_ddm2":
+    if model == "full_ddm":
         x = full_ddm(
             v=theta[:, 0],
             a=theta[:, 1],
@@ -385,7 +375,7 @@ def simulator(
             max_t=max_t,
         )
 
-    if model == "ornstein" or model == "ornstein_uhlenbeck":
+    if model == "ornstein":
         x = ornstein_uhlenbeck(
             v=theta[:, 0],
             a=theta[:, 1],
@@ -801,9 +791,9 @@ def simulator(
             v_l_1=theta[:, 1],
             v_l_2=theta[:, 2],
             a=theta[:, 3],
-            z_h=theta[:, 4],  # np.array([0.5], dtype = np.float32),
-            z_l_1=theta[:, 5],  # np.array([0.5], dtype = np.float32),
-            z_l_2=theta[:, 6],  # np.array([0.5], dtype = np.float32),
+            z_h=theta[:, 4],
+            z_l_1=theta[:, 5],
+            z_l_2=theta[:, 6],
             d=theta[:, 7],
             t=theta[:, 8],
             s=s,

@@ -59,13 +59,3 @@ class TorchConfig(object):
         with open(os.path.join(hddm.__path__[0], "torch_models", file_name), "rb") as f:
             network_config = pickle.load(f)
         return network_config
-
-
-# network_configs =
-# network_configs['ddm'] = {'layer_types': ['dense', 'dense', 'dense', 'dense'],
-#                           'layer_sizes': [100, 100, 100, 1],
-#                           'activations': ['tanh', 'tanh', 'tanh', 'linear'],
-#                           'loss': 'huber',
-#                           'callbacks': ['checkpoint', 'earlystopping', 'reducelr'],
-#                           'model_id': 'ddm'}
-# return network_configs[model]

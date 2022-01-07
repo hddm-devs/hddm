@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext"
 
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 from . import simulators
 from . import likelihoods
@@ -10,6 +10,13 @@ from . import likelihoods_mlp
 from . import generate
 from . import utils
 from . import plotting
+from .plotting import (
+    _plot_func_model,
+    _plot_func_pair,
+    _plot_func_posterior_node_from_sim,
+    _plot_func_posterior_pdf_node_nn,
+)
+from . import plotting_old
 from . import network_inspectors
 from . import models
 from . import model_config
