@@ -26,8 +26,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf', 'torch_models/*', 'simulators/*']}, # 'cnn_models/*/*'  'keras_models/*.h5',
     scripts=['scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3'],
-    setup_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3'],
+    install_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0'],
+    setup_requires=['NumPy >=1.6.0', 'SciPy >= 0.6.0', 'pandas >= 0.12.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
