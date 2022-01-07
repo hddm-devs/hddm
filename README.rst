@@ -51,16 +51,19 @@ Features
   model (RLDDM), including a module for estimating the impact of continuous regressors onto RLDDM parameters, and a reinforcement learning 
   (RL) model. See tutorial for the RLDDM and RL modules here: https://nbviewer.jupyter.org/github/hddm-devs/hddm/blob/master/hddm/examples/demo_RLHDDMtutorial.ipynb and in the paper here: https://rdcu.be/b4q6Z
   
-* HDDM 0.9.0 brings a host of new features. HDDM includes `likelihood approximation networks`_ via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
-  This allows fitting of a number of variants of sequential sampling models. You can now easily use custom likelihoods
-  for model fitting. We included a range of new **simulators**, which allow data generation for a host of variants of sequential sampling models.
-  There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
-  Some sampler settings are now exposed to the user via a customizable **model_config dictionary**. Lastly you are now able to save and load **HDDMRegression** models with 
-  custom link functions. Please see the **documentation** (under **LAN Extension**) for illustrations on how to use the new features.
+* HDDM 0.9.0 brings a host of new features. 
+             HDDM includes `likelihood approximation networks`_ via the **HDDMnn**, **HDDMnnRegressor** and **HDDMnnStimCoding** classes. 
+             This allows fitting of a number of variants of sequential sampling models. You can now easily use custom likelihoods
+             for model fitting. We included a range of new **simulators**, which allow data generation for a host of variants of sequential sampling models.
+             There are some new out of the box **plots**, in the **hddm.plotting** module. Fast posterior predictives for regression based models.
+             Some sampler settings are now exposed to the user via a customizable **model_config dictionary**. Lastly you are now able to save and load **HDDMRegression** models with 
+             custom link functions. Please see the **documentation** (under **LAN Extension**) for illustrations on how to use the new features.
 
-* HDDM 0.9.1 improved documentation for LAN models. Comprehensive tutorial using LAN included. Bugfixes for ``simulator_h_c()`` function. 
+* HDDM 0.9.1 improved documentation for LAN models. 
+             Comprehensive tutorial using LAN included. Bugfixes for ``simulator_h_c()`` function. 
 
-* HDDM 0.9.2 Major overhaul of the plotting functions under hddm.plotting. Old capabilities are preserved under hddm.plotting_old, but will be deprecated. 
+* HDDM 0.9.2 major overhaul of the plotting functions under hddm.plotting. 
+             Old capabilities are preserved under hddm.plotting_old, but will be deprecated. 
              The new plotting functions replicate the existing functionality, but improve on various aspects of the plot and provide a more abstracted and extensible interface.
              Fixes an error with posterior predictive sampling using hierarchical regression models based on LANs with ``HDDMnnRegressor()``. ``HDDMnnRegressor()`` now issues a 
              single warning for boundary condition violations instead of flagging all occurences.
