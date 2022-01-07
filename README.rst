@@ -63,7 +63,7 @@ Features
              Comprehensive tutorial using LAN included. Bugfixes for ``simulator_h_c()`` function. 
 
 * HDDM 0.9.2 major overhaul of the plotting functions under hddm.plotting. 
-             Old capabilities are preserved under hddm.plotting_old, but will be deprecated. 
+             Old capabilities are preserved under ``hddm.plotting_old``, but will be deprecated. 
              The new plotting functions replicate the existing functionality, but improve on various aspects of the plot and provide a more abstracted and extensible interface.
              Fixes an error with posterior predictive sampling using hierarchical regression models based on LANs with ``HDDMnnRegressor()``. ``HDDMnnRegressor()`` now issues a 
              single warning for boundary condition violations instead of flagging all occurences.
