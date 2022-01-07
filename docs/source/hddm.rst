@@ -1,14 +1,18 @@
+hddm package
+============
+
 Subpackages
-===========
+-----------
 
 .. toctree::
    :maxdepth: 4
 
    hddm.models
    hddm.simulators
+   hddm.torch
 
 Submodules
-==============
+----------
 
 hddm.generate module
 --------------------
@@ -34,6 +38,14 @@ hddm.likelihoods\_mlp module
    :undoc-members:
    :show-inheritance:
 
+hddm.model\_config module
+-------------------------
+
+.. automodule:: hddm.model_config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hddm.network\_inspectors module
 -------------------------------
 
@@ -46,6 +58,14 @@ hddm.plotting module
 --------------------
 
 .. automodule:: hddm.plotting
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hddm.plotting\_old module
+-------------------------
+
+.. automodule:: hddm.plotting_old
    :members:
    :undoc-members:
    :show-inheritance:

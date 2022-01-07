@@ -1,12 +1,11 @@
-.. index:: LANs
-.. _chap_visualizations:
-
 New Visualizations
 ------------------
 
 .. code:: ipython3
 
     import hddm
+    from matplotlib import pyplot as plt
+    import numpy as np
 
 Generate some Data
 ~~~~~~~~~~~~~~~~~~
@@ -14,7 +13,7 @@ Generate some Data
 .. code:: ipython3
 
     # Metadata
-    nmcmc = 2500
+    nmcmc = 500
     model = 'angle'
     n_samples = 1000
     includes = hddm.simulators.model_config[model]['hddm_include']
@@ -73,58 +72,58 @@ Generate some Data
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.737320</td>
-          <td>1.0</td>
+          <td>1.389325</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.105478</td>
-          <td>1.231885</td>
-          <td>0.468836</td>
-          <td>1.273322</td>
-          <td>0.532642</td>
+          <td>-0.614728</td>
+          <td>1.419329</td>
+          <td>0.354043</td>
+          <td>1.057326</td>
+          <td>0.965137</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.614321</td>
-          <td>1.0</td>
+          <td>1.250326</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.105478</td>
-          <td>1.231885</td>
-          <td>0.468836</td>
-          <td>1.273322</td>
-          <td>0.532642</td>
+          <td>-0.614728</td>
+          <td>1.419329</td>
+          <td>0.354043</td>
+          <td>1.057326</td>
+          <td>0.965137</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.897318</td>
-          <td>1.0</td>
+          <td>1.487324</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.105478</td>
-          <td>1.231885</td>
-          <td>0.468836</td>
-          <td>1.273322</td>
-          <td>0.532642</td>
+          <td>-0.614728</td>
+          <td>1.419329</td>
+          <td>0.354043</td>
+          <td>1.057326</td>
+          <td>0.965137</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.783319</td>
+          <td>1.369326</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.105478</td>
-          <td>1.231885</td>
-          <td>0.468836</td>
-          <td>1.273322</td>
-          <td>0.532642</td>
+          <td>-0.614728</td>
+          <td>1.419329</td>
+          <td>0.354043</td>
+          <td>1.057326</td>
+          <td>0.965137</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.605321</td>
+          <td>1.326326</td>
           <td>0.0</td>
           <td>0</td>
-          <td>0.105478</td>
-          <td>1.231885</td>
-          <td>0.468836</td>
-          <td>1.273322</td>
-          <td>0.532642</td>
+          <td>-0.614728</td>
+          <td>1.419329</td>
+          <td>0.354043</td>
+          <td>1.057326</td>
+          <td>0.965137</td>
         </tr>
         <tr>
           <th>...</th>
@@ -139,58 +138,58 @@ Generate some Data
         </tr>
         <tr>
           <th>495</th>
-          <td>1.879133</td>
+          <td>1.393783</td>
           <td>0.0</td>
           <td>4</td>
-          <td>-1.364279</td>
-          <td>1.226657</td>
-          <td>0.455551</td>
-          <td>1.266137</td>
-          <td>0.571162</td>
+          <td>-0.996139</td>
+          <td>1.247421</td>
+          <td>0.360008</td>
+          <td>1.036784</td>
+          <td>0.957094</td>
         </tr>
         <tr>
           <th>496</th>
-          <td>1.741134</td>
+          <td>1.277784</td>
           <td>0.0</td>
           <td>4</td>
-          <td>-1.364279</td>
-          <td>1.226657</td>
-          <td>0.455551</td>
-          <td>1.266137</td>
-          <td>0.571162</td>
+          <td>-0.996139</td>
+          <td>1.247421</td>
+          <td>0.360008</td>
+          <td>1.036784</td>
+          <td>0.957094</td>
         </tr>
         <tr>
           <th>497</th>
-          <td>1.889132</td>
+          <td>1.249784</td>
           <td>0.0</td>
           <td>4</td>
-          <td>-1.364279</td>
-          <td>1.226657</td>
-          <td>0.455551</td>
-          <td>1.266137</td>
-          <td>0.571162</td>
+          <td>-0.996139</td>
+          <td>1.247421</td>
+          <td>0.360008</td>
+          <td>1.036784</td>
+          <td>0.957094</td>
         </tr>
         <tr>
           <th>498</th>
-          <td>1.724134</td>
+          <td>1.447782</td>
           <td>0.0</td>
           <td>4</td>
-          <td>-1.364279</td>
-          <td>1.226657</td>
-          <td>0.455551</td>
-          <td>1.266137</td>
-          <td>0.571162</td>
+          <td>-0.996139</td>
+          <td>1.247421</td>
+          <td>0.360008</td>
+          <td>1.036784</td>
+          <td>0.957094</td>
         </tr>
         <tr>
           <th>499</th>
-          <td>1.520137</td>
-          <td>0.0</td>
+          <td>1.614780</td>
+          <td>1.0</td>
           <td>4</td>
-          <td>-1.364279</td>
-          <td>1.226657</td>
-          <td>0.455551</td>
-          <td>1.266137</td>
-          <td>0.571162</td>
+          <td>-0.996139</td>
+          <td>1.247421</td>
+          <td>0.360008</td>
+          <td>1.036784</td>
+          <td>0.957094</td>
         </tr>
       </tbody>
     </table>
@@ -212,7 +211,6 @@ Generate some Data
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -220,27 +218,27 @@ Generate some Data
 
     # Sample
     hddmnn_model.sample(nmcmc,
-                        burn = 500)
+                        burn = 100)
 
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 2500 of 2500 complete in 219.1 sec
+     [-----------------100%-----------------] 500 of 500 complete in 57.7 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x7fdb2490b250>
+    <pymc.MCMC.MCMC at 0x1418ed590>
 
 
 
-Caterpillar Plot
-~~~~~~~~~~~~~~~~
+``caterpillar plot``
+~~~~~~~~~~~~~~~~~~~~
 
 The ``caterpillar_plot()`` function below displays *parameterwise*,
 
--  as a red tick-mark the **ground truth**.
+-  as a blue tick-mark the **ground truth**.
 -  as a *thin* **black** line the :math:`1 - 99` percentile range of the
    posterior distribution
 -  as a *thick* **black** line the :math:`5-95` percentile range of the
@@ -254,15 +252,16 @@ Again use the ``help()`` function to learn more.
     hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    drop_sd = False,
-                                   x_limits = [-3, 3])
+                                   figsize = (8, 6))
+    plt.show()
 
 
 
 .. image:: lan_visualizations_files/lan_visualizations_10_0.png
 
 
-Model Plot
-~~~~~~~~~~
+``model cartoon plot``
+~~~~~~~~~~~~~~~~~~~~~~
 
 The **model plot** is useful to illustrate the behavior of a models
 pictorially, including the uncertainty over model parameters embedded in
@@ -274,72 +273,51 @@ Check out more of it’s capabilities with the ``help()`` function.
 
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model,
-                             model_ground_truth = model,
-                             n_posterior_parameters = 100,
-                             scale_x = 0.8,
-                             scale_y = 0.6,
-                             ylimit = 3,
-                             cols = 2)
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model,
+                                            columns = 2, # groupby = ['subj_idx'],
+                                            figsize = (8, 6),
+                                            value_range = np.arange(0, 4, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200,
+                                            'legend_fontsize': 7})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_visualizations_files/lan_visualizations_13_0.png
 
 
-
-.. image:: lan_visualizations_files/lan_visualizations_13_1.png
-
-
-Note
-~~~~
-
-Above we used the model plot with *empirical data* (here empirical as in
-our original simulator data, which we fit the model to) as opposed to
-specificying. Such *empirical data*, supplied under the
-``ground_truths_data = ...`` argument is signified in blue. This is in
-contrast to supplying a *ground truth model* under
-``model_ground_truth = ...``, with corresponding *ground truth
-parameterization* (potentially multiple for subject and / or condition
-separated datasets) under ``ground_truths_parameters = ...``, where the
-``model_plot()`` will simulate data for these on the fly. Empirical data
-doesn’t have a *true* model of course, so we *don’t* see a blue model
-caricature here, but simply our posterior model parameterizations.
-
-Posterior Pair Plot
-~~~~~~~~~~~~~~~~~~~
+``posterior pair plot``
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
-    out = hddm.plotting.posterior_pair_plot(hddm_model = hddmnn_model,
-                                      model_ground_truth = model,
-                                      axes_limits = 'samples',
-                                      height = 2,
-                                      aspect_ratio = 1,
-                                      n_subsample = 100,
-                                      font_scale = 1.0
-                                      )
+    hddm.plotting.plot_posterior_pair(hddmnn_model, save = False, 
+                                      parameter_recovery_mode = True,
+                                      samples = 200,
+                                      figsize = (6, 6))
 
 
 
-.. image:: lan_visualizations_files/lan_visualizations_16_0.png
+.. image:: lan_visualizations_files/lan_visualizations_15_0.png
 
 
 
-.. image:: lan_visualizations_files/lan_visualizations_16_1.png
+.. image:: lan_visualizations_files/lan_visualizations_15_1.png
 
 
 
-.. image:: lan_visualizations_files/lan_visualizations_16_2.png
+.. image:: lan_visualizations_files/lan_visualizations_15_2.png
 
 
 
-.. image:: lan_visualizations_files/lan_visualizations_16_3.png
+.. image:: lan_visualizations_files/lan_visualizations_15_3.png
 
 
 
-.. image:: lan_visualizations_files/lan_visualizations_16_4.png
-
+.. image:: lan_visualizations_files/lan_visualizations_15_4.png
 

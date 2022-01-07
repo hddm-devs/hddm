@@ -1,8 +1,8 @@
 .. index:: LANs
 .. _chap_custom_lans:
 
-Use your Custom LAN
-===================
+Use your Likelihood Function
+----------------------------
 
 If you have your own LAN, or really, a class with a
 ``predict_on_batch()`` method which you can call to get back the
@@ -19,8 +19,8 @@ We need two components to use our ``custom`` LAN.
 1. A config dictionary for the ``custom`` model.
 2. A pretrained LAN with a ``predict_on_batch`` method.
 
-Construct the config dictionary
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Construct Config Dictionary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -49,8 +49,8 @@ about this object in **lan tutorial concerning new models**.
                              "t": 0.01, "t_std": 0.15}, # hyperparameters for the slice-sampler used for posterior sampling, take these as an orientation, can be helpful to optimize speed (optional)
         }
 
-Load the network
-~~~~~~~~~~~~~~~~
+Load Network
+~~~~~~~~~~~~
 
 To make the example complete, here is a code snippet to load in a
 ``Keras`` model. We are simply using the ``ddm`` network here.
@@ -58,6 +58,11 @@ To make the example complete, here is a code snippet to load in a
 .. code:: ipython3
 
     custom_network = hddm.torch.mlp_inference_class.load_torch_mlp(model = 'ddm')  # or any class with a valid predict on batch function
+
+**NOTE:**
+
+Above, for simplicity, we load a network that is already available in
+HDDM. You would call you own code instead.
 
 .. code:: ipython3
 
@@ -78,8 +83,8 @@ To make the example complete, here is a code snippet to load in a
                                                                                       group_only = None,
                                                                                       fixed_at_default = None)
 
-Initialize the Hddm Model
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Initialize HDDM Model
+~~~~~~~~~~~~~~~~~~~~~
 
 Now you are ready to load a HDDM model with your ``custom`` LAN.
 
@@ -119,8 +124,7 @@ You are now ready to get samples from your model.
 
 
 
-Warning
-~~~~~~~
+**WARNING**:
 
 Not all the functionality of the HDDM package will work seamlessly with
 such custom likelihoods. You will be able to generate some, but not all
@@ -131,5 +135,5 @@ approximate likelihoods. Most of the packages utility functions have a
 higher degree of specificity to models that have been fully incorporated
 into the package.
 
-Look at the tutorial ``add_new_models_to_hddm_tutorial.ipynb`` for a
-higher degree of integration.
+A tutorial concerning full integration into HDDM will be made available
+in the near future.

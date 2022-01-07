@@ -2,7 +2,7 @@
 .. _chap_new_classes:
 
 New Classes
---------------------------
+-----------
 
 The **LAN extension (HDDM >= 0.9.0)**, provides three new classes which
 are LAN-enabled versions of the respective classes in base HDDM. These
@@ -12,7 +12,8 @@ new classes are,
 -  The ``HDDMnnStimCoding()`` class
 -  The ``HDDMnnRegressor()`` class
 
-The usage mirrors what you are used to from standard HDDM equivalents.
+The usage mirrors what you are used to from standard ``HDDM``
+equivalents.
 
 What changes is that you now use the ``model`` argument to specify one
 of the models you find listed in the ``hddm.model_config.model_config``
@@ -23,7 +24,7 @@ Moreover, you have to be a little more careful when specifying the
 ``include`` argument, since the ability to use new models comes with new
 parameters. To help get started here, the
 ``hddm.model_config.model_config`` dictionary provides you a
-``hddm_include`` key *for every model-specific sub-dictionary*. This
+``hddm_include`` key for *every* model-specific sub-dictionary. This
 let’s you fit all parameters of a given model. To keep some parameters
 fixed, remove them respectively from the resulting list.
 
@@ -293,6 +294,5 @@ Short example
       </tbody>
     </table>
     </div>
-
 
 

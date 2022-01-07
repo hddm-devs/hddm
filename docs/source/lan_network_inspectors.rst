@@ -78,6 +78,9 @@ HDDM provides two plotting function to investigate the network outputs
 directly. The ``kde_vs_lan_likelihoods()`` plot and the
 ``lan_manifold()`` plot.
 
+**NOTE**: These utilities are designed for 2-choice models at the
+moment.
+
 ``kde_vs_lan_likelihoods()``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

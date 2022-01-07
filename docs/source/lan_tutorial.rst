@@ -1,8 +1,5 @@
-.. index:: LANs
-.. _chap_lan_tutorial
-
-Welcome to the HDMM-LAN TUTORIAL!
-=================================
+Tutorial
+========
 
 This tutorial is a rather comprehensive introduction to **HDDM** with
 focus on the new **LAN extension**. The methods behind the **new**
@@ -14,7 +11,7 @@ reports regarding bugs or other limitations and we will do our best to
 help as soon as we can.
 
 Things to look out for:
-'''''''''''''''''''''''
+-----------------------
 
 -  Networks were trained over a fairly wide range of parameters which
    hopefully capture the scope of common empirical data. The networks
@@ -28,25 +25,43 @@ Things to look out for:
 -  You may encounter more print output than with standard HDDM. These
    are sanity checks and the verbosity will vanish progressively.
 
+Section 0: Colab Prep (Optional)
+--------------------------------
 
-SECTION 0.1: IMPORTS
-''''''''''''''''''''
+Reminder
+~~~~~~~~
 
-.. code:: ipython3
+In the *upper left* menu click on **Runtime**, then **Change runtime
+type** and select **GPU** as **hardware accelerator**
 
-    %load_ext autoreload
-
-
-.. parsed-literal::
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
-
+INSTALLATION COLAB: INSTALL SUPPORT LIBRARIES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
-    %reload_ext autoreload
-    
+    # Note: Usually colab has all other packages which we may use already installed
+    # The basic configuration of colabs does change over time, so you may have to add
+    # some install commands here if imports below don't work for package xyz
+    !pip install scikit-learn
+    !pip install cython
+    !pip install pymc
+
+
+
+INSTALLATION COLAB: INSTALL HDDM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: ipython3
+
+    !pip install -U --no-deps git+https://github.com/hddm-devs/hddm
+    !pip install -U --no-deps git+https://github.com/hddm-devs/kabuki
+
+
+Imports
+~~~~~~~
+
+.. code:: ipython3
+
     # MODULE IMPORTS ----
     
     # warning settings
@@ -69,8 +84,8 @@ SECTION 0.1: IMPORTS
     # HDDM
     import hddm
 
-SECTION 1: MODEL INFO / SIMULATION / BASIC PLOTTING
-'''''''''''''''''''''''''''''''''''''''''''''''''''
+Section 1: Model Info / Simulation / Basic Plotting
+---------------------------------------------------
 
 The main concern of this notebook is to present the extended
 capabilities of the HDDM toolbox as a result of the new ``HDDMnn``
@@ -81,23 +96,23 @@ to data. So let’s take stock of the models that were added to standard
 **HDDM**.
 
 2-Choice Models
----------------
+~~~~~~~~~~~~~~~
 
 ANGLE
-~~~~~
+^^^^^
 
 A model with a linearly collapsing angle. Adds a parameter
 :math:`\theta`, which specifies the angle of the bound.
 
 WEIBULL
-~~~~~~~
+^^^^^^^
 
 A model that includes a collapsing bound parameterized as the scaled
 *cdf* of a Weibull distribution. This adds two parameters to the
 standard **DDM**, :math:`\alpha` and :math:`\beta`.
 
 LEVY
-~~~~
+^^^^
 
 The Levy model is essentially a standard **DDM** where noise is not
 driven by a Gaussian distribution, but the noise process is now
@@ -106,7 +121,7 @@ between a Gausian :math:`\alpha = 2` and a Cauchy (heavy tailed)
 :math:`\alpha = 1`.
 
 ORNSTEIN
-~~~~~~~~
+^^^^^^^^
 
 This model implements the 2-choice **LCA**, which includes a an
 inhibition / excitation parameter :math:`g`.
@@ -117,10 +132,10 @@ Find more details on these models in our companion
 .. _choice-models-1:
 
 3 / 4-Choice Models
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 NOTE
-~~~~
+^^^^
 
 The addition of *3 choice* and *4 choice* models, comes with slightly
 more limited functionality as compared to *2 choice* models.
@@ -129,24 +144,23 @@ translate immediately to models with more choice options. We are trying
 to align this functionality going forward.
 
 LCA (Leaky Competing Accumulator)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Please find the original description in this
 `paper <https://pubmed.ncbi.nlm.nih.gov/11488378/>`__.
 
 RACE
-~~~~
+^^^^
 
 Race models simply take out the mutual and self-inhibition of **LCAs**.
 
 ANGLE versions of LCA / RACE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implements an linearly collapsing bound as above under the respective *2
 choice models*
 
-1.1 ACCESS METADATA
--------------------
+1.1 Access Meta-Data
+~~~~~~~~~~~~~~~~~~~~
 
 Let’s first take a look at some of the useful metadata we can use to set
 up our models and simulators. If we type
@@ -154,8 +168,10 @@ up our models and simulators. If we type
 bunch of information for each of the models that are currently
 implemented in HDDM. It lists,
 
--  A little ``doc`` string that informs about the status of the model. 
-   Please read the ``doc`` string before using any of the new models.
+-  A ``doc`` string that gives some information about the status of the
+   model as it pertains to it’s usability as well as some potential
+   usage tips. Please read the ``doc`` string before using any of the
+   new models.
 -  The parameter names under ``params``,
 -  The parameter bounds that where used for training the network under
    ``param_bounds``
@@ -183,12 +199,12 @@ of freedom when it comes to optimizing your sampler.
 
 .. parsed-literal::
 
-    dict_keys(['test', 'ddm', 'ddm_vanilla', 'angle', 'weibull', 'levy', 'full_ddm', 'full_ddm_vanilla', 'ornstein', 'ddm_sdv', 'ddm_par2', 'ddm_par2_no_bias', 'ddm_par2_angle_no_bias', 'ddm_par2_weibull_no_bias', 'ddm_seq2', 'ddm_seq2_no_bias', 'ddm_seq2_angle_no_bias', 'ddm_seq2_weibull_no_bias', 'ddm_mic2_adj', 'ddm_mic2_adj_no_bias', 'ddm_mic2_adj_angle_no_bias', 'ddm_mic2_adj_weibull_no_bias', 'race_no_bias_3', 'race_no_bias_angle_3', 'race_no_bias_4', 'race_no_bias_angle_4', 'lca_no_bias_3', 'lca_no_bias_angle_3', 'lca_no_bias_4', 'lca_no_bias_angle_4', 'weibull_cdf', 'full_ddm2'])
+    dict_keys(['ddm_vanilla', 'full_ddm_vanilla', 'ddm', 'angle', 'weibull', 'levy', 'full_ddm', 'ornstein', 'ddm_sdv', 'ddm_par2', 'ddm_par2_no_bias', 'ddm_par2_angle_no_bias', 'ddm_par2_weibull_no_bias', 'ddm_seq2', 'ddm_seq2_no_bias', 'ddm_seq2_angle_no_bias', 'ddm_seq2_weibull_no_bias', 'ddm_mic2_adj', 'ddm_mic2_adj_no_bias', 'ddm_mic2_adj_angle_no_bias', 'ddm_mic2_adj_weibull_no_bias', 'race_no_bias_3', 'race_no_bias_angle_3', 'race_no_bias_4', 'race_no_bias_angle_4', 'lca_no_bias_3', 'lca_no_bias_angle_3', 'lca_no_bias_4', 'lca_no_bias_angle_4', 'weibull_cdf', 'full_ddm2'])
 
 
 
 NOTE
-~~~~
+^^^^
 
 You find **two kinds of extra** models which were not mentioned in the
 model listing above:
@@ -204,7 +220,7 @@ Now taking a closer look at the ``angle`` model
 .. code:: ipython3
 
     # Metadata
-    model = 'angle'
+    model = 'ddm'
     n_samples = 1000
 
 .. code:: ipython3
@@ -217,16 +233,16 @@ Now taking a closer look at the ``angle`` model
 
 .. parsed-literal::
 
-    {'params': ['v', 'a', 'z', 't', 'theta'],
-     'params_trans': [0, 0, 1, 0, 0],
-     'params_std_upper': [1.5, 1.0, None, 1.0, 1.0],
-     'param_bounds': [[-3.0, 0.3, 0.2, 0.001, -0.1], [3.0, 2.0, 0.8, 2.0, 1.45]],
-     'param_bounds_cnn': [[-2.5, 0.2, 0.1, 0.0, 0.0],
-      [2.5, 2.0, 0.9, 2.0, 1.3707963267948966]],
-     'boundary': <function hddm.simulators.boundary_functions.angle(t=1, theta=1)>,
-     'n_params': 5,
-     'default_params': [0.0, 1.0, 0.5, 0.001, 0.0],
-     'hddm_include': ['z', 'theta'],
+    {'doc': 'Basic DDM. Meant for use with the LAN extension. \nNote that the boundaries here are coded as -a, and a in line with all other models meant for the LAN extension. \nTo compare model fits between standard HDDM and HDDMnn when using the DDM model, multiply the boundary (a) parameter by 2. \nWe recommend using standard HDDM if you are interested in the basic DDM, but you might want to use this for testing.',
+     'params': ['v', 'a', 'z', 't'],
+     'params_trans': [0, 0, 1, 0],
+     'params_std_upper': [1.5, 1.0, None, 1.0],
+     'param_bounds': [[-3.0, 0.3, 0.1, 0.001], [3.0, 2.5, 0.9, 2.0]],
+     'param_bounds_cnn': [[-2.5, 0.5, 0.25, 0.001], [2.5, 2.2, 0.75, 1.95]],
+     'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
+     'n_params': 4,
+     'default_params': [0.0, 1.0, 0.5, 0.001],
+     'hddm_include': ['z'],
      'n_choices': 2,
      'choices': [-1, 1],
      'slice_widths': {'v': 1.5,
@@ -236,14 +252,26 @@ Now taking a closer look at the ``angle`` model
       'z': 0.1,
       'z_trans': 0.2,
       't': 0.01,
-      't_std': 0.15,
-      'theta': 0.1,
-      'theta_std': 0.2}}
+      't_std': 0.15}}
 
 
 
-Generate Data
-~~~~~~~~~~~~~
+.. code:: ipython3
+
+    # Looking at the doc string before using the model
+    print(hddm.model_config.model_config[model]['doc'])
+
+
+.. parsed-literal::
+
+    Basic DDM. Meant for use with the LAN extension. 
+    Note that the boundaries here are coded as -a, and a in line with all other models meant for the LAN extension. 
+    To compare model fits between standard HDDM and HDDMnn when using the DDM model, multiply the boundary (a) parameter by 2. 
+    We recommend using standard HDDM if you are interested in the basic DDM, but you might want to use this for testing.
+
+
+1.2 Generate Data
+~~~~~~~~~~~~~~~~~
 
 Let’s start by generating some data from the ``angle`` model. For this
 you have available the ``simulators`` module, specifically we will start
@@ -310,64 +338,58 @@ it in the docs). We get back a ``tuple`` of two:
           <th>a</th>
           <th>z</th>
           <th>t</th>
-          <th>theta</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th>0</th>
-          <td>0.574734</td>
-          <td>0.0</td>
+          <td>1.988325</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>0.531735</td>
+          <td>2.038324</td>
           <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>0.529735</td>
-          <td>0.0</td>
+          <td>2.070324</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>0.752732</td>
-          <td>0.0</td>
+          <td>6.729142</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>0.324736</td>
+          <td>2.191322</td>
           <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
           <th>...</th>
@@ -378,66 +400,60 @@ it in the docs). We get back a ``tuple`` of two:
           <td>...</td>
           <td>...</td>
           <td>...</td>
-          <td>...</td>
         </tr>
         <tr>
-          <th>995</th>
-          <td>0.651733</td>
-          <td>0.0</td>
-          <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
-        </tr>
-        <tr>
-          <th>996</th>
-          <td>0.560735</td>
+          <th>95</th>
+          <td>3.696361</td>
           <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
-          <th>997</th>
-          <td>0.618734</td>
-          <td>0.0</td>
+          <th>96</th>
+          <td>1.922326</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
-          <th>998</th>
-          <td>0.755732</td>
-          <td>0.0</td>
+          <th>97</th>
+          <td>2.143323</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
         <tr>
-          <th>999</th>
-          <td>0.545735</td>
-          <td>0.0</td>
+          <th>98</th>
+          <td>1.804325</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-2.92928</td>
-          <td>1.888178</td>
-          <td>0.755953</td>
-          <td>0.199736</td>
-          <td>1.251737</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
+        </tr>
+        <tr>
+          <th>99</th>
+          <td>2.048324</td>
+          <td>1.0</td>
+          <td>0</td>
+          <td>0.370177</td>
+          <td>1.532418</td>
+          <td>0.826664</td>
+          <td>1.675325</td>
         </tr>
       </tbody>
     </table>
-    <p>1000 rows × 8 columns</p>
+    <p>100 rows × 7 columns</p>
     </div>
 
 
@@ -453,25 +469,34 @@ it in the docs). We get back a ``tuple`` of two:
 
 .. parsed-literal::
 
-    {'v': -0.8491120146325952,
-     't': 1.082943180849784,
-     'z': 0.5654699167956244,
-     'theta': 0.6958163277502043,
-     'a': 0.8828284120664517}
+    {'v': 0.3701771346546653,
+     'z': 0.8266639799389839,
+     't': 1.6753252191434032,
+     'a': 1.5324179837552407}
 
 
 
 1.2 First Plot
---------------
+~~~~~~~~~~~~~~
 
 Now that we have our simulated data, we look to visualise it. Let’s look
 at a couple of plots that we can use for this purpose.
 
-The ``model_plot()`` is fairly flexible, and used throughout the
-tutorial.
+The ``HDDM.plotting`` module includes the ``plot_from_data`` function,
+which allows you to plot subsets from a dataset, according to a grouping
+specified by the ``groupby`` argument.
 
-As a start, it allows you to plot simulations from a model, displayed as
-two histograms.
+The plot creates a ``matplotlib.axes`` object for each subset, and you
+can provide a function to manipulate this axes object. Some of these
+*axes manipulators* are provided your you. Here we focus on the
+``_plot_func_model`` *axes manipulator* supplied under the ``plot_func``
+argument.
+
+Check out the arguments of ``plot_from_data`` and ``_plot_func_model``
+using the ``help()`` function. You have quite some freedom in styling
+these plots.
+
+We will refer to this plot as the ``model cartoon plot``.
 
 -  The top histogram refers to the probability of choosing option
    :math:`1` across time.
@@ -479,42 +504,38 @@ two histograms.
    choosing option :math:`-1` (may be coded as :math:`0` as well) across
    time.
 
-The plot has many *style parameters* that you can set as well. Use
-``help(hddm.plotting.model_plot)`` if you want to learn more.
-
 .. code:: ipython3
 
-    hddm.plotting.model_plot(dataset = data,
-                             model_ground_truth = model,
-                             cols = 1,
-                             show_model = False,
-                             scale_x = 0.4,
-                             scale_y = 0.4)
-
+    hddm.plotting.plot_from_data(df = data, 
+                                 generative_model = model,
+                                 columns = 1,
+                                 groupby = ['subj_idx'],
+                                 figsize = (4, 3),
+                                 value_range = np.arange(0, 5, 0.1),
+                                 plot_func = hddm.plotting._plot_func_model,
+                                 **{'alpha': 1.,
+                                    'ylim': 3,
+                                    'add_model': False})
+    plt.show()
 
 
 .. parsed-literal::
 
-    <Figure size 640x480 with 0 Axes>
+    subj_idx(0)
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_23_1.png
 
 
-If we set ``show_model = True``, the ``hddm.plotting.model_plot()``
-function will add a visualization of the ground truth model on top of
-the histograms.
-
-We will see later, that we can use this functionality to also add
-posterior predictives, as well as model visualizations in accordance
-with posterior samples.
+If we set ``add_model = True``, this will add a cartoon of the model on
+top of the histograms.
 
 CAUTION
-~~~~~~~
+^^^^^^^
 
-This functionality is not yet implemented for all models, especially
-models with more than 2 choice options.
+This ``model cartoon plot`` will only work for *2-choice models* for
+now.
 
 Moreover, often useful for illustration purposes, we can include a bunch
 of simulations trajectories into the model plot (note the corresponding
@@ -525,21 +546,22 @@ to include these trajectories, just set ``show_trajectories = False``.
 
 .. code:: ipython3
 
-    # Model Plots (Only data)
-    hddm.plotting.model_plot(dataset = data,
-                           model_ground_truth = model,
-                           show_trajectories = True,
-                           n_trajectories = 10,
-                           cols = 1,
-                           show_model = True,
-                           scale_x = 0.4,
-                           scale_y = 0.4)
-
+    hddm.plotting.plot_from_data(df = data, 
+                                 generative_model = model,
+                                 columns = 1,
+                                 groupby = ['subj_idx'],
+                                 figsize = (4, 3),
+                                 value_range = np.arange(0, 5, 0.1),
+                                 plot_func = hddm.plotting._plot_func_model,
+                                 **{'alpha': 1.,
+                                    'ylim': 3,
+                                    'add_model': True})
+    plt.show()
 
 
 .. parsed-literal::
 
-    <Figure size 640x480 with 0 Axes>
+    subj_idx(0)
 
 
 
@@ -549,16 +571,16 @@ to include these trajectories, just set ``show_trajectories = False``.
 If you are interested, you can use this plot to investigate the behavior
 of models across different parameters setups.
 
-SECTION 2: SINGLE SUBJECT (OR COLLAPSED) DATA
-'''''''''''''''''''''''''''''''''''''''''''''
+Section 2: Single Subject (or collapsed) Data
+---------------------------------------------
 
 Now, we try to fit these models to data! Let’s start with an simple
 dataset. In other words, we have one single participant who provides
 :math:`n` datatpoints (reaction times and choices) from some *two
 alternative forced choice* task paradigm.
 
-**Note**
-
+Note
+~~~~
 
 In this demo we fit to simulated data. This serves as a template, and
 you can easily adapt it to your needs.
@@ -571,8 +593,8 @@ you can easily adapt it to your needs.
     n_samples = 1000
     includes = hddm.model_config.model_config[model]['hddm_include']
 
-**Note**
-
+Note
+~~~~
 
 When defining ``includes``, you can also pick only as subset of the
 parameters suggested under ``hddm.model_config.model_config``.
@@ -632,58 +654,58 @@ parameters suggested under ``hddm.model_config.model_config``.
       <tbody>
         <tr>
           <th>0</th>
-          <td>3.006165</td>
-          <td>0.0</td>
+          <td>1.835903</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.774136</td>
+          <td>1.996901</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>2.386165</td>
+          <td>1.780904</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>2.180155</td>
+          <td>1.962902</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.371141</td>
+          <td>1.825903</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>...</th>
@@ -698,58 +720,58 @@ parameters suggested under ``hddm.model_config.model_config``.
         </tr>
         <tr>
           <th>95</th>
-          <td>1.693137</td>
+          <td>1.784904</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>96</th>
-          <td>2.163154</td>
+          <td>1.682905</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>97</th>
-          <td>2.013147</td>
+          <td>1.707905</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>98</th>
-          <td>2.387165</td>
-          <td>0.0</td>
+          <td>1.556905</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
         <tr>
           <th>99</th>
-          <td>2.139153</td>
-          <td>1.0</td>
+          <td>1.778904</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.831833</td>
-          <td>1.799862</td>
-          <td>0.493408</td>
-          <td>0.767145</td>
-          <td>0.51155</td>
+          <td>0.871674</td>
+          <td>0.849288</td>
+          <td>0.608084</td>
+          <td>1.437905</td>
+          <td>0.576924</td>
         </tr>
       </tbody>
     </table>
@@ -771,7 +793,6 @@ parameters suggested under ``hddm.model_config.model_config``.
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -784,22 +805,22 @@ parameters suggested under ``hddm.model_config.model_config``.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1500 of 1500 complete in 25.5 sec
+     [-----------------100%-----------------] 1500 of 1500 complete in 21.5 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1462c50d0>
+    <pymc.MCMC.MCMC at 0x1425708d0>
 
 
 
-2.1 VISUALIZATION
------------------
+2.1 Visualization
+~~~~~~~~~~~~~~~~~
 
 The ``caterpillar_plot()`` function below displays *parameterwise*,
 
--  as a red tick-mark the **ground truth**.
+-  as a blue tick-mark the **ground truth**.
 -  as a *thin* **black** line the :math:`1 - 99` percentile range of the
    posterior distribution
 -  as a *thick* **black** line the :math:`5-95` percentile range of the
@@ -810,51 +831,56 @@ Again use the ``help()`` function to learn more.
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
-                                 ground_truth_parameter_dict = full_parameter_dict,
-                                 drop_sd = False,
-                                 x_limits = [-3, 3])
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+                                   ground_truth_parameter_dict = full_parameter_dict,
+                                   figsize = (8, 5),
+                                   columns = 3)
+    
+    plt.show()
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_37_0.png
 
 
-Posterior Predictive (via Model Plot)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2.1.1 Posterior Predictive (via ``model cartoon plot``)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another way to examine whether or not our recovery was satisfactory is
 to perform posterior predictive checks. Essentially, we are looking to
 simulate datasets from the trace and check whether it aligns with the
 ground truth participant data. This answers the question of whether or
 not these parameters that you recovered can actually reproduce the data.
-Note that the parameter ``n_posterior_parameters`` controls the number
-of samples drawn from the trace.
+
+Use the ``plot_posterior_predictive()`` function in the ``plotting``
+module for this. It is structured just like the ``plot_from_data()``
+function, but instead of providing a *dataset*, you supply a *hddm
+model*.
+
+Use the ``help()`` function to check out all the functionality.
 
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model,
-                             model_ground_truth = model,
-                             n_posterior_parameters = 100,
-                             scale_x = 0.5,
-                             scale_y = 0.5,
-                             ylimit = 3,
-                             cols = 1,
-                             legend_fontsize = 16)
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model,
+                                            columns = 1,
+                                            groupby = ['subj_idx'],
+                                            figsize = (6, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_39_1.png
+.. image:: lan_tutorial_files/lan_tutorial_39_0.png
 
 
 A small note on convergence
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that the MCMC algorithm requires the chain to converge. There are
 many heuristics that help you identifying problems with convergence,
@@ -904,21 +930,18 @@ convergence statistics you want of course.
 
 .. code:: ipython3
 
-    hddm.plotting.posterior_pair_plot(hddm_model = hddmnn_model,
-                                      model_ground_truth = model,
-                                      axes_limits = 'samples',
-                                      height = 2,
-                                      aspect_ratio = 1,
-                                      n_subsample = 100,
-                                      )
+    hddm.plotting.plot_posterior_pair(hddmnn_model, save = False, 
+                                      parameter_recovery_mode = True,
+                                      samples = 500,
+                                      figsize = (6, 6))
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_42_0.png
 
 
-SECTION 3: HIERARCHICAL MODELS
-''''''''''''''''''''''''''''''
+Section 3: Hierarchical Models
+------------------------------
 
 The ‘h’ in ``hddm`` stands for hierarchical, so let’s do it! If we have
 data from multiple participants and we assume that the parameters of
@@ -975,13 +998,6 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
                                                                                       group_only = None,
                                                                                       fixed_at_default = None)
 
-
-.. parsed-literal::
-
-    new round of data simulation because parameter bounds where violated
-    new round of data simulation because parameter bounds where violated
-
-
 .. code:: ipython3
 
     hddmnn_model = hddm.HDDMnn(data,
@@ -994,7 +1010,6 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -1006,24 +1021,25 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 204.7 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 252.5 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x145074590>
+    <pymc.MCMC.MCMC at 0x148854650>
 
 
 
 .. code:: ipython3
 
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
+    # Caterpillar Plot: (Parameters recovered ok?)
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
-                                   drop_sd = False,
-                                   tick_label_size_x = 14,
-                                   tick_label_size_y = 10
-                                  )
+                                   figsize = (8, 5),
+                                   columns = 3)
+    
+    plt.show()
 
 
 
@@ -1032,33 +1048,27 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model,
-                             model_ground_truth= model,
-                             n_posterior_parameters = 100,
-                             n_simulations_per_parameter = 10,
-                             show_trajectories = True,
-                             cols = 3,
-                             show_model = True,
-                             ylimit = 3,
-                             max_t = 3,
-                             scale_x = 1.0,
-                             scale_y = 0.5,
-                             legend_fontsize = 14,
-                             )
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model,
+                                            columns = 3,
+                                            figsize = (10, 7),
+                                            groupby = ['subj_idx'],
+                                            value_range = np.arange(0, 3, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 150,
+                                            'legend_fontsize': 7.})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_49_0.png
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_49_1.png
-
-
-SECTION 4: PARAMETER VARIES BY CONDITION
-''''''''''''''''''''''''''''''''''''''''
+Section 4: Parameter varies by Condition
+----------------------------------------
 
 An important aspect of these posterior analysis, is the consideration of
 experiment design. We may have an experiment in which subject are
@@ -1103,6 +1113,7 @@ The resulting model would be of the form,
     
     # We allow the boundary conditions to vary
     depends_on = {'a': ['c_one']}
+    
     # They will depend on a fictious column 'c_one' that specifies
     # levels / conditions
     conditions = {'c_one': ['low', 'medium', 'high']}
@@ -1137,13 +1148,13 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-    {'t': 0.6817734595154115,
-     'theta': 0.146645662081508,
-     'z': 0.44192788466254684,
-     'v': -1.9913588428255857,
-     'a(high)': 0.5268907494201087,
-     'a(low)': 0.5402240738914456,
-     'a(medium)': 0.528512829260991}
+    {'v': 0.4462678703210373,
+     't': 0.26512839382634135,
+     'z': 0.5692405509008568,
+     'theta': 0.6979843818086482,
+     'a(high)': 1.1901114931495684,
+     'a(low)': 1.544656573014909,
+     'a(medium)': 1.0606522352960175}
 
 
 
@@ -1161,7 +1172,6 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -1173,22 +1183,25 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 74.0 sec
+     [-----------------100%-----------------] 1001 of 1000 complete in 103.6 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1079b5d90>
+    <pymc.MCMC.MCMC at 0x14430ed90>
 
 
 
 .. code:: ipython3
 
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
+    # Caterpillar Plot: (Parameters recovered ok?)
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
-                                   drop_sd = False
-                                  )
+                                   figsize = (8, 5),
+                                   columns = 3)
+    
+    plt.show()
 
 
 
@@ -1197,32 +1210,34 @@ The resulting model would be of the form,
 
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model,
-                             model_ground_truth= model,
-                             n_posterior_parameters = 100,
-                             n_simulations_per_parameter = 10,
-                             show_trajectories = False,
-                             cols = 3,
-                             show_model = True,
-                             ylimit = 3,
-                             max_t = 3,
-                             scale_x = 1.0,
-                             scale_y = 0.5,
-                             legend_fontsize = 14)
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model,
+                                            columns = 1,
+                                            groupby = ['subj_idx'],
+                                            figsize = (4, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_58_0.png
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_58_1.png
 
 
-INTERMEZZO: We can of course combine Hierarchical and Condition data
---------------------------------------------------------------------
+
+.. image:: lan_tutorial_files/lan_tutorial_58_2.png
+
+
+4.1 Combine Hierarchical and Condition data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -1266,7 +1281,6 @@ INTERMEZZO: We can of course combine Hierarchical and Condition data
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -1277,90 +1291,61 @@ INTERMEZZO: We can of course combine Hierarchical and Condition data
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 945.9 sec
+     [-----------------100%-----------------] 1501 of 1500 complete in 1150.9 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x10e5de550>
+    <pymc.MCMC.MCMC at 0x14bec8dd0>
 
 
 
 .. code:: ipython3
 
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
+    # Caterpillar Plot: (Parameters recovered ok?)
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
-                                   drop_sd = False,
-                                   x_limits = (-3, 3))
+                                   figsize = (8, 8),
+                                   columns = 3)
+    
+    plt.show()
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_64_0.png
 
 
-NOTE ON PLOTTING WITH THE MODEL PLOT
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can now plot the resulting data in two ways, by changing the
-``group_by`` argument to the model plot.
-
-If you supply ``groupby = True``, you will get *one plot per condition*
-which provides you with a group level posterior. This group level
-posterior takes an average of single subject posteriors for the group.
-
-If you set ``group_by=False``, you get a figure for each condition, with
-subplots corresponding to single subjects.
-
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model,
-                             model_ground_truth= model,
-                             grouped = False,
-                             n_posterior_parameters = 100,
-                             n_simulations_per_parameter = 10,
-                             show_trajectories = False,
-                             cols = 3,
-                             show_model = True,
-                             ylimit = 3,
-                             max_t = 3,
-                             scale_y = 0.5,
-                             legend_fontsize = 14,
-                             )
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model,
+                                            columns = 2, # groupby = ['subj_idx'],
+                                            figsize = (8, 6),
+                                            value_range = np.arange(1, 2.5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200,
+                                            'legend_fontsize': 7})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_65_0.png
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_66_1.png
+.. image:: lan_tutorial_files/lan_tutorial_65_1.png
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_65_2.png
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_66_3.png
-
-
-
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_66_5.png
-
-
-SECTION 5: REGRESSORS
-'''''''''''''''''''''
+Section 5: Regressors
+---------------------
 
 This section provides a simple working example using the Neural Networks
 with the Regression backend. The regression back-end allows linking
@@ -1369,7 +1354,7 @@ parameters to trial-by-trial covariates via a (general) linear model.
 .. code:: ipython3
 
     # Metadata
-    nmcmc = 1000
+    nmcmc = 200
     model = 'angle'
     n_samples_by_subject = 500
 
@@ -1386,12 +1371,6 @@ parameters to trial-by-trial covariates via a (general) linear model.
                                                                                       group_only_regressors = False,
                                                                                       group_only = None,
                                                                                       fixed_at_default = None)
-
-
-.. parsed-literal::
-
-    new round of data simulation because parameter bounds where violated
-
 
 .. code:: ipython3
 
@@ -1413,13 +1392,12 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
     Reg Model:
-    {'outcome': 't', 'model': ' 1 + covariate_name', 'params': ['t_Intercept', 't_covariate_name'], 'link_func': <function <lambda> at 0x1448bc710>}
+    {'outcome': 't', 'model': ' 1 + covariate_name', 'params': ['t_Intercept', 't_covariate_name'], 'link_func': <function <lambda> at 0x14acc9e60>}
     Uses Identity Link
     Reg Model:
-    {'outcome': 'v', 'model': ' 1 + covariate_name', 'params': ['v_Intercept', 'v_covariate_name'], 'link_func': <function <lambda> at 0x1448bce60>}
+    {'outcome': 'v', 'model': ' 1 + covariate_name', 'params': ['v_Intercept', 'v_covariate_name'], 'link_func': <function <lambda> at 0x14acc9f80>}
     Uses Identity Link
 
 
@@ -1431,32 +1409,33 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-    boundary violation of regressor part
-     [-----------------100%-----------------] 1000 of 1000 complete in 281.9 sec
+     [-----------------100%-----------------] 201 of 200 complete in 55.7 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1448a2190>
+    <pymc.MCMC.MCMC at 0x14aeac190>
 
 
 
 .. code:: ipython3
 
+    # Caterpillar Plot: (Parameters recovered ok?)
     hddm.plotting.caterpillar_plot(hddm_model = hddmnn_reg,
                                    ground_truth_parameter_dict = full_parameter_dict,
-                                   drop_sd = False,
-                                   x_limits = (-3, 3)
-                                   )
+                                   figsize = (8, 8),
+                                   columns = 3)
+    
+    plt.show()
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_74_0.png
+.. image:: lan_tutorial_files/lan_tutorial_73_0.png
 
 
-SECTION 6: STIM CODING
-''''''''''''''''''''''
+Section 6: Stim Coding
+----------------------
 
 You can read more about **stimulus coding** in the
 `documentation <https://hddm.readthedocs.io/en/latest/howto.html?highlight=stimulus%20coding#code-subject-responses>`__.
@@ -1518,57 +1497,57 @@ Here just an example.
       <tbody>
         <tr>
           <th>0</th>
-          <td>5.652330</td>
-          <td>0.0</td>
+          <td>1.117388</td>
+          <td>1.0</td>
           <td>1</td>
-          <td>-1.314013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>1.849253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>4.137441</td>
-          <td>0.0</td>
+          <td>1.343385</td>
+          <td>1.0</td>
           <td>1</td>
-          <td>-1.314013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>1.849253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>3.885454</td>
-          <td>0.0</td>
+          <td>2.401411</td>
+          <td>1.0</td>
           <td>1</td>
-          <td>-1.314013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>1.849253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>2.545414</td>
-          <td>0.0</td>
+          <td>1.766382</td>
+          <td>1.0</td>
           <td>1</td>
-          <td>-1.314013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>1.849253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>2.820410</td>
-          <td>0.0</td>
+          <td>1.419384</td>
+          <td>1.0</td>
           <td>1</td>
-          <td>-1.314013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>1.849253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
@@ -1584,57 +1563,57 @@ Here just an example.
         </tr>
         <tr>
           <th>495</th>
-          <td>2.589413</td>
-          <td>1.0</td>
+          <td>1.507383</td>
+          <td>0.0</td>
           <td>2</td>
-          <td>1.914013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>-1.249253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>496</th>
-          <td>2.982412</td>
-          <td>1.0</td>
+          <td>1.669381</td>
+          <td>0.0</td>
           <td>2</td>
-          <td>1.914013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>-1.249253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>497</th>
-          <td>2.856410</td>
-          <td>1.0</td>
+          <td>1.564382</td>
+          <td>0.0</td>
           <td>2</td>
-          <td>1.914013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>-1.249253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>498</th>
-          <td>2.633413</td>
-          <td>1.0</td>
+          <td>2.199402</td>
+          <td>0.0</td>
           <td>2</td>
-          <td>1.914013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>-1.249253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
         <tr>
           <th>499</th>
-          <td>2.366416</td>
-          <td>1.0</td>
+          <td>4.159324</td>
+          <td>0.0</td>
           <td>2</td>
-          <td>1.914013</td>
-          <td>2.179732</td>
-          <td>0.669262</td>
-          <td>1.924418</td>
+          <td>-1.249253</td>
+          <td>1.768009</td>
+          <td>0.609367</td>
+          <td>0.734389</td>
           <td>none</td>
         </tr>
       </tbody>
@@ -1653,10 +1632,10 @@ Here just an example.
 
 .. parsed-literal::
 
-    {'v': 1.6140126698443504,
-     'a': 2.1797323478366213,
-     'z': 0.669262414376684,
-     't': 1.924418483555181,
+    {'v': -1.5492528678397146,
+     'a': 1.768009337867962,
+     'z': 0.6093670057327081,
+     't': 0.7343894622514304,
      'dc': 0.3}
 
 
@@ -1675,7 +1654,6 @@ Here just an example.
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z']
 
 
@@ -1686,13 +1664,13 @@ Here just an example.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 300 of 300 complete in 14.8 sec
+     [-----------------100%-----------------] 300 of 300 complete in 19.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x144ea1590>
+    <pymc.MCMC.MCMC at 0x13f388dd0>
 
 
 
@@ -1736,58 +1714,58 @@ Here just an example.
       <tbody>
         <tr>
           <th>v</th>
-          <td>1.68431</td>
-          <td>0.0509085</td>
-          <td>1.58601</td>
-          <td>1.65245</td>
-          <td>1.68618</td>
-          <td>1.71961</td>
-          <td>1.79228</td>
-          <td>0.00483229</td>
+          <td>-1.5451</td>
+          <td>0.0563424</td>
+          <td>-1.67373</td>
+          <td>-1.57841</td>
+          <td>-1.54131</td>
+          <td>-1.50422</td>
+          <td>-1.45404</td>
+          <td>0.00524814</td>
         </tr>
         <tr>
           <th>a</th>
-          <td>2.29568</td>
-          <td>0.0770001</td>
-          <td>2.14422</td>
-          <td>2.24712</td>
-          <td>2.3006</td>
-          <td>2.3515</td>
-          <td>2.43424</td>
-          <td>0.00743587</td>
+          <td>1.76045</td>
+          <td>0.0662287</td>
+          <td>1.66187</td>
+          <td>1.70927</td>
+          <td>1.74559</td>
+          <td>1.81343</td>
+          <td>1.90748</td>
+          <td>0.00626699</td>
         </tr>
         <tr>
           <th>z</th>
-          <td>0.654377</td>
-          <td>0.014122</td>
-          <td>0.624026</td>
-          <td>0.645505</td>
-          <td>0.654532</td>
-          <td>0.663257</td>
-          <td>0.682383</td>
-          <td>0.00135835</td>
+          <td>0.606831</td>
+          <td>0.0125441</td>
+          <td>0.581529</td>
+          <td>0.598842</td>
+          <td>0.606698</td>
+          <td>0.616136</td>
+          <td>0.630195</td>
+          <td>0.00115023</td>
         </tr>
         <tr>
           <th>t</th>
-          <td>1.90255</td>
-          <td>0.0209144</td>
-          <td>1.85984</td>
-          <td>1.88962</td>
-          <td>1.90423</td>
-          <td>1.9182</td>
-          <td>1.94035</td>
-          <td>0.00201974</td>
+          <td>0.748318</td>
+          <td>0.0180518</td>
+          <td>0.707402</td>
+          <td>0.737856</td>
+          <td>0.75037</td>
+          <td>0.760675</td>
+          <td>0.779373</td>
+          <td>0.00169372</td>
         </tr>
         <tr>
           <th>dc</th>
-          <td>0.347919</td>
-          <td>0.0572532</td>
-          <td>0.236966</td>
-          <td>0.306711</td>
-          <td>0.35142</td>
-          <td>0.384429</td>
-          <td>0.454514</td>
-          <td>0.00531654</td>
+          <td>0.334341</td>
+          <td>0.0501656</td>
+          <td>0.250645</td>
+          <td>0.298964</td>
+          <td>0.330595</td>
+          <td>0.366809</td>
+          <td>0.438761</td>
+          <td>0.00450004</td>
         </tr>
       </tbody>
     </table>
@@ -1797,24 +1775,36 @@ Here just an example.
 
 .. code:: ipython3
 
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model,
-                                 ground_truth_parameter_dict = parameter_dict,
-                                 drop_sd = False,
-                                 x_limits = [-3, 3])
+    # Caterpillar Plot: (Parameters recovered ok?)
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+                                   ground_truth_parameter_dict = parameter_dict,
+                                   figsize = (8, 5),
+                                   columns = 3)
+    
+    plt.show()
+
+
+.. parsed-literal::
+
+    v
+    a
+    z
+    t
+    dc
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_84_0.png
+.. image:: lan_tutorial_files/lan_tutorial_83_1.png
 
 
 NOTE:
------
+~~~~~
 
 The ``hddm.plotting.model_plot()`` does not yet accept *stimcoding*
 data. This will be updated as soon as possible.
 
-SECTION 7: MODEL RECOVERY
-'''''''''''''''''''''''''
+Section 7: Model Recovery
+-------------------------
 
 A crucial exercise in statistical modeling concern **model comparison**.
 
@@ -1833,7 +1823,7 @@ the **true** model.
 .. code:: ipython3
 
     # Metadata
-    model = 'weibull_cdf'
+    model = 'weibull'
     n_samples = 300
 
 .. code:: ipython3
@@ -1844,14 +1834,13 @@ the **true** model.
                                                                                       n_samples_by_subject = n_samples,
                                                                                       model = model,
                                                                                       p_outlier = 0.00,
-                                                                                      conditions = None, #{'c_one': ['low', 'medium', 'high']}, #, 'c_three': ['low', 'medium', 'high']},
-                                                                                      depends_on = None, #{'v': ['c_one']}, # 'theta': ['c_two']}, # 'theta': ['c_two']}, #regression_models = None, #
-                                                                                      regression_models = None, #regression_covariates = None, 
-                                                                                      regression_covariates = None, # need this to make initial covariate matrix from which to use dmatrix (patsy)
+                                                                                      conditions = None, 
+                                                                                      depends_on = None, 
+                                                                                      regression_models = None,
+                                                                                      regression_covariates = None,
                                                                                       group_only_regressors = False,
                                                                                       group_only = None,
                                                                                       fixed_at_default = None)
-                                                                                      #fixed_at_default = ['z'])
 
 .. code:: ipython3
 
@@ -1894,63 +1883,63 @@ the **true** model.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.895880</td>
+          <td>1.598599</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>2.434905</td>
-          <td>0.0</td>
+          <td>2.916635</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.413876</td>
+          <td>1.737597</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>2.504908</td>
-          <td>1.0</td>
+          <td>1.998594</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>2.801913</td>
+          <td>2.634622</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>...</th>
@@ -1966,63 +1955,63 @@ the **true** model.
         </tr>
         <tr>
           <th>95</th>
-          <td>2.844910</td>
-          <td>1.0</td>
+          <td>2.588620</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>96</th>
-          <td>1.261878</td>
+          <td>1.625599</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>97</th>
-          <td>3.071893</td>
-          <td>1.0</td>
+          <td>2.666624</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>98</th>
-          <td>3.072893</td>
-          <td>0.0</td>
+          <td>3.206628</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
         <tr>
           <th>99</th>
-          <td>2.474907</td>
-          <td>1.0</td>
+          <td>3.395614</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>-0.187077</td>
-          <td>1.464049</td>
-          <td>0.414442</td>
-          <td>0.726881</td>
-          <td>2.204855</td>
-          <td>3.188174</td>
+          <td>-0.713551</td>
+          <td>1.839439</td>
+          <td>0.519457</td>
+          <td>1.030603</td>
+          <td>1.858435</td>
+          <td>2.602788</td>
         </tr>
       </tbody>
     </table>
@@ -2058,11 +2047,8 @@ the **true** model.
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'alpha', 'beta']
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z']
 
 
@@ -2081,98 +2067,86 @@ the **true** model.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 13.9 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 24.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1448d1850>
+    <pymc.MCMC.MCMC at 0x1490cca90>
 
 
 
-7.1 CHECKING THE MODEL FITS VISUALLY
-------------------------------------
+7.1 Checking Model Fits Visually
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Posterior Predictive: Do the ‘Posterior Models’ also make sense?
 
 .. code:: ipython3
 
     # WEIBULL
-    hddm.plotting.model_plot(hddm_model = hddmnn_model_weibull,
-                           model_ground_truth = model,
-                           n_posterior_parameters = 50,
-                           cols = 1,
-                           max_t = 5,
-                           show_model = True,
-                           scale_x = 0.4,
-                           scale_y = 0.4,
-                           legend_fontsize = 16
-                           )
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model_weibull,
+                                            columns = 1,
+                                            groupby = ['subj_idx'],
+                                            figsize = (4, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = True,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_93_1.png
+.. image:: lan_tutorial_files/lan_tutorial_92_0.png
 
 
 .. code:: ipython3
 
     # ANGLE
-    hddm.plotting.model_plot(hddm_model = hddmnn_model_angle,
-                           model_ground_truth = model,
-                           n_posterior_parameters = 100,
-                           cols = 1,
-                           max_t = 5,
-                           show_model = True,
-                           scale_x = 0.4,
-                           scale_y = 0.4,
-                           legend_fontsize = 16
-                           )
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model_angle,
+                                            columns = 1,
+                                            groupby = ['subj_idx'],
+                                            figsize = (4, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = False,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_94_1.png
+.. image:: lan_tutorial_files/lan_tutorial_93_0.png
 
 
 .. code:: ipython3
 
     # DDM
-    hddm.plotting.model_plot(hddm_model = hddmnn_model_ddm, #ground_truth_parameters = sim_data_recov[2],
-                           model_ground_truth = model,
-                           n_posterior_parameters = 100,
-                           cols = 1,
-                           max_t = 5,
-                           show_model = True,
-                           scale_x = 0.4,
-                           scale_y = 0.4,
-                           legend_fontsize = 16
-                           )
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model_ddm,
+                                            columns = 1,
+                                            groupby = ['subj_idx'],
+                                            figsize = (4, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = False,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_94_0.png
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_95_1.png
-
-
-Let’s compare the DIC’s
-~~~~~~~~~~~~~~~~~~~~~~~
+7.2 Comparing DIC’s
+~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -2183,7 +2157,7 @@ Let’s compare the DIC’s
 
 .. parsed-literal::
 
-    325.53708419799807
+    288.7850790405273
 
 
 
@@ -2196,7 +2170,7 @@ Let’s compare the DIC’s
 
 .. parsed-literal::
 
-    321.5858329772949
+    284.47917434692386
 
 
 
@@ -2209,7 +2183,7 @@ Let’s compare the DIC’s
 
 .. parsed-literal::
 
-    359.50928085327143
+    311.62192436218265
 
 
 
@@ -2217,8 +2191,8 @@ Let’s compare the DIC’s
 gives us a result that conforms with the intuition we get from looking
 at the model plots.
 
-SECTION 8: REAL DATA?
-'''''''''''''''''''''
+Section 8: Real Data!
+---------------------
 
 .. code:: ipython3
 
@@ -2227,8 +2201,8 @@ SECTION 8: REAL DATA?
     burn = 500
     model = 'angle'
 
-Load and Pre-process dataset
-----------------------------
+8.1 Load and Pre-process dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -2389,8 +2363,8 @@ Load and Pre-process dataset
 
 
 
-Basic Condition Split Model
----------------------------
+8.2 Basic Condition Split Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -2405,7 +2379,6 @@ Basic Condition Split Model
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -2416,61 +2389,45 @@ Basic Condition Split Model
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 155.0 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 252.6 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14d608350>
+    <pymc.MCMC.MCMC at 0x144143650>
 
 
 
 .. code:: ipython3
 
-    hddm.plotting.model_plot(hddm_model = hddmnn_model_cav,
-                             model_ground_truth = None,
-                             n_posterior_parameters = 50,
-                             cols = 3,
-                             max_t = 5,
-                             scale_y = 0.2,
-                             scale_x = 0.5,
-                             show_model = True,
-                             legend_fontsize = 14)
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model_cav,
+                                            columns = 1,
+                                            figsize = (4, 4),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = False,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200})
+    plt.show()
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_108_0.png
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_109_1.png
+.. image:: lan_tutorial_files/lan_tutorial_108_1.png
 
 
 
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
+.. image:: lan_tutorial_files/lan_tutorial_108_2.png
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_109_3.png
-
-
-
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_109_5.png
-
-
-Basic Hierarchical Model
-------------------------
+8.3 Basic Hierarchical Model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -2483,7 +2440,6 @@ Basic Hierarchical Model
 
 .. parsed-literal::
 
-    Setting priors uninformative (LANs only work with uninformative priors for now)
     Includes supplied:  ['z', 'theta']
 
 
@@ -2494,48 +2450,48 @@ Basic Hierarchical Model
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 402.0 sec
+     [-----------------100%-----------------] 1001 of 1000 complete in 506.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14ce5db90>
+    <pymc.MCMC.MCMC at 0x1437f0b10>
 
 
 
 .. code:: ipython3
 
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model_cav,
-                                   ground_truth_parameter_dict = None, #weibull_params.values[0],
-                                   drop_sd = False)
+    # Caterpillar Plot: (Parameters recovered ok?)
+    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model_cav, 
+                                   figsize = (8, 8),
+                                   columns = 3)
+    
+    plt.show()
+
+
+
+.. image:: lan_tutorial_files/lan_tutorial_112_0.png
+
+
+.. code:: ipython3
+
+    hddm.plotting.plot_posterior_predictive(model = hddmnn_model_cav,
+                                            columns = 3,
+                                            figsize = (10, 10),
+                                            value_range = np.arange(0, 5, 0.1),
+                                            plot_func = hddm.plotting._plot_func_model,
+                                            parameter_recovery_mode = False,
+                                            **{'alpha': 0.01,
+                                            'ylim': 3,
+                                            'add_model': True,
+                                            'samples': 200,
+                                            'legend_fontsize': 7})
+    plt.show()
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_113_0.png
-
-
-.. code:: ipython3
-
-    hddm.plotting.model_plot(hddm_model = hddmnn_model_cav,
-                             model_ground_truth = None,
-                             n_posterior_parameters = 50,
-                             cols = 3,
-                             max_t = 5,
-                             scale_y = 0.2,
-                             scale_x = 0.5,
-                             show_model = True,
-                             legend_fontsize = 12)
-
-
-
-.. parsed-literal::
-
-    <Figure size 640x480 with 0 Axes>
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_114_1.png
 
 
 Note
@@ -2544,14 +2500,14 @@ Note
 This is just an example. The angle model might not be the best choice
 here, and we are moreover ignoring the supplied conditions.
 
-9. ACCESSING THE NEURAL NETWORK DIRECTLY
-''''''''''''''''''''''''''''''''''''''''
+Section 9: Accessing the Neural Network Directly
+------------------------------------------------
 
 The ``network_inspectors`` module allows you to inspect the LANs
 directly.
 
 9.1 Direct access to batch predictions
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use the ``hddm.network_inspectors.get_torch_mlp()`` function to
 access network predictions.
@@ -2606,14 +2562,14 @@ Let’s predict some likelihoods !
 
 
 9.2 Plotting Utilities
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 HDDM provides two plotting function to investigate the network outputs
 directly. The ``kde_vs_lan_likelihoods()`` plot and the
 ``lan_manifold()`` plot.
 
 9.2.1 ``kde_vs_lan_likelihoods()``
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``kde_vs_lan_likelihoods()`` plot allows you to check the
 likelihoods produced by a LAN against Kernel Density Estimates (KDEs)
@@ -2773,11 +2729,11 @@ parameter vectors as rows.
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_129_1.png
+.. image:: lan_tutorial_files/lan_tutorial_128_1.png
 
 
 9.2.2 ``lan_manifold()``
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Lastly, you can use the ``lan_manifold()`` plot to investigate the LAN
 likelihoods over a range of parameters.
@@ -2787,8 +2743,6 @@ parameters in a prespecificed range.
 
 This plot can be informative if you would like to understand better how
 a parameter affects model behavior.
-
-
 
 .. code:: ipython3
 
@@ -2865,11 +2819,8 @@ a parameter affects model behavior.
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_134_1.png
+.. image:: lan_tutorial_files/lan_tutorial_132_1.png
 
-
-END
-'''
 
 Hopefully this tutorial proves as a useful starting point for your
 application.

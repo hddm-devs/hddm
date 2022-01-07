@@ -295,8 +295,7 @@ example.
 
 
 
-Note
-^^^^
+**Note**:
 
 The full_parameter_dict returned plays well with HDDM and some plots
 that give you the option to provide ground truth parameters. In our case

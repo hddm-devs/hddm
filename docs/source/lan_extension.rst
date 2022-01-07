@@ -11,6 +11,7 @@ LAN Extension
     lan_tutorial
     lan_new_classes
     lan_new_models
+    lan_investigate_model_behavior
     lan_visualizations
     lan_add_custom_lans
     lan_network_inspectors

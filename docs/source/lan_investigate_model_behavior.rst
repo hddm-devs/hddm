@@ -1,46 +1,13 @@
 .. index:: LANs
-.. _chap_investigate_model_behav:
+.. _chap_investigate_model_behavior:
 
-LAN EXTENSION: NEW MODELS
--------------------------
+Investigate Model Behavior
+--------------------------
 
 .. code:: ipython3
 
     # MODULE IMPORTS ----
-    
-    # warning settings
-    import warnings
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-    
-    
-    # 
     import hddm
-    
-    # Make simulators visible
-    import sys
-    #sys.path.append('simulators')
-    
-    # Data management
-    import pandas as pd
-    import numpy as np
-    import pickle
-    
-    # Plotting
-    import matplotlib.pyplot as plt
-    import matplotlib
-    import seaborn as sns
-    
-    # Stats functionality
-    from statsmodels.distributions.empirical_distribution import ECDF
-
-
-.. parsed-literal::
-
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-    HDDM: Trying import of pytorch related classes.
-
 
 From version HDDM >= 0.9.0, you have access to multiple **new sequential
 sampling models**. You can simulate from these models, perform parameter
@@ -48,8 +15,8 @@ estimation and moreover you have some extended plotting capabilities
 which can be useful to visualize model fits, or simply to investigate
 the behavior of models across parameter settings.
 
-1. METADATA
-~~~~~~~~~~~
+Metadata
+~~~~~~~~
 
 Lets take a look at the new ``hddm.model_config.model_config``
 dictionary, which allows you to investigate metadata for all the new
@@ -133,7 +100,7 @@ for the user):
 
 You can change these settings as you see fit.
 
-SIMULATE
+Simulate
 ~~~~~~~~
 
 The new ``simulator_h_c()`` function lets you generate complex datasets
@@ -167,7 +134,6 @@ example.
 .. code:: ipython3
 
     # A look at the data generated
-    
     data
 
 
@@ -350,6 +316,5 @@ example.
      'a': 0.6463614139071022,
      'v': 0.4196711728599843,
      'theta': 0.3724329086161189}
-
 
 
