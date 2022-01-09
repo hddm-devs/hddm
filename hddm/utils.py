@@ -6,9 +6,9 @@ import kabuki
 import pandas as pd
 import string
 
-# from kabuki.analyze import post_pred_gen, post_pred_compare_stats
-# import pymc.progressbar as pbar
-# import tqdm
+from kabuki.analyze import post_pred_gen, post_pred_compare_stats
+import pymc.progressbar as pbar
+import tqdm
 import warnings
 
 
