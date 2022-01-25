@@ -183,8 +183,6 @@ def simulator(
             Determines the model that will be simulated.
         n_samples: int <default=1000>
             Number of simulation runs (for each trial if supplied n_trials > 1)
-        n_trials: int <default=1>
-            Number of trials in a simulations run (this specifically addresses trial by trial parameterizations)
         delta_t: float
             Size fo timesteps in simulator (conceptually measured in seconds)
         max_t: float

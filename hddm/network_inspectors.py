@@ -277,6 +277,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     save=False,
     show=True,
     font_scale=1.5,
+    figsize = (10, 10),
 ):
     """Function creates a plot that compares kernel density estimates from simulation data with mlp output.
 
@@ -314,10 +315,10 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     rows = int(np.ceil(parameter_df.shape[0] / cols))
     sns.set(style="white", palette="muted", color_codes=True, font_scale=2)
 
-    fig, ax = plt.subplots(rows, cols, figsize=(10, 10), sharex=True, sharey=False)
+    fig, ax = plt.subplots(rows, cols, figsize=figsize, sharex=True, sharey=False)
 
     fig.suptitle(
-        "Likelihoods KDE - MLP" + ": " + model.upper().replace("_", "-"), fontsize=40
+        "Likelihoods KDE vs. LAN" + ": " + model.upper().replace("_", "-"), fontsize=30
     )
     sns.despine(right=True)
 
