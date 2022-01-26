@@ -1277,7 +1277,7 @@ def model_plot(
 
 
 # Posterior Pair Plot
-def posterior_pair_plot(
+def plot_posterior_pair(
     hddm_model=None,
     axes_limits="samples",  # 'samples' or dict({'parameter_name': [lower bound, upper bound]})
     font_scale=1.5,

@@ -82,7 +82,7 @@ class HDDMnn(HDDM):
             however, when the 'response' column codes
             correct/error.
 
-        p_outlier : double (default=0)
+        p_outlier : double (default=0.05)
             The probability of outliers in the data. if p_outlier is passed in the
             'include' argument, then it is estimated from the data and the value passed
             using the p_outlier argument is ignored.

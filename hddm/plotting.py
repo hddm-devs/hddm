@@ -257,6 +257,7 @@ def plot_posterior_predictive(
     format="png",
     num_subjs=None,
     parameter_recovery_mode=False,
+    subplots_adjust = {'top': 0.85, 'hspace': 0.4, 'wspace': 0.3},
     **kwargs
 ):
     """Plot the posterior predictive distribution of a kabuki hierarchical model.
@@ -293,6 +294,9 @@ def plot_posterior_predictive(
             Save figure to a image file of type 'format'. If more then one format is
             given, multiple files are created
 
+        subplots_adjust : dict <default={'top': 0.85, 'hspace': 0.4, 'wspace': 0.3}>
+            Spacing rules for subplot organization. See Matplotlib documentation for details.
+
         parameter_recovery_mode: bool <default=False>
             If the data attached to the model supplied under the model argument
             has the format expected of the simulator_h_c() function from the simulators.hddm_dataset_generators
@@ -314,6 +318,7 @@ def plot_posterior_predictive(
     else:
         kwargs["model_"] = "ddm_vanilla"
 
+
     if plot_func is None:
         plot_func = _plot_func_posterior_pdf_node_nn
 
@@ -329,7 +334,9 @@ def plot_posterior_predictive(
     for tag, nodes in observeds.groupby("tag"):
         fig = plt.figure(figsize=figsize)  # prev utils.pretty_tag
         fig.suptitle(prettier_tag(tag), fontsize=12)
-        fig.subplots_adjust(top=0.85, hspace=0.4, wspace=0.3)
+        fig.subplots_adjust(top=subplots_adjust['top'], 
+                            hspace=subplots_adjust['hspace'], 
+                            wspace=subplots_adjust['wspace'])
 
         nrows = num_subjs or np.ceil(len(nodes) / columns)
 
@@ -915,7 +922,7 @@ def _plot_func_model(
         value_range = (value_range[0], value_range[-1])
 
     # Extract some parameters from kwargs
-    bins = np.arange(0, value_range[-1], bin_size)
+    bins = np.arange(value_range[0], value_range[-1], bin_size)
 
     add_uc = kwargs.pop("add_posterior_uncertainty", True)
     add_mean = kwargs.pop("add_posterior_mean", True)
@@ -955,7 +962,7 @@ def _plot_func_model(
     # ---------------------------
     ylim = kwargs.pop("ylim", 3)
 
-    axis.set_xlim(0, value_range[-1])
+    axis.set_xlim(value_range[0], value_range[-1])
     axis.set_ylim(-ylim, ylim)
     axis_twin_up = axis.twinx()
     axis_twin_down = axis.twinx()
@@ -1379,7 +1386,7 @@ def _group_traces_via_grouped_nodes(model, group_dict):
     return grouped_traces
 
 
-def caterpillar_plot(
+def plot_caterpillar(
     hddm_model=None,
     ground_truth_parameter_dict=None,
     drop_sd=True,
@@ -1390,6 +1397,7 @@ def caterpillar_plot(
     path=None,
     format="png",
     y_tick_size=10,
+    x_tick_size=10
 ):
 
     """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
@@ -1486,6 +1494,7 @@ def caterpillar_plot(
 
         ax.tick_params(axis="y", rotation=45)
         ax.tick_params(axis="y", labelsize=y_tick_size)
+        ax.tick_params(axis="x", labelsize=x_tick_size)
 
     if save:
         print("passing_print")
