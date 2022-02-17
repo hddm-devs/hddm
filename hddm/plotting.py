@@ -859,7 +859,6 @@ def _plot_func_posterior_node_from_sim(
                 shadow=legend_shadow,
             )
 
-
 def _plot_func_model(
     bottom_node, axis, value_range=None, samples=10, bin_size=0.1, **kwargs
 ):

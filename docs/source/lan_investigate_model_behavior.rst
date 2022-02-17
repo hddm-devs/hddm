@@ -1,6 +1,3 @@
-.. index:: LANs
-.. _chap_investigate_model_behavior:
-
 Investigate Model Behavior
 --------------------------
 
@@ -32,16 +29,16 @@ dictionary, which allows you to investigate metadata for all the new
 
 .. parsed-literal::
 
-    ['test',
+    ['ddm_vanilla',
+     'full_ddm_vanilla',
      'ddm',
-     'ddm_vanilla',
      'angle',
      'weibull',
      'levy',
      'full_ddm',
-     'full_ddm_vanilla',
      'ornstein',
-     'ddm_sdv']
+     'ddm_sdv',
+     'ddm_par2']
 
 
 
@@ -56,16 +53,15 @@ dictionary, which allows you to investigate metadata for all the new
 
 .. parsed-literal::
 
-    {'params': ['v', 'a', 'z', 'g', 't'],
+    {'doc': 'Model formulation is described in the documentation under LAN Extension.Meant for use with the extension.',
+     'params': ['v', 'a', 'z', 'g', 't'],
      'params_trans': [0, 0, 1, 0, 0],
      'params_std_upper': [1.5, 1.0, None, 1.0, 1.0],
      'param_bounds': [[-2.0, 0.3, 0.2, -1.0, 0.001], [2.0, 2.0, 0.8, 1.0, 2]],
      'param_bounds_cnn': [[-2.5, 0.2, 0.1, -1.0, 0.0], [2.5, 2.0, 0.9, 1.0, 2.0]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
-     'n_params': 5,
      'default_params': [0.0, 1.0, 0.5, 0.0, 0.001],
      'hddm_include': ['z', 'g'],
-     'n_choices': 2,
      'choices': [-1, 1],
      'slice_widths': {'v': 1.5,
       'v_std': 0.1,
@@ -172,58 +168,58 @@ example.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.879841</td>
+          <td>0.770753</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.977840</td>
+          <td>0.812753</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.691843</td>
-          <td>1.0</td>
+          <td>0.707753</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.616843</td>
+          <td>0.616753</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.608843</td>
+          <td>0.746753</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>...</th>
@@ -238,58 +234,58 @@ example.
         </tr>
         <tr>
           <th>95</th>
-          <td>1.571842</td>
-          <td>1.0</td>
+          <td>0.696753</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>96</th>
-          <td>1.675843</td>
-          <td>0.0</td>
+          <td>0.778753</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>97</th>
-          <td>1.734843</td>
-          <td>0.0</td>
+          <td>0.708753</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>98</th>
-          <td>1.712843</td>
-          <td>1.0</td>
+          <td>0.848752</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
         <tr>
           <th>99</th>
-          <td>1.549842</td>
+          <td>0.817753</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.419671</td>
-          <td>0.646361</td>
-          <td>0.493535</td>
-          <td>1.475843</td>
-          <td>0.372433</td>
+          <td>0.380409</td>
+          <td>0.839763</td>
+          <td>0.479834</td>
+          <td>0.515753</td>
+          <td>0.959683</td>
         </tr>
       </tbody>
     </table>
@@ -298,12 +294,13 @@ example.
 
 
 
+The ``full_parameter_dic`` returned plays well with ``HDDM`` and some
+plots that give you the option to provide ground truth parameters. In
+our case the output is simple. More complicated datasets, will make this
+much more interesting.
+
 .. code:: ipython3
 
-    # The full_parameter_dict returned plays well with HDDM and some plots that give you the option
-    # to provide ground truth parameters. In our case the output is simple. More complicated
-    # datasets, will make this much more interesting.
-    
     full_parameter_dict
 
 
@@ -311,10 +308,10 @@ example.
 
 .. parsed-literal::
 
-    {'z': 0.4935347303966837,
-     't': 1.475842521721244,
-     'a': 0.6463614139071022,
-     'v': 0.4196711728599843,
-     'theta': 0.3724329086161189}
+    {'z': 0.4798341238342858,
+     'theta': 0.9596826258981702,
+     'v': 0.3804088421388936,
+     't': 0.51575296339607,
+     'a': 0.8397625801445228}
 
 

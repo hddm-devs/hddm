@@ -1,8 +1,5 @@
-.. index:: LANs
-.. _chap_new_models:
-
 New Models
--------------------------
+----------
 
 .. code:: ipython3
 

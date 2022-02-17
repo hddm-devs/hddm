@@ -47,6 +47,16 @@ INSTALLATION COLAB: INSTALL SUPPORT LIBRARIES
     !pip install pymc
 
 
+.. parsed-literal::
+
+    Requirement already satisfied: scikit-learn in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (0.24.2)
+    Requirement already satisfied: numpy>=1.13.3 in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (from scikit-learn) (1.19.1)
+    Requirement already satisfied: scipy>=0.19.1 in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (from scikit-learn) (1.7.2)
+    Requirement already satisfied: joblib>=0.11 in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (from scikit-learn) (1.0.1)
+    Requirement already satisfied: threadpoolctl>=2.0.0 in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (from scikit-learn) (2.1.0)
+    Requirement already satisfied: cython in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (0.29.24)
+    Requirement already satisfied: pymc in /Users/afengler/opt/miniconda3/envs/hddmnn_tutorial/lib/python3.7/site-packages (2.3.8)
+
 
 INSTALLATION COLAB: INSTALL HDDM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,6 +66,15 @@ INSTALLATION COLAB: INSTALL HDDM
     !pip install -U --no-deps git+https://github.com/hddm-devs/hddm
     !pip install -U --no-deps git+https://github.com/hddm-devs/kabuki
 
+
+.. parsed-literal::
+
+    Collecting git+https://github.com/hddm-devs/hddm
+      Cloning https://github.com/hddm-devs/hddm to /private/var/folders/gx/s43vynx550qbypcxm83fv56dzq4hgg/T/pip-req-build-xzqqwrcn
+      Running command git clone -q https://github.com/hddm-devs/hddm /private/var/folders/gx/s43vynx550qbypcxm83fv56dzq4hgg/T/pip-req-build-xzqqwrcn
+      Running command git submodule update --init --recursive -q
+    Building wheels for collected packages: HDDM
+      Building wheel for HDDM (setup.py) ... [?25l|
 
 Imports
 ~~~~~~~
@@ -155,6 +174,7 @@ RACE
 Race models simply take out the mutual and self-inhibition of **LCAs**.
 
 ANGLE versions of LCA / RACE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Implements an linearly collapsing bound as above under the respective *2
 choice models*
@@ -175,12 +195,12 @@ implemented in HDDM. It lists,
 -  The parameter names under ``params``,
 -  The parameter bounds that where used for training the network under
    ``param_bounds``
--  The number of parameters (``n_params``)
 -  The boundary_function (``boundary``)
 -  Default parameter values (``default_params``).
 -  Slice sampler settings by parameter (``slice_widths``)
 -  Under ``params_trans`` you can choose parameters which will be logit
    transformed for sampling (order as in ``params``)
+-  ``choices`` determines valid choice options under the model
 -  Under ``hddm_include``, it lists the parameters which we want to
    include when initializing our HDDM Model with one of the sequential
    sampling models available.
@@ -240,10 +260,8 @@ Now taking a closer look at the ``angle`` model
      'param_bounds': [[-3.0, 0.3, 0.1, 0.001], [3.0, 2.5, 0.9, 2.0]],
      'param_bounds_cnn': [[-2.5, 0.5, 0.25, 0.001], [2.5, 2.2, 0.75, 1.95]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
-     'n_params': 4,
      'default_params': [0.0, 1.0, 0.5, 0.001],
      'hddm_include': ['z'],
-     'n_choices': 2,
      'choices': [-1, 1],
      'slice_widths': {'v': 1.5,
       'v_std': 1,
@@ -282,7 +300,7 @@ it.
 .. code:: ipython3
 
     data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_samples_by_subject = n_samples,
+                                                                                      n_trials_per_subject = n_samples,
                                                                                       model = model,
                                                                                       p_outlier = 0.00,
                                                                                       conditions = None, 
@@ -343,53 +361,53 @@ it in the docs). We get back a ``tuple`` of two:
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.988325</td>
+          <td>1.956185</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>2.038324</td>
-          <td>1.0</td>
+          <td>1.035191</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>2.070324</td>
-          <td>1.0</td>
+          <td>1.004191</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>6.729142</td>
-          <td>1.0</td>
+          <td>1.510186</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>2.191322</td>
-          <td>1.0</td>
+          <td>1.164191</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
           <th>...</th>
@@ -402,58 +420,58 @@ it in the docs). We get back a ``tuple`` of two:
           <td>...</td>
         </tr>
         <tr>
-          <th>95</th>
-          <td>3.696361</td>
-          <td>1.0</td>
+          <th>995</th>
+          <td>1.697184</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
-          <th>96</th>
-          <td>1.922326</td>
+          <th>996</th>
+          <td>1.520186</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
-          <th>97</th>
-          <td>2.143323</td>
-          <td>1.0</td>
+          <th>997</th>
+          <td>1.552186</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
-          <th>98</th>
-          <td>1.804325</td>
-          <td>1.0</td>
+          <th>998</th>
+          <td>1.038191</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
         <tr>
-          <th>99</th>
-          <td>2.048324</td>
+          <th>999</th>
+          <td>0.932191</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.370177</td>
-          <td>1.532418</td>
-          <td>0.826664</td>
-          <td>1.675325</td>
+          <td>-0.481731</td>
+          <td>0.655642</td>
+          <td>0.439841</td>
+          <td>0.887191</td>
         </tr>
       </tbody>
     </table>
-    <p>100 rows × 7 columns</p>
+    <p>1000 rows × 7 columns</p>
     </div>
 
 
@@ -469,10 +487,10 @@ it in the docs). We get back a ``tuple`` of two:
 
 .. parsed-literal::
 
-    {'v': 0.3701771346546653,
-     'z': 0.8266639799389839,
-     't': 1.6753252191434032,
-     'a': 1.5324179837552407}
+    {'v': -0.48173086489284433,
+     'a': 0.6556418306610691,
+     't': 0.8871907031605131,
+     'z': 0.4398408702789776}
 
 
 
@@ -515,7 +533,8 @@ We will refer to this plot as the ``model cartoon plot``.
                                  plot_func = hddm.plotting._plot_func_model,
                                  **{'alpha': 1.,
                                     'ylim': 3,
-                                    'add_model': False})
+                                    'add_data_rts': True,
+                                    'add_data_model': False})
     plt.show()
 
 
@@ -555,7 +574,8 @@ to include these trajectories, just set ``show_trajectories = False``.
                                  plot_func = hddm.plotting._plot_func_model,
                                  **{'alpha': 1.,
                                     'ylim': 3,
-                                    'add_model': True})
+                                    'add_data_rts': True,
+                                    'add_data_model': True})
     plt.show()
 
 
@@ -603,7 +623,7 @@ parameters suggested under ``hddm.model_config.model_config``.
 
     # Generate some simulatred data
     data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_samples_by_subject = n_samples,
+                                                                                      n_trials_per_subject = n_samples,
                                                                                       model = model,
                                                                                       p_outlier = 0.00,
                                                                                       conditions = None,
@@ -654,58 +674,58 @@ parameters suggested under ``hddm.model_config.model_config``.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.835903</td>
-          <td>1.0</td>
+          <td>1.302310</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.996901</td>
-          <td>1.0</td>
+          <td>1.300310</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.780904</td>
-          <td>1.0</td>
+          <td>1.321310</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.962902</td>
+          <td>1.709305</td>
           <td>1.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.825903</td>
-          <td>1.0</td>
+          <td>1.152311</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
         <tr>
           <th>...</th>
@@ -719,63 +739,63 @@ parameters suggested under ``hddm.model_config.model_config``.
           <td>...</td>
         </tr>
         <tr>
-          <th>95</th>
-          <td>1.784904</td>
-          <td>1.0</td>
-          <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
-        </tr>
-        <tr>
-          <th>96</th>
-          <td>1.682905</td>
-          <td>1.0</td>
-          <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
-        </tr>
-        <tr>
-          <th>97</th>
-          <td>1.707905</td>
-          <td>1.0</td>
-          <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
-        </tr>
-        <tr>
-          <th>98</th>
-          <td>1.556905</td>
-          <td>1.0</td>
-          <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
-        </tr>
-        <tr>
-          <th>99</th>
-          <td>1.778904</td>
+          <th>995</th>
+          <td>1.366309</td>
           <td>0.0</td>
           <td>0</td>
-          <td>0.871674</td>
-          <td>0.849288</td>
-          <td>0.608084</td>
-          <td>1.437905</td>
-          <td>0.576924</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
+        </tr>
+        <tr>
+          <th>996</th>
+          <td>1.824303</td>
+          <td>0.0</td>
+          <td>0</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
+        </tr>
+        <tr>
+          <th>997</th>
+          <td>1.206311</td>
+          <td>0.0</td>
+          <td>0</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
+        </tr>
+        <tr>
+          <th>998</th>
+          <td>1.523307</td>
+          <td>0.0</td>
+          <td>0</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
+        </tr>
+        <tr>
+          <th>999</th>
+          <td>1.127311</td>
+          <td>0.0</td>
+          <td>0</td>
+          <td>-0.469642</td>
+          <td>1.427666</td>
+          <td>0.31696</td>
+          <td>0.971311</td>
+          <td>0.74697</td>
         </tr>
       </tbody>
     </table>
-    <p>100 rows × 8 columns</p>
+    <p>1000 rows × 8 columns</p>
     </div>
 
 
@@ -790,12 +810,6 @@ parameters suggested under ``hddm.model_config.model_config``.
                                w_outlier = 0.1,
                                model = model,)
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
-
 .. code:: ipython3
 
     # Sample
@@ -805,20 +819,20 @@ parameters suggested under ``hddm.model_config.model_config``.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1500 of 1500 complete in 21.5 sec
+     [-----------------100%-----------------] 1500 of 1500 complete in 121.6 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1425708d0>
+    <pymc.MCMC.MCMC at 0x14c61ce50>
 
 
 
 2.1 Visualization
 ~~~~~~~~~~~~~~~~~
 
-The ``caterpillar_plot()`` function below displays *parameterwise*,
+The ``plot_caterpillar()`` function below displays *parameterwise*,
 
 -  as a blue tick-mark the **ground truth**.
 -  as a *thin* **black** line the :math:`1 - 99` percentile range of the
@@ -831,7 +845,7 @@ Again use the ``help()`` function to learn more.
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    figsize = (8, 5),
                                    columns = 3)
@@ -870,17 +884,14 @@ Use the ``help()`` function to check out all the functionality.
                                             parameter_recovery_mode = True,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
                                             'samples': 200})
     plt.show()
 
 
+.. image:: lan_tutorial_files/lan_tutorial_39_1.png
 
-.. image:: lan_tutorial_files/lan_tutorial_39_0.png
 
-
-A small note on convergence
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**A small note on convergence**:
 
 Note that the MCMC algorithm requires the chain to converge. There are
 many heuristics that help you identifying problems with convergence,
@@ -1007,12 +1018,6 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
                                include = hddm.simulators.model_config[model]['hddm_include'],
                                p_outlier = 0.0)
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
-
 .. code:: ipython3
 
     hddmnn_model.sample(nmcmc,
@@ -1021,20 +1026,20 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 252.5 sec
+     [-----------------100%-----------------] 1001 of 1000 complete in 463.1 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x148854650>
+    <pymc.MCMC.MCMC at 0x14f459d10>
 
 
 
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    figsize = (8, 5),
                                    columns = 3)
@@ -1052,19 +1057,19 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
                                             columns = 3,
                                             figsize = (10, 7),
                                             groupby = ['subj_idx'],
-                                            value_range = np.arange(0, 3, 0.1),
+                                            value_range = np.arange(0, 5, 0.1),
                                             plot_func = hddm.plotting._plot_func_model,
                                             parameter_recovery_mode = True,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
-                                            'samples': 150,
+                                            'add_posterior_mean_rts': True,
+                                            'add_posterior_mean_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_uncertainty_model': False,
+                                            'samples': 200,
                                             'legend_fontsize': 7.})
-    plt.show()
 
-
-
-.. image:: lan_tutorial_files/lan_tutorial_49_0.png
+.. image:: lan_tutorial_files/lan_tutorial_49_1.png
 
 
 Section 4: Parameter varies by Condition
@@ -1148,13 +1153,13 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-    {'v': 0.4462678703210373,
-     't': 0.26512839382634135,
-     'z': 0.5692405509008568,
-     'theta': 0.6979843818086482,
-     'a(high)': 1.1901114931495684,
-     'a(low)': 1.544656573014909,
-     'a(medium)': 1.0606522352960175}
+    {'theta': 0.7406253194726012,
+     'v': 1.464554358239174,
+     'z': 0.6206249211841304,
+     't': 1.534252965986117,
+     'a(high)': 1.0519165572885651,
+     'a(low)': 1.2561997135872933,
+     'a(medium)': 0.9265856569938499}
 
 
 
@@ -1169,12 +1174,6 @@ The resulting model would be of the form,
                                is_group_model = False, 
                                depends_on = depends_on)
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
-
 .. code:: ipython3
 
     # Sample
@@ -1183,20 +1182,20 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 103.6 sec
+     [-----------------100%-----------------] 1001 of 1000 complete in 129.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14430ed90>
+    <pymc.MCMC.MCMC at 0x14f44c690>
 
 
 
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    figsize = (8, 5),
                                    columns = 3)
@@ -1219,21 +1218,20 @@ The resulting model would be of the form,
                                             parameter_recovery_mode = True,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_rts': True,
+                                            'add_posterior_uncertainty_model': True,
                                             'samples': 200})
     plt.show()
-
-
-
-.. image:: lan_tutorial_files/lan_tutorial_58_0.png
-
-
 
 .. image:: lan_tutorial_files/lan_tutorial_58_1.png
 
 
 
-.. image:: lan_tutorial_files/lan_tutorial_58_2.png
+.. image:: lan_tutorial_files/lan_tutorial_58_3.png
+
+
+
+.. image:: lan_tutorial_files/lan_tutorial_58_5.png
 
 
 4.1 Combine Hierarchical and Condition data
@@ -1278,12 +1276,6 @@ The resulting model would be of the form,
                                is_group_model = True,
                                depends_on = {'v': 'c_one'})
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
-
 .. code:: ipython3
 
     hddmnn_model.sample(nmcmc, burn = 100)
@@ -1291,20 +1283,20 @@ The resulting model would be of the form,
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1501 of 1500 complete in 1150.9 sec
+     [-----------------100%-----------------] 1500 of 1500 complete in 919.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14bec8dd0>
+    <pymc.MCMC.MCMC at 0x14e324a90>
 
 
 
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    figsize = (8, 8),
                                    columns = 3)
@@ -1326,22 +1318,20 @@ The resulting model would be of the form,
                                             parameter_recovery_mode = True,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_rts': True,
+                                            'add_posterior_uncertainty_model': True,
                                             'samples': 200,
                                             'legend_fontsize': 7})
     plt.show()
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_65_0.png
-
-
-
 .. image:: lan_tutorial_files/lan_tutorial_65_1.png
 
 
+.. image:: lan_tutorial_files/lan_tutorial_65_3.png
 
-.. image:: lan_tutorial_files/lan_tutorial_65_2.png
+
+.. image:: lan_tutorial_files/lan_tutorial_65_5.png
 
 
 Section 5: Regressors
@@ -1392,12 +1382,11 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-    Includes supplied:  ['z', 'theta']
     Reg Model:
-    {'outcome': 't', 'model': ' 1 + covariate_name', 'params': ['t_Intercept', 't_covariate_name'], 'link_func': <function <lambda> at 0x14acc9e60>}
+    {'outcome': 't', 'model': ' 1 + covariate_name', 'params': ['t_Intercept', 't_covariate_name'], 'link_func': <function <lambda> at 0x1550739e0>}
     Uses Identity Link
     Reg Model:
-    {'outcome': 'v', 'model': ' 1 + covariate_name', 'params': ['v_Intercept', 'v_covariate_name'], 'link_func': <function <lambda> at 0x14acc9f80>}
+    {'outcome': 'v', 'model': ' 1 + covariate_name', 'params': ['v_Intercept', 'v_covariate_name'], 'link_func': <function <lambda> at 0x1550730e0>}
     Uses Identity Link
 
 
@@ -1409,20 +1398,30 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 201 of 200 complete in 55.7 sec
+     [----             12%                  ] 25 of 200 complete in 6.6 sec
+
+.. parsed-literal::
+
+    /Users/afengler/OneDrive/project_hddm_extension/hddm/hddm/likelihoods_mlp.py:11: UserWarning: boundary violation of regressor part
+      
+
+
+.. parsed-literal::
+
+     [-----------------100%-----------------] 200 of 200 complete in 56.9 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14aeac190>
+    <pymc.MCMC.MCMC at 0x14d7f6990>
 
 
 
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_reg,
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_reg,
                                    ground_truth_parameter_dict = full_parameter_dict,
                                    figsize = (8, 8),
                                    columns = 3)
@@ -1455,7 +1454,7 @@ Here just an example.
     sim_data_stimcoding, parameter_dict = hddm.simulators.simulator_stimcoding(model = model,
                                                                                split_by = split_param,
                                                                                drift_criterion = 0.3,
-                                                                               n_samples_by_condition = 500)
+                                                                               n_trials_per_condition = 500)
 
 .. code:: ipython3
 
@@ -1497,57 +1496,57 @@ Here just an example.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.117388</td>
+          <td>3.190470</td>
           <td>1.0</td>
           <td>1</td>
-          <td>1.849253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>0.834704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.343385</td>
+          <td>3.942454</td>
           <td>1.0</td>
           <td>1</td>
-          <td>1.849253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>0.834704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>2.401411</td>
+          <td>4.186436</td>
           <td>1.0</td>
           <td>1</td>
-          <td>1.849253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>0.834704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.766382</td>
+          <td>2.205442</td>
           <td>1.0</td>
           <td>1</td>
-          <td>1.849253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>0.834704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.419384</td>
+          <td>4.669401</td>
           <td>1.0</td>
           <td>1</td>
-          <td>1.849253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>0.834704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
@@ -1563,57 +1562,57 @@ Here just an example.
         </tr>
         <tr>
           <th>495</th>
-          <td>1.507383</td>
+          <td>11.207737</td>
           <td>0.0</td>
           <td>2</td>
-          <td>-1.249253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>-0.234704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>496</th>
-          <td>1.669381</td>
-          <td>0.0</td>
+          <td>10.334385</td>
+          <td>1.0</td>
           <td>2</td>
-          <td>-1.249253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>-0.234704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>497</th>
-          <td>1.564382</td>
+          <td>7.077227</td>
           <td>0.0</td>
           <td>2</td>
-          <td>-1.249253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>-0.234704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>498</th>
-          <td>2.199402</td>
-          <td>0.0</td>
+          <td>8.740107</td>
+          <td>1.0</td>
           <td>2</td>
-          <td>-1.249253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>-0.234704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
         <tr>
           <th>499</th>
-          <td>4.159324</td>
+          <td>2.621444</td>
           <td>0.0</td>
           <td>2</td>
-          <td>-1.249253</td>
-          <td>1.768009</td>
-          <td>0.609367</td>
-          <td>0.734389</td>
+          <td>-0.234704</td>
+          <td>2.426857</td>
+          <td>0.417932</td>
+          <td>1.507448</td>
           <td>none</td>
         </tr>
       </tbody>
@@ -1632,10 +1631,10 @@ Here just an example.
 
 .. parsed-literal::
 
-    {'v': -1.5492528678397146,
-     'a': 1.768009337867962,
-     'z': 0.6093670057327081,
-     't': 0.7343894622514304,
+    {'v': -0.5347036843723503,
+     'a': 2.426856838254428,
+     'z': 0.4179319892615798,
+     't': 1.5074477307220377,
      'dc': 0.3}
 
 
@@ -1651,12 +1650,6 @@ Here just an example.
                                          informative = False,
                                          drift_criterion = True)
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z']
-
-
 .. code:: ipython3
 
     hddmnn_model.sample(nmcmc, burn = 100)
@@ -1664,13 +1657,13 @@ Here just an example.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 300 of 300 complete in 19.4 sec
+     [-----------------100%-----------------] 300 of 300 complete in 32.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x13f388dd0>
+    <pymc.MCMC.MCMC at 0x14e56a850>
 
 
 
@@ -1714,58 +1707,58 @@ Here just an example.
       <tbody>
         <tr>
           <th>v</th>
-          <td>-1.5451</td>
-          <td>0.0563424</td>
-          <td>-1.67373</td>
-          <td>-1.57841</td>
-          <td>-1.54131</td>
-          <td>-1.50422</td>
-          <td>-1.45404</td>
-          <td>0.00524814</td>
+          <td>-0.539954</td>
+          <td>0.0155719</td>
+          <td>-0.572298</td>
+          <td>-0.549469</td>
+          <td>-0.540782</td>
+          <td>-0.528279</td>
+          <td>-0.508065</td>
+          <td>0.00112267</td>
         </tr>
         <tr>
           <th>a</th>
-          <td>1.76045</td>
-          <td>0.0662287</td>
-          <td>1.66187</td>
-          <td>1.70927</td>
-          <td>1.74559</td>
-          <td>1.81343</td>
-          <td>1.90748</td>
-          <td>0.00626699</td>
+          <td>2.49136</td>
+          <td>0.00895635</td>
+          <td>2.47002</td>
+          <td>2.48866</td>
+          <td>2.49422</td>
+          <td>2.49799</td>
+          <td>2.49988</td>
+          <td>0.000770613</td>
         </tr>
         <tr>
           <th>z</th>
-          <td>0.606831</td>
-          <td>0.0125441</td>
-          <td>0.581529</td>
-          <td>0.598842</td>
-          <td>0.606698</td>
-          <td>0.616136</td>
-          <td>0.630195</td>
-          <td>0.00115023</td>
+          <td>0.4031</td>
+          <td>0.0118855</td>
+          <td>0.37898</td>
+          <td>0.397112</td>
+          <td>0.40288</td>
+          <td>0.409666</td>
+          <td>0.431941</td>
+          <td>0.000958058</td>
         </tr>
         <tr>
           <th>t</th>
-          <td>0.748318</td>
-          <td>0.0180518</td>
-          <td>0.707402</td>
-          <td>0.737856</td>
-          <td>0.75037</td>
-          <td>0.760675</td>
-          <td>0.779373</td>
-          <td>0.00169372</td>
+          <td>1.48852</td>
+          <td>0.035718</td>
+          <td>1.41497</td>
+          <td>1.46917</td>
+          <td>1.48828</td>
+          <td>1.51355</td>
+          <td>1.56092</td>
+          <td>0.00286112</td>
         </tr>
         <tr>
           <th>dc</th>
-          <td>0.334341</td>
-          <td>0.0501656</td>
-          <td>0.250645</td>
-          <td>0.298964</td>
-          <td>0.330595</td>
-          <td>0.366809</td>
-          <td>0.438761</td>
-          <td>0.00450004</td>
+          <td>0.348321</td>
+          <td>0.0202259</td>
+          <td>0.30703</td>
+          <td>0.334826</td>
+          <td>0.349703</td>
+          <td>0.361927</td>
+          <td>0.386422</td>
+          <td>0.00170049</td>
         </tr>
       </tbody>
     </table>
@@ -1776,7 +1769,7 @@ Here just an example.
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model, 
                                    ground_truth_parameter_dict = parameter_dict,
                                    figsize = (8, 5),
                                    columns = 3)
@@ -1784,24 +1777,14 @@ Here just an example.
     plt.show()
 
 
-.. parsed-literal::
 
-    v
-    a
-    z
-    t
-    dc
+.. image:: lan_tutorial_files/lan_tutorial_83_0.png
 
 
+**NOTE**:
 
-.. image:: lan_tutorial_files/lan_tutorial_83_1.png
-
-
-NOTE:
-~~~~~
-
-The ``hddm.plotting.model_plot()`` does not yet accept *stimcoding*
-data. This will be updated as soon as possible.
+The ``hddm.plotting.plot_posterior_predictive()`` does not yet accept
+*stimcoding* data. This will be updated as soon as possible.
 
 Section 7: Model Recovery
 -------------------------
@@ -1883,63 +1866,63 @@ the **true** model.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.598599</td>
+          <td>4.204582</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>2.916635</td>
+          <td>4.269577</td>
           <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.737597</td>
+          <td>4.404568</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.998594</td>
-          <td>0.0</td>
+          <td>2.960620</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>2.634622</td>
-          <td>0.0</td>
+          <td>2.223596</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>...</th>
@@ -1955,63 +1938,63 @@ the **true** model.
         </tr>
         <tr>
           <th>95</th>
-          <td>2.588620</td>
-          <td>0.0</td>
+          <td>2.304595</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>96</th>
-          <td>1.625599</td>
-          <td>0.0</td>
+          <td>3.067625</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>97</th>
-          <td>2.666624</td>
-          <td>0.0</td>
+          <td>2.379594</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>98</th>
-          <td>3.206628</td>
+          <td>3.991597</td>
           <td>1.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
         <tr>
           <th>99</th>
-          <td>3.395614</td>
+          <td>2.904617</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.713551</td>
-          <td>1.839439</td>
-          <td>0.519457</td>
-          <td>1.030603</td>
-          <td>1.858435</td>
-          <td>2.602788</td>
+          <td>0.246969</td>
+          <td>1.470066</td>
+          <td>0.451724</td>
+          <td>1.397603</td>
+          <td>3.268501</td>
+          <td>4.603728</td>
         </tr>
       </tbody>
     </table>
@@ -2044,14 +2027,6 @@ the **true** model.
                                    include = hddm.simulators.model_config['ddm']['hddm_include'],
                                    is_group_model = False)
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'alpha', 'beta']
-    Includes supplied:  ['z', 'theta']
-    Includes supplied:  ['z']
-
-
 .. code:: ipython3
 
     nmcmc = 1000
@@ -2067,13 +2042,13 @@ the **true** model.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 24.4 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 23.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1490cca90>
+    <pymc.MCMC.MCMC at 0x14d606c90>
 
 
 
@@ -2094,13 +2069,14 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
                                             parameter_recovery_mode = True,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_mean_rts': True,
                                             'samples': 200})
     plt.show()
 
 
-
-.. image:: lan_tutorial_files/lan_tutorial_92_0.png
+.. image:: lan_tutorial_files/lan_tutorial_92_1.png
 
 
 .. code:: ipython3
@@ -2115,7 +2091,9 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
                                             parameter_recovery_mode = False,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_mean_rts': True,
                                             'samples': 200})
     plt.show()
 
@@ -2136,7 +2114,9 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
                                             parameter_recovery_mode = False,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_mean_rts': True,
                                             'samples': 200})
     plt.show()
 
@@ -2157,7 +2137,7 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
 
 .. parsed-literal::
 
-    288.7850790405273
+    414.65114936828616
 
 
 
@@ -2170,7 +2150,7 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
 
 .. parsed-literal::
 
-    284.47917434692386
+    415.8001557922363
 
 
 
@@ -2183,7 +2163,7 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
 
 .. parsed-literal::
 
-    311.62192436218265
+    418.04479835510256
 
 
 
@@ -2376,12 +2356,6 @@ Section 8: Real Data!
                                    is_group_model = False,
                                    depends_on = {'v': 'stim'})
 
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
-
 .. code:: ipython3
 
     hddmnn_model_cav.sample(nmcmc, burn = burn)
@@ -2389,13 +2363,13 @@ Section 8: Real Data!
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1000 of 1000 complete in 252.6 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 243.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x144143650>
+    <pymc.MCMC.MCMC at 0x154a35350>
 
 
 
@@ -2409,7 +2383,9 @@ Section 8: Real Data!
                                             parameter_recovery_mode = False,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_mean_rts': True,
                                             'samples': 200})
     plt.show()
 
@@ -2434,14 +2410,9 @@ Section 8: Real Data!
     hddmnn_model_cav = hddm.HDDMnn(cav_data,
                                    model = model,
                                    informative = False,
-                                   include = hddm.simulators.model_config[model]['hddm_include'], #is_group_model = True,
+                                   include = hddm.simulators.model_config[model]['hddm_include'], 
+                                   is_group_model = True,
                                    p_outlier = 0.05)
-
-
-.. parsed-literal::
-
-    Includes supplied:  ['z', 'theta']
-
 
 .. code:: ipython3
 
@@ -2450,20 +2421,20 @@ Section 8: Real Data!
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 506.0 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 471.3 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x1437f0b10>
+    <pymc.MCMC.MCMC at 0x14cca5090>
 
 
 
 .. code:: ipython3
 
     # Caterpillar Plot: (Parameters recovered ok?)
-    hddm.plotting.caterpillar_plot(hddm_model = hddmnn_model_cav, 
+    hddm.plotting.plot_caterpillar(hddm_model = hddmnn_model_cav, 
                                    figsize = (8, 8),
                                    columns = 3)
     
@@ -2484,9 +2455,12 @@ Section 8: Real Data!
                                             parameter_recovery_mode = False,
                                             **{'alpha': 0.01,
                                             'ylim': 3,
-                                            'add_model': True,
+                                            'add_posterior_uncertainty_model': True,
+                                            'add_posterior_uncertainty_rts': False,
+                                            'add_posterior_mean_rts': True,
                                             'samples': 200,
-                                            'legend_fontsize': 7})
+                                            'legend_fontsize': 7,
+                                            'subplots_adjust': {'top': 0.9, 'hspace': 0.3, 'wspace': 0.3}})
     plt.show()
 
 
@@ -2548,16 +2522,16 @@ Let’s predict some likelihoods !
 
 .. parsed-literal::
 
-    [[-6.5302606 ]
-     [ 0.5264375 ]
-     [ 0.410895  ]
-     [-0.52280986]
-     [-1.0521754 ]
-     [-1.552991  ]
-     [-2.0735168 ]
-     [-2.6183672 ]
-     [-3.2071779 ]
-     [-3.878473  ]]
+    [[-2.9323568]
+     [ 2.078088 ]
+     [ 0.4104141]
+     [-0.5943402]
+     [-1.1136726]
+     [-1.6901499]
+     [-2.3512228]
+     [-3.080151 ]
+     [-3.8215086]
+     [-4.4257374]]
     (200, 1)
 
 
@@ -2620,83 +2594,83 @@ parameter vectors as rows.
       <tbody>
         <tr>
           <th>0</th>
-          <td>-2.822411</td>
-          <td>1.857000</td>
-          <td>0.597105</td>
-          <td>1.265332</td>
-          <td>1.127908</td>
+          <td>2.149626</td>
+          <td>1.684902</td>
+          <td>0.232222</td>
+          <td>0.641663</td>
+          <td>-0.070030</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>-2.480144</td>
-          <td>0.790550</td>
-          <td>0.370082</td>
-          <td>0.135557</td>
-          <td>1.267330</td>
+          <td>1.817911</td>
+          <td>0.776330</td>
+          <td>0.535083</td>
+          <td>0.006625</td>
+          <td>1.069452</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>-1.805679</td>
-          <td>1.067249</td>
-          <td>0.789487</td>
-          <td>1.343145</td>
-          <td>0.782929</td>
+          <td>-0.908428</td>
+          <td>0.654107</td>
+          <td>0.301445</td>
+          <td>1.560911</td>
+          <td>0.396448</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.538892</td>
-          <td>1.940111</td>
-          <td>0.624851</td>
-          <td>1.358304</td>
-          <td>1.143875</td>
+          <td>-0.022136</td>
+          <td>1.140235</td>
+          <td>0.479664</td>
+          <td>0.757727</td>
+          <td>1.316409</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.154106</td>
-          <td>0.693673</td>
-          <td>0.201944</td>
-          <td>0.964244</td>
-          <td>1.218428</td>
+          <td>2.281230</td>
+          <td>0.366558</td>
+          <td>0.409224</td>
+          <td>1.908211</td>
+          <td>1.059872</td>
         </tr>
         <tr>
           <th>5</th>
-          <td>0.289881</td>
-          <td>0.972925</td>
-          <td>0.363896</td>
-          <td>1.232385</td>
-          <td>1.385627</td>
+          <td>1.067632</td>
+          <td>1.228020</td>
+          <td>0.337573</td>
+          <td>1.447155</td>
+          <td>0.083665</td>
         </tr>
         <tr>
           <th>6</th>
-          <td>-0.097920</td>
-          <td>0.727295</td>
-          <td>0.733222</td>
-          <td>0.217358</td>
-          <td>1.284991</td>
+          <td>2.022131</td>
+          <td>1.254037</td>
+          <td>0.262336</td>
+          <td>0.416462</td>
+          <td>0.512724</td>
         </tr>
         <tr>
           <th>7</th>
-          <td>1.530997</td>
-          <td>0.322452</td>
-          <td>0.492426</td>
-          <td>0.539634</td>
-          <td>0.167850</td>
+          <td>-1.974657</td>
+          <td>0.793536</td>
+          <td>0.791707</td>
+          <td>0.591319</td>
+          <td>1.036441</td>
         </tr>
         <tr>
           <th>8</th>
-          <td>-2.425803</td>
-          <td>1.765036</td>
-          <td>0.670777</td>
-          <td>0.356949</td>
-          <td>0.947358</td>
+          <td>-2.002436</td>
+          <td>1.382722</td>
+          <td>0.442411</td>
+          <td>0.074192</td>
+          <td>0.356522</td>
         </tr>
         <tr>
           <th>9</th>
-          <td>0.270504</td>
-          <td>1.263645</td>
-          <td>0.624119</td>
-          <td>0.391290</td>
-          <td>0.620432</td>
+          <td>-2.757462</td>
+          <td>0.402900</td>
+          <td>0.738999</td>
+          <td>0.755093</td>
+          <td>1.334423</td>
         </tr>
       </tbody>
     </table>
@@ -2710,7 +2684,7 @@ parameter vectors as rows.
                                                    model = model,
                                                    cols = 3,
                                                    n_samples = 2000,
-                                                   n_reps = 2,
+                                                   n_reps = 10,
                                                    show = True)
 
 
@@ -2788,11 +2762,11 @@ a parameter affects model behavior.
       <tbody>
         <tr>
           <th>0</th>
-          <td>0.72663</td>
-          <td>1.309131</td>
-          <td>0.205633</td>
-          <td>0.931494</td>
-          <td>0.909723</td>
+          <td>-2.218164</td>
+          <td>0.889863</td>
+          <td>0.254979</td>
+          <td>0.707028</td>
+          <td>0.040745</td>
         </tr>
       </tbody>
     </table>

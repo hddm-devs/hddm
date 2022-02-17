@@ -52,7 +52,6 @@ def hddm_preprocess(
                 df[param] = simulator_data[2][param][0]
     return df
 
-
 def _add_outliers(
     sim_out=None,
     p_outlier=None,  # AF-comment: Redundant argument, can compute from sim_out !
@@ -192,6 +191,7 @@ def simulator_single_subject(
     max_t=20,
     bin_dim=None,
     bin_pointwise=False,
+    verbose = 0,
 ):
     """Generate a hddm-ready dataset from a single set of parameters
 
@@ -233,9 +233,11 @@ def simulator_single_subject(
     # Sanity checks
     assert p_outlier >= 0 and p_outlier <= 1, "p_outlier is not between 0 and 1"
     assert max_rt_outlier > 0, "max_rt__outlier needs to be > 0"
+    
+    if verbose:
+        print("Model: ", model)
+        print("Parameters needed: ", model_config[model]["params"])
 
-    print("Model: ", model)
-    print("Parameters needed: ", model_config[model]["params"])
     if parameters is None:
         print("Proposing parameters and checking if in bounds")
         params_ok = 0
@@ -309,7 +311,8 @@ def simulator_single_subject(
     else:
         return "parameters argument is not of type list, np.ndarray, dict"
 
-    print(parameters)
+    if verbose:
+        print(parameters)
 
     x = simulator(
         theta=parameters,
