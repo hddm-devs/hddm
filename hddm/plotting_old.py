@@ -730,7 +730,7 @@ def model_plot(
 
     if hddm_model is not None:
         assert (
-            model_config[hddm_model.model]["n_choices"] == 2
+            len(model_config[hddm_model.model]["choices"]) == 2
         ), "The model_plot() currently only works for 2-choice models"
 
     # AF-TODO: Shape checks
@@ -1747,7 +1747,7 @@ def posterior_predictive_plot(
     """
     if hddm_model is not None:
         assert (
-            model_config[hddm_model.model]["n_choices"] == 2
+            len(model_config[hddm_model.model]["choices"]) == 2
         ), "The posterior_predictive() plot currently only works for 2-choice models"
 
     if n_posterior_parameters <= 1:

@@ -20,7 +20,9 @@ from scipy.stats.mstats import mquantiles
 make_likelihood_fun_from_str = exec
 
 
-def make_likelihood_str_mlp(config=None, fun_name="custom_likelihood"):
+def make_likelihood_str_mlp(
+    config=None, wiener_params=None, fun_name="custom_likelihood"
+):
     """Define string for a likelihood function that can be used as an mlp-likelihood
     in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
 
@@ -35,13 +37,16 @@ def make_likelihood_str_mlp(config=None, fun_name="custom_likelihood"):
 
     """
     params_str = ", ".join(config["params"])
+    w_outlier_str = str(wiener_params["w_outlier"])
 
     fun_str = (
         "def "
         + fun_name
         + "(x, "
         + params_str
-        + ", p_outlier=0.0, w_outlier=0.1, network = None):\n    "
+        + ", p_outlier=0.0, w_outlier="
+        + w_outlier_str
+        + ", network = None):\n    "
         + 'return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, '
         + "np.array(["
         + params_str
@@ -51,7 +56,9 @@ def make_likelihood_str_mlp(config=None, fun_name="custom_likelihood"):
     return fun_str
 
 
-def make_likelihood_str_mlp_info(config=None, fun_name="custom_likelihood"):
+def make_likelihood_str_mlp_info(
+    config=None, wiener_params=None, fun_name="custom_likelihood"
+):
     """Define string for a likelihood function that can be used as an mlp-likelihood
     in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
 
@@ -66,6 +73,7 @@ def make_likelihood_str_mlp_info(config=None, fun_name="custom_likelihood"):
 
     """
     params_str = ", ".join(config["params"])
+    w_outlier_str = str(wiener_params["w_outlier"])
     upper_bounds_str = (
         "np.array(" + str(config["param_bounds"][1]) + ", dtype = np.float32)"
     )
@@ -78,7 +86,9 @@ def make_likelihood_str_mlp_info(config=None, fun_name="custom_likelihood"):
         + fun_name
         + "(x, "
         + params_str
-        + ", p_outlier=0.0, w_outlier=0.1, network = None):"
+        + ", p_outlier=0.0, w_outlier="
+        + w_outlier_str
+        + ", network = None):"
         + '\n    return hddm.wfpt.wiener_like_nn_mlp_info(x["rt"].values, x["response"].values, '
         + "np.array(["
         + params_str
@@ -97,7 +107,9 @@ def make_likelihood_str_mlp_info(config=None, fun_name="custom_likelihood"):
     return fun_str
 
 
-def make_reg_likelihood_str_mlp(config=None, fun_name="custom_likelihood_reg"):
+def make_reg_likelihood_str_mlp(
+    config=None, wiener_params=None, fun_name="custom_likelihood_reg"
+):
     """Define string for a likelihood function that can be used as a
     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
 
@@ -114,10 +126,11 @@ def make_reg_likelihood_str_mlp(config=None, fun_name="custom_likelihood_reg"):
     """
 
     params_fun_def_str = ", ".join(config["params"])
+    w_outlier_str = str(wiener_params["w_outlier"])
     upper_bounds_str = str(config["param_bounds"][1])
     lower_bounds_str = str(config["param_bounds"][0])
-    n_params_str = str(config["n_params"])
-    data_frame_width_str = str(config["n_params"] + 2)
+    n_params_str = str(len(config["params"]))
+    data_frame_width_str = str(len(config["params"]) + 2)
     params_str = str(config["params"])
 
     fun_str = (
@@ -125,7 +138,9 @@ def make_reg_likelihood_str_mlp(config=None, fun_name="custom_likelihood_reg"):
         + fun_name
         + "(value, "
         + params_fun_def_str
-        + ", reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs):"
+        + ", reg_outcomes, p_outlier=0, w_outlier="
+        + w_outlier_str
+        + ", **kwargs):"
         + "\n    params = locals()"
         + "\n    size = int(value.shape[0])"
         + "\n    data = np.zeros(((size, "

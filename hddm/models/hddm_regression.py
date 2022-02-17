@@ -91,7 +91,7 @@ def generate_wfpt_reg_stochastic_class(
 
         if sampling_method == "cssm":
             param_data = np.zeros(
-                (self.value.shape[0], model_config["full_ddm_vanilla"]["n_params"]),
+                (self.value.shape[0], len(model_config["full_ddm_vanilla"]["params"])),
                 dtype=np.float32,
             )
             cnt = 0
@@ -460,12 +460,6 @@ class HDDMRegressor(HDDM):
 
                 # AF-COMMENT Old slice_widths
                 self.slice_widths[param] = 0.05
-
-                # AF-COMMENT Now basing slice widths on model_config:
-                # if trans:
-                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")] + '_trans']
-                # else:
-                #     self.slice_widths[param] = model_config[self.model]["slice_widths"][param[: param.find("_")]]
 
             reg_knode = KnodeRegress(
                 pm.Deterministic,

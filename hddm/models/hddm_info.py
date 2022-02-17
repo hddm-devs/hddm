@@ -1,5 +1,4 @@
 from hddm.simulators import *
-from hddm.model_config import model_config
 from hddm.simulators.basic_simulator import *
 from collections import OrderedDict
 import inspect
@@ -111,8 +110,16 @@ class HDDM(HDDMBase):
             self.nn = False
 
         if self.nn:
-            self.slice_widths = model_config[self.model]["slice_widths"]
+            # If the supplied model_config doesn't provide parameter wise slice_widths
+            # we use reasonable defaults
+            if "slice_widths" in self.model_config.keys():
+                self.slice_widths = self.model_config["slice_widths"]
+            else:
+                self.slice_widths = {
+                    param: 0.1 for param in self.model_config["params"]
+                }
             self.slice_widths["p_outlier"] = 1.0
+
         else:
             self.slice_widths = {
                 "a": 1,
@@ -130,24 +137,6 @@ class HDDM(HDDMBase):
                 "alpha": 1.5,
                 "pos_alpha": 1.5,
             }
-
-        # AF-Q: Is emcee actually used or can this be deleted ?
-        self.emcee_dispersions = {
-            "a": 1,
-            "t": 0.1,
-            "a_std": 1,
-            "t_std": 0.15,
-            "sz": 1.1,
-            "v": 1.5,
-            "st": 0.1,
-            "sv": 3,
-            "z_trans": 0.2,
-            "z": 0.1,
-            "p_outlier": 1.0,
-            "v_std": 1,
-            "alpha": 1.5,
-            "pos_alpha": 1.5,
-        }
 
         if self.nn:
             self.is_informative = kwargs.pop("informative", False)
@@ -185,32 +174,50 @@ class HDDM(HDDMBase):
                 depends=self.depends["p_outlier"],
             )
 
-        for tmp_param in model_config[self.model]["params"]:
+        for tmp_param in self.model_config["params"]:
             if tmp_param in include:
-                param_id = model_config[self.model]["params"].index(tmp_param)
-                trans = model_config[self.model]["params_trans"][param_id]
+                param_id = self.model_config["params"].index(tmp_param)
 
+                # Perform some checks on the model_config to see if all expected keys are included
+                # If not, choose reasonable defaults for some of them.
+                if not "params_trans" in self.model_config.keys():
+                    trans = 0
+                else:
+                    trans = self.model_config["params_trans"][param_id]
+
+                if not "params_std_upper" in self.model_config.keys():
+                    param_std_upper = 1
+                else:
+                    param_std_upper = self.model_config["params_std_upper"][param_id]
+
+                if not "default_params" in self.model_config.keys():
+                    param_default = (
+                        self.model_config["param_bounds"][1][param_id]
+                        - self.model_config["param_bounds"][0][param_id]
+                    ) / 2
+                else:
+                    param_default = self.model_config["default_params"][param_id]
+
+                # Add to knodes
                 if trans:
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
                             g_tau=10 ** -2,
                             std_std=0.5,
-                            lower=model_config[self.model]["param_bounds"][0][param_id],
-                            upper=model_config[self.model]["param_bounds"][1][param_id],
-                            value=model_config[self.model]["default_params"][param_id],
+                            lower=self.model_config["param_bounds"][0][param_id],
+                            upper=self.model_config["param_bounds"][1][param_id],
+                            value=param_default,
                         )
                     )
                 else:
                     knodes.update(
                         self._create_family_trunc_normal(
                             tmp_param,
-                            lower=model_config[self.model]["param_bounds"][0][param_id],
-                            upper=model_config[self.model]["param_bounds"][1][param_id],
-                            value=model_config[self.model]["default_params"][param_id],
-                            std_upper=model_config[self.model]["params_std_upper"][
-                                param_id
-                            ],  # added AF
+                            lower=self.model_config["param_bounds"][0][param_id],
+                            upper=self.model_config["param_bounds"][1][param_id],
+                            value=param_default,
+                            std_upper=param_std_upper,  # added AF
                         )
                     )
         return knodes
@@ -232,10 +239,29 @@ class HDDM(HDDMBase):
                 depends=self.depends["p_outlier"],
             )
 
-        for tmp_param in model_config[self.model]["params"]:
+        for tmp_param in self.model_config["params"]:
             if tmp_param in include:
-                param_id = model_config[self.model]["params"].index(tmp_param)
-                trans = model_config[self.model]["params_trans"][param_id]
+                param_id = self.model_config["params"].index(tmp_param)
+
+                # Perform some checks on the self.model_config to see if all expected keys are included
+                # If not, choose reasonable defaults for some of them.
+                if not "params_trans" in self.model_config.keys():
+                    trans = 0
+                else:
+                    trans = self.model_config["params_trans"][param_id]
+
+                if not "params_std_upper" in self.model_config.keys():
+                    param_std_upper = 1
+                else:
+                    param_std_upper = self.model_config["params_std_upper"][param_id]
+
+                if not "default_params" in self.model_config.keys():
+                    param_default = (
+                        self.model_config["param_bounds"][1][param_id]
+                        - self.model_config["param_bounds"][0][param_id]
+                    ) / 2
+                else:
+                    param_default = self.model_config["default_params"][param_id]
 
                 if trans:
                     knodes.update(
@@ -243,21 +269,19 @@ class HDDM(HDDMBase):
                             tmp_param,
                             g_tau=10 ** -2,
                             std_std=0.5,
-                            lower=model_config[self.model]["param_bounds"][0][param_id],
-                            upper=model_config[self.model]["param_bounds"][1][param_id],
-                            value=model_config[self.model]["default_params"][param_id],
+                            lower=self.model_config["param_bounds"][0][param_id],
+                            upper=self.model_config["param_bounds"][1][param_id],
+                            value=param_default,
                         )
                     )
                 else:
                     knodes.update(
                         self._create_family_trunc_normal(
                             tmp_param,
-                            lower=model_config[self.model]["param_bounds"][0][param_id],
-                            upper=model_config[self.model]["param_bounds"][1][param_id],
-                            value=model_config[self.model]["default_params"][param_id],
-                            std_upper=model_config[self.model]["params_std_upper"][
-                                param_id
-                            ],  # added AF
+                            lower=self.model_config["param_bounds"][0][param_id],
+                            upper=self.model_config["param_bounds"][1][param_id],
+                            value=param_default,
+                            std_upper=param_std_upper,  # added AF
                         )
                     )
         return knodes

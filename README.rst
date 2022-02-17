@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.2
+:Version: 0.9.3
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -67,6 +67,15 @@ Features
              The new plotting functions replicate the existing functionality, but improve on various aspects of the plot and provide a more abstracted and extensible interface.
              Fixes an error with posterior predictive sampling using hierarchical regression models based on LANs with ``HDDMnnRegressor()``. ``HDDMnnRegressor()`` now issues a 
              single warning for boundary condition violations instead of flagging all occurences.
+
+* HDDM 0.9.3 Lot's of minor improvements.
+             Model plots now working for race and lca models with n > 2 choices (use **_plot_func_model_n** as **plot_func** argument in **hddm.plotting.plot_posterior_predictive**).
+             **model_config** files are simplified and class construction is a bit more robust to lack of specification, improving ease of use with custom models.
+             Various plots received a bit more styling features.
+             Better defaults for **simulator_h_c** function in **hddm.simulators.hddm_dataset_generators**.
+             Posterior predictives now properly take into account the *p_outlier* parameter when generating data from the implicit mixture model. *p_outlier* percent of the data,
+             now explicitly come from random choices with uniform reaction times.
+             The documentation is updated to reflect / illustrate the improvements.
 
 Comparison to other packages
 ============================

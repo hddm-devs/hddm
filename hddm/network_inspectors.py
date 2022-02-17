@@ -39,7 +39,6 @@ def get_torch_mlp(model="angle", nbin=512):
         Specifies the models you would like to load
 
     Returns:
-        keras.model.predict_on_batch
         Returns a function that gives you access to a forward pass through the MLP.
         This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
         model parameters trailed by a reaction time and a choice.
@@ -277,7 +276,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     save=False,
     show=True,
     font_scale=1.5,
-    figsize = (10, 10),
+    figsize=(10, 10),
 ):
     """Function creates a plot that compares kernel density estimates from simulation data with mlp output.
 
@@ -286,7 +285,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
             DataFrame hold a parameter vector in each row. (Parameter vector has to be compatible with the model string supplied to the
             'model' argument)
         model: str <default=None>
-            String that specifies the model which should be used for the graph (find allowed models listed under hddm.simulators.model_config).
+            String that specifies the model which should be used for the graph (find allowed models listed under hddm.model_config.model_config).
         n_samples: int <default=10>
             How many model samples to base kernel density estimates on.
         n_reps: int <default=10>
@@ -323,7 +322,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
     sns.despine(right=True)
 
     # Data template
-    if model_config[model]["n_choices"] == 2:
+    if len(model_config[model]["choices"]) == 2:
         plot_data = np.zeros((4000, 2))
         plot_data[:, 0] = np.concatenate(
             (
@@ -333,15 +332,15 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
         )
         plot_data[:, 1] = np.concatenate((np.repeat(-1, 2000), np.repeat(1, 2000)))
     else:
-        plot_data = np.zeros((model_config[model]["n_choices"] * 1000, 2))
+        plot_data = np.zeros((len(model_config[model]["choices"]) * 1000, 2))
         plot_data[:, 0] = np.concatenate(
             [
                 [i * 0.01 for i in range(1, 1001, 1)]
-                for j in range(model_config[model]["n_choices"])
+                for j in range(len(model_config[model]["choices"]))
             ]
         )
         plot_data[:, 1] = np.concatenate(
-            [np.repeat(i, 1000) for i in range(model_config[model]["n_choices"])]
+            [np.repeat(i, 1000) for i in range(len(model_config[model]["choices"]))]
         )
 
     # Load Keras model and initialize batch container
@@ -379,10 +378,10 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
             else:
                 label = None
 
-            if model_config[model]["n_choices"] == 2:
+            if len(model_config[model]["choices"]) == 2:
                 sns.lineplot(
-                    plot_data[:, 0] * plot_data[:, 1],
-                    np.exp(ll_out_gt),
+                    x=plot_data[:, 0] * plot_data[:, 1],
+                    y=np.exp(ll_out_gt),
                     color="black",
                     alpha=alpha,
                     label=label,
@@ -390,7 +389,7 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
                 )
 
             else:
-                for k in range(model_config[model]["n_choices"]):
+                for k in range(len(model_config[model]["choices"])):
                     if k > 0:
                         label = None
                     sns.lineplot(
@@ -404,17 +403,17 @@ def kde_vs_lan_likelihoods(  # ax_titles = [],
 
             if j == 0:
                 # Plot keras predictions
-                if model_config[model]["n_choices"] == 2:
+                if len(model_config[model]["choices"]) == 2:
                     sns.lineplot(
-                        plot_data[:, 0] * plot_data[:, 1],
-                        np.exp(ll_out_keras[:, 0]),
+                        x=plot_data[:, 0] * plot_data[:, 1],
+                        y=np.exp(ll_out_keras[:, 0]),
                         color="green",
                         label="MLP",
                         alpha=1,
                         ax=ax[row_tmp, col_tmp],
                     )
                 else:
-                    for k in range(model_config[model]["n_choices"]):
+                    for k in range(len(model_config[model]["choices"])):
                         if k == 0:
                             label = "MLP"
                         else:
@@ -519,7 +518,7 @@ def lan_manifold(
     # mpl.rcParams['svg.fonttype'] = 'none'
 
     assert (
-        model_config[model]["n_choices"] == 2
+        len(model_config[model]["choices"]) == 2
     ), "This plot works only for 2-choice models at the moment. Improvements coming!"
 
     if parameter_df.shape[0] > 0:
@@ -550,7 +549,7 @@ def lan_manifold(
         (np.repeat(-1, n_rt_steps), np.repeat(1, n_rt_steps))
     )
 
-    n_params = model_config[model]["n_params"]
+    n_params = len(model_config[model]["params"])
     n_levels = vary_dict[list(vary_dict.keys())[0]].shape[0]
     data_var = np.zeros(((n_rt_steps * 2) * n_levels, n_params + 3))
 
@@ -637,54 +636,3 @@ def lan_manifold(
 
     plt.close()
     return
-
-
-# -------------------------------------------------------------------------------------
-# def get_mlp(model="angle"):
-#     """Returns the keras network which is the basis of the MLP likelihoods
-
-#     :Arguments:
-#         model: str <default='angle'>
-#         Specifies the models you would like to load
-
-#     Returns:
-#         keras.model.predict_on_batch
-#         Returns a function that gives you access to a forward pass through the MLP.
-#         This in turn expects as input a 2d np.array of datatype np.float32. Each row is filled with
-#         model parameters trailed by a reaction time and a choice.
-#         (e.g. input dims for a ddm MLP could be (3, 6), 3 datapoints and 4 parameters + reaction time and choice).
-#         Predict on batch then returns for each row of the input the log likelihood of the respective parameter vector and datapoint.
-
-#     :Example:
-#         >>> forward = hddm.network_inspectors.get_mlp(model = 'ddm')
-#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5, 1.0, -1.0], [0.5, 1.5, 0.5, 0.5, 1.0, -1.0]], dtype = np.float32)
-#         >>> forward(data)
-#     """
-
-#     network = load_mlp(model=model)
-#     return network.predict_on_batch
-
-
-# def get_cnn(model="angle", nbin=512):
-#     """Returns tensorflow CNN which is the basis of the CNN likelihoods
-
-#     :Arguments:
-#         model: str <default='angle'>
-#         Specifies the models you would like to load
-
-#     Returns:
-#         function
-#             Returns a function that you can call passing as an argument a 1d or 2d np.array with datatype np.float32.
-#             The shape of the input to this function should match the number of parameter vectors (rows) and the corresponding parameters (cols).
-#             Per paraemter vector passed, this function will give out an np.array() of shape (1, n_choice_options * nbins).
-#             This output defines a probability mass functions over discretized rt / choice space. The first 'n_choice_options' indices
-#             define the probability of landing in the first bin for each choice option etc..
-
-#     Example:
-#         :Example:
-#         >>> forward = hddm.network_inspectors.get_cnn(model = 'ddm')
-#         >>> data = np.array([[0.5, 1.5, 0.5, 0.5], [0.5, 1.5, 0.5, 0.5]], dtype = np.float32)
-#         >>> forward(data)
-#     """
-#     network = load_cnn(model=model, nbin=nbin)
-#     return network

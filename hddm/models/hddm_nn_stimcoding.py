@@ -1,5 +1,6 @@
 from hddm.models import HDDMStimCoding
 from hddm.models.hddm_stimcoding import KnodeWfptStimCoding
+from copy import deepcopy
 
 try:
     # print('HDDM: Trying import of pytorch related classes.')
@@ -69,6 +70,27 @@ class HDDMnnStimCoding(HDDMStimCoding):
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
+        self.model_config = kwargs.pop("model_config", None)
+
+        if not "wiener_params" in kwargs.keys():
+            kwargs["wiener_params"] = {
+                "err": 1e-4,
+                "n_st": 2,
+                "n_sz": 2,
+                "use_adaptive": 1,
+                "simps_err": 1e-3,
+                "w_outlier": 0.1,
+            }
+
+        # If no config was supplied try loading a config from
+        # the configs included in the package
+        if self.model_config == None:
+            try:
+                self.model_config = deepcopy(hddm.model_config.model_config[self.model])
+            except:
+                print(
+                    "It seems that you supplied a model string that refers to an undefined model"
+                )
 
         if self.network is None:
             try:
@@ -82,7 +104,10 @@ class HDDMnnStimCoding(HDDMStimCoding):
                 return None
         network_dict = {"network": self.network}
         self.wfpt_nn = hddm.likelihoods_mlp.make_mlp_likelihood(
-            model=self.model, **network_dict
+            model=self.model,
+            model_config=self.model_config,
+            wiener_params=kwargs["wiener_params"],
+            **network_dict
         )
 
         super(HDDMnnStimCoding, self).__init__(*args, **kwargs)

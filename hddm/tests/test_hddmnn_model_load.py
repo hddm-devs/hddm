@@ -79,7 +79,7 @@ class ModelLoad(unittest.TestCase):
 
     def test_init_sample_save_load_stimcoding(self):
         for model in self.models:
-            if hddm.model_config.model_config[model]["n_choices"] == 2:
+            if len(hddm.model_config.model_config[model]["choices"]) == 2:
                 # Generate Data
                 data, gt = hddm.simulators.hddm_dataset_generators.simulator_stimcoding(
                     model=model,
@@ -124,7 +124,7 @@ class ModelLoad(unittest.TestCase):
 
     def test_init_sample_save_load_regressor(self):
         for model in self.models:
-            if hddm.model_config.model_config[model]["n_choices"] == 2:
+            if len(hddm.model_config.model_config[model]["choices"]) == 2:
                 # Define Link Function
                 def id_link(x):
                     return x

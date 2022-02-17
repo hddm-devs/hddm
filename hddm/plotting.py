@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sns
 
-import pymc as pm
 import os
 import warnings
-import hddm
+
+# import pymc as pm
+# import hddm
 
 import pandas as pd
 
@@ -181,6 +182,17 @@ def plot_from_data(
         This function changes the current value and logp of the nodes.
     """
 
+    # Flip argument names to make the compatible with downstream expectations
+    # of the plot_func() function
+    if "add_data_model" in kwargs.keys():
+        kwargs["add_posterior_mean_model"] = kwargs["add_data_model"]
+    if "add_data_rts" in kwargs.keys():
+        kwargs["add_posterior_mean_rts"] = kwargs["add_data_rts"]
+    if "data_color" in kwargs.keys():
+        kwargs["posterior_mean_color"] = kwargs["data_color"]
+    else:
+        kwargs["posterior_mean_color"] = "blue"
+
     kwargs["model_"] = generative_model
     title_ = kwargs.pop("title", "")
     ax_title_size = kwargs.pop("ax_title_fontsize", 10)
@@ -257,7 +269,7 @@ def plot_posterior_predictive(
     format="png",
     num_subjs=None,
     parameter_recovery_mode=False,
-    subplots_adjust = {'top': 0.85, 'hspace': 0.4, 'wspace': 0.3},
+    subplots_adjust={"top": 0.85, "hspace": 0.4, "wspace": 0.3},
     **kwargs
 ):
     """Plot the posterior predictive distribution of a kabuki hierarchical model.
@@ -318,7 +330,6 @@ def plot_posterior_predictive(
     else:
         kwargs["model_"] = "ddm_vanilla"
 
-
     if plot_func is None:
         plot_func = _plot_func_posterior_pdf_node_nn
 
@@ -334,9 +345,11 @@ def plot_posterior_predictive(
     for tag, nodes in observeds.groupby("tag"):
         fig = plt.figure(figsize=figsize)  # prev utils.pretty_tag
         fig.suptitle(prettier_tag(tag), fontsize=12)
-        fig.subplots_adjust(top=subplots_adjust['top'], 
-                            hspace=subplots_adjust['hspace'], 
-                            wspace=subplots_adjust['wspace'])
+        fig.subplots_adjust(
+            top=subplots_adjust["top"],
+            hspace=subplots_adjust["hspace"],
+            wspace=subplots_adjust["wspace"],
+        )
 
         nrows = num_subjs or np.ceil(len(nodes) / columns)
 
@@ -387,6 +400,7 @@ def plot_posterior_predictive(
                 fig.savefig("%s.%s" % (os.path.join(path, fname), x), format=x)
                 for x in format
             ]
+        plt.show()
 
 
 # AXIS MANIPULATORS ---------------
@@ -395,8 +409,13 @@ def _plot_func_posterior_pdf_node_nn(
     axis,
     value_range=None,
     samples=10,
-    bin_size=0.2,
+    bin_size=0.05,
     plot_likelihood_raw=False,
+    linewidth=0.5,
+    data_color="blue",
+    posterior_color="red",
+    add_legend=True,
+    alpha=0.05,
     **kwargs
 ):
     """Calculate posterior predictives from raw likelihood values and plot it on top of a histogram of the real data.
@@ -421,7 +440,7 @@ def _plot_func_posterior_pdf_node_nn(
         samples : int <default=10>
             Number of posterior samples to use.
 
-        bin_size: float <default=0.2>
+        bin_size: float <default=0.05>
             Size of bins for the data histogram.
 
         plot_likelihood_raw : bool <default=False>
@@ -432,6 +451,12 @@ def _plot_func_posterior_pdf_node_nn(
 
         linewidth : float <default=0.5>
             Linewidth of histogram outlines.
+
+        data_color : str <default="blue">
+            Color of the data part of the plot.
+
+        posterior_color : str <default="red">
+            Color of the posterior part of the plot.
 
     """
 
@@ -448,12 +473,11 @@ def _plot_func_posterior_pdf_node_nn(
     }
 
     model_ = kwargs.pop("model_", "ddm_vanilla")
-    add_legend = kwargs.pop("add_legend", True)
-    alpha_line = kwargs.pop("alpha", 0.05)
-    lw_ = kwargs.pop("linewidth", 0.5)
-
     choices = model_config[model_]["choices"]
-    n_choices = model_config[model_]["n_choices"]
+    n_choices = len(model_config[model_]["choices"])
+
+    # data_color = kwargs.pop("data_color", "blue")
+    # posterior_color = kwargs.pop("posterior_color", "red")
 
     bins = np.arange(value_range[0], value_range[-1], bin_size)
 
@@ -482,9 +506,9 @@ def _plot_func_posterior_pdf_node_nn(
                 axis.plot(
                     value_range,
                     like[sample, :],
-                    color="black",
+                    color=posterior_color,
                     lw=1.0,
-                    alpha=alpha_line,
+                    alpha=alpha,
                 )
         else:
             c_cnt = 0
@@ -498,7 +522,7 @@ def _plot_func_posterior_pdf_node_nn(
                         like[sample, :, c_cnt],
                         color=color_dict[choice],
                         lw=1.0,
-                        alpha=alpha_line,
+                        alpha=alpha,
                     )
                 c_cnt += 1
     # -------
@@ -517,9 +541,9 @@ def _plot_func_posterior_pdf_node_nn(
             y_std = np.zeros_like(y)
 
         if n_choices == 2:
-            axis.plot(value_range, y, label="post pred", color="black")
+            axis.plot(value_range, y, label="post pred", color=posterior_color)
             axis.fill_between(
-                value_range, y - y_std, y + y_std, color="black", alpha=0.5
+                value_range, y - y_std, y + y_std, color=posterior_color, alpha=0.5
             )
         else:
             c_cnt = 0
@@ -551,12 +575,12 @@ def _plot_func_posterior_pdf_node_nn(
             axis.hist(
                 rt_dat.rt.values,
                 density=True,
-                color="blue",
+                color=data_color,
                 label="data",
                 bins=bins,
                 linestyle="-",
                 histtype="step",
-                lw=lw_,
+                lw=linewidth,
             )
         else:
             for choice in choices:
@@ -575,7 +599,7 @@ def _plot_func_posterior_pdf_node_nn(
                         label="data",
                         linestyle="dashed",
                         histtype="step",
-                        lw=lw_,
+                        lw=linewidth,
                     )
 
     axis.set_ylim(bottom=0)  # Likelihood and histogram can only be positive
@@ -586,8 +610,13 @@ def _plot_func_posterior_pdf_node_nn(
         if n_choices == 2:
             custom_elems = []
             custom_titles = []
-            custom_elems.append(Line2D([0], [0], color="blue", lw=1.0, linestyle="-"))
-            custom_elems.append(Line2D([0], [0], color="black", lw=1.0, linestyle="-"))
+            custom_elems.append(
+                Line2D([0], [0], color=data_color, lw=1.0, linestyle="-")
+            )
+            custom_elems.append(
+                Line2D([0], [0], color=posterior_color, lw=1.0, linestyle="-")
+            )
+
             custom_titles.append("Data")
             custom_titles.append("Posterior")
         # If more than two choices --> more styling
@@ -597,7 +626,7 @@ def _plot_func_posterior_pdf_node_nn(
             ]
             custom_titles = ["response: " + str(choice) for choice in choices]
             custom_elems.append(
-                Line2D([0], [0], color="black", lw=1.0, linestyle="dashed")
+                Line2D([0], [0], color=posterior_color, lw=1.0, linestyle="dashed")
             )
             custom_elems.append(Line2D([0], [0], color="black", lw=1.0, linestyle="-"))
             custom_titles.append("Data")
@@ -611,9 +640,18 @@ def _plot_func_posterior_node_from_sim(
     axis,
     value_range=None,
     samples=10,
-    bin_size=0.1,
-    add_posterior_uncertainty=True,
-    add_posterior_mean=True,
+    bin_size=0.05,
+    add_posterior_uncertainty_rts=True,
+    add_posterior_mean_rts=True,
+    legend_location="upper right",
+    legend_fontsize=12,
+    legend_shadow=True,
+    alpha=0.05,
+    linewidth=0.5,
+    add_legend=True,
+    data_color="blue",
+    posterior_mean_color="red",
+    posterior_uncertainty_color="black",
     **kwargs
 ):
     """Calculate posterior predictive for a certain bottom node and plot a histogram using the supplied axis element.
@@ -632,13 +670,13 @@ def _plot_func_posterior_node_from_sim(
         samples : int (default=10)
             Number of posterior samples to use.
 
-        bin_size : int (default=100)
+        bin_size : int (default=0.05)
             Number of bins to compute histogram over.
 
-        add_posterior_uncertainty: bool (default=True)
+        add_posterior_uncertainty_rts: bool (default=True)
             Plot individual posterior samples or not.
 
-        add_posterior_mean: bool (default=True)
+        add_posterior_mean_rts: bool (default=True)
             Whether to add a mean posterior (histogram from a dataset collapsed across posterior samples)
 
         alpha: float (default=0.05)
@@ -659,8 +697,18 @@ def _plot_func_posterior_node_from_sim(
         legend_fontsize: float <default=12>
             Fontsize of legend.
 
+        data_color : str <default="blue">
+            Color for the data part of the plot.
+
+        posterior_mean_color : str <default="red">
+            Color for the posterior mean part of the plot.
+
+        posterior_uncertainty_color : str <default="black">
+            Color for the posterior uncertainty part of the plot.
+
         model_: str (default='lca_no_bias_4')
             string that the defines generative models used (e.g. 'ddm', 'ornstein' etc.).
+
     """
 
     color_dict = {
@@ -685,21 +733,10 @@ def _plot_func_posterior_node_from_sim(
     # Extract some parameters from kwargs
     bins = np.arange(value_range[0], value_range[1], bin_size)
 
-    # add_uc = kwargs.pop('add_posterior_uncertainty', True)
-    # add_mean = kwargs.pop('add_posterior_mean', True)
-    sample_hist_alpha = kwargs.pop("alpha", 0.05)
-    lw_ = kwargs.pop("linewidth", 0.5)
-    add_legend = kwargs.pop("add_legend", True)
-
     model_ = kwargs.pop("model_", "lca_no_bias_4")
     choices = model_config[model_]["choices"]
-    n_choices = model_config[model_]["n_choices"]
+    n_choices = len(model_config[model_]["choices"])
 
-    legend_loc = kwargs.pop("legend_loc", "upper right")
-    legend_fs = kwargs.pop("legend_fontsize", 12)
-    legend_shadow = kwargs.pop("legend_shadow", True)
-
-    # like = np.empty((samples, len(value_range)), dtype=np.float32)
     if type(bottom_node) == pd.DataFrame:
         samples = None
         data_tmp = bottom_node
@@ -716,7 +753,7 @@ def _plot_func_posterior_node_from_sim(
         data_only = 0
 
     # Go sample by sample (to show uncertainty)
-    if add_posterior_uncertainty and not data_only:
+    if add_posterior_uncertainty_rts and not data_only:
         for sample in samples:
             if n_choices == 2:
                 if np.sum(sample.rt < 0) == 0:
@@ -728,11 +765,11 @@ def _plot_func_posterior_node_from_sim(
                     sample.rt,
                     bins=bins,
                     density=True,
-                    color="black",
+                    color=posterior_uncertainty_color,
                     label="posterior",
                     histtype="step",
-                    lw=lw_,
-                    alpha=sample_hist_alpha,
+                    lw=linewidth,
+                    alpha=alpha,
                 )
 
             else:
@@ -749,12 +786,12 @@ def _plot_func_posterior_node_from_sim(
                         color=color_dict[choice],
                         label="posterior",
                         histtype="step",
-                        lw=lw_,
-                        alpha=sample_hist_alpha,
+                        lw=linewidth,
+                        alpha=alpha,
                     )
 
     # Add a 'mean' line
-    if add_posterior_mean and not data_only:
+    if add_posterior_mean_rts and not data_only:
         concat_data = pd.concat(samples)
 
         if n_choices == 2:
@@ -767,10 +804,10 @@ def _plot_func_posterior_node_from_sim(
                 concat_data.rt,
                 bins=bins,
                 density=True,
-                color="black",
+                color=posterior_mean_color,
                 label="posterior",
                 histtype="step",
-                lw=lw_,
+                lw=linewidth,
                 alpha=1.0,
             )
         else:
@@ -787,8 +824,8 @@ def _plot_func_posterior_node_from_sim(
                     color=color_dict[choice],
                     label="posterior",
                     histtype="step",
-                    lw=1.0,
-                    alpha=lw_,
+                    lw=linewidth,
+                    alpha=1.0,
                 )
 
     # Plot data
@@ -804,11 +841,11 @@ def _plot_func_posterior_node_from_sim(
                 rt_dat.rt,
                 bins=bins,
                 density=True,
-                color="blue",
+                color=data_color,
                 label="data",
                 linestyle="-",
                 histtype="step",
-                lw=lw_,
+                lw=linewidth,
             )
         else:
             for choice in choices:
@@ -825,7 +862,7 @@ def _plot_func_posterior_node_from_sim(
                     label="data",
                     linestyle="dashed",
                     histtype="step",
-                    lw=lw_,
+                    lw=linewidth,
                 )
 
     axis.set_ylim(bottom=0)  # Likelihood and histogram can only be positive
@@ -835,8 +872,12 @@ def _plot_func_posterior_node_from_sim(
         if n_choices == 2:
             custom_elems = []
             custom_titles = []
-            custom_elems.append(Line2D([0], [0], color="blue", lw=1.0, linestyle="-"))
-            custom_elems.append(Line2D([0], [0], color="black", lw=1.0, linestyle="-"))
+            custom_elems.append(
+                Line2D([0], [0], color=data_color, lw=1.0, linestyle="-")
+            )
+            custom_elems.append(
+                Line2D([0], [0], color=posterior_mean_color, lw=1.0, linestyle="-")
+            )
             custom_titles.append("Data")
             custom_titles.append("Posterior")
         else:
@@ -854,13 +895,36 @@ def _plot_func_posterior_node_from_sim(
             axis.legend(
                 custom_elems,
                 custom_titles,
-                loc=legend_loc,
-                fontsize=legend_fs,
+                loc=legend_location,
+                fontsize=legend_fontsize,
                 shadow=legend_shadow,
             )
 
+
 def _plot_func_model(
-    bottom_node, axis, value_range=None, samples=10, bin_size=0.1, **kwargs
+    bottom_node,
+    axis,
+    value_range=None,
+    samples=10,
+    bin_size=0.05,
+    add_data_rts=True,
+    add_data_model=True,
+    add_posterior_uncertainty_model=False,
+    add_posterior_uncertainty_rts=False,
+    add_posterior_mean_model=True,
+    add_posterior_mean_rts=True,
+    linewidth_histogram=0.5,
+    linewidth_model=0.5,
+    legend_fontsize=12,
+    legend_shadow=True,
+    legend_location="upper right",
+    data_color="blue",
+    posterior_mean_color="red",
+    posterior_uncertainty_color="black",
+    alpha=0.05,
+    delta_t_model=0.01,
+    add_legend=True,
+    **kwargs
 ):
     """Calculate posterior predictive for a certain bottom node.
 
@@ -878,16 +942,22 @@ def _plot_func_model(
         samples: int <default=10>
             Number of posterior samples to use.
 
-        bin_size: float <default=0.1>
+        bin_size: float <default=0.05>
             Size of bins used for histograms
 
         alpha: float <default=0.05>
             alpha (transparency) level for the sample-wise elements of the plot
 
-        add_posterior_uncertainty: bool <default=True>
+        add_data_rts: bool <default=True>
+            Add data histogram of rts ?
+
+        add_data_model: bool <default=True>
+            Add model cartoon for data
+
+        add_posterior_uncertainty_rts: bool <default=True>
             Add sample by sample histograms?
 
-        add_posterior_mean: bool <default=True>
+        add_posterior_mean_rts: bool <default=True>
             Add a mean posterior?
 
         add_model: bool <default=True>
@@ -899,7 +969,7 @@ def _plot_func_model(
         linewidth_model: float <default=0.5>
             linewidth of plot elements concerning the model cartoons.
 
-        legend_loc: str <default='upper right'>
+        legend_location: str <default='upper right'>
             string defining legend position. Find the rest of the options in the matplotlib documentation.
 
         legend_shadow: bool <default=True>
@@ -907,6 +977,15 @@ def _plot_func_model(
 
         legend_fontsize: float <default=12>
             Fontsize of legend.
+
+        data_color : str <default="blue">
+            Color for the data part of the plot.
+
+        posterior_mean_color : str <default="red">
+            Color for the posterior mean part of the plot.
+
+        posterior_uncertainty_color : str <default="black">
+            Color for the posterior uncertainty part of the plot.
 
         delta_t_model:
             specifies plotting intervals for model cartoon elements of the graphs.
@@ -922,18 +1001,6 @@ def _plot_func_model(
 
     # Extract some parameters from kwargs
     bins = np.arange(value_range[0], value_range[-1], bin_size)
-
-    add_uc = kwargs.pop("add_posterior_uncertainty", True)
-    add_mean = kwargs.pop("add_posterior_mean", True)
-    add_model = kwargs.pop("add_model", True)
-
-    sample_hist_alpha = kwargs.pop("alpha", 0.05)
-
-    lw_h = kwargs.pop("linewidth_histogram", 0.5)
-    lw_m = kwargs.pop("linewidth_model", 0.5)
-    legend_fs = kwargs.pop("legend_fontsize", 12)
-    legend_shad = kwargs.pop("legend_shadow", True)
-    legend_loc = kwargs.pop("legend_loc", "upper right")
 
     # If bottom_node is a DataFrame we know that we are just plotting real data
     if type(bottom_node) == pd.DataFrame:
@@ -953,11 +1020,9 @@ def _plot_func_model(
     node_data_full = kwargs.pop("node_data", None)
 
     tmp_model = kwargs.pop("model_", "angle")
-    if model_config[tmp_model]["n_choices"] > 2:
+    if len(model_config[tmp_model]["choices"]) > 2:
         raise ValueError("The model plot works only for 2 choice models at the moment")
 
-    delta_t_graph = kwargs.pop("delta_t_model", 0.01)
-    add_legend = kwargs.pop("add_legend", True)
     # ---------------------------
     ylim = kwargs.pop("ylim", 3)
 
@@ -974,7 +1039,7 @@ def _plot_func_model(
     # -------------------------------
 
     # POSTERIOR BASED HISTOGRAM
-    if add_uc:
+    if add_posterior_uncertainty_rts:  # add_uc_rts:
         j = 0
         for sample in samples_tmp:
             tmp_label = None
@@ -996,12 +1061,12 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_up,
                 histtype="step",
-                alpha=sample_hist_alpha,
-                color="black",
-                edgecolor="black",
+                alpha=alpha,
+                color=posterior_uncertainty_color,
+                edgecolor=posterior_uncertainty_color,
                 zorder=-1,
                 label=tmp_label,
-                linewidth=lw_h,
+                linewidth=linewidth_histogram,
             )
 
             axis_twin_down.hist(
@@ -1009,15 +1074,15 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_down,
                 histtype="step",
-                alpha=sample_hist_alpha,
-                color="black",
-                edgecolor="black",
-                linewidth=lw_h,
+                alpha=alpha,
+                color=posterior_uncertainty_color,
+                edgecolor=posterior_uncertainty_color,
+                linewidth=linewidth_histogram,
                 zorder=-1,
             )
             j += 1
 
-    if add_mean:
+    if add_posterior_mean_rts:  # add_mean_rts:
         concat_data = pd.concat(samples_tmp)
         tmp_label = None
 
@@ -1039,11 +1104,11 @@ def _plot_func_model(
             weights=weights_up,
             histtype="step",
             alpha=1.0,
-            color="black",
-            edgecolor="black",
+            color=posterior_mean_color,
+            edgecolor=posterior_mean_color,
             zorder=-1,
             label=tmp_label,
-            linewidth=lw_h,
+            linewidth=linewidth_histogram,
         )
 
         axis_twin_down.hist(
@@ -1052,14 +1117,14 @@ def _plot_func_model(
             weights=weights_down,
             histtype="step",
             alpha=1.0,
-            color="black",
-            edgecolor="black",
-            linewidth=lw_h,
+            color=posterior_mean_color,
+            edgecolor=posterior_mean_color,
+            linewidth=linewidth_histogram,
             zorder=-1,
         )
 
     # DATA HISTOGRAM
-    if data_tmp is not None:
+    if (data_tmp is not None) and add_data_rts:
         tmp_label = None
         if add_legend:
             tmp_label = "Data"
@@ -1079,11 +1144,11 @@ def _plot_func_model(
             weights=weights_up,
             histtype="step",
             alpha=1,
-            color="blue",
-            edgecolor="blue",
+            color=data_color,
+            edgecolor=data_color,
             label=tmp_label,
             zorder=-1,
-            linewidth=lw_h,
+            linewidth=linewidth_histogram,
         )
 
         axis_twin_down.hist(
@@ -1092,51 +1157,73 @@ def _plot_func_model(
             weights=weights_down,
             histtype="step",
             alpha=1,
-            color="blue",
-            edgecolor="blue",
-            linewidth=lw_h,
+            color=data_color,
+            edgecolor=data_color,
+            linewidth=linewidth_histogram,
             zorder=-1,
         )
     # -------------------------------
 
     if add_legend:
         if data_tmp is not None:
-            axis_twin_up.legend(fontsize=legend_fs, shadow=legend_shad, loc=legend_loc)
+            axis_twin_up.legend(
+                fontsize=legend_fontsize, shadow=legend_shadow, loc=legend_location
+            )
 
     # ADD MODEL:
+    j = 0
+    t_s = np.arange(0, value_range[-1], delta_t_model)
+
     # MAKE BOUNDS (FROM MODEL CONFIG) !
-    if add_model:
-        t_s = np.arange(0, value_range[-1], delta_t_graph)
-        j = 0
+    if add_posterior_uncertainty_model:  # add_uc_model:
         for sample in samples_tmp:
             _add_model_cartoon_to_ax(
                 sample=sample,
                 axis=axis,
                 tmp_model=tmp_model,
-                delta_t_graph=delta_t_graph,
-                sample_hist_alpha=sample_hist_alpha,
-                lw_m=lw_m,
+                delta_t_graph=delta_t_model,
+                sample_hist_alpha=alpha,
+                lw_m=linewidth_model,
                 tmp_label=tmp_label,
                 ylim=ylim,
                 t_s=t_s,
-                color="black",
+                color=posterior_uncertainty_color,
                 zorder_cnt=j,
             )
 
-        if node_data_full is not None:
-            _add_model_cartoon_to_ax(
-                sample=node_data_full,
-                axis=axis,
-                tmp_model=tmp_model,
-                delta_t_graph=delta_t_graph,
-                sample_hist_alpha=1.0,
-                lw_m=lw_m + 0.5,
-                tmp_label=None,
-                ylim=ylim,
-                t_s=t_s,
-                color="blue",
-                zorder_cnt=j + 1,
-            )
+    if (node_data_full is not None) and add_data_model:
+        _add_model_cartoon_to_ax(
+            sample=node_data_full,
+            axis=axis,
+            tmp_model=tmp_model,
+            delta_t_graph=delta_t_model,
+            sample_hist_alpha=1.0,
+            lw_m=linewidth_model + 0.5,
+            tmp_label=None,
+            ylim=ylim,
+            t_s=t_s,
+            color=data_color,
+            zorder_cnt=j + 1,
+        )
+
+    if add_posterior_mean_model:  # add_mean_model:
+        tmp_label = None
+        if add_legend:
+            tmp_label = "PostPred Mean"
+
+        _add_model_cartoon_to_ax(
+            sample=pd.DataFrame(pd.concat(samples_tmp).mean().astype(np.float32)).T,
+            axis=axis,
+            tmp_model=tmp_model,
+            delta_t_graph=delta_t_model,
+            sample_hist_alpha=1.0,
+            lw_m=linewidth_model + 0.5,
+            tmp_label=None,
+            ylim=ylim,
+            t_s=t_s,
+            color=posterior_mean_color,
+            zorder_cnt=j + 2,
+        )
 
 
 def _add_model_cartoon_to_ax(
@@ -1240,6 +1327,395 @@ def _add_model_cartoon_to_ax(
     )
 
 
+def _plot_func_model_n(
+    bottom_node,
+    axis,
+    value_range=None,
+    samples=10,
+    bin_size=0.05,
+    add_posterior_uncertainty_model=False,
+    add_posterior_uncertainty_rts=False,
+    add_posterior_mean_model=True,
+    add_posterior_mean_rts=True,
+    linewidth_histogram=0.5,
+    linewidth_model=0.5,
+    legend_fontsize=7,
+    legend_shadow=True,
+    legend_location="upper right",
+    delta_t_model=0.01,
+    add_legend=True,
+    alpha=0.01,
+    **kwargs
+):
+    """Calculate posterior predictive for a certain bottom node.
+
+    Arguments:
+        bottom_node: pymc.stochastic
+            Bottom node to compute posterior over.
+
+        axis: matplotlib.axis
+            Axis to plot into.
+
+        value_range: numpy.ndarray
+            Range over which to evaluate the likelihood.
+
+    Optional:
+        samples: int <default=10>
+            Number of posterior samples to use.
+
+        bin_size: float <default=0.05>
+            Size of bins used for histograms
+
+        alpha: float <default=0.05>
+            alpha (transparency) level for the sample-wise elements of the plot
+
+        add_posterior_uncertainty_rts: bool <default=True>
+            Add sample by sample histograms?
+
+        add_posterior_mean_rts: bool <default=True>
+            Add a mean posterior?
+
+        add_model: bool <default=True>
+            Whether to add model cartoons to the plot.
+
+        linewidth_histogram: float <default=0.5>
+            linewdith of histrogram plot elements.
+
+        linewidth_model: float <default=0.5>
+            linewidth of plot elements concerning the model cartoons.
+
+        legend_loc: str <default='upper right'>
+            string defining legend position. Find the rest of the options in the matplotlib documentation.
+
+        legend_shadow: bool <default=True>
+            Add shadow to legend box?
+
+        legend_fontsize: float <default=12>
+            Fontsize of legend.
+
+        data_color : str <default="blue">
+            Color for the data part of the plot.
+
+        posterior_mean_color : str <default="red">
+            Color for the posterior mean part of the plot.
+
+        posterior_uncertainty_color : str <default="black">
+            Color for the posterior uncertainty part of the plot.
+
+
+        delta_t_model:
+            specifies plotting intervals for model cartoon elements of the graphs.
+    """
+
+    color_dict = {
+        -1: "black",
+        0: "black",
+        1: "green",
+        2: "blue",
+        3: "red",
+        4: "orange",
+        5: "purple",
+        6: "brown",
+    }
+
+    # AF-TODO: Add a mean version of this !
+    if value_range is None:
+        # Infer from data by finding the min and max from the nodes
+        raise NotImplementedError("value_range keyword argument must be supplied.")
+
+    if len(value_range) > 2:
+        value_range = (value_range[0], value_range[-1])
+
+    # Extract some parameters from kwargs
+    bins = np.arange(value_range[0], value_range[-1], bin_size)
+
+    # Relevant for recovery mode
+    node_data_full = kwargs.pop("node_data", None)
+    tmp_model = kwargs.pop("model_", "angle")
+
+    bottom = 0
+    # ------------
+    ylim = kwargs.pop("ylim", 3)
+
+    choices = model_config[tmp_model]["choices"]
+
+    # If bottom_node is a DataFrame we know that we are just plotting real data
+    if type(bottom_node) == pd.DataFrame:
+        samples_tmp = [bottom_node]
+        data_tmp = None
+    else:
+        samples_tmp = _post_pred_generate(
+            bottom_node,
+            samples=samples,
+            data=None,
+            append_data=False,
+            add_model_parameters=True,
+        )
+        data_tmp = bottom_node.value.copy()
+
+    axis.set_xlim(value_range[0], value_range[-1])
+    axis.set_ylim(0, ylim)
+
+    # ADD MODEL:
+    j = 0
+    t_s = np.arange(0, value_range[-1], delta_t_model)
+
+    # # MAKE BOUNDS (FROM MODEL CONFIG) !
+    if add_posterior_uncertainty_model:  # add_uc_model:
+        for sample in samples_tmp:
+            tmp_label = None
+
+            if add_legend and (j == 0):
+                tmp_label = "PostPred"
+
+            _add_model_n_cartoon_to_ax(
+                sample=sample,
+                axis=axis,
+                tmp_model=tmp_model,
+                delta_t_graph=delta_t_model,
+                sample_hist_alpha=alpha,
+                lw_m=linewidth_model,
+                tmp_label=tmp_label,
+                linestyle="-",
+                ylim=ylim,
+                t_s=t_s,
+                color_dict=color_dict,
+                zorder_cnt=j,
+            )
+
+            j += 1
+
+    if add_posterior_mean_model:  # add_mean_model:
+        tmp_label = None
+        if add_legend:
+            tmp_label = "PostPred Mean"
+
+        bottom = _add_model_n_cartoon_to_ax(
+            sample=pd.DataFrame(pd.concat(samples_tmp).mean().astype(np.float32)).T,
+            axis=axis,
+            tmp_model=tmp_model,
+            delta_t_graph=delta_t_model,
+            sample_hist_alpha=1.0,
+            lw_m=linewidth_model + 0.5,
+            linestyle="-",
+            tmp_label=None,
+            ylim=ylim,
+            t_s=t_s,
+            color_dict=color_dict,
+            zorder_cnt=j + 2,
+        )
+
+    if node_data_full is not None:
+        _add_model_n_cartoon_to_ax(
+            sample=node_data_full,
+            axis=axis,
+            tmp_model=tmp_model,
+            delta_t_graph=delta_t_model,
+            sample_hist_alpha=1.0,
+            lw_m=linewidth_model + 0.5,
+            linestyle="dashed",
+            tmp_label=None,
+            ylim=ylim,
+            t_s=t_s,
+            color_dict=color_dict,
+            zorder_cnt=j + 1,
+        )
+
+    # ADD HISTOGRAMS
+    # -------------------------------
+
+    # POSTERIOR BASED HISTOGRAM
+    if add_posterior_uncertainty_rts:  # add_uc_rts:
+        j = 0
+        for sample in samples_tmp:
+            for choice in choices:
+                tmp_label = None
+
+                if add_legend and j == 0:
+                    tmp_label = "PostPred"
+
+                weights = np.tile(
+                    (1 / bin_size) / sample.shape[0],
+                    reps=sample.loc[sample.response == choice, :].shape[0],
+                )
+
+                axis.hist(
+                    np.abs(sample.rt[sample.response == choice]),
+                    bins=bins,
+                    bottom=bottom,
+                    weights=weights,
+                    histtype="step",
+                    alpha=alpha,
+                    color=color_dict[choice],
+                    zorder=-1,
+                    label=tmp_label,
+                    linewidth=linewidth_histogram,
+                )
+                j += 1
+
+    if add_posterior_mean_rts:
+        concat_data = pd.concat(samples_tmp)
+        for choice in choices:
+            tmp_label = None
+            if add_legend and (choice == choices[0]):
+                tmp_label = "PostPred Mean"
+
+            weights = np.tile(
+                (1 / bin_size) / concat_data.shape[0],
+                reps=concat_data.loc[concat_data.response == choice, :].shape[0],
+            )
+
+            axis.hist(
+                np.abs(concat_data.rt[concat_data.response == choice]),
+                bins=bins,
+                bottom=bottom,
+                weights=weights,
+                histtype="step",
+                alpha=1.0,
+                color=color_dict[choice],
+                zorder=-1,
+                label=tmp_label,
+                linewidth=linewidth_histogram,
+            )
+
+    # DATA HISTOGRAM
+    if data_tmp is not None:
+        for choice in choices:
+            tmp_label = None
+            if add_legend and (choice == choices[0]):
+                tmp_label = "Data"
+
+            weights = np.tile(
+                (1 / bin_size) / data_tmp.shape[0],
+                reps=data_tmp.loc[data_tmp.response == choice, :].shape[0],
+            )
+
+            axis.hist(
+                np.abs(data_tmp.rt[data_tmp.response == choice]),
+                bins=bins,
+                bottom=bottom,
+                weights=weights,
+                histtype="step",
+                linestyle="dashed",
+                alpha=1.0,
+                color=color_dict[choice],
+                edgecolor=color_dict[choice],
+                zorder=-1,
+                label=tmp_label,
+                linewidth=linewidth_histogram,
+            )
+    # -------------------------------
+
+    if add_legend:
+        if data_tmp is not None:
+            custom_elems = [
+                Line2D([0], [0], color=color_dict[choice], lw=1) for choice in choices
+            ]
+            custom_titles = ["response: " + str(choice) for choice in choices]
+
+            custom_elems.append(
+                Line2D([0], [0], color="black", lw=1.0, linestyle="dashed")
+            )
+            custom_elems.append(Line2D([0], [0], color="black", lw=1.0, linestyle="-"))
+            custom_titles.append("Data")
+            custom_titles.append("Posterior")
+
+            axis.legend(
+                custom_elems,
+                custom_titles,
+                fontsize=legend_fontsize,
+                shadow=legend_shadow,
+                loc=legend_location,
+            )
+
+
+def _add_model_n_cartoon_to_ax(
+    sample=None,
+    axis=None,
+    tmp_model=None,
+    delta_t_graph=None,
+    sample_hist_alpha=None,
+    lw_m=None,
+    linestyle="-",
+    tmp_label=None,
+    ylim=None,
+    t_s=None,
+    zorder_cnt=1,
+    color_dict=None,
+):
+
+    if "weibull" in tmp_model:
+        b = np.maximum(
+            sample.a.values[0]
+            * model_config[tmp_model]["boundary"](
+                t=t_s, alpha=sample.alpha.values[0], beta=sample.beta.values[0]
+            ),
+            0,
+        )
+
+    elif "angle" in tmp_model:
+        b = np.maximum(
+            sample.a.values[0]
+            + model_config[tmp_model]["boundary"](t=t_s, theta=sample.theta.values[0]),
+            0,
+        )
+
+    else:
+        b = sample.a.values[0] * np.ones(t_s.shape[0])
+
+    # Upper bound
+    axis.plot(
+        t_s + sample.t.values[0],
+        b,
+        color="black",
+        alpha=sample_hist_alpha,
+        zorder=1000 + zorder_cnt,
+        linewidth=lw_m,
+        linestyle=linestyle,
+        label=tmp_label,
+    )
+
+    # Starting point
+    axis.axvline(
+        x=sample.t.values[0],
+        ymin=-ylim,
+        ymax=ylim,
+        color="black",
+        linestyle=linestyle,
+        linewidth=lw_m,
+        alpha=sample_hist_alpha,
+    )
+
+    # # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
+    out = simulator(
+        theta=sample[model_config[tmp_model]["params"]].values[0],
+        model=tmp_model,
+        n_samples=1,
+        no_noise=True,
+        delta_t=delta_t_graph,
+        bin_dim=None,
+    )
+
+    # # AF-TODO: Add trajectories
+    tmp_traj = out[2]["trajectory"]
+
+    for i in range(len(model_config[tmp_model]["choices"])):
+        tmp_maxid = np.minimum(np.argmax(np.where(tmp_traj[:, i] > -999)), t_s.shape[0])
+
+        # Slope
+        axis.plot(
+            t_s[:tmp_maxid] + sample.t.values[0],
+            tmp_traj[:tmp_maxid, i],
+            color=color_dict[i],
+            linestyle=linestyle,
+            alpha=sample_hist_alpha,
+            zorder=1000 + zorder_cnt,
+            linewidth=lw_m,
+        )  # TOOK AWAY LABEL
+
+    return b[0]
+
+
 def _plot_func_pair(
     bottom_node, model_="ddm_vanilla", n_samples=200, figsize=(8, 6), title="", **kwargs
 ):
@@ -1262,6 +1738,7 @@ def _plot_func_pair(
         model: str <default='ddm_vanilla'>
 
     """
+
     params = model_config[model_]["params"]
     parent_keys = bottom_node.parents.value.keys()
     param_intersection = set(params).intersection(set(parent_keys))
@@ -1396,7 +1873,7 @@ def plot_caterpillar(
     path=None,
     format="png",
     y_tick_size=10,
-    x_tick_size=10
+    x_tick_size=10,
 ):
 
     """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
@@ -1510,3 +1987,5 @@ def plot_caterpillar(
             fig.savefig("%s.%s" % (os.path.join(path, fname), x), format=x)
             for x in format
         ]
+
+    plt.show()

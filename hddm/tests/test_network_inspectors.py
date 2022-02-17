@@ -23,7 +23,7 @@ class NetworkInspectorTest(unittest.TestCase):
             torch_model = hddm.network_inspectors.load_torch_mlp(model=model)
 
             # Define model dependent data
-            n_choices = hddm.model_config.model_config[model]["n_choices"]
+            n_choices = len(hddm.model_config.model_config[model]["choices"])
             choice_options = hddm.model_config.model_config[model]["choices"]
             theta = hddm.model_config.model_config[model]["default_params"]
 

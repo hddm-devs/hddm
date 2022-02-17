@@ -43,7 +43,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         # print("printing self.nn")
         # print(self.nn)
         if self.nn:
-            if model_config[self.model]["n_choices"] == 2:
+            if len(self.model_config["choices"]) == 2:
                 # print("2-choice model --> passed through flip errors nn")
                 data = hddm.utils.flip_errors_nn(data)
             else:
@@ -1291,13 +1291,16 @@ class HDDMBase(AccumulatorModel):
             print("No model attribute --> setting up standard HDDM")
 
             if ("st" in include) or ("sz" in include) or ("sv" in include):
-                self.model = "full_ddm"
+                self.model = "full_ddm_vanilla"
             else:
-                self.model = "ddm"
+                self.model = "ddm_vanilla"
+
+        if not hasattr(self, "model_config"):
+            self.model_config = deepcopy(model_config[self.model])
 
         # For 2-choice models adjust include statement
-        if model_config[self.model]["n_choices"] == 2:
-            print("Includes supplied: ", include)
+        if len(self.model_config["choices"]) == 2:
+            # print("Includes supplied: ", include)
             self.include = set(["v", "a", "t"])
             if include is not None:
                 if include == "all":
@@ -1319,9 +1322,7 @@ class HDDMBase(AccumulatorModel):
 
         # Automate possible_parameters
         if self.nn:
-            possible_parameters = tuple(model_config[self.model]["params"]) + (
-                "p_outlier",
-            )
+            possible_parameters = tuple(self.model_config["params"]) + ("p_outlier",)
         else:
             possible_parameters = (
                 "v",
@@ -1390,12 +1391,12 @@ class HDDMBase(AccumulatorModel):
 
         if self.nn:
             # Define parents for HDDMnn across included models
-            for tmp_param in model_config[self.model]["params"]:
+            for tmp_param in self.model_config["params"]:
                 wfpt_parents[tmp_param] = (
                     knodes[tmp_param + "_bottom"]
                     if tmp_param in self.include
-                    else model_config[self.model]["default_params"][
-                        model_config[self.model]["params"].index(tmp_param)
+                    else self.model_config["default_params"][
+                        self.model_config["params"].index(tmp_param)
                     ]
                 )
 

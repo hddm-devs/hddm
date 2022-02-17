@@ -5,17 +5,21 @@ from copy import deepcopy
 
 import hddm
 from hddm.simulators import *
-from hddm.model_config import model_config
+
+# from hddm.model_config import model_config
 from hddm.utils import *
 
 
-def make_mlp_likelihood(model, **kwargs):
+def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwargs):
     """Defines the likelihoods for the MLP networks.
 
     :Arguments:
         model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+        model_config: dict <default=None>
+            Model config supplied via the calling HDDM class. Necessary for construction of likelihood.
+            Should have the structure of model_configs in the hddm.model_config.model_config dictionary.
         kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
@@ -23,10 +27,6 @@ def make_mlp_likelihood(model, **kwargs):
     :Returns:
         Returns a pymc.object stochastic object as defined by PyMC2
     """
-
-    assert (
-        model in model_config.keys()
-    ), "Model supplied does not have an entry in the model_config dictionary"
 
     def random(
         self,
@@ -40,16 +40,25 @@ def make_mlp_likelihood(model, **kwargs):
         """
 
         # This can be simplified so that we pass parameters directly to the simulator ...
-        theta = np.array(model_config[model]["default_params"], dtype=np.float32)
+        theta = np.array(model_config["default_params"], dtype=np.float32)
         keys_tmp = self.parents.value.keys()
         cnt = 0
 
-        for param in model_config[model]["params"]:
+        for param in model_config["params"]:
             if param in keys_tmp:
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
             cnt += 1
 
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
+
+        # Add outliers:
+        if self.parents.value["p_outlier"] > 0.0:
+            sim_out = hddm_dataset_generators._add_outliers(
+                sim_out=sim_out,
+                p_outlier=self.parents.value["p_outlier"],
+                max_rt_outlier=1 / wiener_params["w_outlier"],
+            )
+
         sim_out_proc = hddm_preprocess(
             sim_out,
             keep_negative_responses=keep_negative_responses,
@@ -77,24 +86,31 @@ def make_mlp_likelihood(model, **kwargs):
             response = x[:, 1]
 
         params = np.array(
-            [self.parents[param] for param in model_config[model]["params"]]
+            [self.parents[param] for param in model_config["params"]]
         ).astype(np.float32)
 
         return hddm.wfpt.wiener_like_nn_mlp_pdf(
-            rt, response, params, network=kwargs["network"]
+            rt,
+            response,
+            params,
+            p_outlier=self.parents.value["p_outlier"],
+            w_outlier=wiener_params["w_outlier"],
+            network=kwargs["network"],
         )
 
     def cdf(self, x):
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
 
-    def make_likelihood(model=model):
-        likelihood_str = make_likelihood_str_mlp(config=model_config[model])
+    def make_likelihood():
+        likelihood_str = make_likelihood_str_mlp(
+            config=model_config, wiener_params=wiener_params
+        )
         exec(likelihood_str)
         my_fun = locals()["custom_likelihood"]
         return my_fun
 
-    likelihood_ = make_likelihood(model=model)
+    likelihood_ = make_likelihood()
 
     wfpt_nn = stochastic_from_dist("Wienernn_" + model, partial(likelihood_, **kwargs))
 
@@ -106,13 +122,18 @@ def make_mlp_likelihood(model, **kwargs):
 
 
 # REGRESSOR LIKELIHOODS
-def make_mlp_likelihood_reg(model=None, **kwargs):
+def make_mlp_likelihood_reg(
+    model=None, model_config=None, wiener_params=None, **kwargs
+):
     """Defines the regressor likelihoods for the MLP networks.
 
     :Arguments:
         model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+        model_config: dict <default=None>
+            Model config supplied via the calling HDDM class. Necessary for construction of likelihood.
+            Should have the structure of model_configs in the hddm.model_config.model_config dictionary.
         kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
@@ -120,10 +141,6 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
     :Returns:
         Returns a pymc.object stochastic object as defined by PyMC2
     """
-
-    assert (
-        model in model_config.keys()
-    ), "Model supplied does not have an entry in the model_config dictionary"
 
     # Need to rewrite these random parts !
     def random(
@@ -140,11 +157,11 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         del param_dict["reg_outcomes"]
 
         param_data = np.zeros(
-            (self.value.shape[0], model_config[model]["n_params"]), dtype=np.float32
+            (self.value.shape[0], len(model_config["params"])), dtype=np.float32
         )
 
         cnt = 0
-        for tmp_str in model_config[model]["params"]:  # ['v', 'a', 'z', 't']:
+        for tmp_str in model_config["params"]:  # ['v', 'a', 'z', 't']:
             if tmp_str in self.parents["reg_outcomes"]:
                 param_data[:, cnt] = param_dict[tmp_str].values
                 # previously iloc[self.value.index]
@@ -156,6 +173,14 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         sim_out = simulator(
             theta=param_data, model=model, n_samples=1, max_t=20  # n_trials = size,
         )
+
+        # Add outliers:
+        if self.parents.value["p_outlier"] > 0.0:
+            sim_out = hddm_dataset_generators._add_outliers(
+                sim_out=sim_out,
+                p_outlier=self.parents.value["p_outlier"],
+                max_rt_outlier=1 / wiener_params["w_outlier"],
+            )
 
         sim_out_proc = hddm_preprocess(
             sim_out,
@@ -177,18 +202,15 @@ def make_mlp_likelihood_reg(model=None, **kwargs):
         return "Not yet implemented"
 
     # if model == 'custom':
-    def make_likelihood(model=model):
-        likelihood_str = make_reg_likelihood_str_mlp(config=model_config[model])
-        # print(likelihood_str)
-        # print('PRINTING MODEL: ')
-        # print(model)
+    def make_likelihood():
+        likelihood_str = make_reg_likelihood_str_mlp(
+            config=model_config, wiener_params=wiener_params
+        )
         exec(likelihood_str)
-        # print(locals())
         my_fun = locals()["custom_likelihood_reg"]
-        # print(my_fun)
         return my_fun
 
-    likelihood_ = make_likelihood(model=model)
+    likelihood_ = make_likelihood()
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_, **kwargs))
     stoch.pdf = pdf
     stoch.cdf = cdf

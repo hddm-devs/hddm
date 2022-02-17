@@ -52,6 +52,7 @@ def hddm_preprocess(
                 df[param] = simulator_data[2][param][0]
     return df
 
+
 def _add_outliers(
     sim_out=None,
     p_outlier=None,  # AF-comment: Redundant argument, can compute from sim_out !
@@ -191,7 +192,7 @@ def simulator_single_subject(
     max_t=20,
     bin_dim=None,
     bin_pointwise=False,
-    verbose = 0,
+    verbose=0,
 ):
     """Generate a hddm-ready dataset from a single set of parameters
 
@@ -233,7 +234,7 @@ def simulator_single_subject(
     # Sanity checks
     assert p_outlier >= 0 and p_outlier <= 1, "p_outlier is not between 0 and 1"
     assert max_rt_outlier > 0, "max_rt__outlier needs to be > 0"
-    
+
     if verbose:
         print("Model: ", model)
         print("Parameters needed: ", model_config[model]["params"])
@@ -343,7 +344,7 @@ def simulator_stimcoding(
     p_outlier=0.0,
     max_rt_outlier=10.0,
     drift_criterion=0.0,
-    n_samples_by_condition=1000,
+    n_trials_per_condition=1000,
     delta_t=0.001,
     prespecified_params={},
     bin_pointwise=False,
@@ -446,7 +447,7 @@ def simulator_stimcoding(
         sim_out = simulator(
             param_base[i, :],
             model=model,
-            n_samples=n_samples_by_condition,
+            n_samples=n_trials_per_condition,
             bin_dim=bin_dim,
             bin_pointwise=bin_pointwise,
             max_t=max_t,
@@ -476,25 +477,21 @@ def simulator_h_c(
     n_subjects=10,
     n_trials_per_subject=100,
     model="ddm_vanilla",
-    conditions={
-        "c_one": ["high", "low"],
-        "c_two": ["high", "low"],
-        "c_three": ["high", "medium", "low"],
-    },
-    depends_on={"v": ["c_one", "c_two"]},
-    regression_models=["z ~ covariate_name"],
-    regression_covariates={
-        "covariate_name": {"type": "categorical", "range": (0, 4)}
-    },  # need this to make initial covariate matrix from which to use dmatrix (patsy)
+    conditions=None,
+    depends_on=None,
+    regression_models=None,
+    regression_covariates=None,  # need this to make initial covariate matrix from which to use dmatrix (patsy)
     group_only_regressors=True,
     group_only=["z"],
-    fixed_at_default=["t"],
+    fixed_at_default=None,
     p_outlier=0.0,
     outlier_max_t=10.0,
     **kwargs,
 ):
 
-    """Flexible simulator that allows specification of models very similar to the hddm model classes.
+    """Flexible simulator that allows specification of models very similar to the hddm model classes. Has two major modes. When data \n
+    is supplied the function generates synthetic versions of the provided data. If no data is provided, you can supply
+    a varied of options to create complicated synthetic datasets from scratch.
 
     :Arguments:
         data: pd.DataFrame <default=None>
@@ -506,22 +503,30 @@ def simulator_h_c(
         model: str <default = 'ddm_vanilla'>
             Model to sample from. For traditional hddm supported models, append '_vanilla' to the model. Omitting 'vanilla'
             imposes constraints on the parameter sets to not violate the trained parameter space of our LANs.
-        conditions: dict <default={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}>
+        conditions: dict <default=None>
             Keys represent condition relevant columns, and values are lists of unique items for each condition relevant column.
-        depends_on: dict <default={'v': ['c_one', 'c_two']}>
+            Example: {"c_one": ["high", "low"], "c_two": ["high", "low"], "c_three": ["high", "medium", "low"]}
+        depends_on: dict <default=None>
             Keys specify model parameters that depend on the values --> lists of condition relevant columns.
-        regression_models: list or strings <default = ['z ~ covariate_name']>
+            Follows the syntax in the HDDM model classes. Example: {"v": ["c_one", "c_two"]}
+        regression_models: list or strings <default=None>
             Specify regression model formulas for one or more dependent parameters in a list.
+            Follows syntax of HDDM model classes.
+            Example: ["z ~ covariate_name"]
         regression_covariates: dict <default={'covariate_name': {'type': 'categorical', 'range': (0, 4)}}>
             Dictionary in dictionary. Specify the name of the covariate column as keys, and for each key supply the 'type' (categorical, continuous) and
             'range' ((lower bound, upper bound)) of the covariate.
+            Example: {"covariate_name": {"type": "categorical", "range": (0, 4)}}
         group_only_regressors: bin <default=True>
             Should regressors only be specified at the group level? If true then only intercepts are specified subject wise.
             Other covariates act globally.
         group_only: list <default = ['z']>
             List of parameters that are specified only at the group level.
-        fixed_at_default: list <default=['t']>
-            List of parameters for which defaults are to be used. These defaults are specified in the model_config dictionary, which you can access via: hddm.simulators.model_config.
+        fixed_at_default: list <default=None>
+            List of parameters for which defaults are to be used.
+            These defaults are specified in the model_config dictionary,
+            which you can access via: hddm.simulators.model_config.
+            Example: ['t']
         p_outlier: float <default = 0.0>
             Specifies the proportion of outliers in the data.
         outlier_max_t: float <default = 10.0>
@@ -1223,6 +1228,8 @@ def simulator_h_c(
             idx = model_config[model]["params"].index(param_name)
 
             param_gen_info[param_name] = {}
+            # print(idx)
+            # print(model_config[model]["param_bounds"])
             param_gen_info[param_name]["range"] = (
                 model_config[model]["param_bounds"][1][idx]
                 - model_config[model]["param_bounds"][0][idx]

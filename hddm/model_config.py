@@ -9,10 +9,8 @@ model_config = {
         "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[-5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
         "boundary": bf.constant,
-        "n_params": 4,
         "default_params": [0.0, 2.0, 0.5, 0],
         "hddm_include": ["z"],
-        "n_choices": 2,
         "choices": [0, 1],
         "slice_widths": {
             "v": 1.5,
@@ -35,10 +33,8 @@ model_config = {
             [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
         ],
         "boundary": bf.constant,
-        "n_params": 7,
         "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
         "hddm_include": ["z", "st", "sv", "sz"],
-        "n_choices": 2,
         "choices": [0, 1],
         "slice_widths": {
             "v": 1.5,
@@ -70,10 +66,8 @@ model_config = {
             [2.5, 2.2, 0.75, 1.95],
         ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
         "boundary": bf.constant,
-        "n_params": 4,
         "default_params": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -98,10 +92,8 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, (np.pi / 2 - 0.2)],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
         "boundary": bf.angle,
-        "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["z", "theta"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -131,10 +123,8 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, 5.0, 7.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0.5, 5.0), (0.5, 7.0)]
         "boundary": bf.weibull_cdf,
-        "n_params": 6,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
         "hddm_include": ["z", "alpha", "beta"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -163,10 +153,8 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2), (0.1, 0.9), (1.0, 2.0), (0.0, 2.0)]
         "boundary": bf.constant,
-        "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1.5, 1e-3],
         "hddm_include": ["z", "alpha"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -196,10 +184,8 @@ model_config = {
             [2.5, 2.0, 0.9, 2.5, 0.4, 1.0, 0.5],
         ],  #  [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.25, 2.5), (0, 0.4), (0, 1), (0.0, 0.5)]
         "boundary": bf.constant,
-        "n_params": 7,
         "default_params": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
         "hddm_include": ["z", "st", "sv", "sz"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -227,10 +213,8 @@ model_config = {
             [2.5, 2.0, 0.9, 1.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (-1.0, 1.0), (0.0, 2.0)]
         "boundary": bf.constant,
-        "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 0.0, 1e-3],
         "hddm_include": ["z", "g"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -258,10 +242,8 @@ model_config = {
             [3.0, 2.5, 0.9, 2.0, 2.5],
         ],  # [(-3, 3), (0.3, 2.5), (0.1, 0.9), (0.0, 2.0), (0.0, 2.5)]
         "boundary": bf.constant,
-        "n_params": 5,
         "default_params": [0.0, 1.0, 0.5, 1e-3, 1e-3],
         "hddm_include": ["z", "sv"],
-        "n_choices": 2,
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -289,10 +271,8 @@ model_config = {
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -320,10 +300,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "n_params": 5,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -349,10 +327,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "n_params": 6,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "theta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -380,10 +356,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "n_params": 7,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -418,10 +392,8 @@ model_config = {
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -449,10 +421,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "n_params": 5,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -478,10 +448,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "n_params": 6,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "theta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -509,10 +477,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "n_params": 6,
         "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -537,20 +503,16 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 1, 1, 1, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, None, None, None, 1.0],
         "param_bounds": [
-            [
-                [-2.5, -2.5, -2.5, 0.3, 0.2, 0.2, 0.2, 0.0, 0.0],
-                [2.5, 2.5, 2.5, 2.0, 0.8, 0.8, 0.8, 1.0, 2.0],
-            ]
+            [-2.5, -2.5, -2.5, 0.3, 0.2, 0.2, 0.2, 0.0, 0.0],
+            [2.5, 2.5, 2.5, 2.0, 0.8, 0.8, 0.8, 1.0, 2.0],
         ],
         "param_bounds_cnn": [
             [-2.5, -2.5, -2.5, 0.2, 0.1, 0.1, 0.1, 0.0, 0.0],
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 1.0, 2.0],
         ],
         "boundary": bf.constant,
-        "n_params": 9,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -583,10 +545,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.constant,
-        "n_params": 6,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -614,10 +574,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "n_params": 7,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t", "theta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -647,10 +605,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -682,10 +638,8 @@ model_config = {
             [2.5, 2.5, 2.5, 3.0, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "n_params": 6,
         "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "t"],
-        "n_choices": 3,
         "choices": [0, 1, 2],
         "slice_widths": {
             "v0": 1.5,
@@ -713,10 +667,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0],
         "boundary": bf.angle,
-        "n_params": 7,
         "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "t", "theta"],
-        "n_choices": 3,
         "choices": [0, 1, 2],
         "slice_widths": {
             "v0": 1.5,
@@ -746,10 +698,8 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.0],
         "params_trans": [0, 0, 0, 0, 0, 1, 0],
         "boundary": bf.constant,
-        "n_params": 7,
         "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "v0": 1.5,
@@ -779,10 +729,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0],
         "boundary": bf.angle,
-        "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "t", "theta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "v0": 1.5,
@@ -814,10 +762,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0, 1.0],
         "boundary": bf.constant,
-        "n_params": 8,
         "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "g", "b", "t"],
-        "n_choices": 3,
         "choices": [0, 1, 2],
         "slice_widths": {
             "v0": 1.5,
@@ -849,10 +795,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
-        "n_params": 9,
         "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "g", "b", "t", "theta"],
-        "n_choices": 3,
         "choices": [0, 1, 2],
         "slice_widths": {
             "v0": 1.5,
@@ -886,10 +830,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "n_params": 9,
         "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "v0": 1.5,
@@ -923,10 +865,8 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
-        "n_params": 10,
         "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t", "theta"],
-        "n_choices": 4,
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "v0": 1.5,
