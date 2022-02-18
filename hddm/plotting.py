@@ -1628,7 +1628,6 @@ def _plot_func_model_n(
                 loc=legend_location,
             )
 
-
 def _add_model_n_cartoon_to_ax(
     sample=None,
     axis=None,
