@@ -190,13 +190,13 @@ class HDDM(HDDMBase):
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
 
-                if not "default_params" in self.model_config.keys():
+                if not "params_default" in self.model_config.keys():
                     param_default = (
                         self.model_config["param_bounds"][1][param_id]
                         - self.model_config["param_bounds"][0][param_id]
                     ) / 2
                 else:
-                    param_default = self.model_config["default_params"][param_id]
+                    param_default = self.model_config["params_default"][param_id]
 
                 # Add to knodes
                 if trans:
@@ -255,13 +255,13 @@ class HDDM(HDDMBase):
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
 
-                if not "default_params" in self.model_config.keys():
+                if not "params_default" in self.model_config.keys():
                     param_default = (
                         self.model_config["param_bounds"][1][param_id]
                         - self.model_config["param_bounds"][0][param_id]
                     ) / 2
                 else:
-                    param_default = self.model_config["default_params"][param_id]
+                    param_default = self.model_config["params_default"][param_id]
 
                 if trans:
                     knodes.update(

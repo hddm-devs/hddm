@@ -68,7 +68,7 @@ class SimulatorTests(unittest.TestCase):
             print("Now testing model: ", model)
             out = hddm.simulators.simulator(
                 theta=np.tile(
-                    hddm.model_config.model_config[model]["default_params"],
+                    hddm.model_config.model_config[model]["params_default"],
                     reps=(self.n_trials, 1),
                 ),
                 model=model,

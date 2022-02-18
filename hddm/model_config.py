@@ -9,7 +9,7 @@ model_config = {
         "params_std_upper": [1.5, 1.0, None, 1.0],
         "param_bounds": [[-5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
         "boundary": bf.constant,
-        "default_params": [0.0, 2.0, 0.5, 0],
+        "params_default": [0.0, 2.0, 0.5, 0],
         "hddm_include": ["z"],
         "choices": [0, 1],
         "slice_widths": {
@@ -33,7 +33,7 @@ model_config = {
             [5.0, 5.0, 0.7, 2.25, 0.25, 4.0, 0.25],
         ],
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
+        "params_default": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
         "hddm_include": ["z", "st", "sv", "sz"],
         "choices": [0, 1],
         "slice_widths": {
@@ -66,7 +66,7 @@ model_config = {
             [2.5, 2.2, 0.75, 1.95],
         ],  # [-2.5, 0.5, 0.25, 0.05], [2.5, 2.2, 0.75, 1.95]]
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 1e-3],
+        "params_default": [0.0, 1.0, 0.5, 1e-3],
         "hddm_include": ["z"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -92,7 +92,7 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, (np.pi / 2 - 0.2)],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
         "boundary": bf.angle,
-        "default_params": [0.0, 1.0, 0.5, 1e-3, 0.0],
+        "params_default": [0.0, 1.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["z", "theta"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -123,7 +123,7 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, 5.0, 7.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0.5, 5.0), (0.5, 7.0)]
         "boundary": bf.weibull_cdf,
-        "default_params": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
+        "params_default": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
         "hddm_include": ["z", "alpha", "beta"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -153,7 +153,7 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2), (0.1, 0.9), (1.0, 2.0), (0.0, 2.0)]
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 1.5, 1e-3],
+        "params_default": [0.0, 1.0, 0.5, 1.5, 1e-3],
         "hddm_include": ["z", "alpha"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -184,7 +184,7 @@ model_config = {
             [2.5, 2.0, 0.9, 2.5, 0.4, 1.0, 0.5],
         ],  #  [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.25, 2.5), (0, 0.4), (0, 1), (0.0, 0.5)]
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
+        "params_default": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
         "hddm_include": ["z", "st", "sv", "sz"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -213,7 +213,7 @@ model_config = {
             [2.5, 2.0, 0.9, 1.0, 2.0],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (-1.0, 1.0), (0.0, 2.0)]
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 0.0, 1e-3],
+        "params_default": [0.0, 1.0, 0.5, 0.0, 1e-3],
         "hddm_include": ["z", "g"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -242,7 +242,7 @@ model_config = {
             [3.0, 2.5, 0.9, 2.0, 2.5],
         ],  # [(-3, 3), (0.3, 2.5), (0.1, 0.9), (0.0, 2.0), (0.0, 2.5)]
         "boundary": bf.constant,
-        "default_params": [0.0, 1.0, 0.5, 1e-3, 1e-3],
+        "params_default": [0.0, 1.0, 0.5, 1e-3, 1e-3],
         "hddm_include": ["z", "sv"],
         "choices": [-1, 1],
         "slice_widths": {
@@ -271,7 +271,7 @@ model_config = {
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -300,7 +300,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -327,7 +327,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "theta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -356,7 +356,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -392,7 +392,7 @@ model_config = {
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -421,7 +421,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -448,7 +448,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "theta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -477,7 +477,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "t", "alpha", "beta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -511,7 +511,7 @@ model_config = {
             [2.5, 2.5, 2.5, 2.0, 0.9, 0.9, 0.9, 1.0, 2.0],
         ],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "zh", "zl1", "zl2", "d", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -545,7 +545,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -574,7 +574,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 0.0],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t", "theta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -605,7 +605,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.5, 1.5],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
-        "default_params": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 2.5, 3.5],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0, 2.5, 3.5],
         "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -638,7 +638,7 @@ model_config = {
             [2.5, 2.5, 2.5, 3.0, 0.9, 2.0],
         ],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
+        "params_default": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "t"],
         "choices": [0, 1, 2],
         "slice_widths": {
@@ -667,7 +667,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0],
         "boundary": bf.angle,
-        "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "t", "theta"],
         "choices": [0, 1, 2],
         "slice_widths": {
@@ -698,7 +698,7 @@ model_config = {
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.0],
         "params_trans": [0, 0, 0, 0, 0, 1, 0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
+        "params_default": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -729,7 +729,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0],
         "boundary": bf.angle,
-        "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "t", "theta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -762,7 +762,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.0, 1.0, 1.0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
+        "params_default": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "g", "b", "t"],
         "choices": [0, 1, 2],
         "slice_widths": {
@@ -795,7 +795,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
-        "default_params": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "a", "z", "g", "b", "t", "theta"],
         "choices": [0, 1, 2],
         "slice_widths": {
@@ -830,7 +830,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0],
         "boundary": bf.constant,
-        "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
+        "params_default": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
@@ -865,7 +865,7 @@ model_config = {
         "params_trans": [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
         "params_std_upper": [1.5, 1.5, 1.5, 1.5, 1.0, None, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
-        "default_params": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
+        "params_default": [0.0, 0.0, 0.0, 0.0, 2.0, 0.5, 0.0, 0.0, 1e-3, 0.0],
         "hddm_include": ["v0", "v1", "v2", "v3", "a", "z", "g", "b", "t", "theta"],
         "choices": [0, 1, 2, 3],
         "slice_widths": {

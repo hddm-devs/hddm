@@ -25,7 +25,7 @@ class NetworkInspectorTest(unittest.TestCase):
             # Define model dependent data
             n_choices = len(hddm.model_config.model_config[model]["choices"])
             choice_options = hddm.model_config.model_config[model]["choices"]
-            theta = hddm.model_config.model_config[model]["default_params"]
+            theta = hddm.model_config.model_config[model]["params_default"]
 
             rts = np.expand_dims(
                 np.concatenate(

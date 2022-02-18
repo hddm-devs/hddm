@@ -67,7 +67,7 @@ of the sampler.
                                        "t": 0.01, "t_std": 0.15}
     
     # set sampler starting points manually for each parameter
-    my_model_config['default_params'] = [0.0, 1.0, 0.5, 1e-3] 
+    my_model_config['params_default'] = [0.0, 1.0, 0.5, 1e-3] 
     
     # set a (reasonable) upper limit of group level standard deviations,
     # this can help with sampler stability 

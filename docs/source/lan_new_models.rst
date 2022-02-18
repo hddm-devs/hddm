@@ -59,7 +59,7 @@ dictionary, which allows you to investigate metadata for all the new
      'param_bounds_cnn': [[-2.5, 0.2, 0.1, -1.0, 0.0], [2.5, 2.0, 0.9, 1.0, 2.0]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
      'n_params': 5,
-     'default_params': [0.0, 1.0, 0.5, 0.0, 0.001],
+     'params_default': [0.0, 1.0, 0.5, 0.0, 0.001],
      'hddm_include': ['z', 'g'],
      'n_choices': 2,
      'choices': [-1, 1],
@@ -88,7 +88,7 @@ for the user):
 -  ``boundary`` the boundary function, which corresponds to the model
    (access the available boundary functions through the
    ``hddm.simulators.boundary_functions`` module.
--  ``default_params``, defaults settings for the parameters of the model
+-  ``params_default``, defaults settings for the parameters of the model
 -  ``hddm_include``, list to supply to hddm to include all model
    parameters (you may want to drop some)
 -  ``slide_widths``, slice sampler settings parameter by parameter

@@ -196,7 +196,7 @@ implemented in HDDM. It lists,
 -  The parameter bounds that where used for training the network under
    ``param_bounds``
 -  The boundary_function (``boundary``)
--  Default parameter values (``default_params``).
+-  Default parameter values (``params_default``).
 -  Slice sampler settings by parameter (``slice_widths``)
 -  Under ``params_trans`` you can choose parameters which will be logit
    transformed for sampling (order as in ``params``)
@@ -260,7 +260,7 @@ Now taking a closer look at the ``angle`` model
      'param_bounds': [[-3.0, 0.3, 0.1, 0.001], [3.0, 2.5, 0.9, 2.0]],
      'param_bounds_cnn': [[-2.5, 0.5, 0.25, 0.001], [2.5, 2.2, 0.75, 1.95]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
-     'default_params': [0.0, 1.0, 0.5, 0.001],
+     'params_default': [0.0, 1.0, 0.5, 0.001],
      'hddm_include': ['z'],
      'choices': [-1, 1],
      'slice_widths': {'v': 1.5,

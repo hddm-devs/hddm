@@ -445,7 +445,7 @@ def filter_subject_condition_traces(
             for param_not_included in list(includes_diff):
                 condition_wise_params_dict[key_tmp]["traces"][
                     param_not_included
-                ] = model_config[model]["default_params"][
+                ] = model_config[model]["params_default"][
                     model_config[model]["params"].index(param_not_included)
                 ]
 

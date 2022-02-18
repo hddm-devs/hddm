@@ -306,9 +306,9 @@ def simulator_single_subject(
                     "Taking default ",
                     param,
                     " from hddm.model_config as",
-                    model_config.model_config[model]["default_params"],
+                    model_config.model_config[model]["params_default"],
                 )
-                parameters[:, idx] = model_config[model]["default_params"][idx]
+                parameters[:, idx] = model_config[model]["params_default"][idx]
     else:
         return "parameters argument is not of type list, np.ndarray, dict"
 
@@ -1281,7 +1281,7 @@ def simulator_h_c(
         if fixed_at_default is not None:
             for fixed_tmp in fixed_at_default:
                 group_level_parameter_dict[fixed_tmp] = model_config[model][
-                    "default_params"
+                    "params_default"
                 ][model_config[model]["params"].index(fixed_tmp)]
 
         # Group only part (excluding depends on) ----------------------------

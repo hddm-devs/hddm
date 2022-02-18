@@ -1395,7 +1395,7 @@ class HDDMBase(AccumulatorModel):
                 wfpt_parents[tmp_param] = (
                     knodes[tmp_param + "_bottom"]
                     if tmp_param in self.include
-                    else self.model_config["default_params"][
+                    else self.model_config["params_default"][
                         self.model_config["params"].index(tmp_param)
                     ]
                 )

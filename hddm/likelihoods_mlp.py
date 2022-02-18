@@ -40,7 +40,7 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
         """
 
         # This can be simplified so that we pass parameters directly to the simulator ...
-        theta = np.array(model_config["default_params"], dtype=np.float32)
+        theta = np.array(model_config["params_default"], dtype=np.float32)
         keys_tmp = self.parents.value.keys()
         cnt = 0
 

@@ -34,7 +34,7 @@ class NetworkInspectorTest(unittest.TestCase):
                 data,
                 gt_params,
             ) = hddm.simulators.hddm_dataset_generators.simulator_single_subject(
-                parameters=hddm.model_config.model_config[model]["default_params"],
+                parameters=hddm.model_config.model_config[model]["params_default"],
                 n_samples=self.n_samples_per_trial,
                 p_outlier=0.01,
                 max_rt_outlier=10.0,
