@@ -1176,7 +1176,7 @@ def simulator_h_c(
 
             # Identify outliers in dataframe
             data["outlier"] = 0
-            data.loc[outlier_idx, [list(full_data.keys()).index("outlier")]] = 1
+            data.loc[outlier_idx, [list(data.keys()).index("outlier")]] = 1
 
         # AF-Comment: Does this cover all corner cases?
         # If n_subjects is 1 --> we overwrite the group parameters with the subj.0 parameters
