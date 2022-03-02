@@ -165,7 +165,7 @@ class HDDMnnRegressor(HDDMRegressor):
         network_dict = {"network": d["network"]}
 
         d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-            model=d["model"], **network_dict
+            model=d["model"], model_config = d["model_config"], **network_dict
         )
 
         super(HDDMnnRegressor, self).__setstate__(d)

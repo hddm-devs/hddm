@@ -195,7 +195,7 @@ class HDDMnn(HDDM):
         d["network"] = load_torch_mlp(model=d["model"])
         network_dict = {"network": d["network"]}
         d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
-            model=d["model"], **network_dict
+            model=d["model"], model_config=d["model_config"], **network_dict
         )
 
         super(HDDMnn, self).__setstate__(d)
