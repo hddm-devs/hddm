@@ -184,9 +184,15 @@ class HDDM(HDDMBase):
                     trans = 0
                 else:
                     trans = self.model_config["params_trans"][param_id]
-
+                
                 if not "params_std_upper" in self.model_config.keys():
-                    param_std_upper = 1
+                    print('Supplied model_config does not have a params_std_upper argument.')
+                    print('Set to a default of 10')
+                    param_std_upper = 10
+                elif self.model_config["params_std_upper"][param_id] == None:
+                    print('Supplied model_config specifies params_std_upper for ', tmp_param, 'as ', 'None.')
+                    print('Changed to 10')
+                    param_std_upper = 10
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
 
@@ -251,7 +257,13 @@ class HDDM(HDDMBase):
                     trans = self.model_config["params_trans"][param_id]
 
                 if not "params_std_upper" in self.model_config.keys():
-                    param_std_upper = 1
+                    print('Supplied model_config does not have a params_std_upper argument.')
+                    print('Set to a default of 10')
+                    param_std_upper = 10
+                elif self.model_config["params_std_upper"][param_id] == None:
+                    print('Supplied model_config specifies params_std_upper for ', tmp_param, 'as ', 'None.')
+                    print('Changed to 10')
+                    param_std_upper = 10
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
 

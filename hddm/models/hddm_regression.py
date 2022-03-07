@@ -70,7 +70,6 @@ def generate_wfpt_reg_stochastic_class(
 
         assert sampling_method in ["drift", "cssm"], "Sampling method is invalid!"
         # AF add: exchange this with new simulator
-        # print(self.parents.value)
         param_dict = deepcopy(self.parents.value)
         del param_dict["reg_outcomes"]
         sampled_rts = self.value.copy()
@@ -130,7 +129,6 @@ wfpt_reg_like = generate_wfpt_reg_stochastic_class(sampling_method="cssm")  # "d
 
 
 class KnodeRegress(kabuki.hierarchical.Knode):
-    # print('passing through Knoderegress')
     def __init__(self, *args, **kwargs):
         # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)
@@ -292,8 +290,6 @@ class HDDMRegressor(HDDM):
             }
             self.model_descrs.append(model_descr)
 
-            # print("Adding these covariates:")
-            # print(model_descr["params"])
             if group_only_regressors:
                 group_only_nodes += model_descr["params"]
                 kwargs["group_only_nodes"] = group_only_nodes
@@ -314,19 +310,10 @@ class HDDMRegressor(HDDM):
     def __getstate__(self):
         d = super(HDDMRegressor, self).__getstate__()
         del d["wfpt_reg_class"]
-        # for model in d["model_descrs"]:
-        # if "link_func" in model:
-        #    print("From __get_state__ print:")
-        #    print("WARNING: Will not save custom link functions.")
-        #    del model["link_func"]
         return d
 
     def __setstate__(self, d):
         d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
-        # print("WARNING: Custom link functions will not be loaded.")
-        # for model in d["model_descrs"]:
-        # model["link_func"] = lambda x: x
-        # model["link_func"] = id_link
         super(HDDMRegressor, self).__setstate__(d)
 
     def _create_wfpt_knode(self, knodes):
@@ -341,14 +328,11 @@ class HDDMRegressor(HDDM):
         )
 
     def _create_stochastic_knodes(self, include):
-        # print('passing through _create_stochastic_knodes')
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
-        # includes_remainder = set(include).difference(self.reg_outcomes)
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(
             include.difference(self.reg_outcomes)
         )
-        # knodes = super(HDDMRegressor, self)._create_stochastic_knodes(includes_remainder)
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
@@ -377,21 +361,18 @@ class HDDMRegressor(HDDM):
             # ------
             try:
                 link_is_identity = np.array_equal(
-                    reg["link_func"](np.arange(-1000, 1000, 0.1)),
-                    np.arange(-1000, 1000, 0.1),
+                    reg["link_func"](np.arange(-10, 10, 0.01)),
+                    np.arange(-10, 10, 0.01),
                 )
             except:
-                print("Reg Model: ")
-                print(reg)
-                print("Does not use Identity Link")
-                # print('exception raised that hints at the fact that your link function is not identity. \n' + \
-                #       'If all your link functions are identity this means trouble!')
                 link_is_identity = False
 
             if link_is_identity:
                 print("Reg Model:")
                 print(reg)
-                print("Uses Identity Link")
+            else:
+                print("Reg Model:")
+                print(reg)
             # ------
 
             for inter, param in zip(intercept, reg["params"]):
@@ -402,21 +383,33 @@ class HDDMRegressor(HDDM):
 
                     # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
                     if self.nn:
-                        param_id = model_config[self.model]["params"].index(
+                        param_id = self.model_config["params"].index(
                             param_lookup
                         )
-                        trans = model_config[self.model]["params_trans"][param_id]
+                        trans = self.model_config["params_trans"][param_id]
 
                         if trans:
-                            param_lower = model_config[self.model]["param_bounds"][0][
+                            param_lower = self.model_config["param_bounds"][0][
                                 param_id
                             ]
-                            param_upper = model_config[self.model]["param_bounds"][1][
+                            param_upper = self.model_config["param_bounds"][1][
                                 param_id
                             ]
-                            param_std_upper = model_config[self.model][
+
+                            if not "params_std_upper" in self.model_config.keys():
+                                print('Supplied model_config does not have a params_std_upper argument.')
+                                print('Set to a default of 10')
+                                param_std_upper = 10
+                            elif self.model_config[
                                 "params_std_upper"
-                            ][param_id]
+                            ][param_id] == None:
+                                print('Supplied model_config specifies params_std_upper for ', param, 'as ', 'None.')
+                                print('Changed to 10')
+                                param_std_upper = 10
+                            else:
+                                param_std_upper = self.model_config[
+                                    "params_std_upper"
+                                ][param_id]
 
                     elif param_lookup == "z":
                         trans = 1
@@ -432,7 +425,8 @@ class HDDMRegressor(HDDM):
                         )._create_stochastic_knodes([param_lookup])
                     else:  # Otherwise apply normal prior family
                         reg_family = self._create_family_trunc_normal(
-                            param,
+                            param_lookup,
+                            value=0.1,
                             lower=param_lower,
                             upper=param_upper,
                             std_upper=param_std_upper,
