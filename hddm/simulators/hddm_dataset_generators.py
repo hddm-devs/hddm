@@ -1120,7 +1120,6 @@ def simulator_h_c(
                             outcome + "_reg_std"
                         ][key]
 
-                    print('defining regressor set') # AEU
                     regressor_set = 0
                     if not regressor_set:
                         for k in range(len(reg_param_names_tmp)):
