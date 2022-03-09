@@ -922,6 +922,46 @@ def posterior_predictive_dataprocessor_nn(x):
     print(x)
     return x[:, 1] * x[:, 0]
 
+def results_long2wide(md, name_col="Unnamed: 0", val_col='mean'):
+    # Anne Urai, 2022: include a little parser that returns a more manageable output
+    # can be used on full_parameter_dict from hddm_dataset_generators.simulator_h_c
+    # or on the output of gen_stats()
+    import re # regexp
+
+    # recode to something more useful
+    # 0. replace x_subj(yy).ZZZZ with x(yy)_subj.ZZZZ
+    md["colname_tmp"] = [re.sub(".+\_subj\(.+\)\..+", ".+\(.+\)\_subj\..+", i) for i in list(md[name_col])]
+
+    # 1. separate the subject from the parameter
+    new = md[name_col].str.split("_subj.", n=1, expand=True)
+    md["parameter"] = new[0]
+    md["subj_idx"] = new[1]
+
+    # only run this below if it's not a regression model!
+    if not any(md[name_col].str.contains('Intercept', case=False)) \
+        and not any(md[name_col].str.contains('indirect', case=False)):
+        new = md["subj_idx"].str.split("\)\.", n=1, expand=True)
+        # separate out subject idx and parameter value
+        for index, row in new.iterrows():
+            if row[1] == None:
+                row[1] = row[0]
+                row[0] = None
+
+        md["parameter_condition"] = new[0]
+        md["subj_idx"] = new[1]
+
+        # pivot to put parameters as column names and subjects as row names
+        md = md.drop(name_col, axis=1)
+        md_wide = md.pivot_table(index=['subj_idx'], values=val_col,
+                                 columns=['parameter', 'parameter_condition']).reset_index()
+    else:
+        # pivot to put parameters as column names and subjects as row names
+        md = md.drop('Unnamed: 0', axis=1)
+        md_wide = md.pivot_table(index=['subj_idx'], values='mean',
+                                 columns=['parameter']).reset_index()
+
+    return md_wide
+
 
 if __name__ == "__main__":
     import doctest
