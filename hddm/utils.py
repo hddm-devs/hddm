@@ -956,8 +956,8 @@ def results_long2wide(md, name_col="Unnamed: 0", val_col='mean'):
                                  columns=['parameter', 'parameter_condition']).reset_index()
     else:
         # pivot to put parameters as column names and subjects as row names
-        md = md.drop('Unnamed: 0', axis=1)
-        md_wide = md.pivot_table(index=['subj_idx'], values='mean',
+        md = md.drop(name_col, axis=1)
+        md_wide = md.pivot_table(index=['subj_idx'], values=val_col,
                                  columns=['parameter']).reset_index()
 
     return md_wide
