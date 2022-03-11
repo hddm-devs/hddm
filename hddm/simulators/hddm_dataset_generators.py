@@ -1422,8 +1422,10 @@ def simulator_h_c(
     cnt = 0
     while params_ok_all == 0:
         if cnt > 0:
-            # print("new round of data simulation because parameter bounds where violated")
-
+            print(
+                "new round of data simulation because parameter bounds where violated"
+            )
+            
         group_level_param_dict = make_group_level_params(
             data=data,
             conditions_df=conditions_df,
