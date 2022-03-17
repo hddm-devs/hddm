@@ -1059,14 +1059,6 @@ def simulator_h_c(
                                 ]
 
             # Regressor part
-            # if regression_covariates is not None:
-            #     cov_df = make_covariate_df(regression_covariates, n_trials_per_subject)
-
-            #     # Add cov_df to subject data
-            #     # AF COMMENT: Not necessary if
-            #     # for key_tmp in cov_df.keys():
-            #     #     subj_data[key_tmp] = cov_df[key_tmp].copy()
-
             if regression_models is not None:
                 for reg_model in regression_models:
                     # Make Design Matrix
@@ -1353,6 +1345,7 @@ def simulator_h_c(
                     if ("Intercept" in covariate) or (covariate == "1"):
 
                         # AF-COMMENT: Here instead of covariate_rv --> just use
+                        print(reg_trace_dict)
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[
                             outcome
                         ]["rv"]()

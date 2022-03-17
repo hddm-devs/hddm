@@ -259,7 +259,7 @@ class HDDMRegressor(HDDM):
         )  # holds all the parameters that are going to modeled as outcome
 
         self.model_descrs = []
-
+        
         for model in models:
             if isinstance(model, dict):
                 try:
@@ -327,6 +327,11 @@ class HDDMRegressor(HDDM):
             **wfpt_parents
         )
 
+    # def _preprocess_indirect_regressors(self, indirect_regressors):
+    #     if indirect_regressors is not None:
+    #         assert type(indirect_regressors) == dict, 'indirect regressors is not supplied as a dictionary, but is also not None'
+
+
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
@@ -367,12 +372,8 @@ class HDDMRegressor(HDDM):
             except:
                 link_is_identity = False
 
-            if link_is_identity:
-                print("Reg Model:")
-                print(reg)
-            else:
-                print("Reg Model:")
-                print(reg)
+            print("Reg Model:")
+            print(reg)
             # ------
 
             for inter, param in zip(intercept, reg["params"]):
@@ -381,52 +382,98 @@ class HDDMRegressor(HDDM):
                     # Intercept parameter should have original prior (not centered on 0)
                     param_lookup = param[: param.find("_")]
 
-                    # Check if param_lookup is 'z' (or more generally a parameter that should originally be transformed)
+                    # Check if param_lookup is 'z' (for standard HDDM)
+                    # Or more generally a parameter that should originally be transformed (for LAN extension --> self.nn is True)
+                    is_indirect_regressor = 0
+                    is_indirect_regressor_target = 0
                     if self.nn:
-                        param_id = self.model_config["params"].index(
-                            param_lookup
-                        )
-                        trans = self.model_config["params_trans"][param_id]
 
-                        if trans:
-                            param_lower = self.model_config["param_bounds"][0][
-                                param_id
-                            ]
-                            param_upper = self.model_config["param_bounds"][1][
-                                param_id
-                            ]
-
-                            if not "params_std_upper" in self.model_config.keys():
-                                print('Supplied model_config does not have a params_std_upper argument.')
-                                print('Set to a default of 10')
-                                param_std_upper = 10
-                            elif self.model_config[
-                                "params_std_upper"
-                            ][param_id] == None:
-                                print('Supplied model_config specifies params_std_upper for ', param, 'as ', 'None.')
-                                print('Changed to 10')
-                                param_std_upper = 10
+                        # If our current parameter is a indirect regressor we apply appropriate settings
+                        if ('indirect_regressors' in self.model_config) and (param_lookup in self.model_config['indirect_regressors']):
+                            is_indirect_regressor = 1
+                            trans = 0
+                            param_lower = self.model_config['indirect_regressors'][param_lookup]['param_bounds'][0]
+                            param_upper = self.model_config['indirect_regressors'][param_lookup]['param_bounds'][1]
+                            param_std_upper = 10
+                            
+                            if 'default_value' in self.model_config['indirect_regressors'][param_lookup]:
+                                default_val = self.model_config['indirect_regressors'][param_lookup]['default_value']
                             else:
-                                param_std_upper = self.model_config[
+                                default_val = (param_upper - param_lower) / 2    
+                        
+                        # If our current parameter is a normal regressor we apply appropriate settings
+                        else:
+                            if ('indirect_regressors' in self.model_config) and (param_lookup in self.model_config['indirect_regressor_targets']):
+                                # If the current parameter is targeted by an indirect regressor, 
+                                # we need to apply special bounds, and it is not obvious which ones makes sense
+                                # AF-TODO: Make this a bit more adaptive
+                                print('param_lookup: ', param_lookup)
+                                is_indirect_regressor_target = 1
+                                param_lower = -10
+                                param_upper = 10
+                                param_std_upper = 10
+                                default_val = 0.0
+
+                            param_id = self.model_config["params"].index(
+                                param_lookup
+                            )
+                            trans = self.model_config["params_trans"][param_id]
+
+                            if trans and (not is_indirect_regressor_target):
+                                if not link_is_identity:
+                                    default_val = 0.1
+
+                                param_lower = self.model_config["param_bounds"][0][
+                                    param_id
+                                ]
+                                param_upper = self.model_config["param_bounds"][1][
+                                    param_id
+                                ]
+
+                                if not "params_std_upper" in self.model_config.keys():
+                                    print('Supplied model_config does not have a params_std_upper argument.')
+                                    print('Set to a default of 10')
+                                    param_std_upper = 10
+                                elif self.model_config[
                                     "params_std_upper"
-                                ][param_id]
+                                ][param_id] == None:
+                                    print('Supplied model_config specifies params_std_upper for ', param, 'as ', 'None.')
+                                    print('Changed to 10')
+                                    param_std_upper = 10
+                                else:
+                                    param_std_upper = self.model_config[
+                                        "params_std_upper"
+                                    ][param_id]
+                            elif trans and is_indirect_regressor_target:
+                                raise ValueError('Target to an indirect regressor is specified as parameter to transform for sampling. This is not allowed. \n' + \
+                                                 'Please make sure that the "trans" value for all targets to indirect regressors is set to 0')
 
                     elif param_lookup == "z":
                         trans = 1
-                        if trans:
-                            param_lower = 0
-                            param_upper = 1
-                            param_std_upper = 100
+                        default_val = 0.1 # used if link is not identity
+                        
+                        # Used if link is not identity
+                        param_lower = 0
+                        param_upper = 1
+                        param_std_upper = 100
 
-                    # If yes and link function is identity or if parameter is not trans --> apply usual prior
-                    if (trans and link_is_identity) or (not trans):
+                    print(param_lookup)
+                    print('trans: ', trans)
+                    print('is_indirect_regressor', is_indirect_regressor)
+                    print('link_is_identity', link_is_identity)
+                    #print('default_val', default_val)
+
+                    # If trans and link function is identity or if parameter is not trans --> apply usual prior
+                    if ((trans and link_is_identity) or (not trans)) and (not is_indirect_regressor) and (not is_indirect_regressor_target):
                         reg_family = super(
                             HDDMRegressor, self
                         )._create_stochastic_knodes([param_lookup])
                     else:  # Otherwise apply normal prior family
+                        # If the parameter is listed as transformed, but non-identity link is assigned
+                        # --> Actually do not transform parameter and apply truncated normal family prior
                         reg_family = self._create_family_trunc_normal(
                             param_lookup,
-                            value=0.1,
+                            value=default_val,
                             lower=param_lower,
                             upper=param_upper,
                             std_upper=param_std_upper,
@@ -441,11 +488,12 @@ class HDDMRegressor(HDDM):
                     param_lookup = param
 
                 else:
-                    # param_lookup = param[:param.find('_')]
                     reg_family = self._create_family_normal(param)
                     param_lookup = param
 
                 reg_parents[param] = reg_family["%s_bottom" % param_lookup]
+                
+                # 
                 if reg not in self.group_only_nodes:
                     reg_family["%s_subj_reg" % param] = reg_family.pop(
                         "%s_bottom" % param_lookup
@@ -473,7 +521,5 @@ class HDDMRegressor(HDDM):
 
 
 # Some standard link functions
-
-
 def id_link(x):
     return x
