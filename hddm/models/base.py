@@ -1391,6 +1391,8 @@ class HDDMBase(AccumulatorModel):
 
         if self.nn:
             # Define parents for HDDMnn across included models
+
+            # Basic model parameters
             for tmp_param in self.model_config["params"]:
                 wfpt_parents[tmp_param] = (
                     knodes[tmp_param + "_bottom"]
@@ -1400,6 +1402,13 @@ class HDDMBase(AccumulatorModel):
                     ]
                 )
 
+            # Indirect regressors (this is used in HDDMnnRegressor)
+            if 'indirect_regressors' in self.model_config:
+                for tmp_param in self.model_config['indirect_regressors'].keys():
+                    wfpt_parents[tmp_param] = (
+                        knodes[tmp_param + "_bottom"]
+                            )
+            
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]
                 if "p_outlier" in self.include

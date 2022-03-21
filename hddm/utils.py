@@ -108,7 +108,9 @@ def make_likelihood_str_mlp_info(
 
 
 def make_reg_likelihood_str_mlp(
-    config=None, wiener_params=None, fun_name="custom_likelihood_reg"
+    config=None, wiener_params=None,
+    param_links=None, 
+    fun_name="custom_likelihood_reg"
 ):
     """Define string for a likelihood function that can be used as a
     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
@@ -125,7 +127,36 @@ def make_reg_likelihood_str_mlp(
 
     """
 
+    # Prepare indirect regressors
+    # From dictionary that has indirect regressors as keys and links to parameters
+    # To dictionary that has parameters as keys and links them to any potential indirect regressor
+    
+    # param_links = {}
+    # if 'indirect_regressors' in config:
+    #     for indirect_regressor_tmp in config['indirect_regressors'].keys():
+    #         for links_to_tmp in config['indirect_regressors'][indirect_regressor_tmp]['links_to']:
+    #             if links_to_tmp in param_links.keys():
+    #                 param_links[links_to_tmp].add(indirect_regressor_tmp)
+    #             else:
+    #                 param_links[links_to_tmp] = set()
+    #                 param_links[links_to_tmp].add(indirect_regressor_tmp)
+    
+
+    # for param in config["params"]:
+    #     if param in param_links:
+    #         pass
+    #     else:
+    #         param_links[param] = set()
+    # print(config['params'])
+    # print(param_links)
+
+    param_links_str = str(param_links)
     params_fun_def_str = ", ".join(config["params"])
+    
+    if 'indirect_regressors' in config:
+        for indirect_regressor in config['indirect_regressors'].keys():
+            params_fun_def_str += ', ' + indirect_regressor
+    
     w_outlier_str = str(wiener_params["w_outlier"])
     upper_bounds_str = str(config["param_bounds"][1])
     lower_bounds_str = str(config["param_bounds"][0])
@@ -146,6 +177,8 @@ def make_reg_likelihood_str_mlp(
         + "\n    data = np.zeros(((size, "
         + data_frame_width_str
         + ")), dtype=np.float32)"
+        + "\n    param_links = "
+        + param_links_str
         + "\n    data[:, "
         + n_params_str
         + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)'
@@ -155,6 +188,8 @@ def make_reg_likelihood_str_mlp(
         + ":"
         + "\n        if tmp_str in reg_outcomes:"
         + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
+        + "\n            for linked_indirect_regressor in param_links[tmp_str]:"
+        + '\n                data[:, cnt] = data[:, cnt] + params[linked_indirect_regressor].loc[value["rt"].index].values'        
         + "\n            if (data[:, cnt].min() < "
         + lower_bounds_str
         + "[cnt]) or (data[:, cnt].max() > "
@@ -169,6 +204,67 @@ def make_reg_likelihood_str_mlp(
     )
     return fun_str
 
+# def make_reg_likelihood_str_mlp(
+#     config=None, wiener_params=None, fun_name="custom_likelihood_reg"
+# ):
+#     """Define string for a likelihood function that can be used as a
+#     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
+
+#     :Arguments:
+#         config : dict <default = None>
+#             Config dictionary for the model for which you would like to construct a custom
+#             likelihood. In the style of what you find under hddm.model_config.
+
+#     :Returns:
+#         str:
+#             A string that holds the code to define a likelihood function as needed by HDDM to pass
+#             to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+#     """
+
+#     params_fun_def_str = ", ".join(config["params"])
+#     w_outlier_str = str(wiener_params["w_outlier"])
+#     upper_bounds_str = str(config["param_bounds"][1])
+#     lower_bounds_str = str(config["param_bounds"][0])
+#     n_params_str = str(len(config["params"]))
+#     data_frame_width_str = str(len(config["params"]) + 2)
+#     params_str = str(config["params"])
+
+#     fun_str = (
+#         "def "
+#         + fun_name
+#         + "(value, "
+#         + params_fun_def_str
+#         + ", reg_outcomes, p_outlier=0, w_outlier="
+#         + w_outlier_str
+#         + ", **kwargs):"
+#         + "\n    params = locals()"
+#         + "\n    size = int(value.shape[0])"
+#         + "\n    data = np.zeros(((size, "
+#         + data_frame_width_str
+#         + ")), dtype=np.float32)"
+#         + "\n    data[:, "
+#         + n_params_str
+#         + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)'
+#         + "\n    cnt=0"
+#         + "\n    for tmp_str in "
+#         + params_str
+#         + ":"
+#         + "\n        if tmp_str in reg_outcomes:"
+#         + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
+#         + "\n            if (data[:, cnt].min() < "
+#         + lower_bounds_str
+#         + "[cnt]) or (data[:, cnt].max() > "
+#         + upper_bounds_str
+#         + "[cnt]):"
+#         + '\n                warnings.warn("boundary violation of regressor part")'
+#         + "\n                return -np.inf"
+#         + "\n        else:"
+#         + "\n            data[:, cnt] = params[tmp_str]"
+#         + "\n        cnt += 1"
+#         + '\n    return hddm.wfpt.wiener_like_multi_nn_mlp(data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])'
+#     )
+#     return fun_str
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.
