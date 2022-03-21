@@ -5,10 +5,7 @@ from copy import deepcopy
 
 import hddm
 from hddm.simulators import *
-
-# from hddm.model_config import model_config
 from hddm.utils import *
-
 
 def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwargs):
     """Defines the likelihoods for the MLP networks.
@@ -33,6 +30,7 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
         keep_negative_responses=True,
         add_model=False,
         add_model_parameters=False,
+        add_outliers=False,
         keep_subj_idx=False,
     ):
         """
@@ -52,12 +50,13 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
         sim_out = simulator(theta=theta, model=model, n_samples=self.shape[0], max_t=20)
 
         # Add outliers:
-        if self.parents.value["p_outlier"] > 0.0:
-            sim_out = hddm_dataset_generators._add_outliers(
-                sim_out=sim_out,
-                p_outlier=self.parents.value["p_outlier"],
-                max_rt_outlier=1 / wiener_params["w_outlier"],
-            )
+        if add_outliers:
+            if self.parents.value["p_outlier"] > 0.0:
+                sim_out = hddm_dataset_generators._add_outliers(
+                    sim_out=sim_out,
+                    p_outlier=self.parents.value["p_outlier"],
+                    max_rt_outlier=1 / wiener_params["w_outlier"],
+                )
 
         sim_out_proc = hddm_preprocess(
             sim_out,
@@ -120,7 +119,6 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
     wfpt_nn.random = random
     return wfpt_nn
 
-
 # REGRESSOR LIKELIHOODS
 def make_mlp_likelihood_reg(
     model=None, model_config=None, wiener_params=None, **kwargs
@@ -142,14 +140,40 @@ def make_mlp_likelihood_reg(
         Returns a pymc.object stochastic object as defined by PyMC2
     """
 
+    # Prepare indirect regressors
+    # From dictionary that has indirect regressors as keys and links to parameters
+    # To dictionary that has parameters as keys and links them to any potential indirect regressor
+    param_links = {}
+    if 'indirect_regressors' in model_config:
+        for indirect_regressor_tmp in model_config['indirect_regressors'].keys():
+            for links_to_tmp in model_config['indirect_regressors'][indirect_regressor_tmp]['links_to']:
+                if links_to_tmp in param_links.keys():
+                    param_links[links_to_tmp].add(indirect_regressor_tmp)
+                else:
+                    param_links[links_to_tmp] = set()
+                    param_links[links_to_tmp].add(indirect_regressor_tmp)
+
+    # For remaining parameters that haven't been linked to anything
+    # we let them link to an empty set
+    # If there are not indirect_regressors, all parameters link to the empty set
+    for param in model_config["params"]:
+        if param in param_links:
+            pass
+        else:
+            param_links[param] = set()
+
+    print(model_config['params'])
+    print(param_links)
+
     # Need to rewrite these random parts !
     def random(
         self,
         keep_negative_responses=True,
         add_model=False,
         add_model_parameters=False,
+        add_outliers=False,
         keep_subj_idx=False,
-    ):
+        ):
         """
         Function to sample from a regressor based likelihood. Conditions on the covariates.
         """
@@ -161,11 +185,12 @@ def make_mlp_likelihood_reg(
         )
 
         cnt = 0
-        for tmp_str in model_config["params"]:  # ['v', 'a', 'z', 't']:
+        for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
                 param_data[:, cnt] = param_dict[tmp_str].values
-                # previously iloc[self.value.index]
-                # changed from iloc[self.value.index][0]
+                for linked_indirect_regressor in param_links[tmp_str]:
+                    param_data[:, cnt] = param_data[:, cnt] + \
+                                            param_dict[linked_indirect_regressor].values
             else:
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
@@ -175,12 +200,13 @@ def make_mlp_likelihood_reg(
         )
 
         # Add outliers:
-        if self.parents.value["p_outlier"] > 0.0:
-            sim_out = hddm_dataset_generators._add_outliers(
-                sim_out=sim_out,
-                p_outlier=self.parents.value["p_outlier"],
-                max_rt_outlier=1 / wiener_params["w_outlier"],
-            )
+        if add_outliers:
+            if self.parents.value["p_outlier"] > 0.0:
+                sim_out = hddm_dataset_generators._add_outliers(
+                    sim_out=sim_out,
+                    p_outlier=self.parents.value["p_outlier"],
+                    max_rt_outlier=1 / wiener_params["w_outlier"],
+                )
 
         sim_out_proc = hddm_preprocess(
             sim_out,
@@ -201,12 +227,15 @@ def make_mlp_likelihood_reg(
         # TODO: Implement the CDF method for neural networks
         return "Not yet implemented"
 
-    # if model == 'custom':
     def make_likelihood():
         likelihood_str = make_reg_likelihood_str_mlp(
-            config=model_config, wiener_params=wiener_params
-        )
+                config=model_config, 
+                wiener_params=wiener_params, 
+                param_links=param_links,
+                )
+
         exec(likelihood_str)
+        print(likelihood_str)
         my_fun = locals()["custom_likelihood_reg"]
         return my_fun
 
@@ -216,7 +245,6 @@ def make_mlp_likelihood_reg(
     stoch.cdf = cdf
     stoch.random = random
     return stoch
-
 
 # KEEP BELOW AS AN EXAMPLE FOR HOW MLP LIKELIHOODS WERE DEFINED
 # Test likelihood function

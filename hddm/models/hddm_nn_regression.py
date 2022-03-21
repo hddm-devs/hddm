@@ -26,6 +26,7 @@ class HDDMnnRegressor(HDDMRegressor):
         models,
         group_only_regressors=True,
         keep_regressor_trace=False,
+        indirect_regressors=None,
         **kwargs
     ):
         """Instantiate a regression model, with neural network based likelihoods.
@@ -118,6 +119,22 @@ class HDDMnnRegressor(HDDMRegressor):
                     "It seems that you supplied a model string that refers to an undefined model"
                 )
 
+        # Add indirect_regressors to model_config, if they were supplied
+        if indirect_regressors is not None:
+            print('adding indirect regressors')
+            assert type(indirect_regressors) == dict, 'indirect_regressors is supplied, but not as a dictionary'
+            self.model_config['indirect_regressors'] = indirect_regressors
+
+            # Compute all indirect regressor targets
+            indirect_regressor_targets = []
+            for indirect_regressor in self.model_config['indirect_regressors'].keys():
+                for target_tmp in self.model_config['indirect_regressors'][indirect_regressor]['links_to']:
+                    indirect_regressor_targets.append(target_tmp)
+
+            self.model_config['indirect_regressor_targets'] = indirect_regressor_targets
+
+            print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
+            
         if self.network is None:
             try:
                 self.network = load_torch_mlp(model=self.model)
