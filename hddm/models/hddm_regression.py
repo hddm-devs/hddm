@@ -26,7 +26,10 @@ from hddm.model_config import model_config
 
 
 def generate_wfpt_reg_stochastic_class(
-    wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
+    wiener_params=None, 
+    sampling_method="cdf", 
+    cdf_range=(-5, 5), 
+    sampling_dt=1e-4
 ):
 
     # set wiener_params
@@ -132,8 +135,8 @@ class KnodeRegress(kabuki.hierarchical.Knode):
     def __init__(self, *args, **kwargs):
         # Whether or not to keep regressor trace
         self.keep_regressor_trace = kwargs.pop("keep_regressor_trace", False)
+        
         # Initialize kabuki.hierarchical.Knode
-
         super(KnodeRegress, self).__init__(*args, **kwargs)
 
     def create_node(self, name, kwargs, data):
@@ -148,38 +151,35 @@ class KnodeRegress(kabuki.hierarchical.Knode):
 
         parents = {"args": args}
 
-        # Make sure design matrix is kosher
-        # dm = dmatrix(reg['model'], data=self.data)
-        # import pdb; pdb.set_trace()
-        # if math.isnan(dm.sum()):
-        #    raise NotImplementedError('DesignMatrix contains NaNs.')
-
-        # AF-comment: The dmatrix seems to be hardcoded --> If you want to use post_pred_gen() later on other covariates,
-        # you can't, because changing model.data doesn't affect func as defined here ?
         def func(
             args,
             design_matrix=dmatrix(
-                reg["model"], data=self.data, return_type="dataframe", NA_action="raise"
+                reg["model"], 
+                data=self.data, # Note: data is hardcoded here
+                return_type="dataframe", 
+                NA_action="raise"
             ),
             link_func=reg["link_func"],
-            knode_data=data,
+            #knode_data=data, AF-NOTE: I think this can be dropped
         ):
-            # convert parents to matrix
+            # Convert parents to matrix
             params = np.matrix(args)
             design_matrix = design_matrix.loc[data.index]
+            
             # Apply design matrix to input data
             if design_matrix.shape[1] != params.shape[1]:
                 raise NotImplementedError(
                     "Missing columns in design matrix. You need data for all conditions for all subjects."
                 )
-            predictor = link_func(design_matrix.dot(params.T)[0])
 
+            # predictor is the final regression outcome --> our parameter of interest
+            predictor = link_func(design_matrix.dot(params.T)[0])
             return predictor
 
+        # Build pymc node based on the information provided
         return self.pymc_node(
             func, kwargs["doc"], name, parents=parents, trace=self.keep_regressor_trace
         )
-
 
 class HDDMRegressor(HDDM):
     """HDDMRegressor allows estimation of the DDM where parameter
@@ -256,10 +256,43 @@ class HDDMRegressor(HDDM):
         group_only_nodes = list(kwargs.get("group_only_nodes", ()))
         self.reg_outcomes = (
             set()
-        )  # holds all the parameters that are going to modeled as outcome
+        )  # holds all the parameters that are going to modeled as outcome of regression models
 
+        kwargs["group_only_nodes"] = self._prepare_model_descriptors(data = data,
+                                                    models = models,
+                                                    group_only_regressors=group_only_regressors,
+                                                    group_only_nodes=group_only_nodes
+                                                    )
+
+        # set wfpt_reg_class
+        self.wfpt_reg_class = deepcopy(wfpt_reg_like)
+
+        super(HDDMRegressor, self).__init__(data, **kwargs)
+
+        # Sanity checks
+        for model_descr in self.model_descrs:
+            for param in model_descr["params"]:
+                assert (
+                    len(self.depends[param]) == 0
+                ), "When using a regression on a given model parameter, you can not add it in the depends_on argument too."
+
+    def __getstate__(self):
+        d = super(HDDMRegressor, self).__getstate__()
+        del d["wfpt_reg_class"]
+        return d
+
+    def __setstate__(self, d):
+        d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
+        super(HDDMRegressor, self).__setstate__(d)
+    
+    def _prepare_model_descriptors(self, 
+                                   data = None, 
+                                   models = None, 
+                                   group_only_regressors = True, 
+                                   group_only_nodes = None):
         self.model_descrs = []
-        
+
+        # Cycle through list of regression models supplied
         for model in models:
             if isinstance(model, dict):
                 try:
@@ -273,10 +306,18 @@ class HDDMRegressor(HDDM):
                 model_str = model
                 link_func = lambda x: x
 
+            # Find separator
             separator = model_str.find("~")
             assert separator != -1, "No outcome variable specified."
+            
+            # Separate model string into outcome and model
             outcome = model_str[:separator].strip(" ")
             model_stripped = model_str[(separator + 1) :]
+            
+            # Add outcome to reg_outcomes
+            self.reg_outcomes.add(outcome)
+            
+            # Get covariate names from patsys dmatrix
             covariates = dmatrix(model_stripped, data).design_info.column_names
 
             # Build model descriptor
@@ -292,29 +333,8 @@ class HDDMRegressor(HDDM):
 
             if group_only_regressors:
                 group_only_nodes += model_descr["params"]
-                kwargs["group_only_nodes"] = group_only_nodes
-            self.reg_outcomes.add(outcome)
-
-        # set wfpt_reg
-        self.wfpt_reg_class = deepcopy(wfpt_reg_like)
-
-        super(HDDMRegressor, self).__init__(data, **kwargs)
-
-        # Sanity checks
-        for model_descr in self.model_descrs:
-            for param in model_descr["params"]:
-                assert (
-                    len(self.depends[param]) == 0
-                ), "When using patsy, you can not use any model parameter in depends_on."
-
-    def __getstate__(self):
-        d = super(HDDMRegressor, self).__getstate__()
-        del d["wfpt_reg_class"]
-        return d
-
-    def __setstate__(self, d):
-        d["wfpt_reg_class"] = deepcopy(wfpt_reg_like)
-        super(HDDMRegressor, self).__setstate__(d)
+        
+        return group_only_nodes
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
@@ -327,17 +347,27 @@ class HDDMRegressor(HDDM):
             **wfpt_parents
         )
 
-    # def _preprocess_indirect_regressors(self, indirect_regressors):
-    #     if indirect_regressors is not None:
-    #         assert type(indirect_regressors) == dict, 'indirect regressors is not supplied as a dictionary, but is also not None'
-
-
     def _create_stochastic_knodes(self, include):
         # Create all stochastic knodes except for the ones that we want to replace
         # with regressors.
+
+        # Basic model parameters
         knodes = super(HDDMRegressor, self)._create_stochastic_knodes(
             include.difference(self.reg_outcomes)
         )
+
+        # Indirect beta parameters
+        if ('indirect_betas' in self.model_config):
+            for beta_tmp in self.model_config['indirect_betas'].keys():
+                assert beta_tmp not in self.model_config["params"], 'Naming conflict:' + \
+                    'beta_tmp ' + ' is ' + beta_tmp + ', but the parameters is already used as a' + \
+                        'basic model parameter!'
+                print('making indirect betas knode')
+                knodes.update(
+                                self._create_family_normal(beta_tmp, value = 0.0)
+                )
+
+                self.slice_widths[beta_tmp] = 0.05
 
         # This is in dire need of refactoring. Like any monster, it just grew over time.
         # The main problem is that it's not always clear which prior to use. For the intercept
@@ -346,11 +376,15 @@ class HDDMRegressor(HDDM):
 
         # create regressor params
         for reg in self.model_descrs:
+            print('reg')
+            print(reg)
             reg_parents = {}
+            
             # Find intercept parameter
             intercept = (
                 np.asarray([param.find("Intercept") for param in reg["params"]]) != -1
             )
+            
             # If no intercept specified (via 0 + C()) assume all C() are different conditions
             # -> all are intercepts
             if not np.any(intercept):
@@ -362,7 +396,7 @@ class HDDMRegressor(HDDM):
                     ]
                 )
 
-            # CHECK IF LINK FUNCTION IS IDENTITY
+            # check if link fuction is identity for current regressor
             # ------
             try:
                 link_is_identity = np.array_equal(
@@ -407,7 +441,6 @@ class HDDMRegressor(HDDM):
                                 # If the current parameter is targeted by an indirect regressor, 
                                 # we need to apply special bounds, and it is not obvious which ones makes sense
                                 # AF-TODO: Make this a bit more adaptive
-                                print('param_lookup: ', param_lookup)
                                 is_indirect_regressor_target = 1
                                 param_lower = -10
                                 param_upper = 10
@@ -448,22 +481,18 @@ class HDDMRegressor(HDDM):
                                 raise ValueError('Target to an indirect regressor is specified as parameter to transform for sampling. This is not allowed. \n' + \
                                                  'Please make sure that the "trans" value for all targets to indirect regressors is set to 0')
 
-                    elif param_lookup == "z":
+                    elif param_lookup == "z": 
                         trans = 1
-                        default_val = 0.1 # used if link is not identity
-                        
+
                         # Used if link is not identity
+                        default_val = 0.1
                         param_lower = 0
                         param_upper = 1
                         param_std_upper = 100
 
-                    print(param_lookup)
-                    print('trans: ', trans)
-                    print('is_indirect_regressor', is_indirect_regressor)
-                    print('link_is_identity', link_is_identity)
-                    #print('default_val', default_val)
-
-                    # If trans and link function is identity or if parameter is not trans --> apply usual prior
+                    # If parameter is transformed and link function is identity --> apply usual prior
+                    # If parameter is not transformed --> apply usual prior
+                    # (Parameter should not be a indirect regressor, and not be the target of an indirect regressor for this)
                     if ((trans and link_is_identity) or (not trans)) and (not is_indirect_regressor) and (not is_indirect_regressor_target):
                         reg_family = super(
                             HDDMRegressor, self
@@ -485,6 +514,7 @@ class HDDMRegressor(HDDM):
                         knode = reg_family.pop(name)
                         knode.name = knode.name.replace(param_lookup, param, 1)
                         reg_family[name.replace(param_lookup, param, 1)] = knode
+                    # switch param lookup to param
                     param_lookup = param
 
                 else:
@@ -494,7 +524,13 @@ class HDDMRegressor(HDDM):
                 reg_parents[param] = reg_family["%s_bottom" % param_lookup]
                 
                 # 
+                print('self.group_only_nodes')
+                print(self.group_only_nodes)
+
+                # AF-NOTE: BUG ?
+                # reg will never be in self.group_only_nodes....
                 if reg not in self.group_only_nodes:
+                    print('PASSED')
                     reg_family["%s_subj_reg" % param] = reg_family.pop(
                         "%s_bottom" % param_lookup
                     )
@@ -502,6 +538,7 @@ class HDDMRegressor(HDDM):
 
                 # AF-COMMENT Old slice_widths
                 self.slice_widths[param] = 0.05
+                print(knodes)
 
             reg_knode = KnodeRegress(
                 pm.Deterministic,
@@ -518,7 +555,6 @@ class HDDMRegressor(HDDM):
             knodes["%s_bottom" % reg["outcome"]] = reg_knode
 
         return knodes
-
 
 # Some standard link functions
 def id_link(x):

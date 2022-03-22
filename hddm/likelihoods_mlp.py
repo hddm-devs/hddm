@@ -1,3 +1,4 @@
+from inspect import modulesbyfile
 import numpy as np
 from functools import partial
 from kabuki.utils import stochastic_from_dist
@@ -7,6 +8,69 @@ import hddm
 from hddm.simulators import *
 from hddm.utils import *
 
+def __prepare_indirect_regressors(model_config = {}):
+    # Prepare indirect regressors
+    # From dictionary that has indirect regressors as keys and links to parameters
+    # To dictionary that has parameters as keys and links them to any potential indirect regressor
+    param_links = {}
+    indirect_regressors_present = False
+    if 'indirect_regressors' in model_config:
+        indirect_regressors_present = True
+        for indirect_regressor_tmp in model_config['indirect_regressors'].keys():
+            for links_to_tmp in model_config['indirect_regressors'][indirect_regressor_tmp]['links_to']:
+                if links_to_tmp in param_links.keys():
+                    param_links[links_to_tmp].add(indirect_regressor_tmp)
+                else:
+                    param_links[links_to_tmp] = set()
+                    param_links[links_to_tmp].add(indirect_regressor_tmp)
+
+    # For remaining parameters that haven't been linked to anything
+    # we let them link to an empty set
+    # If there are not indirect_regressors, all parameters link to the empty set
+    for param in model_config["params"]:
+        if param in param_links:
+            pass
+        else:
+            param_links[param] = set()
+
+    return param_links, indirect_regressors_present
+
+def __prepare_indirect_betas(model_config = {}):
+    # Prepare indirect betas
+    param_links_betas = {}
+    indirect_betas_present = False
+    # Loop over indirect betas
+    if 'indirect_betas' in model_config:
+        indirect_betas_present = True
+        for indirect_beta_tmp in model_config['indirect_betas'].keys():
+            # For particular indirect beta loop over the
+            # parameters it links to
+            for links_to_tmp in model_config['indirect_betas'][indirect_beta_tmp]['links_to'].keys():
+                print(param_links_betas.keys())
+
+                # If param links has respective key already
+                # just add the indirect beta to it
+                if links_to_tmp in param_links_betas.keys():
+                    param_links_betas[links_to_tmp].add((indirect_beta_tmp, model_config['indirect_betas'][indirect_beta_tmp]['links_to'][links_to_tmp]))
+
+                # Otherwise first crete empty set then add the indirect 
+                # regressor
+                else:
+                    param_links_betas[links_to_tmp] = set()
+                    param_links_betas[links_to_tmp].add((indirect_beta_tmp, model_config['indirect_betas'][indirect_beta_tmp]['links_to'][links_to_tmp]))
+
+    # For remaining parameters that haven't been linked to anything
+    # we let them link to an empty set
+    # If there are not indirect_parameters, all parameters link to the empty set
+    for param in model_config["params"]:
+        if param in param_links_betas:
+            pass
+        else:
+            param_links_betas[param] = set()
+    
+    return param_links_betas, indirect_betas_present
+
+# LIKELIHOODS
 def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwargs):
     """Defines the likelihoods for the MLP networks.
 
@@ -140,31 +204,6 @@ def make_mlp_likelihood_reg(
         Returns a pymc.object stochastic object as defined by PyMC2
     """
 
-    # Prepare indirect regressors
-    # From dictionary that has indirect regressors as keys and links to parameters
-    # To dictionary that has parameters as keys and links them to any potential indirect regressor
-    param_links = {}
-    if 'indirect_regressors' in model_config:
-        for indirect_regressor_tmp in model_config['indirect_regressors'].keys():
-            for links_to_tmp in model_config['indirect_regressors'][indirect_regressor_tmp]['links_to']:
-                if links_to_tmp in param_links.keys():
-                    param_links[links_to_tmp].add(indirect_regressor_tmp)
-                else:
-                    param_links[links_to_tmp] = set()
-                    param_links[links_to_tmp].add(indirect_regressor_tmp)
-
-    # For remaining parameters that haven't been linked to anything
-    # we let them link to an empty set
-    # If there are not indirect_regressors, all parameters link to the empty set
-    for param in model_config["params"]:
-        if param in param_links:
-            pass
-        else:
-            param_links[param] = set()
-
-    print(model_config['params'])
-    print(param_links)
-
     # Need to rewrite these random parts !
     def random(
         self,
@@ -184,6 +223,7 @@ def make_mlp_likelihood_reg(
             (self.value.shape[0], len(model_config["params"])), dtype=np.float32
         )
 
+        print(self.value)
         cnt = 0
         for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
@@ -191,6 +231,9 @@ def make_mlp_likelihood_reg(
                 for linked_indirect_regressor in param_links[tmp_str]:
                     param_data[:, cnt] = param_data[:, cnt] + \
                                             param_dict[linked_indirect_regressor].values
+                for linked_indirect_beta in param_links_betas[tmp_str]:
+                    param_data[:, cnt] = param_data[:, cnt] + \
+                                            param_dict[linked_indirect_beta[0]] * self.value[linked_indirect_beta[1]]
             else:
                 param_data[:, cnt] = param_dict[tmp_str]
             cnt += 1
@@ -228,16 +271,26 @@ def make_mlp_likelihood_reg(
         return "Not yet implemented"
 
     def make_likelihood():
-        likelihood_str = make_reg_likelihood_str_mlp(
-                config=model_config, 
-                wiener_params=wiener_params, 
-                param_links=param_links,
-                )
+        if indirect_betas_present or indirect_regressors_present:
+            likelihood_str = make_reg_likelihood_str_mlp(
+                    config=model_config, 
+                    wiener_params=wiener_params, 
+                    param_links=param_links,
+                    param_links_betas=param_links_betas,
+                    )
+        else:
+            likelihood_str = make_reg_likelihood_str_mlp_basic(
+                config = model_config,
+                wiener_params=wiener_params,
+            )
 
         exec(likelihood_str)
         print(likelihood_str)
         my_fun = locals()["custom_likelihood_reg"]
         return my_fun
+
+    param_links, indirect_regressors_present = __prepare_indirect_regressors(model_config = model_config)
+    param_links_betas, indirect_betas_present = __prepare_indirect_betas(model_config = model_config)
 
     likelihood_ = make_likelihood()
     stoch = stochastic_from_dist("wfpt_reg", partial(likelihood_, **kwargs))
@@ -245,94 +298,3 @@ def make_mlp_likelihood_reg(
     stoch.cdf = cdf
     stoch.random = random
     return stoch
-
-# KEEP BELOW AS AN EXAMPLE FOR HOW MLP LIKELIHOODS WERE DEFINED
-# Test likelihood function
-# Potentially useful later
-# if model == "test":
-#     def wienernn_like_test(p_outlier = 0, w_outlier = 0.1, network = None, **kws):
-#         """
-#         LAN Log-likelihood for the DDM
-#         """
-#         print(kws)
-#         print(locals())
-#         return hddm.wfpt.wiener_like_nn_mlp(
-#             kws['x']["rt"].values,
-#             kws['x']["response"].values,
-#             np.array([kws[param] for param in model_config[model]["params"]], dtype = np.float32),
-#             p_outlier=p_outlier,
-#             w_outlier=w_outlier,
-#             network=network,
-#         )  # **kwargs)
-
-#     def pdf_test(self, x):
-#         rt = np.array(x, dtype=np.float32)
-#         response = rt / np.abs(rt)
-#         rt = np.abs(rt)
-#         params = np.array(
-#             [self.parents[param] for param in model_config[model]["params"]]
-#         ).astype(np.float32)
-#         out = hddm.wfpt.wiener_like_nn_mlp_pdf(
-#             rt, response, params, network=kwargs["network"], **self.parents
-#         )  # **kwargs) # This may still be buggy !
-#         return out
-
-#     def cdf_test(self, x):
-#         # TODO: Implement the CDF method for neural networks
-#         return "Not yet implemented"
-
-#     #Create wfpt class
-#     wfpt_nn = stochastic_from_dist(
-#         "Wienernn_" + model, partial(wienernn_like_test, network = kwargs["network"])
-#     )
-
-#     # wfpt_nn = stochastic_from_dist(
-#     #     "Wienernn_" + model, partial(kwargs["likelihood_fun"], network = kwargs["network"])
-#     # )
-
-#     # wfpt_nn = stochastic_from_dist(
-#     #     "Wienernn_" + model, partial(wienernn_like_test, network = kwargs["network"])
-#     # )
-
-#     wfpt_nn.pdf = pdf_test
-#     wfpt_nn.cdf_vec = None  # AF TODO: Implement this for neural nets (not a big deal actually but not yet sure where this is ever used finally)
-#     wfpt_nn.cdf = cdf_test
-#     wfpt_nn.random = random
-#     return wfpt_nn
-
-
-# Keeping below function as example for how regressor likelihoods were defined
-# for how likelihood functions were defined previously
-# now --> util.py --> make_reg_likelihood_str_mlp
-
-# def wiener_multi_like_nn_test(
-#     value, v, a, z, t, reg_outcomes, p_outlier=0, w_outlier=0.1, **kwargs
-# ):
-#     params = locals()
-#     size = int(value.shape[0])
-#     data = np.zeros((size, data_frame_width), dtype=np.float32)
-#     data[:, n_params:] = np.stack(
-#         [
-#             np.absolute(value["rt"]).astype(np.float32),
-#             value["response"].astype(np.float32),
-#         ],
-#         axis=1,
-#     )
-
-#     cnt = 0
-#     for tmp_str in model_parameter_names:  # model_config[model]['params']:
-#         if tmp_str in reg_outcomes:
-#             data[:, cnt] = params[tmp_str].loc[value["rt"].index].values
-#             if (data[:, cnt].min() < model_parameter_lower_bounds[cnt]) or (
-#                 data[:, cnt].max() > model_parameter_upper_bounds[cnt]
-#             ):
-#                 print("boundary violation of regressor part")
-#                 return -np.inf
-#         else:
-#             data[:, cnt] = params[tmp_str]
-#         cnt += 1
-
-#     # Has optimization potential --> AF-TODO: For next version!
-#     return hddm.wfpt.wiener_like_multi_nn_mlp(
-#         data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"]
-#     )  # **kwargs

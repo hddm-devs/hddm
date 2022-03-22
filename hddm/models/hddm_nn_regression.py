@@ -4,7 +4,6 @@ from copy import deepcopy
 from kabuki import Knode
 
 try:
-    # print('HDDM: Trying import of pytorch related classes.')
     from hddm.torch.mlp_inference_class import load_torch_mlp
 except:
     print(
@@ -12,7 +11,6 @@ except:
         + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
         + "classes will not work"
     )
-
 
 class HDDMnnRegressor(HDDMRegressor):
     """HDDMnnRegressor allows estimation of the NNDDM where parameter
@@ -27,6 +25,7 @@ class HDDMnnRegressor(HDDMRegressor):
         group_only_regressors=True,
         keep_regressor_trace=False,
         indirect_regressors=None,
+        indirect_betas=None,
         **kwargs
     ):
         """Instantiate a regression model, with neural network based likelihoods.
@@ -118,23 +117,13 @@ class HDDMnnRegressor(HDDMRegressor):
                 print(
                     "It seems that you supplied a model string that refers to an undefined model"
                 )
-
+        
         # Add indirect_regressors to model_config, if they were supplied
-        if indirect_regressors is not None:
-            print('adding indirect regressors')
-            assert type(indirect_regressors) == dict, 'indirect_regressors is supplied, but not as a dictionary'
-            self.model_config['indirect_regressors'] = indirect_regressors
+        self._add_indirect_regressors(indirect_regressors=indirect_regressors)
 
-            # Compute all indirect regressor targets
-            indirect_regressor_targets = []
-            for indirect_regressor in self.model_config['indirect_regressors'].keys():
-                for target_tmp in self.model_config['indirect_regressors'][indirect_regressor]['links_to']:
-                    indirect_regressor_targets.append(target_tmp)
+        # Add indirect betas to model_config, if they were supplied        
+        self._add_indirect_betas(indirect_betas=indirect_betas)
 
-            self.model_config['indirect_regressor_targets'] = indirect_regressor_targets
-
-            print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
-            
         if self.network is None:
             try:
                 self.network = load_torch_mlp(model=self.model)
@@ -161,15 +150,54 @@ class HDDMnnRegressor(HDDMRegressor):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+
         return Knode(
             self.wfpt_nn_reg_class,
             "wfpt",
             observed=True,
-            col_name=["response", "rt"],
+            col_name=["response", "rt"] + self.model_config['likelihood_relevant_covariates'],
             reg_outcomes=self.reg_outcomes,
             **wfpt_parents
         )
 
+    def _add_indirect_betas(self, indirect_betas = None):
+        self.model_config['likelihood_relevant_covariates'] = []
+
+        if indirect_betas is not None:
+            assert type(indirect_betas) == dict, 'indirect parameters is supplied, but is not a dictionary'
+            self.model_config['indirect_betas'] = indirect_betas
+
+            relevant_covariates = []
+            for indirect_beta_tmp in indirect_betas.keys():
+                for linked_covariate_tmp in indirect_betas[indirect_beta_tmp]['links_to'].keys():
+                    print('linked_covatirate_tmp')
+                    print(linked_covariate_tmp)
+                    print(indirect_betas)
+                    tmp = indirect_betas[indirect_beta_tmp]['links_to'][linked_covariate_tmp]
+                    
+                    
+                    if tmp in relevant_covariates:
+                        pass
+                    else:
+                        relevant_covariates.append(tmp)
+            
+            self.model_config['likelihood_relevant_covariates'] = relevant_covariates
+
+    def _add_indirect_regressors(self, indirect_regressors = None):
+        if indirect_regressors is not None:
+            assert type(indirect_regressors) == dict, 'indirect_regressors is supplied, but not as a dictionary'
+            self.model_config['indirect_regressors'] = indirect_regressors
+
+            # Compute all indirect regressor targets
+            indirect_regressor_targets = []
+            for indirect_regressor in self.model_config['indirect_regressors'].keys():
+                for target_tmp in self.model_config['indirect_regressors'][indirect_regressor]['links_to']:
+                    indirect_regressor_targets.append(target_tmp)
+
+            self.model_config['indirect_regressor_targets'] = indirect_regressor_targets
+            
+            print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
+        
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
         d = super(HDDMnnRegressor, self).__getstate__()
