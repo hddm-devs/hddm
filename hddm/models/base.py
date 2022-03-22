@@ -1364,11 +1364,11 @@ class HDDMBase(AccumulatorModel):
         self.p_outlier = p_outlier
 
         # set cdf_range
-        print('data["rt"]')
-        print(data["rt"])
-        print(np.abs(data["rt"]))
-        print(max(np.abs(data["rt"])))
-        
+        print('data')
+        print(data)
+        #print(np.abs(data["rt"]))
+        #print(max(np.abs(data["rt"])))
+
         cdf_bound = max(np.abs(data["rt"])) + 1
         self.cdf_range = (-cdf_bound, cdf_bound)
 
