@@ -170,11 +170,7 @@ class HDDMnnRegressor(HDDMRegressor):
             relevant_covariates = []
             for indirect_beta_tmp in indirect_betas.keys():
                 for linked_covariate_tmp in indirect_betas[indirect_beta_tmp]['links_to'].keys():
-                    print('linked_covatirate_tmp')
-                    print(linked_covariate_tmp)
-                    print(indirect_betas)
                     tmp = indirect_betas[indirect_beta_tmp]['links_to'][linked_covariate_tmp]
-                    
                     
                     if tmp in relevant_covariates:
                         pass
@@ -195,8 +191,7 @@ class HDDMnnRegressor(HDDMRegressor):
                     indirect_regressor_targets.append(target_tmp)
 
             self.model_config['indirect_regressor_targets'] = indirect_regressor_targets
-            
-            print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
+            #print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
         
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):

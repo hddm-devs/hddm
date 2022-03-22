@@ -360,9 +360,9 @@ class HDDMRegressor(HDDM):
         if ('indirect_betas' in self.model_config):
             for beta_tmp in self.model_config['indirect_betas'].keys():
                 assert beta_tmp not in self.model_config["params"], 'Naming conflict:' + \
-                    'beta_tmp ' + ' is ' + beta_tmp + ', but the parameters is already used as a' + \
+                    'beta_tmp ' + ' is ' + beta_tmp + ', but the parameter is already used as a' + \
                         'basic model parameter!'
-                print('making indirect betas knode')
+                print('making indirect betas knode: ', beta_tmp)
                 knodes.update(
                                 self._create_family_normal(beta_tmp, value = 0.0)
                 )
@@ -376,8 +376,6 @@ class HDDMRegressor(HDDM):
 
         # create regressor params
         for reg in self.model_descrs:
-            print('reg')
-            print(reg)
             reg_parents = {}
             
             # Find intercept parameter
@@ -523,22 +521,15 @@ class HDDMRegressor(HDDM):
 
                 reg_parents[param] = reg_family["%s_bottom" % param_lookup]
                 
-                # 
-                print('self.group_only_nodes')
-                print(self.group_only_nodes)
-
                 # AF-NOTE: BUG ?
                 # reg will never be in self.group_only_nodes....
                 if reg not in self.group_only_nodes:
-                    print('PASSED')
                     reg_family["%s_subj_reg" % param] = reg_family.pop(
                         "%s_bottom" % param_lookup
                     )
                 knodes.update(reg_family)
 
-                # AF-COMMENT Old slice_widths
                 self.slice_widths[param] = 0.05
-                print(knodes)
 
             reg_knode = KnodeRegress(
                 pm.Deterministic,
