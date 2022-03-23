@@ -1683,13 +1683,13 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                            boundary_params = {}
                            ):
     # Param views
-    cdef float[:] v_h_view = v_h
-    cdef float[:] v_l_1_view = v_l_1
-    cdef float[:] v_l_2_view = v_l_2
+    cdef float[:] v_h_view = v_h # slope corresponding to high dimension slope
+    cdef float[:] v_l_1_view = v_l_1 # slope corresponding to irrelevant low dimension
+    cdef float[:] v_l_2_view = v_l_2 # slope corresponding to correct low dimension
     cdef float[:] a_view = a
-    cdef float[:] z_h_view = z_h
-    cdef float[:] z_l_1_view = z_l_1
-    cdef float[:] z_l_2_view = z_l_2
+    cdef float[:] z_h_view = z_h # bias corresponding to high dimension 
+    cdef float[:] z_l_1_view = z_l_1 # bias corresponding to irrelevant low dimension
+    cdef float[:] z_l_2_view = z_l_2 # bias corresponding to correct low dimension
     cdef float[:] d_view = d
     cdef float[:] t_view = t
 
@@ -1710,7 +1710,7 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
     cdef float[:] boundary_view = boundary
 
     # Y particle trace
-    bias_trace = np.zeros(num_draws, dtype = DTYPE)
+    bias_trace = np.zeros(num_draws, dtype = DTYPE) # tracks the y_h position in the accumulator (normalized to be between [0, 1])
     cdef float[:] bias_trace_view = bias_trace
 
     cdef float y_h, y_l, v_l, t_h, t_l
@@ -1751,13 +1751,12 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                     m = 0
 
             # The probability of making a 'mistake' 1 - (relative y position)
-            # y at upper bound --> choices_view[n, k, 0] stays the same
-            # y at lower bound --> choice_view[n, k, 0] adds one deterministically
+            # y at upper bound --> y_h + boundary_view[ix] / 2 * boundary_view[ix] = 1 --> choices_view[n, k, 0] adds two     
+            # y at lower bound --> y_h + boundary_view[ix] / 2 * boundary_view[ix] = 0 --> choices_view[n, k, 0] stays the same 
             if random_uniform() <= ((y_h + boundary_view[ix]) / (2 * boundary_view[ix])):
                 choices_view[n, k, 0] += 2
            
             if choices_view[n, k, 0] == 2:
-                #choices_view[n, k, 0] = 0
                 y_l = (- 1) * boundary_view[0] + (z_l_2_view[k] * 2 * (boundary_view[0])) 
                 v_l = v_l_2_view[k]
 
@@ -1768,12 +1767,8 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                     ix_tmp += 1
 
             else: # Store intermediate choice
-                #choices_view[n, k, 0] = 2
                 y_l = (- 1) * boundary_view[0] + (z_l_1_view[k] * 2 * (boundary_view[0])) 
                 v_l = v_l_1_view[k]
-
-                #print('came through')
-                #print('v_l: ', v_l)
 
                 # Fill bias trace until max_rt reached
                 ix_tmp = ix + 1
@@ -1781,24 +1776,24 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                     bias_trace_view[ix_tmp] = 0.0
                     ix_tmp += 1
 
-                #We need to reverse the bias_trace if we took the lower choice
-                ix_tmp = 0 
+                # We need to reverse the bias_trace if we took the lower choice
+                ix_tmp = 0
                 while ix_tmp < num_draws:
                     bias_trace_view[ix_tmp] = 1.0 - bias_trace_view[ix_tmp]
                     ix_tmp += 1
-
-                #print('new bias_trace: ', bias_trace)
             
-            # Random walks until the y_l corresponding to y_h hits bound
+            # Random walks until the y_l corresponding to high dimensional choice hits bound
             ix = 0
             while (y_l >= ((-1) * boundary_view[ix])) and (y_l <= boundary_view[ix]) and (t_l <= max_t):
-                if (bias_trace_view[ix] < 1) and (bias_trace_view[ix] > 0):
+                # If high-dim choice has not been taken --> apply the slope discount according to parameter d and the position of y_h (normalized and sitting in bias_trace_view)
+                if (bias_trace_view[ix] < 1) and (bias_trace_view[ix] > 0): # Note I think > 0 part is unnecessary 
                     y_l += ((v_l * bias_trace_view[ix] * d_view[k]) * delta_t)
-                else:
+                else: # If high-dim choice already taken, apply low dim slope undiscounted
                     y_l += (v_l * delta_t)
-                y_l += (sqrt_st * gaussian_values[m])
                 
-                t_l += delta_t
+                y_l += (sqrt_st * gaussian_values[m]) # add noise
+                
+                t_l += delta_t # add time
                 ix += 1
                 m += 1
                 if m == num_draws:
@@ -1808,8 +1803,8 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
             rts_view[n, k, 0] = fmax(t_h, t_l) + t_view[k]
 
             # The probability of making a 'mistake' 1 - (relative y position)
-            # y at upper bound --> choices_view[n, k, 0] stays the same
-            # y at lower bound --> choice_view[n, k, 0] adds one deterministically
+            # y at upper bound --> y_l + boundary_view[ix] / 2 * boundary_view[ix] = 1 --> choices_view[n, k, 0] adds one     
+            # y at lower bound --> y_l + boundary_view[ix] / 2 * boundary_view[ix] = 0 --> choices_view[n, k, 0] stays the same 
             if random_uniform() <= ((y_l + boundary_view[ix]) / (2 * boundary_view[ix])):
                 choices_view[n, k, 0] += 1
 

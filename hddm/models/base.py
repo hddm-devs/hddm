@@ -477,7 +477,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             )
 
             knodes["%s_bottom" % name] = subj
-
+        print('returning normal family knode of ' + name)
         return knodes
 
     def _create_family_trunc_normal(
@@ -1391,6 +1391,8 @@ class HDDMBase(AccumulatorModel):
 
         if self.nn:
             # Define parents for HDDMnn across included models
+
+            # Basic model parameters
             for tmp_param in self.model_config["params"]:
                 print("@ ", tmp_param)
                 if tmp_param not in ['alpha', 'pos_alpha']:
@@ -1402,6 +1404,19 @@ class HDDMBase(AccumulatorModel):
                         ]
                     )
 
+            # Indirect regressors (this is used in HDDMnnRegressor)
+            if 'indirect_regressors' in self.model_config:
+                for tmp_param in self.model_config['indirect_regressors'].keys():
+                    wfpt_parents[tmp_param] = (
+                        knodes[tmp_param + "_bottom"]
+                            )
+
+            if 'indirect_betas' in self.model_config:
+                for tmp_param in self.model_config['indirect_betas'].keys():
+                    wfpt_parents[tmp_param] = (
+                        knodes[tmp_param + "_bottom"]
+                            )
+            
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]
                 if "p_outlier" in self.include
@@ -1449,6 +1464,7 @@ class HDDMBase(AccumulatorModel):
     def create_knodes(self):
         knodes = self._create_stochastic_knodes(self.include)
         knodes["wfpt"] = self._create_wfpt_knode(knodes)
+        #print(list(knodes.values()))
         return list(knodes.values())
 
     def plot_posterior_predictive(self, *args, **kwargs):

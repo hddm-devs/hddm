@@ -962,15 +962,11 @@ def simulator_h_c(
         # Construct subject data
         full_parameter_dict = group_level_parameter_dict.copy()
 
-        # Subject part -----------------------
-        full_data = []
-        # Condition --------------------------
-
         # Initialize parameter columns in data
         for param in model_config[model]["params"]:
             data[param] = 0
 
-        for subj_idx in data["subj_idx"].unique():  # range(n_subjects):
+        for subj_idx in data["subj_idx"].unique(): 
 
             # Fixed part
             if fixed_at_default is not None:
@@ -978,7 +974,6 @@ def simulator_h_c(
                     data.loc[
                         data["subj_idx"] == int(subj_idx), [fixed_tmp]
                     ] = group_level_parameter_dict[fixed_tmp]
-                    # subj_data.loc[fixed_tmp] = group_level_parameter_dict[fixed_tmp]
 
             # Group only part
             if group_only is not None:
@@ -993,8 +988,6 @@ def simulator_h_c(
             # Remainder part
             if remainder is not None:
                 for remainder_tmp in remainder:
-                    # print('group_level_parameter_dict')
-                    # print(group_level_parameter_dict)
                     tmp_mean = group_level_parameter_dict[remainder_tmp]
                     tmp_std = group_level_parameter_dict[remainder_tmp + "_std"]
                     full_parameter_dict[
@@ -1059,16 +1052,9 @@ def simulator_h_c(
                                 ]
 
             # Regressor part
-            # if regression_covariates is not None:
-            #     cov_df = make_covariate_df(regression_covariates, n_trials_per_subject)
-
-            #     # Add cov_df to subject data
-            #     # AF COMMENT: Not necessary if
-            #     # for key_tmp in cov_df.keys():
-            #     #     subj_data[key_tmp] = cov_df[key_tmp].copy()
-
             if regression_models is not None:
                 for reg_model in regression_models:
+
                     # Make Design Matrix
                     separator = reg_model.find("~")
                     outcome = reg_model[:separator].strip(" ")
@@ -1120,19 +1106,16 @@ def simulator_h_c(
                             outcome + "_reg_std"
                         ][key]
 
-                    if not regressor_set:
-                        for k in range(len(reg_param_names_tmp)):
-                            full_parameter_dict[
-                                reg_param_names_tmp[k]
-                            ] = reg_params_tmp[k]
+                    for k in range(len(reg_param_names_tmp)):
+                        full_parameter_dict[
+                            reg_param_names_tmp[k]
+                        ] = reg_params_tmp[k]
 
                     data.loc[data["subj_idx"] == int(subj_idx), [outcome]] = (
                         design_matrix * reg_params_tmp
                     ).sum(
                         axis=1
                     )  # AF-TD: This should probably include a noise term here (parameter really defined as coming from a linear model + noise)
-
-            regressor_set = 1
 
         parameters = data[model_config[model]["params"]]
 
@@ -1353,6 +1336,7 @@ def simulator_h_c(
                     if ("Intercept" in covariate) or (covariate == "1"):
 
                         # AF-COMMENT: Here instead of covariate_rv --> just use
+                        print(reg_trace_dict)
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[
                             outcome
                         ]["rv"]()

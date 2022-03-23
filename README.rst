@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.3
+:Version: 0.9.4
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -76,6 +76,13 @@ Features
              Posterior predictives now properly take into account the *p_outlier* parameter when generating data from the implicit mixture model. *p_outlier* percent of the data,
              now explicitly come from random choices with uniform reaction times.
              The documentation is updated to reflect / illustrate the improvements.
+
+* HDDM 0.9.4 Bug fixes and one major new functionality.
+             **HDDMnnRegressor** now allows you to define **indirect regressors**, latent parameters that are driven by their own regression and link to model parameters.
+             See the documentation for more information on this. **Note** this functionality is experimental for now. Model fitting will work, but extraenous functionality may not,
+             including posterior predictives for models that include such indirect regressors. Including indirect regressors might demand you to think carefully about the supplied 
+             **model_config**. E.g. in the **race_no_bias_3** model, the usual lower bounds on the **v0, v1 ,v2, v3** parameters are 0. If we allow these parameters to be driven by an 
+             indirect regressor **v**, which is added to the regressions of **v0, v1, v2, v3**, then **v0, v1, v2, v3**
 
 Comparison to other packages
 ============================
