@@ -46,7 +46,6 @@ def __prepare_indirect_betas(model_config = {}):
             # For particular indirect beta loop over the
             # parameters it links to
             for links_to_tmp in model_config['indirect_betas'][indirect_beta_tmp]['links_to'].keys():
-                print(param_links_betas.keys())
 
                 # If param links has respective key already
                 # just add the indirect beta to it

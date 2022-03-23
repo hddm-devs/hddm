@@ -404,8 +404,8 @@ class HDDMRegressor(HDDM):
             except:
                 link_is_identity = False
 
-            print("Reg Model:")
-            print(reg)
+            # print("Reg Model:")
+            # print(reg)
             # ------
 
             for inter, param in zip(intercept, reg["params"]):
