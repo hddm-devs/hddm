@@ -1392,13 +1392,15 @@ class HDDMBase(AccumulatorModel):
         if self.nn:
             # Define parents for HDDMnn across included models
             for tmp_param in self.model_config["params"]:
-                wfpt_parents[tmp_param] = (
-                    knodes[tmp_param + "_bottom"]
-                    if tmp_param in self.include
-                    else self.model_config["params_default"][
-                        self.model_config["params"].index(tmp_param)
-                    ]
-                )
+                print("@ ", tmp_param)
+                if tmp_param not in ['alpha', 'pos_alpha']:
+                    wfpt_parents[tmp_param] = (
+                        knodes[tmp_param + "_bottom"]
+                        if tmp_param in self.include
+                        else self.model_config["params_default"][
+                            self.model_config["params"].index(tmp_param)
+                        ]
+                    )
 
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]

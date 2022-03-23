@@ -126,6 +126,7 @@ class HDDMnn(HDDM):
         self.non_centered = kwargs.pop("non_centered", False)
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
+        print("in HDDMnn -- ", self.model)
         self.model_config = kwargs.pop("model_config", None)
 
         if not "wiener_params" in kwargs.keys():
@@ -146,7 +147,7 @@ class HDDMnn(HDDM):
             except:
                 print(
                     "It seems that you supplied a model string that refers to an undefined model."
-                    + "This works only if you supply a custom model_config dictionionary."
+                    + "This works only if you supply a custom model_config dictionary."
                 )
 
         if self.network is None:

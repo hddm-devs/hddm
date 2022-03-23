@@ -20,6 +20,46 @@ from scipy.stats.mstats import mquantiles
 make_likelihood_fun_from_str = exec
 
 
+def make_likelihood_str_mlp_rlssm(
+    model, config=None, wiener_params=None, fun_name="custom_likelihood"
+):
+
+    params_str_ssm = ", ".join(config["params"])
+
+    config["params"].append('alpha')
+    config["params"].append('pos_alpha')
+    params_str = ", ".join(config["params"])
+    w_outlier_str = str(wiener_params["w_outlier"])
+
+    print("= utils: ", model, params_str)
+    
+    fun_str = (
+        "def "
+        + fun_name
+        + "(x, "
+        + params_str
+        + ", p_outlier=0.0, w_outlier="
+        + w_outlier_str
+        + ", network = None):\n    "
+        # + "print(\"types: \", type(x[\"rt\"].values[0]), type(x[\"response\"].values[0]), type(x[\"feedback\"].values[0]), type(a), type(alpha), a, alpha) \n    "
+        + "return hddm.wfpt.wiener_like_rlssm_nn('" + model + "', "
+        + 'x["rt"].values.astype(float), '
+        + 'x["response"].values.astype(int), '
+        + 'x["feedback"].values, '
+        + 'x["split_by"].values.astype(int), '
+        + 'x["q_init"].iloc[0], '
+        + "np.array([" + params_str_ssm + "]), "
+        + "alpha, "
+        + "pos_alpha, "
+        + "network=network, "
+        + "p_outlier=p_outlier)"
+    )
+
+    print("\n"+fun_str+"\n")
+
+    return fun_str
+
+
 def make_likelihood_str_mlp(
     config=None, wiener_params=None, fun_name="custom_likelihood"
 ):

@@ -92,7 +92,7 @@ model_config = {
             [2.5, 2.0, 0.9, 2.0, (np.pi / 2 - 0.2)],
         ],  # [(-2.5, 2.5), (0.2, 2.0), (0.1, 0.9), (0.0, 2.0), (0, (np.pi / 2 - .2))]
         "boundary": bf.angle,
-        "params_default": [0.0, 1.0, 0.5, 1e-3, 0.0],
+        "params_default": [0.0, 1.0, 0.5, 1e-3, 0.1],
         "hddm_include": ["z", "theta"],
         "choices": [-1, 1],
         "slice_widths": {

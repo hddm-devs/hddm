@@ -120,6 +120,22 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
     wfpt_nn.random = random
     return wfpt_nn
 
+def make_mlp_likelihood_rlssm(model=None, model_config=None, wiener_params=None, **kwargs):
+    print(" in make_mlp: ", model)
+    def make_likelihood():
+        likelihood_str = make_likelihood_str_mlp_rlssm(
+            model=model, config=model_config, wiener_params=wiener_params
+        )
+        exec(likelihood_str)
+        my_fun = locals()["custom_likelihood"]
+        return my_fun
+
+    likelihood_ = make_likelihood()
+
+    wfpt_nn_rl = stochastic_from_dist("WienernnRL_" + model, partial(likelihood_, **kwargs))
+
+    return wfpt_nn_rl
+
 
 # REGRESSOR LIKELIHOODS
 def make_mlp_likelihood_reg(
