@@ -291,7 +291,7 @@ class HDDMRegressor(HDDM):
                                    group_only_regressors = True, 
                                    group_only_nodes = None):
         self.model_descrs = []
-
+        group_only_nodes_tmp = deepcopy(group_only_nodes)
         # Cycle through list of regression models supplied
         for model in models:
             if isinstance(model, dict):
@@ -332,9 +332,9 @@ class HDDMRegressor(HDDM):
             self.model_descrs.append(model_descr)
 
             if group_only_regressors:
-                group_only_nodes += model_descr["params"]
+                group_only_nodes_tmp += model_descr["params"]
         
-        return group_only_nodes
+        return group_only_nodes_tmp
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
