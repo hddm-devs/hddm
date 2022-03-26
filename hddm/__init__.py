@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext"
 
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 
 from . import simulators
 from . import likelihoods

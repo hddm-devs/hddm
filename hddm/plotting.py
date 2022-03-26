@@ -116,7 +116,7 @@ def plot_posterior_pair(
 
             # Save figure if necessary
             if save:
-                print("passing_print")
+                #print("passing_print")
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
@@ -1972,7 +1972,7 @@ def plot_caterpillar(
         ax.tick_params(axis="x", labelsize=x_tick_size)
 
     if save:
-        print("passing_print")
+        #print("passing_print")
 
         fname = "caterpillar_" + hddm_model.model
 
