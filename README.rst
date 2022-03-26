@@ -90,7 +90,9 @@ Features
              for **v0**, **v1**, **v2** like so:
 
              **v0 = beta0 * covariate0 + ... + v * covariate_v_0**
+
              **v1 = beta0 * covariate0 + ... + v * covariate_v_1**
+             
              **v2 = beta0 * covariate0 + ... + v * covariate_v_2**
 
              The **v0**, **v1**, **v2** parameters might be drifts in a preference based choice task, and dedicated to respective choice 
