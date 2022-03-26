@@ -1910,7 +1910,7 @@ def plot_caterpillar(
     traces_by_param = _group_traces_via_grouped_nodes(model=hddm_model, group_dict=out)
 
     ncolumns = columns
-    nrows = np.ceil(len(out.keys()) / ncolumns)
+    nrows = int(np.ceil(len(out.keys()) / ncolumns))
 
     fig = plt.figure(figsize=figsize)
     fig.suptitle("")

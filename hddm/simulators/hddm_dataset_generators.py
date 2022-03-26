@@ -1336,7 +1336,7 @@ def simulator_h_c(
                     if ("Intercept" in covariate) or (covariate == "1"):
 
                         # AF-COMMENT: Here instead of covariate_rv --> just use
-                        print(reg_trace_dict)
+                        #print(reg_trace_dict)
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[
                             outcome
                         ]["rv"]()
@@ -1382,7 +1382,7 @@ def simulator_h_c(
 
     # Make conditions df
     if depends_on is not None:
-        print("depends_on is: ", depends_on)
+        #print("depends_on is: ", depends_on)
         if type(depends_on) == dict:
             if len(list(depends_on.keys())) > 0:
                 # If data is None then conditions were supplied as an argument
