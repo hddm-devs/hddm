@@ -125,9 +125,10 @@ Installation
 ============
 
 For **HDDM >= 0.9.0**, currently in beta release, the most convenient way to install HDDM, is to directly 
-install via git. In a fresh environment type:
+install via git. In a fresh environment type.
 
 :: 
+
     pip install cython
     pip install pymc
     pip install git+https://github.com/hddm-devs/kabuki
@@ -139,7 +140,7 @@ To make use of the LAN fuctionalities, need actually need to install `pytorch`_ 
 
 A common issue is that the installation of the **pymc** package (a necessary dependency),
 is hampered by issues with compiling its fortran code. Try downgrading you the version of your
-**gcc* compiler. This can be done on a MAC (not the new M1 versions tragically), via 
+**gcc** compiler. This can be done on a MAC (not the new M1 versions tragically), via 
 
 ::
 
