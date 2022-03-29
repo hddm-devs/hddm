@@ -92,7 +92,7 @@ Features
              **v0 = beta0 * covariate0 + ... + v * covariate_v_0**
 
              **v1 = beta0 * covariate0 + ... + v * covariate_v_1**
-             
+
              **v2 = beta0 * covariate0 + ... + v * covariate_v_2**
 
              The **v0**, **v1**, **v2** parameters might be drifts in a preference based choice task, and dedicated to respective choice 
@@ -104,8 +104,6 @@ Features
 
              Note also that the usage of **indirect betas** as well as **indirect regressors** may affect the speed of sampling in general.
              Both translate into more computational work at the stage of regression likelihood evaluation.
-
-
 
 
 Comparison to other packages
