@@ -333,7 +333,6 @@ class HDDMRegressor(HDDM):
 
             if group_only_regressors:
                 group_only_nodes_tmp += model_descr["params"]
-        
         return group_only_nodes_tmp
 
     def _create_wfpt_knode(self, knodes):
@@ -527,6 +526,7 @@ class HDDMRegressor(HDDM):
                     reg_family["%s_subj_reg" % param] = reg_family.pop(
                         "%s_bottom" % param_lookup
                     )
+
                 knodes.update(reg_family)
 
                 self.slice_widths[param] = 0.05
