@@ -20,6 +20,7 @@ from . import plotting_old
 from . import network_inspectors
 from . import models
 from . import model_config
+from . import model_config_rl
 import cdfdif_wrapper
 
 from .models import *

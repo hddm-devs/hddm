@@ -168,59 +168,151 @@ class HDDM(HDDMBase):
 
     def _create_stochastic_knodes_nn_rl_noninfo(self, include):
         knodes = self._create_stochastic_knodes_nn_noninfo(include)
-        #knodes = super(HDDMnnRL, self)._create_stochastic_knodes(include)
-        if self.non_centered:
-            print("setting learning rate parameter(s) to be non-centered")
-            if self.alpha:
-                knodes.update(
-                    self._create_family_normal_non_centered(
-                        "alpha",
-                        value=0,
-                        g_mu=0.2,
-                        g_tau=3 ** -2,
-                        std_lower=1e-10,
-                        std_upper=10,
-                        std_value=0.1,
+
+        print("$$$ include = ", include)
+        #print("\n\n model_config_rl == ",  self.model_config_rl["params"])
+        for tmp_param in self.model_config_rl["params"]:
+            if tmp_param in include:
+                param_id = self.model_config_rl["params"].index(tmp_param)
+
+                # Perform some checks on the model_config to see if all expected keys are included
+                # If not, choose reasonable defaults for some of them.
+                if not "params_trans" in self.model_config_rl.keys():
+                    trans = 0
+                else:
+                    trans = self.model_config_rl["params_trans"][param_id]
+                
+                if not "params_std_upper" in self.model_config_rl.keys():
+                    print('Supplied model_config does not have a params_std_upper argument.')
+                    print('Set to a default of 10')
+                    param_std_upper = 10
+                elif self.model_config_rl["params_std_upper"][param_id] == None:
+                    print('Supplied model_config specifies params_std_upper for ', tmp_param, 'as ', 'None.')
+                    print('Changed to 10')
+                    param_std_upper = 10
+                else:
+                    param_std_upper = self.model_config_rl["params_std_upper"][param_id]
+
+                if not "params_default" in self.model_config_rl.keys():
+                    param_default = (
+                        self.model_config["param_bounds"][1][param_id]
+                        - self.model_config_rl["param_bounds"][0][param_id]
+                    ) / 2
+                else:
+                    param_default = self.model_config_rl["params_default"][param_id]
+
+                # Add to knodes
+                if trans:
+                    knodes.update(
+                        self._create_family_invlogit(
+                            tmp_param,
+                            g_tau=10 ** -2,
+                            std_std=0.5,
+                            lower=self.model_config_rl["param_bounds"][0][param_id],
+                            upper=self.model_config_rl["param_bounds"][1][param_id],
+                            value=param_default,
+                        )
                     )
-                )
-            if self.dual:
-                knodes.update(
-                    self._create_family_normal_non_centered(
-                        "pos_alpha",
-                        value=0,
-                        g_mu=0.2,
-                        g_tau=3 ** -2,
-                        std_lower=1e-10,
-                        std_upper=10,
-                        std_value=0.1,
-                    )
-                )
-        else:
-            if self.alpha:
-                knodes.update(
-                    self._create_family_normal(
-                        "alpha",
-                        value=0,
-                        g_mu=0.2,
-                        g_tau=3 ** -2,
-                        std_lower=1e-10,
-                        std_upper=10,
-                        std_value=0.1,
-                    )
-                )
-            if self.dual:
-                knodes.update(
-                    self._create_family_normal(
-                        "pos_alpha",
-                        value=0,
-                        g_mu=0.2,
-                        g_tau=3 ** -2,
-                        std_lower=1e-10,
-                        std_upper=10,
-                        std_value=0.1,
-                    )
-                )
+                else:
+                    if self.non_centered:
+                        knodes.update(
+                            self._create_family_normal_non_centered(
+                                tmp_param,
+                                value=0,
+                                g_mu=0.2,
+                                g_tau=3 ** -2,
+                                std_lower=1e-10,
+                                std_upper=10,
+                                std_value=0.1,
+                            )
+                        )
+                    else:
+                        knodes.update(
+                            self._create_family_normal(
+                                tmp_param,
+                                value=0,
+                                g_mu=0.2,
+                                g_tau=3 ** -2,
+                                std_lower=1e-10,
+                                std_upper=10,
+                                std_value=0.1,
+                            )
+                        )
+                    # knodes.update(
+                    #     self._create_family_trunc_normal(
+                    #         tmp_param,
+                    #         lower=self.model_config["param_bounds"][0][param_id],
+                    #         upper=self.model_config["param_bounds"][1][param_id],
+                    #         value=param_default,
+                    #         std_upper=param_std_upper,  # added AF
+                    #     )
+                    # )
+        print("\n\n knodes == ", knodes.keys())
         return knodes
+
+        # #knodes = super(HDDMnnRL, self)._create_stochastic_knodes(include)
+        # if self.non_centered:
+        #     print("setting learning rate parameter(s) to be non-centered")
+        #     if self.alpha:
+        #         knodes.update(
+        #             self._create_family_normal_non_centered(
+        #                 "alpha",
+        #                 value=0,
+        #                 g_mu=0.2,
+        #                 g_tau=3 ** -2,
+        #                 std_lower=1e-10,
+        #                 std_upper=10,
+        #                 std_value=0.1,
+        #             )
+        #         )
+        #     if self.dual:
+        #         knodes.update(
+        #             self._create_family_normal_non_centered(
+        #                 "pos_alpha",
+        #                 value=0,
+        #                 g_mu=0.2,
+        #                 g_tau=3 ** -2,
+        #                 std_lower=1e-10,
+        #                 std_upper=10,
+        #                 std_value=0.1,
+        #             )
+        #         )
+        # else:
+        #     if self.alpha:
+        #         knodes.update(
+        #             self._create_family_normal(
+        #                 "alpha",
+        #                 value=0,
+        #                 g_mu=0.2,
+        #                 g_tau=3 ** -2,
+        #                 std_lower=1e-10,
+        #                 std_upper=10,
+        #                 std_value=0.1,
+        #             )
+        #         )
+        #         # knodes.update(
+        #         #     self._create_family_invlogit(
+        #         #         "alpha",
+        #         #         value=0.5,
+        #         #         g_mu=0.5,
+        #         #         g_tau=15 ** -2,
+        #         #         std_std=10,
+        #         #         std_value=5,
+        #         #     )
+        #         # )
+        #     if self.dual:
+        #         knodes.update(
+        #             self._create_family_normal(
+        #                 "pos_alpha",
+        #                 value=0,
+        #                 g_mu=0.2,
+        #                 g_tau=3 ** -2,
+        #                 std_lower=1e-10,
+        #                 std_upper=10,
+        #                 std_value=0.1,
+        #             )
+        #         )
+        # return knodes
     
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()

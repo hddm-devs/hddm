@@ -184,11 +184,11 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
     return wfpt_nn
 
 
-def make_mlp_likelihood_rlssm(model=None, model_config=None, wiener_params=None, **kwargs):
-    print(" in make_mlp: ", model)
+def make_mlp_likelihood_rlssm(model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs):
+
     def make_likelihood():
         likelihood_str = make_likelihood_str_mlp_rlssm(
-            model=model, config=model_config, wiener_params=wiener_params
+            model=model, config=model_config, config_rl=model_config_rl, wiener_params=wiener_params,
         )
         exec(likelihood_str)
         my_fun = locals()["custom_likelihood"]

@@ -14,7 +14,7 @@
 # GPLv3
 
 import hddm
-from hddm.model_config import model_config
+#from hddm.model_config import model_config
 
 import scipy.integrate as integrate
 from copy import copy
@@ -159,12 +159,14 @@ def wiener_like_rlssm_nn(str model,
                       np.ndarray[double, ndim=1] feedback,
                       np.ndarray[long, ndim=1] split_by,
                       double q,
-                      np.ndarray[double, ndim=1] params,
-                      double alpha,
-                      double pos_alpha,
+                      np.ndarray[double, ndim=1] params_ssm,
+                      np.ndarray[double, ndim=1] params_rl,
+                      np.ndarray[double, ndim=2] params_bnds,
                       double p_outlier=0, double w_outlier=0, network = None):
 
-    cdef double v = params[0]
+    cdef double v = params_ssm[0]
+    cdef double alpha = params_rl[0]
+    cdef double pos_alpha = params_rl[1]
 
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i, j, i_p
@@ -181,22 +183,25 @@ def wiener_like_rlssm_nn(str model,
     cdef np.ndarray[long, ndim=1] responses
     cdef np.ndarray[long, ndim=1] responses_qs
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
-    cdef Py_ssize_t n_params = len(model_config[model]['params_default']) #4 #params.shape[0]
+    #cdef Py_ssize_t n_params = len(model_config[model]['params_default']) #4 #params.shape[0]
+    cdef Py_ssize_t n_params = params_ssm.shape[0] #+ params_rl.shape[0]
     cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
     cdef float ll_min = -16.11809
     cdef int cumm_s_size = 0
 
+    #print("alpha test ==  ", alpha, pos_alfa)
+    #print("\n\n---> n_params ", n_params, params_ssm.shape[0], params_rl.shape[0])
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
     # Check for boundary violations -- if true, return -np.inf
     # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
     #     return -np.inf
-    for i_p in np.arange(1, len(params)):
-        lower_bnd = model_config[model]['param_bounds'][0][i_p]
-        upper_bnd = model_config[model]['param_bounds'][1][i_p]
+    for i_p in np.arange(1, len(params_ssm)):
+        lower_bnd = params_bnds[0][i_p]
+        upper_bnd = params_bnds[1][i_p]
 
-        if params[i_p] < lower_bnd or params[i_p] > upper_bnd:
+        if params_ssm[i_p] < lower_bnd or params_ssm[i_p] > upper_bnd:
             #print("**", lower_bnd, upper_bnd, params[i_p])
             return -np.inf
 
@@ -228,7 +233,9 @@ def wiener_like_rlssm_nn(str model,
             alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
         else:
             alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
-
+        # alfa = alpha
+        
+        
         # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
         # received on current trial.
         qs[responses_qs[0]] = qs[responses_qs[0]] + \
@@ -245,7 +252,7 @@ def wiener_like_rlssm_nn(str model,
             #data[i, 0:4] = np.array([v, a, z, t])
             data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * v
             # Check for boundary violations -- if true, return -np.inf
-            if data[cumm_s_size + i, 0] < model_config[model]['param_bounds'][0][0] or data[cumm_s_size + i, 0] > model_config[model]['param_bounds'][1][0]:
+            if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
                 return -np.inf
 
             # get learning rate for current trial. if pos_alpha is not in
@@ -264,7 +271,7 @@ def wiener_like_rlssm_nn(str model,
 
     #print("here after loop")
     #print("-- ", len(data), len(data[0, :]), len(data[1, :]), len(model_config[model]['params']), n_params)
-    data[:, 1:n_params] = np.tile(params[1:], (size, 1)).astype(np.float32)
+    data[:, 1:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
     #print(">> ", data.shape, x.shape, response.shape, np.stack([x, response], axis = 1).shape)
     data[:, n_params:] = np.stack([x, response], axis = 1)
     
