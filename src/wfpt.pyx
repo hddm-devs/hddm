@@ -166,7 +166,7 @@ def wiener_like_rlssm_nn(str model,
 
     cdef double v = params_ssm[0]
     cdef double alpha = params_rl[0]
-    cdef double pos_alpha = params_rl[1]
+    #cdef double pos_alpha = params_rl[1]
 
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i, j, i_p
@@ -189,8 +189,9 @@ def wiener_like_rlssm_nn(str model,
     cdef float ll_min = -16.11809
     cdef int cumm_s_size = 0
 
-    #print("alpha test ==  ", alpha, pos_alfa)
-    #print("\n\n---> n_params ", n_params, params_ssm.shape[0], params_rl.shape[0])
+    #print("\n params_rl ==  ", params_rl)
+    #print("\n\n---> n_params ", n_params, params_ssm, params_rl)
+
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
@@ -208,10 +209,16 @@ def wiener_like_rlssm_nn(str model,
     # if params[1] < 0.3 or params[1] > 2.5 or params[3] < 0.001 or params[3] > 2.0:
     #     return -np.inf
 
-    if pos_alpha==100.00:
-        pos_alfa = alpha
+    # check for dual condition
+    if len(params_rl) == 2:
+        pos_alfa = params_rl[1]
     else:
-        pos_alfa = pos_alpha
+        #print("single alpha cond")
+        pos_alfa = alpha
+    # if pos_alpha==100.00:
+    #     pos_alfa = alpha
+    # else:
+    #     pos_alfa = pos_alpha
 
 
     # unique represent # of conditions
@@ -253,6 +260,7 @@ def wiener_like_rlssm_nn(str model,
             data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * v
             # Check for boundary violations -- if true, return -np.inf
             if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
+                #print("v violation")
                 return -np.inf
 
             # get learning rate for current trial. if pos_alpha is not in
@@ -280,6 +288,7 @@ def wiener_like_rlssm_nn(str model,
 
     # Call to network:
     if p_outlier == 0:
+        #print("p_outlier=0")
         sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
     else:
         sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
