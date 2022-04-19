@@ -20,32 +20,23 @@ make_likelihood_fun_from_str = exec
 
 
 def make_likelihood_str_mlp_rlssm(
-    model, config=None, config_rl=None, wiener_params=None, fun_name="custom_likelihood",
+    model, config=None, wiener_params=None, fun_name="custom_likelihood"
 ):
-    param_bounds_lower = config["param_bounds"][0]
-    param_bounds_lower.extend(config_rl["param_bounds"][0])
-    param_bounds_upper = config["param_bounds"][1]
-    param_bounds_upper.extend(config_rl["param_bounds"][1])
-    param_bounds = [param_bounds_lower, param_bounds_upper]
-    print(param_bounds_lower, param_bounds_upper)
-    print("param_bounds = ", param_bounds)
 
     params_str_ssm = ", ".join(config["params"])
-    params_str_rl = ", ".join(config_rl["params"])
 
-    t_params = config["params"]
-    t_params.extend(config_rl["params"])
-    all_params_str = ", ".join(t_params)
-
+    config["params"].append('alpha')
+    config["params"].append('pos_alpha')
+    params_str = ", ".join(config["params"])
     w_outlier_str = str(wiener_params["w_outlier"])
 
-    print("= utils: ", model, all_params_str)
-
+    print("= utils: ", model, params_str)
+    
     fun_str = (
         "def "
         + fun_name
         + "(x, "
-        + all_params_str
+        + params_str
         + ", p_outlier=0.0, w_outlier="
         + w_outlier_str
         + ", network = None):\n    "
@@ -57,13 +48,13 @@ def make_likelihood_str_mlp_rlssm(
         + 'x["split_by"].values.astype(int), '
         + 'x["q_init"].iloc[0], '
         + "np.array([" + params_str_ssm + "]), "
-        + "np.array([" + params_str_rl + "]), "
-        + "params_bnds=" + "np.array(" + str(param_bounds) + "), "
+        + "alpha, "
+        + "pos_alpha, "
         + "network=network, "
         + "p_outlier=p_outlier)"
     )
 
-    print("\n\n FUNCTION \n", fun_str)
+    print("\n"+fun_str+"\n")
 
     return fun_str
 

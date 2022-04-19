@@ -1322,10 +1322,7 @@ class HDDMBase(AccumulatorModel):
 
         # Automate possible_parameters
         if self.nn:
-            if self.rlssm_model:
-                possible_parameters = tuple(self.model_config["params"]) + tuple(self.model_config_rl["params"]) + ("p_outlier",)
-            else:
-                possible_parameters = tuple(self.model_config["params"]) + ("p_outlier",)
+            possible_parameters = tuple(self.model_config["params"]) + ("p_outlier",)
         else:
             possible_parameters = (
                 "v",
@@ -1397,22 +1394,13 @@ class HDDMBase(AccumulatorModel):
 
             # Basic model parameters
             for tmp_param in self.model_config["params"]:
-                wfpt_parents[tmp_param] = (
-                    knodes[tmp_param + "_bottom"]
-                    if tmp_param in self.include
-                    else self.model_config["params_default"][
-                        self.model_config["params"].index(tmp_param)
-                    ]
-                )
-            
-            if self.rlssm_model:
-                # RL model parameters
-                for tmp_param in self.model_config_rl["params"]:
+                print("@ ", tmp_param)
+                if tmp_param not in ['alpha', 'pos_alpha']:
                     wfpt_parents[tmp_param] = (
                         knodes[tmp_param + "_bottom"]
                         if tmp_param in self.include
-                        else self.model_config_rl["params_default"][
-                            self.model_config_rl["params"].index(tmp_param)
+                        else self.model_config["params_default"][
+                            self.model_config["params"].index(tmp_param)
                         ]
                     )
 

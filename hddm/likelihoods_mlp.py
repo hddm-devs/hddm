@@ -184,52 +184,11 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
     return wfpt_nn
 
 
-def make_mlp_likelihood_rlssm(model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs):
-
-
-    def pdf(self, x):
-        rt = x[:, 0]
-        response = x[:, 1]
-        feedback = x[:, 2]
-        split_by = x[:, 3]
-        q_init = x[:, 4] ### CHECK THIS
-
-        params_ssm = np.array(
-            [self.parents[param] for param in model_config["params"]]
-        ).astype(np.float32)
-
-        params_rl = np.array(
-            [self.parents[param] for param in model_config_rl["params"]]
-        ).astype(np.float32)
-
-        param_bounds_lower = model_config["param_bounds"][0]
-        param_bounds_lower.extend(model_config_rl["param_bounds"][0])
-        param_bounds_upper = model_config["param_bounds"][1]
-        param_bounds_upper.extend(model_config_rl["param_bounds"][1])
-        param_bounds = [param_bounds_lower, param_bounds_upper]
-
-        return hddm.wfpt.wiener_like_rlssm_nn_pdf(
-            model,
-            rt,
-            response,
-            feedback,
-            split_by,
-            q_init,
-            params_ssm,
-            params_rl,
-            param_bounds,
-            p_outlier=self.parents.value["p_outlier"],
-            w_outlier=wiener_params["w_outlier"],
-            network=kwargs["network"],
-        )
-
-    def cdf(self, x):
-        # TODO: Implement the CDF method for neural networks
-        return "Not yet implemented"
-
+def make_mlp_likelihood_rlssm(model=None, model_config=None, wiener_params=None, **kwargs):
+    print(" in make_mlp: ", model)
     def make_likelihood():
         likelihood_str = make_likelihood_str_mlp_rlssm(
-            model=model, config=model_config, config_rl=model_config_rl, wiener_params=wiener_params,
+            model=model, config=model_config, wiener_params=wiener_params
         )
         exec(likelihood_str)
         my_fun = locals()["custom_likelihood"]
@@ -239,10 +198,6 @@ def make_mlp_likelihood_rlssm(model=None, model_config=None, model_config_rl=Non
 
     wfpt_nn_rl = stochastic_from_dist("WienernnRL_" + model, partial(likelihood_, **kwargs))
 
-    wfpt_nn_rl.pdf = pdf
-    wfpt_nn_rl.cdf = cdf
-    #wfpt_nn_rl.random = random
-    
     return wfpt_nn_rl
 
 # REGRESSOR LIKELIHOODS
