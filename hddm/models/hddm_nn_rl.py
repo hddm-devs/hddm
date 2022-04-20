@@ -1,5 +1,6 @@
 """
 """
+import numpy as np
 import hddm
 from kabuki.hierarchical import (
     Knode,
@@ -28,13 +29,37 @@ class HDDMnnRL(HDDMnn):
         self.model = kwargs.pop("model", None)
         print("in HDDMnnRL -- ", self.model)
         self.rl_rule = kwargs.pop("rl_rule", "qlearn")
-        self.non_centered = kwargs.pop("non_centered", False)
-        self.dual = kwargs.pop("dual", False)
-        self.alpha = kwargs.pop("alpha", True)
+        print("rl rule = ", self.rl_rule)
+        #print("check import -- ", hddm.model_config_rl.model_config_rl)
+        self.model_config = kwargs.pop("model_config", None)
 
-        self.model_config = hddm.model_config.model_config[self.model]
+        self.non_centered = kwargs.pop("non_centered", False)
+        print("non_centered -- ", self.non_centered)
+
+        self.model_config_rl = kwargs.pop("model_config_rl", None)
+        if self.model_config_rl == None:
+            try:
+                self.model_config_rl = deepcopy(hddm.model_config_rl.model_config_rl[self.rl_rule])
+            except:
+                print(
+                    "It seems that you supplied a model string that refers to an undefined model."
+                    + "This works only if you supply a custom model_config_rl dictionary."
+                )
+
+        self.non_centered = kwargs.pop("non_centered", False)
+
+        if self.model_config == None:
+            try:
+                self.model_config = deepcopy(hddm.model_config.model_config[self.model])
+            except:
+                print(
+                    "It seems that you supplied a model string that refers to an undefined model."
+                    + "This works only if you supply a custom model_config dictionary."
+                )
+
         self.network = load_torch_mlp(model=self.model)
-        network_dict = {"network": self.network}
+
+        kwargs_dict = {"network": self.network}
 
         if not "wiener_params" in kwargs.keys():
             kwargs["wiener_params"] = {
@@ -50,8 +75,9 @@ class HDDMnnRL(HDDMnn):
         self.wfpt_nn_rlssm = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
             model=self.model,
             model_config=self.model_config,
+            model_config_rl=self.model_config_rl, 
             wiener_params=kwargs["wiener_params"],
-            **network_dict
+            **kwargs_dict
         )
 
         # Initialize super class
@@ -59,10 +85,10 @@ class HDDMnnRL(HDDMnn):
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)
-        wfpt_parents["alpha"] = knodes["alpha_bottom"]
-        wfpt_parents["pos_alpha"] = knodes["pos_alpha_bottom"] if self.dual else 100.00
+        #wfpt_parents["alpha"] = knodes["alpha_bottom"]
+        #wfpt_parents["pos_alpha"] = knodes["pos_alpha_bottom"] if self.dual else 100.00
 
-        print(">>> ", wfpt_parents, "\n\n", knodes)
+        print(">>> wfpt_parents == ", wfpt_parents, "\n\n", knodes)
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
