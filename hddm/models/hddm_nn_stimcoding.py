@@ -135,15 +135,15 @@ class HDDMnnStimCoding(HDDMStimCoding):
 
     def __getstate__(self):
         d = super(HDDMnnStimCoding, self).__getstate__()
-        del d["network"]
+        # del d["network"]
         del d["wfpt_nn"]
         return d
 
     def __setstate__(self, d):
-        d["network"] = load_torch_mlp(model=d["model"])
+        # d["network"] = load_torch_mlp(model=d["model"])
         network_dict = {"network": d["network"]}
         d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
             model=d["model"], **network_dict
         )
-
+        
         super(HDDMnnStimCoding, self).__setstate__(d)

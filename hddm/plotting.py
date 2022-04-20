@@ -116,7 +116,7 @@ def plot_posterior_pair(
 
             # Save figure if necessary
             if save:
-                print("passing_print")
+                #print("passing_print")
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
@@ -218,10 +218,10 @@ def plot_from_data(
 
     i = 1
     for group_id, df_tmp in df.groupby(groupby):
-        nrows = np.ceil(n_plots / columns)
+        nrows = int(np.ceil(n_plots / columns))
 
         # Plot individual subjects (if present)
-        ax = fig.add_subplot(np.ceil(nrows), columns, i)
+        ax = fig.add_subplot(nrows, columns, i)
 
         # Allow kwargs to pass to the plot_func, whether this is the first plot
         # (useful to generate legends only for the first subplot)
@@ -351,9 +351,9 @@ def plot_posterior_predictive(
             wspace=subplots_adjust["wspace"],
         )
 
-        nrows = num_subjs or np.ceil(len(nodes) / columns)
+        nrows = num_subjs or int(np.ceil(len(nodes) / columns))
 
-        if len(nodes) - (int(nrows) * columns) > 0:
+        if len(nodes) - (nrows * columns) > 0:
             nrows += 1
 
         # Plot individual subjects (if present)
@@ -363,7 +363,7 @@ def plot_posterior_predictive(
             if not hasattr(bottom_node["node"], required_method):
                 continue  # skip nodes that do not define the required_method
 
-            ax = fig.add_subplot(np.ceil(nrows), columns, subj_i + 1)
+            ax = fig.add_subplot(nrows, columns, subj_i + 1)
             if "subj_idx" in bottom_node:
                 ax.set_title(str(bottom_node["subj_idx"]))
 
@@ -382,7 +382,7 @@ def plot_posterior_predictive(
             # This function should manipulate the ax object, and is expected to not return anything.
             plot_func(bottom_node["node"], ax, **kwargs)
 
-            if i > (np.ceil(nrows) * columns):
+            if i > (nrows * columns):
                 warnings.warn("Too many nodes. Consider increasing number of columns.")
                 break
 
@@ -1910,7 +1910,7 @@ def plot_caterpillar(
     traces_by_param = _group_traces_via_grouped_nodes(model=hddm_model, group_dict=out)
 
     ncolumns = columns
-    nrows = np.ceil(len(out.keys()) / ncolumns)
+    nrows = int(np.ceil(len(out.keys()) / ncolumns))
 
     fig = plt.figure(figsize=figsize)
     fig.suptitle("")
@@ -1972,7 +1972,7 @@ def plot_caterpillar(
         ax.tick_params(axis="x", labelsize=x_tick_size)
 
     if save:
-        print("passing_print")
+        #print("passing_print")
 
         fname = "caterpillar_" + hddm_model.model
 

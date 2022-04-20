@@ -99,7 +99,7 @@ class HDDM(HDDMBase):
     :Example:
         >>> data, params = hddm.generate.gen_rand_data() # gen data
         >>> model = hddm.HDDM(data) # create object
-        >>> mcmc.sample(5000, burn=20) # Sample from posterior
+        >>> model.sample(5000, burn=20) # Sample from posterior
 
     """
 
@@ -118,6 +118,9 @@ class HDDM(HDDMBase):
                 self.slice_widths = {
                     param: 0.1 for param in self.model_config["params"]
                 }
+
+            print(self.slice_widths)
+            
             self.slice_widths["p_outlier"] = 1.0
 
         else:

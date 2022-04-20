@@ -8,7 +8,8 @@ class TorchConfig(object):
     def __init__(self, model=None):
         self.network_files = {
             "ddm": "d27193a4153011ecb76ca0423f39a3e6_ddm_torch_state_dict.pt",
-            "angle": "eba53550128911ec9fef3cecef056d26_angle_torch_state_dict.pt",
+            #"angle": "eba53550128911ec9fef3cecef056d26_angle_torch_state_dict.pt",
+            "angle":  "248c94cca33e11ecb947ac1f6bfea5a4_training_data_angle_torch_state_dict.pt",
             "levy": "80dec298152e11ec88b8ac1f6bfea5a4_levy_torch_state_dict.pt",
             "ornstein": "1f496b50127211ecb6943cecef057438_ornstein_torch_state_dict.pt",
             "weibull": "44deb16a127f11eca325a0423f39b436_weibull_torch_state_dict.pt",
@@ -29,7 +30,8 @@ class TorchConfig(object):
 
         self.network_config_files = {
             "ddm": "d27193a4153011ecb76ca0423f39a3e6_ddm_torch__network_config.pickle",
-            "angle": "eba53550128911ec9fef3cecef056d26_angle_torch__network_config.pickle",
+            #"angle": "eba53550128911ec9fef3cecef056d26_angle_torch__network_config.pickle",
+            "angle": "248c94cca33e11ecb947ac1f6bfea5a4_training_data_angle_torch__network_config.pickle",
             "levy": "80dec298152e11ec88b8ac1f6bfea5a4_levy_torch__network_config.pickle",
             "ornstein": "1f496b50127211ecb6943cecef057438_ornstein_torch__network_config.pickle",
             "weibull": "44deb16a127f11eca325a0423f39b436_weibull_torch__network_config.pickle",

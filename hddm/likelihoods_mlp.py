@@ -46,7 +46,6 @@ def __prepare_indirect_betas(model_config = {}):
             # For particular indirect beta loop over the
             # parameters it links to
             for links_to_tmp in model_config['indirect_betas'][indirect_beta_tmp]['links_to'].keys():
-                print(param_links_betas.keys())
 
                 # If param links has respective key already
                 # just add the indirect beta to it
@@ -240,7 +239,6 @@ def make_mlp_likelihood_reg(
             (self.value.shape[0], len(model_config["params"])), dtype=np.float32
         )
 
-        print(self.value)
         cnt = 0
         for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
@@ -302,7 +300,6 @@ def make_mlp_likelihood_reg(
             )
 
         exec(likelihood_str)
-        print(likelihood_str)
         my_fun = locals()["custom_likelihood_reg"]
         return my_fun
 

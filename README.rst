@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.4
+:Version: 0.9.5
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -84,6 +84,28 @@ Features
              **model_config**. E.g. in the **race_no_bias_3** model, the usual lower bounds on the **v0, v1 ,v2, v3** parameters are 0. If we allow these parameters to be driven by an 
              indirect regressor **v**, which is added to the regressions of **v0, v1, v2, v3**, then **v0, v1, v2, v3**
 
+* HDDM 0.9.5 Bug fixes and another new functionality.
+             **HDDMnnRegressor** now allows you to also define **indirect betas**, latent parameters that can be used in regression models. 
+             E.g. in the **race_no_bias_3** model, you can define a **v** beta, which will be expressed in the regression models 
+             for **v0**, **v1**, **v2** like so:
+
+             **v0 = beta0 * covariate0 + ... + v * covariate_v_0**
+
+             **v1 = beta0 * covariate0 + ... + v * covariate_v_1**
+
+             **v2 = beta0 * covariate0 + ... + v * covariate_v_2**
+
+             The **v0**, **v1**, **v2** parameters might be drifts in a preference based choice task, and dedicated to respective choice 
+             options in a stimulus screen. You may be interested in making these slopes dependent on the respective values of these options
+             in a given trial, but wish to use a central **beta**, (**v** in this example) that relates option value to drift for all drifts.
+
+             Note that first, this is **complementary** to the **indirect regressors** defined above, and second that the usual modelling caveats,
+             such as potential convergence problems apply. 
+
+             Note also that the usage of **indirect betas** as well as **indirect regressors** may affect the speed of sampling in general.
+             Both translate into more computational work at the stage of regression likelihood evaluation.
+
+
 Comparison to other packages
 ============================
 
@@ -125,9 +147,10 @@ Installation
 ============
 
 For **HDDM >= 0.9.0**, currently in beta release, the most convenient way to install HDDM, is to directly 
-install via git. In a fresh environment type:
+install via **github**. In a fresh environment type.
 
 :: 
+
     pip install cython
     pip install pymc
     pip install git+https://github.com/hddm-devs/kabuki
@@ -135,11 +158,11 @@ install via git. In a fresh environment type:
     # Optional
     pip install torch torchvision torchaudio
 
-To make use of the LAN fuctionalities, need actually need to install `pytorch`_ .
+To make use of the LAN fuctionalities, you need to install `pytorch`_ .
 
-A common issue is that the installation of the **pymc** package (a necessary dependency),
-is hampered by issues with compiling its fortran code. Try downgrading you the version of your
-**gcc* compiler. This can be done on a MAC (not the new M1 versions tragically), via 
+A common issue on new machines is that the installation of the **pymc** package (a necessary dependency),
+is hampered by problems with compiling its fortran code. Try downgrading the version of your
+**gcc** compiler. This can be done on a MAC (not the new M1 versions tragically), via 
 
 ::
 

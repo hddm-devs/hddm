@@ -291,7 +291,7 @@ class HDDMRegressor(HDDM):
                                    group_only_regressors = True, 
                                    group_only_nodes = None):
         self.model_descrs = []
-
+        group_only_nodes_tmp = deepcopy(group_only_nodes)
         # Cycle through list of regression models supplied
         for model in models:
             if isinstance(model, dict):
@@ -332,9 +332,8 @@ class HDDMRegressor(HDDM):
             self.model_descrs.append(model_descr)
 
             if group_only_regressors:
-                group_only_nodes += model_descr["params"]
-        
-        return group_only_nodes
+                group_only_nodes_tmp += model_descr["params"]
+        return group_only_nodes_tmp
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
@@ -404,8 +403,8 @@ class HDDMRegressor(HDDM):
             except:
                 link_is_identity = False
 
-            print("Reg Model:")
-            print(reg)
+            # print("Reg Model:")
+            # print(reg)
             # ------
 
             for inter, param in zip(intercept, reg["params"]):
@@ -527,6 +526,7 @@ class HDDMRegressor(HDDM):
                     reg_family["%s_subj_reg" % param] = reg_family.pop(
                         "%s_bottom" % param_lookup
                     )
+
                 knodes.update(reg_family)
 
                 self.slice_widths[param] = 0.05

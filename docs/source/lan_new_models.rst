@@ -56,7 +56,6 @@ dictionary, which allows you to investigate metadata for all the new
      'params_trans': [0, 0, 1, 0, 0],
      'params_std_upper': [1.5, 1.0, None, 1.0, 1.0],
      'param_bounds': [[-2.0, 0.3, 0.2, -1.0, 0.001], [2.0, 2.0, 0.8, 1.0, 2]],
-     'param_bounds_cnn': [[-2.5, 0.2, 0.1, -1.0, 0.0], [2.5, 2.0, 0.9, 1.0, 2.0]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
      'n_params': 5,
      'params_default': [0.0, 1.0, 0.5, 0.0, 0.001],

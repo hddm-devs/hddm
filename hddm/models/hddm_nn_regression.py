@@ -196,12 +196,12 @@ class HDDMnnRegressor(HDDMRegressor):
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
         d = super(HDDMnnRegressor, self).__getstate__()
-        del d["network"]
+        # del d["network"]
         del d["wfpt_nn_reg_class"]
         return d
 
     def __setstate__(self, d):
-        d["network"] = load_torch_mlp(model=d["model"])
+        # d["network"] = load_torch_mlp(model=d["model"])
         network_dict = {"network": d["network"]}
 
         d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(

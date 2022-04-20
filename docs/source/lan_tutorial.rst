@@ -258,7 +258,6 @@ Now taking a closer look at the ``angle`` model
      'params_trans': [0, 0, 1, 0],
      'params_std_upper': [1.5, 1.0, None, 1.0],
      'param_bounds': [[-3.0, 0.3, 0.1, 0.001], [3.0, 2.5, 0.9, 2.0]],
-     'param_bounds_cnn': [[-2.5, 0.5, 0.25, 0.001], [2.5, 2.2, 0.75, 1.95]],
      'boundary': <function hddm.simulators.boundary_functions.constant(t=0)>,
      'params_default': [0.0, 1.0, 0.5, 0.001],
      'hddm_include': ['z'],
