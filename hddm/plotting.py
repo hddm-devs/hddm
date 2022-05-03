@@ -1289,7 +1289,7 @@ def _add_model_cartoon_to_ax(
     maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
 
     if 'vanilla' in tmp_model:
-        tmp_traj = tmp_traj - sample.a.values[0] + (sample.a.values[0] * sample.w.values[0])
+        tmp_traj = tmp_traj - sample.a.values[0] + (sample.a.values[0] * sample.z.values[0])
 
     # Upper bound
     axis.plot(
