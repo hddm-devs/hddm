@@ -370,7 +370,7 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
                            'max_t': max_t,
                            'n_samples': n_samples,
                            'simulator': 'ddm',
-                           'boundary_fun_type': 'constant'
+                           'boundary_fun_type': 'constant',
                            'possible_choices': [0, 1],
                            'trajectory': traj})
 
