@@ -308,6 +308,11 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
     cdef float[:] z_view = z
     cdef float[:] t_view = t
 
+    # Data-structs for trajectory storage
+    traj = np.zeros((int(max_t / delta_t) + 1, 1), dtype = DTYPE)
+    traj[:, :] = -999
+    cdef float[:, :] traj_view = traj
+
     rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
     choices = np.zeros((n_samples, n_trials, 1), dtype = np.intc)
     cdef float[:, :, :] rts_view = rts
@@ -330,11 +335,20 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
             y = z_view[k] * a_view[k] # reset starting point
             t_particle = 0.0 # reset time
 
+            if n == 0:
+                if k == 0:
+                    traj_view[0, 0] = y
+            
             # Random walker
             while y <= a_view[k] and y >= 0 and t_particle <= max_t:
                 y += v_view[k] * delta_t + sqrt_st * gaussian_values[m] # update particle position
                 t_particle += delta_t
                 m += 1
+
+                if n == 0:
+                    if k == 0:
+                        traj_view[ix, 0] = y
+
                 if m == num_draws:
                     gaussian_values = draw_gaussian(num_draws)
                     m = 0
@@ -356,10 +370,9 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
                            'max_t': max_t,
                            'n_samples': n_samples,
                            'simulator': 'ddm',
-                           'boundary_fun_type': 'constant',
-                           'possible_choices': [0, 1]})
-
-
+                           'boundary_fun_type': 'constant'
+                           'possible_choices': [0, 1],
+                           'trajectory': traj})
 
 # Simulate (rt, choice) tuples from: SIMPLE DDM -----------------------------------------------
 # Simplest algorithm
