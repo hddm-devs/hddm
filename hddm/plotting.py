@@ -1266,7 +1266,9 @@ def _add_model_cartoon_to_ax(
         or tmp_model == "ornstein"
         or tmp_model == "levy"
         or tmp_model == "full_ddm"
-    ):
+        or tmp_model == "ddm_vanilla"
+        or tmp_model == "full_ddm_vanilla"
+        ):
 
         b = sample.a.values[0] * np.ones(t_s.shape[0])
 
