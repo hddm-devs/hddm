@@ -60,7 +60,7 @@ def make_likelihood_str_mlp_rlssm(
         + "np.array([" + params_str_rl + "]), "
         + "params_bnds=" + "np.array(" + str(param_bounds) + "), "
         + "network=network, "
-        + "p_outlier=p_outlier)"
+        + "p_outlier=p_outlier, w_outlier=w_outlier)"
     )
 
     print("\n\n FUNCTION \n", fun_str)

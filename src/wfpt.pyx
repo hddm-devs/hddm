@@ -197,6 +197,9 @@ def wiener_like_rlssm_nn(str model,
     # Check for boundary violations -- if true, return -np.inf
     # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
     #     return -np.inf
+    if v <= 0:
+        return -np.inf
+
     for i_p in np.arange(1, len(params_ssm)):
         lower_bnd = params_bnds[0][i_p]
         upper_bnd = params_bnds[1][i_p]
@@ -280,8 +283,15 @@ def wiener_like_rlssm_nn(str model,
     data[:, n_params:] = np.stack([x, response], axis = 1)
     
     #print("create data arr")
-    sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    #sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
     #print("sum_logp: ", sum_logp)
+
+    # Call to network:
+    if p_outlier == 0:
+        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    else:
+        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+
     return sum_logp
 
 '''
