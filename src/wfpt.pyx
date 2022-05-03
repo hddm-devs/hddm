@@ -197,8 +197,6 @@ def wiener_like_rlssm_nn(str model,
     # Check for boundary violations -- if true, return -np.inf
     # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
     #     return -np.inf
-    if v <= 0:
-        return -np.inf
 
     for i_p in np.arange(1, len(params_ssm)):
         lower_bnd = params_bnds[0][i_p]
