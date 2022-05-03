@@ -347,7 +347,7 @@ def ddm(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
 
                 if n == 0:
                     if k == 0:
-                        traj_view[ix, 0] = y
+                        traj_view[m, 0] = y
 
                 if m == num_draws:
                     gaussian_values = draw_gaussian(num_draws)
