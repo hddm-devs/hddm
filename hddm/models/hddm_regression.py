@@ -497,12 +497,23 @@ class HDDMRegressor(HDDM):
                     else:  # Otherwise apply normal prior family
                         # If the parameter is listed as transformed, but non-identity link is assigned
                         # --> Actually do not transform parameter and apply truncated normal family prior
-                        reg_family = self._create_family_trunc_normal(
+                        # There is no general strategy here, because we don't know the supplied link a priori
+                        # AF-TD: Create Warning
+                        # reg_family = self._create_family_trunc_normal(
+                        #     param_lookup,
+                        #     value=default_val,
+                        #     lower=param_lower,
+                        #     upper=param_upper,
+                        #     std_upper=param_std_upper,
+                        # )
+
+                        reg_family = self._create_family_normal(
                             param_lookup,
-                            value=default_val,
-                            lower=param_lower,
-                            upper=param_upper,
-                            std_upper=param_std_upper,
+                            value = default_val,
+                            std_lower = 1e-10,
+                            std_upper = param_std_upper,
+                            g_mu=0,
+                            g_tau=15**-2,
                         )
 
                     # Rename nodes to avoid collissions
