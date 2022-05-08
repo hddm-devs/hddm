@@ -116,7 +116,6 @@ def plot_posterior_pair(
 
             # Save figure if necessary
             if save:
-                #print("passing_print")
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
@@ -361,8 +360,6 @@ def plot_posterior_predictive(
         for subj_i, (node_name, bottom_node) in enumerate(nodes.iterrows()):
             i += 1
             if not hasattr(bottom_node["node"], required_method):
-                print(dir(bottom_node["node"]))
-                print("passed here")
                 continue  # skip nodes that do not define the required_method
 
             ax = fig.add_subplot(nrows, columns, subj_i + 1)
@@ -833,7 +830,6 @@ def _plot_func_posterior_node_from_sim(
     # Plot data
     if len(data_tmp) != 0:
         if n_choices == 2:
-            print(data_tmp)
             rt_dat = data_tmp.copy()
             if np.sum(rt_dat.rt < 0) == 0:
                 if ("response" in rt_dat.columns):
@@ -1986,8 +1982,6 @@ def plot_caterpillar(
         ax.tick_params(axis="x", labelsize=x_tick_size)
 
     if save:
-        #print("passing_print")
-
         fname = "caterpillar_" + hddm_model.model
 
         if path is None:
