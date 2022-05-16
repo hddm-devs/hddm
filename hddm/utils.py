@@ -28,8 +28,6 @@ def make_likelihood_str_mlp_rlssm(
     param_bounds_upper = config["param_bounds"][1]
     param_bounds_upper.extend(config_rl["param_bounds"][1])
     param_bounds = [param_bounds_lower, param_bounds_upper]
-    print(param_bounds_lower, param_bounds_upper)
-    print("param_bounds = ", param_bounds)
 
     params_str_ssm = ", ".join(config["params"])
     params_str_rl = ", ".join(config_rl["params"])
@@ -40,8 +38,6 @@ def make_likelihood_str_mlp_rlssm(
 
     w_outlier_str = str(wiener_params["w_outlier"])
 
-    print("= utils: ", model, all_params_str)
-
     fun_str = (
         "def "
         + fun_name
@@ -50,7 +46,6 @@ def make_likelihood_str_mlp_rlssm(
         + ", p_outlier=0.0, w_outlier="
         + w_outlier_str
         + ", network = None):\n    "
-        # + "print(\"types: \", type(x[\"rt\"].values[0]), type(x[\"response\"].values[0]), type(x[\"feedback\"].values[0]), type(a), type(alpha), a, alpha) \n    "
         + "return hddm.wfpt.wiener_like_rlssm_nn('" + model + "', "
         + 'x["rt"].values.astype(float), '
         + 'x["response"].values.astype(int), '
@@ -63,8 +58,6 @@ def make_likelihood_str_mlp_rlssm(
         + "network=network, "
         + "p_outlier=p_outlier, w_outlier=w_outlier)"
     )
-
-    print("\n\n FUNCTION \n", fun_str)
 
     return fun_str
 

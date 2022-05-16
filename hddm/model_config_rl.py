@@ -1,8 +1,8 @@
 import numpy as np
 
 model_config_rl = {
-    "qlearn": {
-        "doc": "Q-learning",
+    "RWupdate": {
+        "doc": "Rescorla-Wagner update rule.",
         "params": ["rl_alpha"],
         "params_trans": [0],
         "params_std_upper": [None],
@@ -10,7 +10,7 @@ model_config_rl = {
         "params_default": [0.5],
     },
 
-    "qlearn_dual": {
+    "RWupdate_dual": {
         "doc": "Q-learning with two learning rates",
         "params": ["rl_alpha", "rl_pos_alpha"],
         "params_trans": [0, 0],

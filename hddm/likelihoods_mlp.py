@@ -184,7 +184,7 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
 
 
 def make_mlp_likelihood_rlssm(model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs):
-    print("model_config in make_mlp ", model_config['params'])
+
     def make_likelihood():
         likelihood_str = make_likelihood_str_mlp_rlssm(
             model=model, config=model_config, config_rl=model_config_rl, wiener_params=wiener_params

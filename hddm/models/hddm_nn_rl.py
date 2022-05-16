@@ -27,14 +27,14 @@ class HDDMnnRL(HDDMnn):
         self.rlssm_model = True
 
         self.model = kwargs.pop("model", None)
-        print("in HDDMnnRL -- ", self.model)
-        self.rl_rule = kwargs.pop("rl_rule", "qlearn")
-        print("rl rule = ", self.rl_rule)
-        #print("check import -- ", hddm.model_config_rl.model_config_rl)
+        self.rl_rule = kwargs.pop("rl_rule", "RWupdate")
         self.model_config = kwargs.pop("model_config", None)
-
         self.non_centered = kwargs.pop("non_centered", False)
-        print("non_centered -- ", self.non_centered)
+
+        print("\nPrinting model specifications -- ")
+        print("ssm: ", self.model)
+        print("rl rule: ", self.rl_rule)
+        print("using centered dist.: ", self.non_centered)
 
         self.model_config_rl = kwargs.pop("model_config_rl", None)
         if self.model_config_rl == None:
@@ -45,8 +45,6 @@ class HDDMnnRL(HDDMnn):
                     "It seems that you supplied a model string that refers to an undefined model."
                     + "This works only if you supply a custom model_config_rl dictionary."
                 )
-
-        self.non_centered = kwargs.pop("non_centered", False)
 
         if self.model_config == None:
             try:
@@ -85,14 +83,12 @@ class HDDMnnRL(HDDMnn):
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)
-        #wfpt_parents["alpha"] = knodes["alpha_bottom"]
-        #wfpt_parents["pos_alpha"] = knodes["pos_alpha_bottom"] if self.dual else 100.00
 
-        print(">>> wfpt_parents == ", wfpt_parents, "\n\n", knodes)
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+
         return Knode(
             self.wfpt_nn_rlssm,
             "wfpt",
@@ -103,18 +99,16 @@ class HDDMnnRL(HDDMnn):
 
     def __getstate__(self):
         d = super(HDDMnnRL, self).__getstate__()
-        #del d["network"]
         del d["wfpt_nn_rlssm"]
-        #print(d['model_config'])
+
         return d
 
     def __setstate__(self, d):
-        print(d['model_config'])
         network_dict = {"network": d["network"]}
         d["wfpt_nn_rlssm"] = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
             model=d["model"], model_config=d["model_config"], 
             model_config_rl=d["model_config_rl"],
             wiener_params = d['wiener_params'], **network_dict
         )
-        print(d['model_config'])
+
         super(HDDMnnRL, self).__setstate__(d)

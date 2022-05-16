@@ -119,7 +119,7 @@ class HDDM(HDDMBase):
                     param: 0.1 for param in self.model_config["params"]
                 }
 
-            print(self.slice_widths)
+            #print(self.slice_widths)
             
             self.slice_widths["p_outlier"] = 1.0
 
@@ -172,8 +172,6 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes_nn_rl_noninfo(self, include):
         knodes = self._create_stochastic_knodes_nn_noninfo(include)
 
-        print("$$$ include = ", include)
-        #print("\n\n model_config_rl == ",  self.model_config_rl["params"])
         for tmp_param in self.model_config_rl["params"]:
             if tmp_param in include:
                 param_id = self.model_config_rl["params"].index(tmp_param)
@@ -250,7 +248,7 @@ class HDDM(HDDMBase):
                     #         std_upper=param_std_upper,  # added AF
                     #     )
                     # )
-        print("\n\n knodes == ", knodes.keys())
+
         return knodes
 
         # #knodes = super(HDDMnnRL, self)._create_stochastic_knodes(include)
@@ -331,7 +329,6 @@ class HDDM(HDDMBase):
                 depends=self.depends["p_outlier"],
             )
 
-        print("model_config in nn_noninfo ", self.model_config['params'])
         for tmp_param in self.model_config["params"]:
             if tmp_param in include:
                 param_id = self.model_config["params"].index(tmp_param)
