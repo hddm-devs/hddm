@@ -1,4 +1,5 @@
 from .simulators import boundary_functions as bf
+from .simulators import drift_functions as df
 import numpy as np
 
 model_config = {
@@ -228,6 +229,62 @@ model_config = {
             "t_std": 0.15,
             "sv": 0.5,  # AF-TODO: Might be worth adding std ?
         },
+    "gamma_drift": {
+        "doc": "Meant for use with the LAN extension",
+        "params": ["v", "a", "z", "t", "shape", "scale", "c"],
+        "params_trans": [0, 0, 1, 0, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 2.0, 2.0, 1.5],
+        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, 2.0, 0.01, -3.0], [3.0, 3.0, 0.9, 2.0, 10.0, 1.0, 3.0]],
+        "boundary": bf.constant,
+        "params_default": [0.0, 1.0, 0.5, 0.25, 5.0, 0.5, 1.0],
+        "hddm_include": ["z", "shape", "scale", "c"],
+        "choices":[-1, 1],
+        "slice_widths": {
+            "v": 1.5,
+            "v_std": 1,
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "t": 0.01,
+            "t_std": 0.15,
+            "shape": 1,
+            "shape_std": 1,
+            "scale": 1,
+            "scale_std": 1,
+            "c": 1,
+            "c_std": 1
+        }
+    },
+    "gamma_drift_angle": {
+        "doc": "Meant for use with the LAN extension",
+        "params": ["v", "a", "z", "t", "theta", "shape", "scale", "c"],
+        "params_trans": [0, 0, 1, 0, 0, 0, 0, 0],
+        "params_std_upper": [1.5, 1.0, None, 1.0, 1.0, 2.0, 2.0, 1.5],
+        "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, -0.1, 2.0, 0.01, -3.0], [3.0, 3.0, 0.9, 2.0, 1.3, 10.0, 1.0, 3.0]],
+        "boundary": bf.angle,
+        "params_default": [0.0, 1.0, 0.5, 0.25, 0.0, 5.0, 0.5, 1.0],
+        "hddm_include": ["z", "shape", "scale", "c", "theta"],
+        "choices":[-1, 1],
+        "slice_widths": {
+            "v": 1.5,
+            "v_std": 1,
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "t": 0.01,
+            "t_std": 0.15,
+            "theta": 0.1,
+            "theta_std": 0.2,
+            "shape": 1,
+            "shape_std": 1,
+            "scale": 1,
+            "scale_std": 1,
+            "c": 1,
+            "c_std": 1
+        }
+    },
     },
     "ddm_par2": {
         "doc": "Currently undocumented, in testing phase.",

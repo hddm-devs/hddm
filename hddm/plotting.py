@@ -116,7 +116,6 @@ def plot_posterior_pair(
 
             # Save figure if necessary
             if save:
-                #print("passing_print")
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
@@ -833,9 +832,12 @@ def _plot_func_posterior_node_from_sim(
         if n_choices == 2:
             rt_dat = data_tmp.copy()
             if np.sum(rt_dat.rt < 0) == 0:
-                rt_dat.loc[rt_dat.response != 1, "rt"] = (-1) * rt_dat.rt[
-                    rt_dat.response != 1
-                ].values
+                if ("response" in rt_dat.columns):
+                    rt_dat.loc[rt_dat.response != 1, "rt"] = (-1) * rt_dat.rt[
+                        rt_dat.response != 1
+                    ].values
+                else:
+                    pass
 
             axis.hist(
                 rt_dat.rt,
@@ -1266,9 +1268,13 @@ def _add_model_cartoon_to_ax(
         or tmp_model == "ornstein"
         or tmp_model == "levy"
         or tmp_model == "full_ddm"
-    ):
+        or tmp_model == "ddm_vanilla"
+        or tmp_model == "full_ddm_vanilla"
+        ):
 
         b = sample.a.values[0] * np.ones(t_s.shape[0])
+        if 'vanilla' in tmp_model:
+            b = (sample.a.values[0] / 2) * np.ones(t_s.shape[0])
 
     # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
     out = simulator(
@@ -1283,6 +1289,10 @@ def _add_model_cartoon_to_ax(
     # AF-TODO: Add trajectories
     tmp_traj = out[2]["trajectory"]
     maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+
+    if 'vanilla' in tmp_model:
+        a_tmp = sample.a.values[0] / 2
+        tmp_traj = tmp_traj - a_tmp #+ (a_tmp * sample.z.values[0])
 
     # Upper bound
     axis.plot(
@@ -1972,8 +1982,6 @@ def plot_caterpillar(
         ax.tick_params(axis="x", labelsize=x_tick_size)
 
     if save:
-        #print("passing_print")
-
         fname = "caterpillar_" + hddm_model.model
 
         if path is None:

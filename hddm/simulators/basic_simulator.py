@@ -8,6 +8,7 @@ from data_simulators import full_ddm
 from data_simulators import ddm_sdv
 from data_simulators import ddm
 from data_simulators import full_ddm_vanilla
+from data_simulators import ddm_flex
 
 # from data_simulators import ddm_flexbound_pre
 from data_simulators import race_model
@@ -17,6 +18,7 @@ from data_simulators import ddm_flexbound_par2
 from data_simulators import ddm_flexbound_mic2_adj
 
 from . import boundary_functions as bf
+from . import drift_functions as df
 from hddm.model_config import model_config
 
 # Basic simulators and basic preprocessing
@@ -336,6 +338,38 @@ def simulator(
             n_trials=n_trials,
             max_t=max_t,
         )
+    
+    if model == "gamma_drift":
+        x = ddm_flex(v = theta[:, 0],
+                     a = theta[:, 1],
+                     z = theta[:, 2],
+                     t = theta[:, 3],
+                     s = s,
+                     boundary_fun = bf.constant,
+                     drift_fun = df.gamma_drift,
+                     boundary_multiplicative = True,
+                     boundary_params = {},
+                     drift_params = {'shape': theta[:, 4], 'scale': theta[:, 5], 'c': theta[:, 6]},
+                     delta_t = delta_t,
+                     n_samples = n_samples,
+                     n_trials = n_trials,
+                     max_t = max_t)
+
+    if model == "gamma_drift_angle":
+        x = ddm_flex(v = theta[:, 0],
+                     a = theta[:, 1],
+                     z = theta[:, 2],
+                     t = theta[:, 3],
+                     s = s,
+                     boundary_fun = bf.angle,
+                     drift_fun = df.gamma_drift,
+                     boundary_multiplicative = False,
+                     boundary_params = {'theta': theta[:, 4]},
+                     drift_params = {'shape': theta[:, 5], 'scale': theta[:, 6], 'c': theta[:, 7]},
+                     delta_t = delta_t,
+                     n_samples = n_samples,
+                     n_trials = n_trials,
+                     max_t = max_t)
 
     if model == "full_ddm":
         x = full_ddm(
