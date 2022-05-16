@@ -331,6 +331,7 @@ class HDDM(HDDMBase):
                 depends=self.depends["p_outlier"],
             )
 
+        print("model_config in nn_noninfo ", self.model_config['params'])
         for tmp_param in self.model_config["params"]:
             if tmp_param in include:
                 param_id = self.model_config["params"].index(tmp_param)

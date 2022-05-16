@@ -5,6 +5,7 @@ import hddm
 import kabuki
 import pandas as pd
 import string
+from copy import deepcopy
 
 from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 import pymc.progressbar as pbar
@@ -33,7 +34,7 @@ def make_likelihood_str_mlp_rlssm(
     params_str_ssm = ", ".join(config["params"])
     params_str_rl = ", ".join(config_rl["params"])
 
-    t_params = config["params"]
+    t_params = deepcopy(config["params"])
     t_params.extend(config_rl["params"])
     all_params_str = ", ".join(t_params)
 

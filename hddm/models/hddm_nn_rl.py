@@ -105,15 +105,16 @@ class HDDMnnRL(HDDMnn):
         d = super(HDDMnnRL, self).__getstate__()
         #del d["network"]
         del d["wfpt_nn_rlssm"]
+        #print(d['model_config'])
         return d
 
     def __setstate__(self, d):
-
+        print(d['model_config'])
         network_dict = {"network": d["network"]}
-        d["wfpt_nn_rlssm"] = hddm.likelihoods_mlp.make_mlp_likelihood(
+        d["wfpt_nn_rlssm"] = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
             model=d["model"], model_config=d["model_config"], 
             model_config_rl=d["model_config_rl"],
             wiener_params = d['wiener_params'], **network_dict
         )
-
+        print(d['model_config'])
         super(HDDMnnRL, self).__setstate__(d)
