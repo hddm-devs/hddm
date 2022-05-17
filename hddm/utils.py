@@ -1045,3 +1045,30 @@ if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
+
+
+def get_dataset_as_dataframe_rlssm(dataset):
+    list_sub_data = list()
+    for itr in range(len(dataset['data'])):
+        data = dataset['data'][itr]['sim_data']
+        data['q_up']
+        data['q_low']
+        data['sim_drift']
+        data['subj_idx'] = itr
+        
+        list_sub_data.append(data)
+    PR_data = pd.concat(list_sub_data, ignore_index=True)
+
+    return PR_data
+
+def get_traces_rlssm(tracefile):
+    t_res = {}
+    for itr in tracefile.keys():
+        if itr in ['deviance', '_state_']:
+            pass
+        else:
+            t_res[itr] = tracefile[itr][0]
+
+    traces = pd.DataFrame.from_dict(t_res)
+
+    return traces

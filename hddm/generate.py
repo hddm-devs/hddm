@@ -476,7 +476,7 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
     return data, subj_params
 
 
-def gen_rand_rlssm_data_MAB_qlearn(
+def gen_rand_rlssm_data_MAB_RWupdate(
     model,
     ssm_param,
     rl_param,

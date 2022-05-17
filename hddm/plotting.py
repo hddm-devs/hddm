@@ -1,4 +1,5 @@
 from hddm.simulators import *
+from hddm.generate import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +13,8 @@ import warnings
 # import hddm
 
 import pandas as pd
+from tqdm import tqdm
+import pymc
 
 from kabuki.analyze import _post_pred_generate, _parents_to_random_posterior_sample
 from statsmodels.distributions.empirical_distribution import ECDF
@@ -1996,3 +1999,176 @@ def plot_caterpillar(
         ]
 
     plt.show()
+
+
+
+'''
+=== RLSSM functions ===
+'''
+
+def get_mean_correct_responses_rlssm(trials, nbins, data):
+    '''
+    function to get mean proportion of correct responses (condition-wise.)
+    
+    trials: num. of initial trials to consider for computing proportion of correct responses
+    nbins: num. of bins to put the trials into. (Num. of trials per bin = trials/nbin)
+    '''
+
+    data_ppc = data[data.trial <= trials].copy()
+    data_ppc.loc[data_ppc['response'] < 1, 'response'] = 0
+
+    data_ppc['bin_trial'] = np.array(pd.cut(data_ppc.trial, nbins+1, labels=np.linspace(0,nbins,nbins+1)))
+
+    sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index()
+    # if type == 'observed':
+    #     sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index()
+    # elif type == 'simulated':
+    #     sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index() # samp
+
+    ppc_sim = sums.groupby(['bin_trial','split_by']).mean().reset_index()
+
+    #initiate columns that will have the upper and lower bound of the hpd
+    ppc_sim['upper_hpd'] = 0
+    ppc_sim['lower_hpd'] = 0
+    for i in range(0,ppc_sim.shape[0]):
+        #calculate the hpd/hdi of the predicted mean responses across bin_trials
+        hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_sim.bin_trial[i]) & (sums['split_by']==ppc_sim.split_by[i])],alpha=0.05)
+        ppc_sim.loc[i,'upper_hpd'] = hdi[1]
+        ppc_sim.loc[i,'lower_hpd'] = hdi[0]
+    #calculate error term as the distance from upper bound to mean
+    ppc_sim['up_err'] = ppc_sim['upper_hpd']-ppc_sim['response']
+    ppc_sim['low_err'] = ppc_sim['response']-ppc_sim['lower_hpd']
+
+    mean_correct_responses = {}
+    up_err = {}
+    low_err = {}
+    for cond in np.unique(ppc_sim.split_by):
+        mean_correct_responses[cond] = ppc_sim[ppc_sim.split_by==cond]['response']
+        up_err[cond] = ppc_sim[ppc_sim.split_by==cond]['up_err']
+        low_err[cond] = ppc_sim[ppc_sim.split_by==cond]['low_err']
+    
+    return mean_correct_responses, up_err, low_err
+
+
+def gen_ppc_rlssm(model_ssm, config_ssm, model_rl, config_rl, data, traces, nsamples, p_lower, p_upper, save_data=False, save_name=None, save_path=None):  
+    def transform_param(param, param_val):
+        if param == 'rl_alpha':
+            transformed_param_val = np.exp(param_val)/(1+np.exp(param_val))
+        else:
+            transformed_param_val = param_val
+        
+        return transformed_param_val
+
+    sim_data = pd.DataFrame()
+
+    nsamples += 1
+    for i in tqdm(range(1,nsamples)):
+        sample = np.random.randint(0,traces.shape[0]-1)
+
+        for subj in data.subj_idx.unique():
+            sub_data = pd.DataFrame()
+
+            for cond in np.unique(data.split_by):
+                
+                sampled_param_ssm = list()
+                for p in config_ssm['params']:
+                    p_val = traces.loc[sample, p+'_subj.'+str(subj)]
+                    p_val = transform_param(p, p_val)
+                    sampled_param_ssm.append(p_val)
+                
+                sampled_param_rl = list()
+                for p in config_rl['params']:
+                    p_val = traces.loc[sample, p+'_subj.'+str(subj)]
+                    p_val = transform_param(p, p_val)
+                    sampled_param_rl.append(p_val)
+
+                cond_size = len(data[(data['subj_idx']==subj) & (data['split_by']==cond)].trial.unique())
+                ind_cond_data = gen_rand_rlssm_data_MAB_RWupdate(model_ssm, sampled_param_ssm, sampled_param_rl, size=cond_size, p_lower=p_lower[cond], p_upper=p_upper[cond], subjs=1, split_by=cond)
+            
+                #append the conditions
+                sub_data = sub_data.append([ind_cond_data],ignore_index=False)
+            
+            #assign subj_idx
+            sub_data['subj_idx'] = subj
+        
+            #identify the simulated data
+            sub_data['samp'] = i
+            
+            #append data from each subject
+            sim_data = sim_data.append(sub_data,ignore_index=True)
+
+    ppc_sdata = sim_data[['subj_idx','response','split_by','rt','trial','feedback','samp']].copy()
+
+    if save_data:
+        if save_name is None:
+            save_name = 'ppc_data'
+        if save_path is None:
+            save_path = "."
+        ppc_sdata.to_csv("%s.%s" % (os.path.join(save_path, save_name), 'csv'))
+        print("ppc data saved at %s.%s" % (os.path.join(save_path, save_name), 'csv'))
+    
+    return ppc_sdata
+
+
+def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins):  
+    res_obs, up_err_obs, low_err_obs = get_mean_correct_responses_rlssm(trials, nbins, obs_data)
+    res_sim, up_err_sim, low_err_sim = get_mean_correct_responses_rlssm(trials, nbins, sim_data)
+
+    cond_list = np.unique(obs_data.split_by)
+    rows = 1
+    cols = len(cond_list)
+    fig, ax = plt.subplots(rows, cols, constrained_layout=False, tight_layout=True)
+    
+    cond_index = 0
+    for ay in range(cols):
+        cond = cond_list[cond_index]
+        
+        ax[ay].errorbar(1+np.arange(len(res_obs[cond])), res_obs[cond], yerr=[low_err_obs[cond], up_err_obs[cond]], label='observed')
+        ax[ay].errorbar(1+np.arange(len(res_sim[cond])), res_sim[cond], yerr=[low_err_sim[cond], up_err_sim[cond]], label='simulated')
+
+        ax[ay].set_ylim((0,1))
+
+        ax[ay].legend()
+        ax[ay].set_title('split_by='+str(cond), fontsize=12)
+        ax[ay].grid()
+        
+        cond_index += 1
+    
+    fig = plt.gcf()
+    fig.supxlabel('Trial bins', fontsize=12)
+    fig.supylabel('Proportion of Correct Responses', fontsize=12)
+    fig.set_size_inches(4*len(cond_list), 4)
+
+    return fig
+
+
+def plot_ppc_rt_rlssm(obs_data, sim_data):  
+
+    cond_list = np.unique(obs_data.split_by)
+    rows = 1
+    cols = len(cond_list)
+    fig, ax = plt.subplots(rows, cols, constrained_layout=False, tight_layout=True)
+    
+    cond_index = 0
+    for ay in range(cols):
+        cond = cond_list[cond_index]
+
+        rt_ppc_sim = np.where(sim_data[sim_data.split_by==cond].response==1, sim_data[sim_data.split_by==cond].rt, 0-sim_data[sim_data.split_by==cond].rt)
+        rt_ppc_obs = np.where(obs_data[obs_data.split_by==cond].response==1, obs_data[obs_data.split_by==cond].rt, 0-obs_data[obs_data.split_by==cond].rt)
+        
+        sns.kdeplot(rt_ppc_sim, label='simulated', ax=ax[ay]).set(ylabel=None)
+        sns.kdeplot(rt_ppc_obs, label='observed', ax=ax[ay]).set(ylabel=None)
+
+        ax[ay].legend()
+        ax[ay].set_title('split_by='+str(cond), fontsize=12)
+        #ax[ay].get_yaxis().set_visible(False)
+        ax[ay].grid()
+        
+        cond_index += 1
+    
+    fig = plt.gcf()
+    fig.supxlabel('Reaction Time', fontsize=12)
+    fig.supylabel('Density', fontsize=12)
+    fig.set_size_inches(4*len(cond_list), 4)
+
+    return fig
