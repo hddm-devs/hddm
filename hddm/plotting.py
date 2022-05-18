@@ -1,10 +1,12 @@
 from hddm.simulators import *
 from hddm.generate import *
+from hddm.utils import *
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sns
+import arviz as az
 
 import os
 import warnings
@@ -2110,7 +2112,7 @@ def gen_ppc_rlssm(model_ssm, config_ssm, model_rl, config_rl, data, traces, nsam
     return ppc_sdata
 
 
-def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins):  
+def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins, save_fig=False, save_name=None, save_path=None):  
     res_obs, up_err_obs, low_err_obs = get_mean_correct_responses_rlssm(trials, nbins, obs_data)
     res_sim, up_err_sim, low_err_sim = get_mean_correct_responses_rlssm(trials, nbins, sim_data)
 
@@ -2139,10 +2141,18 @@ def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins):
     fig.supylabel('Proportion of Correct Responses', fontsize=12)
     fig.set_size_inches(4*len(cond_list), 4)
 
+    if save_fig:
+        if save_name is None:
+            save_name = 'ppc_choice'
+        if save_path is None:
+            save_path = "."
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
+
     return fig
 
 
-def plot_ppc_rt_rlssm(obs_data, sim_data):  
+def plot_ppc_rt_rlssm(obs_data, sim_data, save_fig=False, save_name=None, save_path=None):  
 
     cond_list = np.unique(obs_data.split_by)
     rows = 1
@@ -2171,4 +2181,37 @@ def plot_ppc_rt_rlssm(obs_data, sim_data):
     fig.supylabel('Density', fontsize=12)
     fig.set_size_inches(4*len(cond_list), 4)
 
+    if save_fig:
+        if save_name is None:
+            save_name = 'ppc_rt'
+        if save_path is None:
+            save_path = "."
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
+
+    return fig
+
+
+def plot_posterior_pairs_rlssm(tracefile, param_list, save_fig=False, save_name=None, save_path=None, **kwargs):
+    traces = hddm.utils.get_traces_rlssm(tracefile)
+    tr = traces.copy()
+    tr_trunc = tr[param_list]
+    tr_dataset = az.dict_to_dataset(tr_trunc)
+    tr_inf_data = az.convert_to_inference_data(tr_dataset)
+
+    if kwargs.__len__() == 0:
+        axes = az.plot_pair(tr_inf_data, kind='kde', marginals=True, point_estimate='mean', textsize=20)
+    else:
+        axes = az.plot_pair(tr_inf_data, **kwargs)
+
+    fig = axes.ravel()[0].figure 
+
+    if save_fig:
+        if save_name is None:
+            save_name = 'posterior_pair'
+        if save_path is None:
+            save_path = "."
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
+    
     return fig
