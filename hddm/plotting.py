@@ -2199,10 +2199,7 @@ def plot_posterior_pairs_rlssm(tracefile, param_list, save_fig=False, save_name=
     tr_dataset = az.dict_to_dataset(tr_trunc)
     tr_inf_data = az.convert_to_inference_data(tr_dataset)
 
-    if kwargs.__len__() == 0:
-        axes = az.plot_pair(tr_inf_data, kind='kde', marginals=True, point_estimate='mean', textsize=20)
-    else:
-        axes = az.plot_pair(tr_inf_data, **kwargs)
+    axes = az.plot_pair(tr_inf_data, kind='kde', marginals=True, point_estimate='mean', textsize=20, **kwargs)
 
     fig = axes.ravel()[0].figure 
 
