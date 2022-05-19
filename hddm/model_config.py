@@ -229,6 +229,7 @@ model_config = {
             "t_std": 0.15,
             "sv": 0.5,  # AF-TODO: Might be worth adding std ?
         },
+    },
     "gamma_drift": {
         "doc": "Meant for use with the LAN extension",
         "params": ["v", "a", "z", "t", "shape", "scale", "c"],
@@ -254,7 +255,7 @@ model_config = {
             "scale_std": 1,
             "c": 1,
             "c_std": 1
-        }
+        },
     },
     "gamma_drift_angle": {
         "doc": "Meant for use with the LAN extension",
@@ -283,7 +284,7 @@ model_config = {
             "scale_std": 1,
             "c": 1,
             "c_std": 1
-        }
+        },
     },
     "ds_conflict_drift": {
         "doc": "Meant for use with LAN extension.",
@@ -319,7 +320,7 @@ model_config = {
             "tcoh_std": 1,
             "dcoh": 1,
             "dcohe_std": 1,
-        }
+        },
     },
     "ds_conflict_drift_angle": {
         "doc": "Meant for use with LAN extension.",
@@ -357,7 +358,7 @@ model_config = {
             "dcoh_std": 1,
             "theta": 0.1,
             "theta_std": 0.2,
-        }
+        },
     },
     "ddm_par2": {
         "doc": "Currently undocumented, in testing phase.",
@@ -985,4 +986,5 @@ model_config = {
 
 # Models for which configs can be reused
 model_config["weibull_cdf"] = model_config["weibull"].copy()
+
 model_config["full_ddm2"] = model_config["full_ddm"].copy()
