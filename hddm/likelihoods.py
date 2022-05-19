@@ -153,6 +153,7 @@ def generate_wfpt_stochastic_class(
         self,
         keep_negative_responses=True,
         add_model=False,
+        add_outliers=False,
         add_model_parameters=False,
         keep_subj_idx=False,
     ):
@@ -188,12 +189,13 @@ def generate_wfpt_stochastic_class(
                 theta=theta, model="full_ddm_vanilla", n_samples=self.shape[0], max_t=20
             )
 
-            if self.parents.value["p_outlier"] > 0.0:
-                sim_out = hddm_dataset_generators._add_outliers(
-                    sim_out=sim_out,
-                    p_outlier=self.parents.value["p_outlier"],
-                    max_rt_outlier=1 / wiener_params["w_outlier"],
-                )
+            if add_outliers:
+                if self.parents.value["p_outlier"] > 0.0:
+                    sim_out = hddm_dataset_generators._add_outliers(
+                        sim_out=sim_out,
+                        p_outlier=self.parents.value["p_outlier"],
+                        max_rt_outlier=1 / wiener_params["w_outlier"],
+                    )
 
             sim_out_proc = hddm_preprocess(
                 sim_out,
