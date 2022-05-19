@@ -34,7 +34,7 @@ class HDDMnnRL(HDDMnn):
         print("\nPrinting model specifications -- ")
         print("ssm: ", self.model)
         print("rl rule: ", self.rl_rule)
-        print("using centered dist.: ", self.non_centered)
+        print("using non-centered dist.: ", self.non_centered)
 
         self.model_config_rl = kwargs.pop("model_config_rl", None)
         if self.model_config_rl == None:
@@ -79,7 +79,7 @@ class HDDMnnRL(HDDMnn):
         )
 
         # Initialize super class
-        super(HDDMnnRL, self).__init__(model=self.model, network=self.network, *args, **kwargs)
+        super(HDDMnnRL, self).__init__(model=self.model, network=self.network, non_centered=self.non_centered, *args, **kwargs)
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)

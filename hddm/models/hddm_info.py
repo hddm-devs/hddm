@@ -216,6 +216,7 @@ class HDDM(HDDMBase):
                     )
                 else:
                     if self.non_centered:
+                        print("Using non-centered distributions.")
                         knodes.update(
                             self._create_family_normal_non_centered(
                                 tmp_param,

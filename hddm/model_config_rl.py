@@ -11,7 +11,7 @@ model_config_rl = {
     },
 
     "RWupdate_dual": {
-        "doc": "Q-learning with two learning rates",
+        "doc": "Rescorla-Wagner update with two learning rates",
         "params": ["rl_alpha", "rl_pos_alpha"],
         "params_trans": [0, 0],
         "params_std_upper": [None, None],
