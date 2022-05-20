@@ -494,17 +494,17 @@ def gen_rand_rlssm_data_MAB_RWupdate(
     binary_outcome=True,
     uncertainty=False,
 ):
-    """Generate RLSSM datasets on 2-armed bandit task. 
+    """Generate RLSSM datasets on 2-armed bandit task.
 
     :Arguments:
         model: str
             String that determines which sequential sampling model to use.
-        ssm_param: list 
+        ssm_param: list
             List of sequential sampling model parameters (in the order of what you define in model_config).
         rl_param: list
             List of reinforcement learning parameters (in the order of what you define in model_config_rl).
         dual: bool <default=False>
-            Flag to denote if use of separate learning rates for positive and negative RPEs. 
+            Flag to denote if use of separate learning rates for positive and negative RPEs.
         size: int <default=1>
             Number of trials to simulate.
         p_upper: float <default=1>
@@ -516,7 +516,7 @@ def gen_rand_rlssm_data_MAB_RWupdate(
         subjs: int <default=1>
             Number of subjects to simulate.
         split_by: int <default=0>
-            Denotes the condition number/index in the experiment. 
+            Denotes the condition number/index in the experiment.
         mu_upper: float <default=1>
             Mean of the (normal) reward distribution for the upper action/choice.
         mu_lower: float <default=0>
@@ -527,7 +527,7 @@ def gen_rand_rlssm_data_MAB_RWupdate(
             Std. dev. of the (normal) reward distribution for the lower action/choice.
         binary_outcome: bool <default=True>
             Denotes if the reward scheme is binary (as opposed to non-binary). Non-binary rewards are sampled from normal distributions.
-        
+
 
     :Returns:
         all_data: Pandas.Dataframe
@@ -601,12 +601,12 @@ def gen_rand_rlssm_data_MAB_RWupdate(
             no_noise=False,
             bin_dim=None,
             bin_pointwise=False,
-            )
+        )
         # get the results in desired df format [rt, response] -- from np.array (1, 2)
         tres = np.transpose(np.squeeze(np.array(list(res[0:2])), axis=1))
-        data = pd.DataFrame(tres, columns=['rt', 'response'])
+        data = pd.DataFrame(tres, columns=["rt", "response"])
         # flip the responses to [1,0]
-        data.loc[data['response'] < 1, 'response'] = 0
+        data.loc[data["response"] < 1, "response"] = 0
 
         df.loc[0, "response"] = data.response[0]
         df.loc[0, "rt"] = data.rt[0]
@@ -658,12 +658,12 @@ def gen_rand_rlssm_data_MAB_RWupdate(
                 no_noise=False,
                 bin_dim=None,
                 bin_pointwise=False,
-                )
+            )
             # get the results in desired df format [rt, response] -- from np.array (1, 2)
             tres = np.transpose(np.squeeze(np.array(list(res[0:2])), axis=1))
-            data = pd.DataFrame(tres, columns=['rt', 'response'])
+            data = pd.DataFrame(tres, columns=["rt", "response"])
             # flip the responses to [1,0]
-            data.loc[data['response'] < 1, 'response'] = 0
+            data.loc[data["response"] < 1, "response"] = 0
 
             df.loc[i, "response"] = data.response[0]
             df.loc[i, "rt"] = data.rt[0]
@@ -697,8 +697,6 @@ def gen_rand_rlssm_data_MAB_RWupdate(
     ]
 
     return all_data
-
-
 
 
 def gen_rand_rlddm_data(

@@ -12,6 +12,7 @@ except:
         + "classes will not work"
     )
 
+
 class HDDMnnRegressor(HDDMRegressor):
     """HDDMnnRegressor allows estimation of the NNDDM where parameter
     values are linear models of a covariate (e.g. a brain measure like
@@ -117,11 +118,11 @@ class HDDMnnRegressor(HDDMRegressor):
                 print(
                     "It seems that you supplied a model string that refers to an undefined model"
                 )
-        
+
         # Add indirect_regressors to model_config, if they were supplied
         self._add_indirect_regressors(indirect_regressors=indirect_regressors)
 
-        # Add indirect betas to model_config, if they were supplied        
+        # Add indirect betas to model_config, if they were supplied
         self._add_indirect_betas(indirect_betas=indirect_betas)
 
         if self.network is None:
@@ -155,44 +156,55 @@ class HDDMnnRegressor(HDDMRegressor):
             self.wfpt_nn_reg_class,
             "wfpt",
             observed=True,
-            col_name=["response", "rt"] + self.model_config['likelihood_relevant_covariates'],
+            col_name=["response", "rt"]
+            + self.model_config["likelihood_relevant_covariates"],
             reg_outcomes=self.reg_outcomes,
             **wfpt_parents
         )
 
-    def _add_indirect_betas(self, indirect_betas = None):
-        self.model_config['likelihood_relevant_covariates'] = []
+    def _add_indirect_betas(self, indirect_betas=None):
+        self.model_config["likelihood_relevant_covariates"] = []
 
         if indirect_betas is not None:
-            assert type(indirect_betas) == dict, 'indirect parameters is supplied, but is not a dictionary'
-            self.model_config['indirect_betas'] = indirect_betas
+            assert (
+                type(indirect_betas) == dict
+            ), "indirect parameters is supplied, but is not a dictionary"
+            self.model_config["indirect_betas"] = indirect_betas
 
             relevant_covariates = []
             for indirect_beta_tmp in indirect_betas.keys():
-                for linked_covariate_tmp in indirect_betas[indirect_beta_tmp]['links_to'].keys():
-                    tmp = indirect_betas[indirect_beta_tmp]['links_to'][linked_covariate_tmp]
-                    
+                for linked_covariate_tmp in indirect_betas[indirect_beta_tmp][
+                    "links_to"
+                ].keys():
+                    tmp = indirect_betas[indirect_beta_tmp]["links_to"][
+                        linked_covariate_tmp
+                    ]
+
                     if tmp in relevant_covariates:
                         pass
                     else:
                         relevant_covariates.append(tmp)
-            
-            self.model_config['likelihood_relevant_covariates'] = relevant_covariates
 
-    def _add_indirect_regressors(self, indirect_regressors = None):
+            self.model_config["likelihood_relevant_covariates"] = relevant_covariates
+
+    def _add_indirect_regressors(self, indirect_regressors=None):
         if indirect_regressors is not None:
-            assert type(indirect_regressors) == dict, 'indirect_regressors is supplied, but not as a dictionary'
-            self.model_config['indirect_regressors'] = indirect_regressors
+            assert (
+                type(indirect_regressors) == dict
+            ), "indirect_regressors is supplied, but not as a dictionary"
+            self.model_config["indirect_regressors"] = indirect_regressors
 
             # Compute all indirect regressor targets
             indirect_regressor_targets = []
-            for indirect_regressor in self.model_config['indirect_regressors'].keys():
-                for target_tmp in self.model_config['indirect_regressors'][indirect_regressor]['links_to']:
+            for indirect_regressor in self.model_config["indirect_regressors"].keys():
+                for target_tmp in self.model_config["indirect_regressors"][
+                    indirect_regressor
+                ]["links_to"]:
                     indirect_regressor_targets.append(target_tmp)
 
-            self.model_config['indirect_regressor_targets'] = indirect_regressor_targets
-            #print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
-        
+            self.model_config["indirect_regressor_targets"] = indirect_regressor_targets
+            # print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
+
     # May need debugging --> set_state(), get_state()
     def __getstate__(self):
         d = super(HDDMnnRegressor, self).__getstate__()
@@ -205,8 +217,10 @@ class HDDMnnRegressor(HDDMRegressor):
         network_dict = {"network": d["network"]}
 
         d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
-            model=d["model"], model_config = d["model_config"], 
-            wiener_params = d['wiener_params'], **network_dict
+            model=d["model"],
+            model_config=d["model_config"],
+            wiener_params=d["wiener_params"],
+            **network_dict
         )
 
         super(HDDMnnRegressor, self).__setstate__(d)

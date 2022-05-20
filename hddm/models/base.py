@@ -339,7 +339,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             while inf_objective:
                 values_iter += 1
                 values = original_values + np.random.randn(len(values)) * (
-                    2 ** -values_iter
+                    2**-values_iter
                 )
                 self.set_values(dict(list(zip(names, values))))
                 inf_objective = np.isinf(objective(values))
@@ -384,7 +384,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -443,7 +443,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -519,7 +519,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -584,7 +584,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -604,7 +604,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -634,7 +634,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -670,7 +670,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -681,7 +681,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -689,7 +689,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -719,7 +719,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -734,7 +734,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -772,7 +772,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Normal,
                 "%s_offset_subj" % name,
                 mu=0,
-                tau=5 ** -2,
+                tau=5**-2,
                 value=0,
                 depends=("subj_idx",),
                 subj=True,
@@ -816,7 +816,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_std=0.2,
         std_value=0.1,
         lower=0.0,  # previously the lower and upper arguments were not there !
@@ -879,7 +879,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -888,7 +888,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -975,7 +975,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -1027,7 +1027,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             tau = Knode(
                 pm.Deterministic,
                 "%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1090,7 +1090,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_normal_normal_hnormal(
-        self, name, value=0, g_mu=None, g_tau=15 ** -2, std_std=2, std_value=0.1
+        self, name, value=0, g_mu=None, g_tau=15**-2, std_std=2, std_value=0.1
     ):
         """Create a family of knodes. A family is a group of knodes
         that belong together.
@@ -1137,7 +1137,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1145,7 +1145,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1194,8 +1194,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         # AF-Comment: previously std_std = 2, std_value = 0.1 --> inconsistent with paper ?
 
         knodes = OrderedDict()
-        g_shape = (g_mean ** 2) / (g_std ** 2)
-        g_rate = g_mean / (g_std ** 2)
+        g_shape = (g_mean**2) / (g_std**2)
+        g_rate = g_mean / (g_std**2)
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(
                 pm.Gamma,
@@ -1210,7 +1210,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1218,7 +1218,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             shape = Knode(
                 pm.Deterministic,
                 "%s_shape" % name,
-                eval=lambda x, y: (x ** 2) / (y ** 2),
+                eval=lambda x, y: (x**2) / (y**2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1229,7 +1229,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             rate = Knode(
                 pm.Deterministic,
                 "%s_rate" % name,
-                eval=lambda x, y: x / (y ** 2),
+                eval=lambda x, y: x / (y**2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1317,9 +1317,15 @@ class HDDMBase(AccumulatorModel):
         # Automate possible_parameters
         if self.nn:
             if self.rlssm_model:
-                possible_parameters = tuple(self.model_config["params"]) + tuple(self.model_config_rl["params"]) + ("p_outlier",)
+                possible_parameters = (
+                    tuple(self.model_config["params"])
+                    + tuple(self.model_config_rl["params"])
+                    + ("p_outlier",)
+                )
             else:
-                possible_parameters = tuple(self.model_config["params"]) + ("p_outlier",)
+                possible_parameters = tuple(self.model_config["params"]) + (
+                    "p_outlier",
+                )
         else:
             possible_parameters = (
                 "v",
@@ -1398,7 +1404,7 @@ class HDDMBase(AccumulatorModel):
                         self.model_config["params"].index(tmp_param)
                     ]
                 )
-            
+
             if self.rlssm_model:
                 # RL model parameters
                 for tmp_param in self.model_config_rl["params"]:
@@ -1411,18 +1417,14 @@ class HDDMBase(AccumulatorModel):
                     )
 
             # Indirect regressors (this is used in HDDMnnRegressor)
-            if 'indirect_regressors' in self.model_config:
-                for tmp_param in self.model_config['indirect_regressors'].keys():
-                    wfpt_parents[tmp_param] = (
-                        knodes[tmp_param + "_bottom"]
-                            )
+            if "indirect_regressors" in self.model_config:
+                for tmp_param in self.model_config["indirect_regressors"].keys():
+                    wfpt_parents[tmp_param] = knodes[tmp_param + "_bottom"]
 
-            if 'indirect_betas' in self.model_config:
-                for tmp_param in self.model_config['indirect_betas'].keys():
-                    wfpt_parents[tmp_param] = (
-                        knodes[tmp_param + "_bottom"]
-                            )
-            
+            if "indirect_betas" in self.model_config:
+                for tmp_param in self.model_config["indirect_betas"].keys():
+                    wfpt_parents[tmp_param] = knodes[tmp_param + "_bottom"]
+
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]
                 if "p_outlier" in self.include

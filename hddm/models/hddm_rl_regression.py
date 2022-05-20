@@ -289,7 +289,7 @@ class HDDMrlRegressor(HDDM):
         if "alpha" in include:
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "alpha", value=0, g_tau=50 ** -2, std_std=10
+                    "alpha", value=0, g_tau=50**-2, std_std=10
                 )
             )
         return knodes

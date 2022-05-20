@@ -145,5 +145,5 @@ class HDDMnnStimCoding(HDDMStimCoding):
         d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
             model=d["model"], **network_dict
         )
-        
+
         super(HDDMnnStimCoding, self).__setstate__(d)

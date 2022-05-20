@@ -27,5 +27,5 @@ __all__ = [
     "HDDMnn",
     "HDDMnnRegressor",
     "HDDMnnStimCoding",
-    "HDDMnnRL"
+    "HDDMnnRL",
 ]

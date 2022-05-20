@@ -37,10 +37,10 @@ try:
     def load_torch_mlp(model=None):
         cfg = TorchConfig(model=model)
         infer_model = LoadTorchMLPInfer(
-                model_file_path=cfg.network_path,
-                network_config=cfg.network_config,
-                input_dim=len(hddm.model_config.model_config[model]["params"]) + 2,
-                )
+            model_file_path=cfg.network_path,
+            network_config=cfg.network_config,
+            input_dim=len(hddm.model_config.model_config[model]["params"]) + 2,
+        )
 
         return infer_model
 

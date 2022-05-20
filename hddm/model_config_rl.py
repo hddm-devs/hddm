@@ -9,7 +9,6 @@ model_config_rl = {
         "param_bounds": [[0.0], [1.0]],
         "params_default": [0.5],
     },
-
     "RWupdate_dual": {
         "doc": "Rescorla-Wagner update with two learning rates",
         "params": ["rl_alpha", "rl_pos_alpha"],
@@ -17,5 +16,5 @@ model_config_rl = {
         "params_std_upper": [None, None],
         "param_bounds": [[0.0, 0.0], [1.0, 1.0]],
         "params_default": [0.5, 0.5],
-    }
-} 
+    },
+}

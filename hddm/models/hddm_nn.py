@@ -186,22 +186,24 @@ class HDDMnn(HDDM):
 
     def __getstate__(self):
         d = super(HDDMnn, self).__getstate__()
-        #del d["network"] # del
+        # del d["network"] # del
         # temporary
         del d["wfpt_nn"]
         return d
 
     def __setstate__(self, d):
-        #print(d)
+        # print(d)
 
-        #print(d["network"]) # del
-        #d["network"] = load_torch_mlp(model=d["model"]) # del
+        # print(d["network"]) # del
+        # d["network"] = load_torch_mlp(model=d["model"]) # del
 
         # temporary
         network_dict = {"network": d["network"]}
         d["wfpt_nn"] = hddm.likelihoods_mlp.make_mlp_likelihood(
-            model=d["model"], model_config=d["model_config"], 
-            wiener_params = d['wiener_params'], **network_dict
+            model=d["model"],
+            model_config=d["model_config"],
+            wiener_params=d["wiener_params"],
+            **network_dict
         )
 
         super(HDDMnn, self).__setstate__(d)

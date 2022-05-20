@@ -837,7 +837,7 @@ def _plot_func_posterior_node_from_sim(
         if n_choices == 2:
             rt_dat = data_tmp.copy()
             if np.sum(rt_dat.rt < 0) == 0:
-                if ("response" in rt_dat.columns):
+                if "response" in rt_dat.columns:
                     rt_dat.loc[rt_dat.response != 1, "rt"] = (-1) * rt_dat.rt[
                         rt_dat.response != 1
                     ].values
@@ -1275,10 +1275,10 @@ def _add_model_cartoon_to_ax(
         or tmp_model == "full_ddm"
         or tmp_model == "ddm_vanilla"
         or tmp_model == "full_ddm_vanilla"
-        ):
+    ):
 
         b = sample.a.values[0] * np.ones(t_s.shape[0])
-        if 'vanilla' in tmp_model:
+        if "vanilla" in tmp_model:
             b = (sample.a.values[0] / 2) * np.ones(t_s.shape[0])
 
     # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
@@ -1295,9 +1295,9 @@ def _add_model_cartoon_to_ax(
     tmp_traj = out[2]["trajectory"]
     maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
 
-    if 'vanilla' in tmp_model:
+    if "vanilla" in tmp_model:
         a_tmp = sample.a.values[0] / 2
-        tmp_traj = tmp_traj - a_tmp #+ (a_tmp * sample.z.values[0])
+        tmp_traj = tmp_traj - a_tmp  # + (a_tmp * sample.z.values[0])
 
     # Upper bound
     axis.plot(
@@ -1642,6 +1642,7 @@ def _plot_func_model_n(
                 shadow=legend_shadow,
                 loc=legend_location,
             )
+
 
 def _add_model_n_cartoon_to_ax(
     sample=None,
@@ -2003,25 +2004,25 @@ def plot_caterpillar(
     plt.show()
 
 
-
-'''
+"""
 === RLSSM functions ===
-'''
+"""
+
 
 def get_mean_correct_responses_rlssm(trials, nbins, data):
-    """Gets the mean proportion of correct responses condition-wise. 
+    """Gets the mean proportion of correct responses condition-wise.
 
     Arguments:
         trials: int
             Number of initial trials to consider for computing proportion of correct responses.
 
-        nbins: int 
+        nbins: int
             Number of bins to put the trials into (Num. of trials per bin = trials/nbin).
 
         data: pandas.DataFrame
-            Pandas DataFrame for the observed or simulated data. 
+            Pandas DataFrame for the observed or simulated data.
 
-    Return: 
+    Return:
         mean_correct_responses: dict
             Dictionary of conditions containing proportion of mean correct responses (for each bin).
         up_err: dict
@@ -2031,239 +2032,293 @@ def get_mean_correct_responses_rlssm(trials, nbins, data):
     """
 
     data_ppc = data[data.trial <= trials].copy()
-    data_ppc.loc[data_ppc['response'] < 1, 'response'] = 0
+    data_ppc.loc[data_ppc["response"] < 1, "response"] = 0
 
-    data_ppc['bin_trial'] = np.array(pd.cut(data_ppc.trial, nbins, labels=np.linspace(0,nbins,nbins)))
+    data_ppc["bin_trial"] = np.array(
+        pd.cut(data_ppc.trial, nbins, labels=np.linspace(0, nbins, nbins))
+    )
 
-    sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index()
+    sums = data_ppc.groupby(["bin_trial", "split_by", "trial"]).mean().reset_index()
 
-    ppc_sim = sums.groupby(['bin_trial','split_by']).mean().reset_index()
+    ppc_sim = sums.groupby(["bin_trial", "split_by"]).mean().reset_index()
 
-    #initiate columns that will have the upper and lower bound of the hpd
-    ppc_sim['upper_hpd'] = 0
-    ppc_sim['lower_hpd'] = 0
-    for i in range(0,ppc_sim.shape[0]):
-        #calculate the hpd/hdi of the predicted mean responses across bin_trials
-        hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_sim.bin_trial[i]) & (sums['split_by']==ppc_sim.split_by[i])],alpha=0.05)
-        ppc_sim.loc[i,'upper_hpd'] = hdi[1]
-        ppc_sim.loc[i,'lower_hpd'] = hdi[0]
+    # initiate columns that will have the upper and lower bound of the hpd
+    ppc_sim["upper_hpd"] = 0
+    ppc_sim["lower_hpd"] = 0
+    for i in range(0, ppc_sim.shape[0]):
+        # calculate the hpd/hdi of the predicted mean responses across bin_trials
+        hdi = pymc.utils.hpd(
+            sums.response[
+                (sums["bin_trial"] == ppc_sim.bin_trial[i])
+                & (sums["split_by"] == ppc_sim.split_by[i])
+            ],
+            alpha=0.05,
+        )
+        ppc_sim.loc[i, "upper_hpd"] = hdi[1]
+        ppc_sim.loc[i, "lower_hpd"] = hdi[0]
 
-    #calculate error term as the distance from upper bound to mean
-    ppc_sim['up_err'] = ppc_sim['upper_hpd']-ppc_sim['response']
-    ppc_sim['low_err'] = ppc_sim['response']-ppc_sim['lower_hpd']
+    # calculate error term as the distance from upper bound to mean
+    ppc_sim["up_err"] = ppc_sim["upper_hpd"] - ppc_sim["response"]
+    ppc_sim["low_err"] = ppc_sim["response"] - ppc_sim["lower_hpd"]
 
     mean_correct_responses = {}
     up_err = {}
     low_err = {}
     for cond in np.unique(ppc_sim.split_by):
-        mean_correct_responses[cond] = ppc_sim[ppc_sim.split_by==cond]['response']
-        up_err[cond] = ppc_sim[ppc_sim.split_by==cond]['up_err']
-        low_err[cond] = ppc_sim[ppc_sim.split_by==cond]['low_err']
-    
+        mean_correct_responses[cond] = ppc_sim[ppc_sim.split_by == cond]["response"]
+        up_err[cond] = ppc_sim[ppc_sim.split_by == cond]["up_err"]
+        low_err[cond] = ppc_sim[ppc_sim.split_by == cond]["low_err"]
+
     return mean_correct_responses, up_err, low_err
 
 
-def gen_ppc_rlssm(model_ssm, config_ssm, model_rl, config_rl, data, traces, nsamples, p_lower, p_upper, save_data=False, save_name=None, save_path=None):  
-    """Generates data (for posterior predictives) using samples from the given trace as parameters. 
+def gen_ppc_rlssm(
+    model_ssm,
+    config_ssm,
+    model_rl,
+    config_rl,
+    data,
+    traces,
+    nsamples,
+    p_lower,
+    p_upper,
+    save_data=False,
+    save_name=None,
+    save_path=None,
+):
+    """Generates data (for posterior predictives) using samples from the given trace as parameters.
 
     Arguments:
         model_ssm: str
             Name of the sequential sampling model used.
 
-        config_ssm: dict 
-            Config dictionary for the specified sequential sampling model. 
-        
+        config_ssm: dict
+            Config dictionary for the specified sequential sampling model.
+
         model_rl: str
             Name of the reinforcement learning model used.
 
-        config_rl: dict 
-            Config dictionary for the specified reinforcement learning model. 
+        config_rl: dict
+            Config dictionary for the specified reinforcement learning model.
 
         data: pandas.DataFrame
-            Pandas DataFrame for the observed data. 
-        
+            Pandas DataFrame for the observed data.
+
         traces: pandas.DataFrame
             Pandas DataFrame containing the traces.
-        
+
         nsamples: int
             Number of posterior samples to draw for each subject.
-        
+
         p_lower: dict
             Dictionary of conditions containing the probability of reward for the lower choice/action in the 2-armed bandit task.
-        
+
         p_upper: dict
             Dictionary of conditions containing the probability of reward for the upper choice/action in the 2-armed bandit task.
-        
+
         save_data: bool <default=False>
             Boolean denoting whether to save the data as csv.
 
         save_name: str <default=None>
             Specifies filename to save the data.
-        
+
         save_path: str <default=None>
             Specifies path to save the data.
 
-    
+
     Return:
         ppc_sdata: pandas.DataFrame
             Pandas DataFrame containing the simulated data (for posterior predictives).
     """
-    
+
     def transform_param(param, param_val):
-        if param == 'rl_alpha':
-            transformed_param_val = np.exp(param_val)/(1+np.exp(param_val))
+        if param == "rl_alpha":
+            transformed_param_val = np.exp(param_val) / (1 + np.exp(param_val))
         else:
             transformed_param_val = param_val
-        
+
         return transformed_param_val
 
     sim_data = pd.DataFrame()
 
     nsamples += 1
-    for i in tqdm(range(1,nsamples)):
-        sample = np.random.randint(0,traces.shape[0]-1)
+    for i in tqdm(range(1, nsamples)):
+        sample = np.random.randint(0, traces.shape[0] - 1)
 
         for subj in data.subj_idx.unique():
             sub_data = pd.DataFrame()
 
             for cond in np.unique(data.split_by):
-                
+
                 sampled_param_ssm = list()
-                for p in config_ssm['params']:
-                    p_val = traces.loc[sample, p+'_subj.'+str(subj)]
+                for p in config_ssm["params"]:
+                    p_val = traces.loc[sample, p + "_subj." + str(subj)]
                     p_val = transform_param(p, p_val)
                     sampled_param_ssm.append(p_val)
-                
+
                 sampled_param_rl = list()
-                for p in config_rl['params']:
-                    p_val = traces.loc[sample, p+'_subj.'+str(subj)]
+                for p in config_rl["params"]:
+                    p_val = traces.loc[sample, p + "_subj." + str(subj)]
                     p_val = transform_param(p, p_val)
                     sampled_param_rl.append(p_val)
 
-                cond_size = len(data[(data['subj_idx']==subj) & (data['split_by']==cond)].trial.unique())
-                ind_cond_data = gen_rand_rlssm_data_MAB_RWupdate(model_ssm, sampled_param_ssm, sampled_param_rl, size=cond_size, p_lower=p_lower[cond], p_upper=p_upper[cond], subjs=1, split_by=cond)
-            
-                #append the conditions
-                sub_data = sub_data.append([ind_cond_data],ignore_index=False)
-            
-            #assign subj_idx
-            sub_data['subj_idx'] = subj
-        
-            #identify the simulated data
-            sub_data['samp'] = i
-            
-            #append data from each subject
-            sim_data = sim_data.append(sub_data,ignore_index=True)
+                cond_size = len(
+                    data[
+                        (data["subj_idx"] == subj) & (data["split_by"] == cond)
+                    ].trial.unique()
+                )
+                ind_cond_data = gen_rand_rlssm_data_MAB_RWupdate(
+                    model_ssm,
+                    sampled_param_ssm,
+                    sampled_param_rl,
+                    size=cond_size,
+                    p_lower=p_lower[cond],
+                    p_upper=p_upper[cond],
+                    subjs=1,
+                    split_by=cond,
+                )
 
-    ppc_sdata = sim_data[['subj_idx','response','split_by','rt','trial','feedback','samp']].copy()
+                # append the conditions
+                sub_data = sub_data.append([ind_cond_data], ignore_index=False)
+
+            # assign subj_idx
+            sub_data["subj_idx"] = subj
+
+            # identify the simulated data
+            sub_data["samp"] = i
+
+            # append data from each subject
+            sim_data = sim_data.append(sub_data, ignore_index=True)
+
+    ppc_sdata = sim_data[
+        ["subj_idx", "response", "split_by", "rt", "trial", "feedback", "samp"]
+    ].copy()
 
     if save_data:
         if save_name is None:
-            save_name = 'ppc_data'
+            save_name = "ppc_data"
         if save_path is None:
             save_path = "."
-        ppc_sdata.to_csv("%s.%s" % (os.path.join(save_path, save_name), 'csv'))
-        print("ppc data saved at %s.%s" % (os.path.join(save_path, save_name), 'csv'))
-    
+        ppc_sdata.to_csv("%s.%s" % (os.path.join(save_path, save_name), "csv"))
+        print("ppc data saved at %s.%s" % (os.path.join(save_path, save_name), "csv"))
+
     return ppc_sdata
 
 
-def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins, save_fig=False, save_name=None, save_path=None):  
-    """Plot posterior preditive plot for choice data. 
+def plot_ppc_choice_rlssm(
+    obs_data, sim_data, trials, nbins, save_fig=False, save_name=None, save_path=None
+):
+    """Plot posterior preditive plot for choice data.
 
     Arguments:
         obs_data: pandas.DataFrame
-            Pandas DataFrame for the observed data. 
-        
+            Pandas DataFrame for the observed data.
+
         sim_data: pandas.DataFrame
-            Pandas DataFrame for the simulated data. 
-        
+            Pandas DataFrame for the simulated data.
+
         trials: int
             Number of initial trials to consider for computing proportion of correct responses.
 
-        nbins: int 
+        nbins: int
             Number of bins to put the trials into (Num. of trials per bin = trials/nbin).
-        
+
         save_fig: bool <default=False>
             Boolean denoting whether to save the plot.
 
         save_name: str <default=None>
             Specifies filename to save the figure.
-        
+
         save_path: str <default=None>
             Specifies path to save the figure.
 
-    
+
     Return:
         fig: matplotlib.Figure
             plot object
     """
 
-    res_obs, up_err_obs, low_err_obs = get_mean_correct_responses_rlssm(trials, nbins, obs_data)
-    res_sim, up_err_sim, low_err_sim = get_mean_correct_responses_rlssm(trials, nbins, sim_data)
+    res_obs, up_err_obs, low_err_obs = get_mean_correct_responses_rlssm(
+        trials, nbins, obs_data
+    )
+    res_sim, up_err_sim, low_err_sim = get_mean_correct_responses_rlssm(
+        trials, nbins, sim_data
+    )
 
     cond_list = np.unique(obs_data.split_by)
     rows = 1
     cols = len(cond_list)
     fig, ax = plt.subplots(rows, cols, constrained_layout=False, tight_layout=True)
-    
+
     cond_index = 0
     for ay in range(cols):
         cond = cond_list[cond_index]
-        
-        ax[ay].errorbar(1+np.arange(len(res_obs[cond])), res_obs[cond], yerr=[low_err_obs[cond], up_err_obs[cond]], label='observed')
-        ax[ay].errorbar(1+np.arange(len(res_sim[cond])), res_sim[cond], yerr=[low_err_sim[cond], up_err_sim[cond]], label='simulated')
 
-        ax[ay].set_ylim((0,1))
+        ax[ay].errorbar(
+            1 + np.arange(len(res_obs[cond])),
+            res_obs[cond],
+            yerr=[low_err_obs[cond], up_err_obs[cond]],
+            label="observed",
+        )
+        ax[ay].errorbar(
+            1 + np.arange(len(res_sim[cond])),
+            res_sim[cond],
+            yerr=[low_err_sim[cond], up_err_sim[cond]],
+            label="simulated",
+        )
+
+        ax[ay].set_ylim((0, 1))
 
         ax[ay].legend()
-        ax[ay].set_title('split_by='+str(cond), fontsize=12)
+        ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
-        
+
         cond_index += 1
-    
+
     fig = plt.gcf()
-    fig.supxlabel('Trial bins', fontsize=12)
-    fig.supylabel('Proportion of Correct Responses', fontsize=12)
-    fig.set_size_inches(4*len(cond_list), 4)
+    fig.supxlabel("Trial bins", fontsize=12)
+    fig.supylabel("Proportion of Correct Responses", fontsize=12)
+    fig.set_size_inches(4 * len(cond_list), 4)
 
     if save_fig:
         if save_name is None:
-            save_name = 'ppc_choice'
+            save_name = "ppc_choice"
         if save_path is None:
             save_path = "."
-        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
-        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), "png"))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), "png"))
 
     return fig
 
 
-def plot_ppc_rt_rlssm(obs_data, sim_data, trials, bw=0.1, save_fig=False, save_name=None, save_path=None):  
-    """Plot posterior preditive plot for reaction time data. 
+def plot_ppc_rt_rlssm(
+    obs_data, sim_data, trials, bw=0.1, save_fig=False, save_name=None, save_path=None
+):
+    """Plot posterior preditive plot for reaction time data.
 
     Arguments:
         obs_data: pandas.DataFrame
-            Pandas DataFrame for the observed data. 
-        
+            Pandas DataFrame for the observed data.
+
         sim_data: pandas.DataFrame
-            Pandas DataFrame for the simulated data. 
-        
+            Pandas DataFrame for the simulated data.
+
         trials: int
             Number of initial trials to consider for computing proportion of correct responses.
 
         bw: float <default=0.1>
             Bandwidth parameter for kernel-density estimates.
-        
+
         save_fig: bool <default=False>
             Boolean denoting whether to save the plot.
 
         save_name: str <default=None>
             Specifies filename to save the figure.
-        
+
         save_path: str <default=None>
             Specifies path to save the figure.
 
-    
+
     Return:
         fig: matplotlib.Figure
             plot object
@@ -2276,59 +2331,73 @@ def plot_ppc_rt_rlssm(obs_data, sim_data, trials, bw=0.1, save_fig=False, save_n
     rows = 1
     cols = len(cond_list)
     fig, ax = plt.subplots(rows, cols, constrained_layout=False, tight_layout=True)
-    
+
     cond_index = 0
     for ay in range(cols):
         cond = cond_list[cond_index]
 
-        rt_ppc_sim = np.where(sim_data_ppc[sim_data_ppc.split_by==cond].response==1, sim_data_ppc[sim_data_ppc.split_by==cond].rt, 0-sim_data_ppc[sim_data_ppc.split_by==cond].rt)
-        rt_ppc_obs = np.where(obs_data_ppc[obs_data_ppc.split_by==cond].response==1, obs_data_ppc[obs_data_ppc.split_by==cond].rt, 0-obs_data_ppc[obs_data_ppc.split_by==cond].rt)
-        
-        sns.kdeplot(rt_ppc_sim, label='simulated', ax=ax[ay], bw_method=bw).set(ylabel=None)
-        sns.kdeplot(rt_ppc_obs, label='observed', ax=ax[ay], bw_method=bw).set(ylabel=None)
+        rt_ppc_sim = np.where(
+            sim_data_ppc[sim_data_ppc.split_by == cond].response == 1,
+            sim_data_ppc[sim_data_ppc.split_by == cond].rt,
+            0 - sim_data_ppc[sim_data_ppc.split_by == cond].rt,
+        )
+        rt_ppc_obs = np.where(
+            obs_data_ppc[obs_data_ppc.split_by == cond].response == 1,
+            obs_data_ppc[obs_data_ppc.split_by == cond].rt,
+            0 - obs_data_ppc[obs_data_ppc.split_by == cond].rt,
+        )
+
+        sns.kdeplot(rt_ppc_sim, label="simulated", ax=ax[ay], bw_method=bw).set(
+            ylabel=None
+        )
+        sns.kdeplot(rt_ppc_obs, label="observed", ax=ax[ay], bw_method=bw).set(
+            ylabel=None
+        )
 
         ax[ay].legend()
-        ax[ay].set_title('split_by='+str(cond), fontsize=12)
+        ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
-        
+
         cond_index += 1
-    
+
     fig = plt.gcf()
-    fig.supxlabel('Reaction Time', fontsize=12)
-    fig.supylabel('Density', fontsize=12)
-    fig.set_size_inches(4*len(cond_list), 4)
+    fig.supxlabel("Reaction Time", fontsize=12)
+    fig.supylabel("Density", fontsize=12)
+    fig.set_size_inches(4 * len(cond_list), 4)
 
     if save_fig:
         if save_name is None:
-            save_name = 'ppc_rt'
+            save_name = "ppc_rt"
         if save_path is None:
             save_path = "."
-        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
-        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), "png"))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), "png"))
 
     return fig
 
 
-def plot_posterior_pairs_rlssm(tracefile, param_list, save_fig=False, save_name=None, save_path=None, **kwargs):
-    """Plot posterior pairs. 
+def plot_posterior_pairs_rlssm(
+    tracefile, param_list, save_fig=False, save_name=None, save_path=None, **kwargs
+):
+    """Plot posterior pairs.
 
     Arguments:
         tracefile: dict
             Dictionary containing the traces.
-        
+
         param_list: list
-            List of model parameters to be included in the posterior pair plots. 
-        
+            List of model parameters to be included in the posterior pair plots.
+
         save_fig: bool <default=False>
             Boolean denoting whether to save the plot.
 
         save_name: str <default=None>
             Specifies filename to save the figure.
-        
+
         save_path: str <default=None>
             Specifies path to save the figure.
 
-    
+
     Return:
         fig: matplotlib.Figure
             plot object
@@ -2340,16 +2409,23 @@ def plot_posterior_pairs_rlssm(tracefile, param_list, save_fig=False, save_name=
     tr_dataset = az.dict_to_dataset(tr_trunc)
     tr_inf_data = az.convert_to_inference_data(tr_dataset)
 
-    axes = az.plot_pair(tr_inf_data, kind='kde', marginals=True, point_estimate='mean', textsize=20, **kwargs)
+    axes = az.plot_pair(
+        tr_inf_data,
+        kind="kde",
+        marginals=True,
+        point_estimate="mean",
+        textsize=20,
+        **kwargs
+    )
 
-    fig = axes.ravel()[0].figure 
+    fig = axes.ravel()[0].figure
 
     if save_fig:
         if save_name is None:
-            save_name = 'posterior_pair'
+            save_name = "posterior_pair"
         if save_path is None:
             save_path = "."
-        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), 'png'))
-        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), 'png'))
-    
+        fig.savefig("%s.%s" % (os.path.join(save_path, save_name), "png"))
+        print("fig saved at %s.%s" % (os.path.join(save_path, save_name), "png"))
+
     return fig

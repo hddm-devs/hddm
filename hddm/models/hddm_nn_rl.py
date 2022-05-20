@@ -38,14 +38,14 @@ class HDDMnnRL(HDDMnn):
         model: str <default='ddm'>
             String that determines which sequential sampling model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
-        
+
         rl_rule: str <default='RWupdate'>
             String that determines which reinforcement learning model you would like to fit your data to.
 
         include: list <default=None>
-            A list with parameters we wish to include in the fitting procedure. 
+            A list with parameters we wish to include in the fitting procedure.
             Which parameters you can include depends on the model you specified under the model parameters.
-        
+
         non_centered: bool <default=False>
             Denotes whether non-centered distributions (a form of re-parameterization) should be used for reinforcement learning parameters.
 
@@ -69,7 +69,7 @@ class HDDMnnRL(HDDMnn):
 
 
     :Example:
-        >>> m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'], p_outlier = 0.0) 
+        >>> m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'], p_outlier = 0.0)
         >>> m.sample(2000, burn=1000, dbname='traces.db', db='pickle')
 
     """
@@ -77,7 +77,7 @@ class HDDMnnRL(HDDMnn):
     def __init__(self, *args, **kwargs):
         self.rlssm_model = True
 
-        self.model = kwargs.pop("model", 'ddm')
+        self.model = kwargs.pop("model", "ddm")
         self.rl_rule = kwargs.pop("rl_rule", "RWupdate")
         self.model_config = kwargs.pop("model_config", None)
         self.non_centered = kwargs.pop("non_centered", False)
@@ -90,7 +90,9 @@ class HDDMnnRL(HDDMnn):
         self.model_config_rl = kwargs.pop("model_config_rl", None)
         if self.model_config_rl == None:
             try:
-                self.model_config_rl = deepcopy(hddm.model_config_rl.model_config_rl[self.rl_rule])
+                self.model_config_rl = deepcopy(
+                    hddm.model_config_rl.model_config_rl[self.rl_rule]
+                )
             except:
                 print(
                     "It seems that you supplied a model string that refers to an undefined model."
@@ -120,17 +122,22 @@ class HDDMnnRL(HDDMnn):
                 "w_outlier": 0.1,
             }
 
-
         self.wfpt_nn_rlssm = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
             model=self.model,
             model_config=self.model_config,
-            model_config_rl=self.model_config_rl, 
+            model_config_rl=self.model_config_rl,
             wiener_params=kwargs["wiener_params"],
             **kwargs_dict
         )
 
         # Initialize super class
-        super(HDDMnnRL, self).__init__(model=self.model, network=self.network, non_centered=self.non_centered, *args, **kwargs)
+        super(HDDMnnRL, self).__init__(
+            model=self.model,
+            network=self.network,
+            non_centered=self.non_centered,
+            *args,
+            **kwargs
+        )
 
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)
@@ -157,9 +164,11 @@ class HDDMnnRL(HDDMnn):
     def __setstate__(self, d):
         network_dict = {"network": d["network"]}
         d["wfpt_nn_rlssm"] = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
-            model=d["model"], model_config=d["model_config"], 
+            model=d["model"],
+            model_config=d["model_config"],
             model_config_rl=d["model_config_rl"],
-            wiener_params = d['wiener_params'], **network_dict
+            wiener_params=d["wiener_params"],
+            **network_dict
         )
 
         super(HDDMnnRL, self).__setstate__(d)
