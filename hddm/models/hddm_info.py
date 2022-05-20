@@ -153,13 +153,15 @@ class HDDM(HDDMBase):
     def _create_stochastic_knodes(self, include):
         if self.nn:
             if self.rlssm_model:
-                if self.is_informative: # KB-TO-DO: handle this/raise error
-                    return self._create_stochastic_knodes_nn_info(include)
+                if self.is_informative: 
+                    #return self._create_stochastic_knodes_nn_info(include)
+                    raise NotImplementedError("Informative priors are not supported with LANs.")
                 else:
                     return self._create_stochastic_knodes_nn_rl_noninfo(include)
             else:
                 if self.is_informative:
-                    return self._create_stochastic_knodes_nn_info(include)
+                    #return self._create_stochastic_knodes_nn_info(include)
+                    raise NotImplementedError("Informative priors are not supported with LANs.")
                 else:
                     return self._create_stochastic_knodes_nn_noninfo(include)
 
@@ -170,6 +172,16 @@ class HDDM(HDDMBase):
                 return self._create_stochastic_knodes_noninfo(include)
 
     def _create_stochastic_knodes_nn_rl_noninfo(self, include):
+        """Creates knodes for HDDMnnRL class.
+
+        :Arguments:
+            include: list
+                List of all parameters to be included in the parameter recovery.
+
+        :Returns:
+            kabuki node object
+        """
+
         knodes = self._create_stochastic_knodes_nn_noninfo(include)
 
         for tmp_param in self.model_config_rl["params"]:
@@ -240,81 +252,9 @@ class HDDM(HDDMBase):
                                 std_value=0.1,
                             )
                         )
-                    # knodes.update(
-                    #     self._create_family_trunc_normal(
-                    #         tmp_param,
-                    #         lower=self.model_config["param_bounds"][0][param_id],
-                    #         upper=self.model_config["param_bounds"][1][param_id],
-                    #         value=param_default,
-                    #         std_upper=param_std_upper,  # added AF
-                    #     )
-                    # )
 
         return knodes
 
-        # #knodes = super(HDDMnnRL, self)._create_stochastic_knodes(include)
-        # if self.non_centered:
-        #     print("setting learning rate parameter(s) to be non-centered")
-        #     if self.alpha:
-        #         knodes.update(
-        #             self._create_family_normal_non_centered(
-        #                 "alpha",
-        #                 value=0,
-        #                 g_mu=0.2,
-        #                 g_tau=3 ** -2,
-        #                 std_lower=1e-10,
-        #                 std_upper=10,
-        #                 std_value=0.1,
-        #             )
-        #         )
-        #     if self.dual:
-        #         knodes.update(
-        #             self._create_family_normal_non_centered(
-        #                 "pos_alpha",
-        #                 value=0,
-        #                 g_mu=0.2,
-        #                 g_tau=3 ** -2,
-        #                 std_lower=1e-10,
-        #                 std_upper=10,
-        #                 std_value=0.1,
-        #             )
-        #         )
-        # else:
-        #     if self.alpha:
-        #         knodes.update(
-        #             self._create_family_normal(
-        #                 "alpha",
-        #                 value=0,
-        #                 g_mu=0.2,
-        #                 g_tau=3 ** -2,
-        #                 std_lower=1e-10,
-        #                 std_upper=10,
-        #                 std_value=0.1,
-        #             )
-        #         )
-        #         # knodes.update(
-        #         #     self._create_family_invlogit(
-        #         #         "alpha",
-        #         #         value=0.5,
-        #         #         g_mu=0.5,
-        #         #         g_tau=15 ** -2,
-        #         #         std_std=10,
-        #         #         std_value=5,
-        #         #     )
-        #         # )
-        #     if self.dual:
-        #         knodes.update(
-        #             self._create_family_normal(
-        #                 "pos_alpha",
-        #                 value=0,
-        #                 g_mu=0.2,
-        #                 g_tau=3 ** -2,
-        #                 std_lower=1e-10,
-        #                 std_upper=10,
-        #                 std_value=0.1,
-        #             )
-        #         )
-        # return knodes
     
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()

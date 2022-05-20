@@ -184,6 +184,23 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
 
 
 def make_mlp_likelihood_rlssm(model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs):
+    """Defines the likelihoods for the MLP networks for RLSSMs.
+
+    :Arguments:
+        model: str <default='ddm'>
+            String that determines which model you would like to fit your data to.
+            Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+        model_config: dict <default=None>
+            Config dictionary for the sequential sampling model, necessary for construction of likelihood. In the style of what you find under hddm.model_config.
+        model_config_rl: dict <default=None>
+            Config dictionary for the reinforcement learning model, necessary for construction of likelihood. In the style of what you find under hddm.model_config_rl.
+        kwargs: dict
+            Dictionary of additional keyword arguments.
+            Importantly here, this carries the preloaded CNN.
+
+    :Returns:
+        Returns a pymc.object stochastic object as defined by PyMC2
+    """
 
     def make_likelihood():
         likelihood_str = make_likelihood_str_mlp_rlssm(

@@ -2009,12 +2009,26 @@ def plot_caterpillar(
 '''
 
 def get_mean_correct_responses_rlssm(trials, nbins, data):
-    '''
-    function to get mean proportion of correct responses (condition-wise.)
-    
-    trials: num. of initial trials to consider for computing proportion of correct responses
-    nbins: num. of bins to put the trials into. (Num. of trials per bin = trials/nbin)
-    '''
+    """Gets the mean proportion of correct responses condition-wise. 
+
+    Arguments:
+        trials: int
+            Number of initial trials to consider for computing proportion of correct responses.
+
+        nbins: int 
+            Number of bins to put the trials into (Num. of trials per bin = trials/nbin).
+
+        data: pandas.DataFrame
+            Pandas DataFrame for the observed or simulated data. 
+
+    Return: 
+        mean_correct_responses: dict
+            Dictionary of conditions containing proportion of mean correct responses (for each bin).
+        up_err: dict
+            Dictionary of conditions containing upper intervals of HDI of mean correct responses (for each bin).
+        low_err: dict
+            Dictionary of conditions containing lower intervals of HDI of mean correct responses (for each bin).
+    """
 
     data_ppc = data[data.trial <= trials].copy()
     data_ppc.loc[data_ppc['response'] < 1, 'response'] = 0
@@ -2033,6 +2047,7 @@ def get_mean_correct_responses_rlssm(trials, nbins, data):
         hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_sim.bin_trial[i]) & (sums['split_by']==ppc_sim.split_by[i])],alpha=0.05)
         ppc_sim.loc[i,'upper_hpd'] = hdi[1]
         ppc_sim.loc[i,'lower_hpd'] = hdi[0]
+
     #calculate error term as the distance from upper bound to mean
     ppc_sim['up_err'] = ppc_sim['upper_hpd']-ppc_sim['response']
     ppc_sim['low_err'] = ppc_sim['response']-ppc_sim['lower_hpd']
@@ -2049,6 +2064,51 @@ def get_mean_correct_responses_rlssm(trials, nbins, data):
 
 
 def gen_ppc_rlssm(model_ssm, config_ssm, model_rl, config_rl, data, traces, nsamples, p_lower, p_upper, save_data=False, save_name=None, save_path=None):  
+    """Generates data (for posterior predictives) using samples from the given trace as parameters. 
+
+    Arguments:
+        model_ssm: str
+            Name of the sequential sampling model used.
+
+        config_ssm: dict 
+            Config dictionary for the specified sequential sampling model. 
+        
+        model_rl: str
+            Name of the reinforcement learning model used.
+
+        config_rl: dict 
+            Config dictionary for the specified reinforcement learning model. 
+
+        data: pandas.DataFrame
+            Pandas DataFrame for the observed data. 
+        
+        traces: pandas.DataFrame
+            Pandas DataFrame containing the traces.
+        
+        nsamples: int
+            Number of posterior samples to draw for each subject.
+        
+        p_lower: dict
+            Dictionary of conditions containing the probability of reward for the lower choice/action in the 2-armed bandit task.
+        
+        p_upper: dict
+            Dictionary of conditions containing the probability of reward for the upper choice/action in the 2-armed bandit task.
+        
+        save_data: bool <default=False>
+            Boolean denoting whether to save the data as csv.
+
+        save_name: str <default=None>
+            Specifies filename to save the data.
+        
+        save_path: str <default=None>
+            Specifies path to save the data.
+
+    
+    Return:
+        ppc_sdata: pandas.DataFrame
+            Pandas DataFrame containing the simulated data (for posterior predictives).
+    """
+    
     def transform_param(param, param_val):
         if param == 'rl_alpha':
             transformed_param_val = np.exp(param_val)/(1+np.exp(param_val))
@@ -2109,6 +2169,36 @@ def gen_ppc_rlssm(model_ssm, config_ssm, model_rl, config_rl, data, traces, nsam
 
 
 def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins, save_fig=False, save_name=None, save_path=None):  
+    """Plot posterior preditive plot for choice data. 
+
+    Arguments:
+        obs_data: pandas.DataFrame
+            Pandas DataFrame for the observed data. 
+        
+        sim_data: pandas.DataFrame
+            Pandas DataFrame for the simulated data. 
+        
+        trials: int
+            Number of initial trials to consider for computing proportion of correct responses.
+
+        nbins: int 
+            Number of bins to put the trials into (Num. of trials per bin = trials/nbin).
+        
+        save_fig: bool <default=False>
+            Boolean denoting whether to save the plot.
+
+        save_name: str <default=None>
+            Specifies filename to save the figure.
+        
+        save_path: str <default=None>
+            Specifies path to save the figure.
+
+    
+    Return:
+        fig: matplotlib.Figure
+            plot object
+    """
+
     res_obs, up_err_obs, low_err_obs = get_mean_correct_responses_rlssm(trials, nbins, obs_data)
     res_sim, up_err_sim, low_err_sim = get_mean_correct_responses_rlssm(trials, nbins, sim_data)
 
@@ -2149,6 +2239,35 @@ def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins, save_fig=False, sav
 
 
 def plot_ppc_rt_rlssm(obs_data, sim_data, trials, bw=0.1, save_fig=False, save_name=None, save_path=None):  
+    """Plot posterior preditive plot for reaction time data. 
+
+    Arguments:
+        obs_data: pandas.DataFrame
+            Pandas DataFrame for the observed data. 
+        
+        sim_data: pandas.DataFrame
+            Pandas DataFrame for the simulated data. 
+        
+        trials: int
+            Number of initial trials to consider for computing proportion of correct responses.
+
+        bw: float <default=0.1>
+            Bandwidth parameter for kernel-density estimates.
+        
+        save_fig: bool <default=False>
+            Boolean denoting whether to save the plot.
+
+        save_name: str <default=None>
+            Specifies filename to save the figure.
+        
+        save_path: str <default=None>
+            Specifies path to save the figure.
+
+    
+    Return:
+        fig: matplotlib.Figure
+            plot object
+    """
 
     obs_data_ppc = obs_data[obs_data.trial <= trials].copy()
     sim_data_ppc = sim_data[sim_data.trial <= trials].copy()
@@ -2191,6 +2310,30 @@ def plot_ppc_rt_rlssm(obs_data, sim_data, trials, bw=0.1, save_fig=False, save_n
 
 
 def plot_posterior_pairs_rlssm(tracefile, param_list, save_fig=False, save_name=None, save_path=None, **kwargs):
+    """Plot posterior pairs. 
+
+    Arguments:
+        tracefile: dict
+            Dictionary containing the traces.
+        
+        param_list: list
+            List of model parameters to be included in the posterior pair plots. 
+        
+        save_fig: bool <default=False>
+            Boolean denoting whether to save the plot.
+
+        save_name: str <default=None>
+            Specifies filename to save the figure.
+        
+        save_path: str <default=None>
+            Specifies path to save the figure.
+
+    
+    Return:
+        fig: matplotlib.Figure
+            plot object
+    """
+
     traces = hddm.utils.get_traces_rlssm(tracefile)
     tr = traces.copy()
     tr_trunc = tr[param_list]

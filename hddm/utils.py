@@ -23,6 +23,25 @@ make_likelihood_fun_from_str = exec
 def make_likelihood_str_mlp_rlssm(
     model, config=None, config_rl=None, wiener_params=None, fun_name="custom_likelihood",
 ):
+    """Define string for a likelihood function for RLSSMs. This can be used as an mlp-likelihood
+    in the HDDMnnRL class. Also useful if you want to supply a custom LAN.
+
+    :Arguments:
+        model : str
+            Name of the sequential sampling model used.
+        config : dict <default = None>
+            Config dictionary for the sequential sampling model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+        config_rl : dict <default = None>
+            Config dictionary for the reinforcement learning model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config_rl.
+    :Returns:
+        str:
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+
     param_bounds_lower = config["param_bounds"][0]
     param_bounds_lower.extend(config_rl["param_bounds"][0])
     param_bounds_upper = config["param_bounds"][1]
@@ -1048,6 +1067,17 @@ if __name__ == "__main__":
 
 
 def get_dataset_as_dataframe_rlssm(dataset):
+    """Get dataset as pandas DataFrame from dict format. 
+
+    Arguments:
+        dataset: dict
+            Dictionary containing the dataset.
+    
+    Return:
+        PR_data: pandas.DataFrame
+            Pandas DataFrame containing the dataset.
+    """
+
     list_sub_data = list()
     for itr in range(len(dataset['data'])):
         data = dataset['data'][itr]['sim_data']
@@ -1062,6 +1092,17 @@ def get_dataset_as_dataframe_rlssm(dataset):
     return PR_data
 
 def get_traces_rlssm(tracefile):
+    """Get traces as pandas DataFrame from dict format. 
+
+    Arguments:
+        tracefile: dict
+            Dictionary containing the trace data.
+    
+    Return:
+        traces: pandas.DataFrame
+            Pandas DataFrame containing the trace data.
+    """
+
     t_res = {}
     for itr in tracefile.keys():
         if itr in ['deviance', '_state_']:

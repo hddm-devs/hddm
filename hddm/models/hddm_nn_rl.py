@@ -21,12 +21,63 @@ except:
 
 
 class HDDMnnRL(HDDMnn):
-    """HDDMnn model class that uses neural network based likelihoods in conjuction with RL rules."""
+    """HDDMnn model class that uses neural network based likelihoods in conjuction with RL rules.
+
+    :Arguments:
+        data: pandas.DataFrame
+            Input data with a row for each trial.
+
+            Must contain the following columns:
+            * 'rt': Reaction time of trial in seconds.
+            * 'response': Binary response (e.g. 0->error, 1->correct)
+            * 'subj_idx': A unique ID (int) of each subject.
+            * Other user-defined columns that can be used in depends_on keyword.
+
+    :Optional:
+
+        model: str <default='ddm'>
+            String that determines which sequential sampling model you would like to fit your data to.
+            Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+        
+        rl_rule: str <default='RWupdate'>
+            String that determines which reinforcement learning model you would like to fit your data to.
+
+        include: list <default=None>
+            A list with parameters we wish to include in the fitting procedure. 
+            Which parameters you can include depends on the model you specified under the model parameters.
+        
+        non_centered: bool <default=False>
+            Denotes whether non-centered distributions (a form of re-parameterization) should be used for reinforcement learning parameters.
+
+        informative : bool <default=True>
+            Whether to use informative priors (True) or vague priors
+            (False).  Informative priors are not yet implemented for neural network based
+            models.
+
+        is_group_model : bool
+            If True, this results in a hierarchical
+            model with separate parameter distributions for each
+            subject. The subject parameter distributions are
+            themselves distributed according to a group parameter
+            distribution.
+
+        p_outlier : double (default=0.05)
+            The probability of outliers in the data. if p_outlier is passed in the
+            'include' argument, then it is estimated from the data and the value passed
+            using the p_outlier argument is ignored.
+
+
+
+    :Example:
+        >>> m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'], p_outlier = 0.0) 
+        >>> m.sample(2000, burn=1000, dbname='traces.db', db='pickle')
+
+    """
 
     def __init__(self, *args, **kwargs):
         self.rlssm_model = True
 
-        self.model = kwargs.pop("model", None)
+        self.model = kwargs.pop("model", 'ddm')
         self.rl_rule = kwargs.pop("rl_rule", "RWupdate")
         self.model_config = kwargs.pop("model_config", None)
         self.non_centered = kwargs.pop("non_centered", False)

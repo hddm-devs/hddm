@@ -494,6 +494,45 @@ def gen_rand_rlssm_data_MAB_RWupdate(
     binary_outcome=True,
     uncertainty=False,
 ):
+    """Generate RLSSM datasets on 2-armed bandit task. 
+
+    :Arguments:
+        model: str
+            String that determines which sequential sampling model to use.
+        ssm_param: list 
+            List of sequential sampling model parameters (in the order of what you define in model_config).
+        rl_param: list
+            List of reinforcement learning parameters (in the order of what you define in model_config_rl).
+        dual: bool <default=False>
+            Flag to denote if use of separate learning rates for positive and negative RPEs. 
+        size: int <default=1>
+            Number of trials to simulate.
+        p_upper: float <default=1>
+            Probability of reward for the upper action/choice.
+        p_lower: float <default=0>
+            Probability of reward for the lower action/choice.
+        q_init: int <default=0.5>
+            Initial q-values.
+        subjs: int <default=1>
+            Number of subjects to simulate.
+        split_by: int <default=0>
+            Denotes the condition number/index in the experiment. 
+        mu_upper: float <default=1>
+            Mean of the (normal) reward distribution for the upper action/choice.
+        mu_lower: float <default=0>
+            Mean of the (normal) reward distribution for the lower action/choice.
+        sd_upper: float <default=0.1>
+            Std. dev. of the (normal) reward distribution for the upper action/choice.
+        sd_lower: float <default=0.1>
+            Std. dev. of the (normal) reward distribution for the lower action/choice.
+        binary_outcome: bool <default=True>
+            Denotes if the reward scheme is binary (as opposed to non-binary). Non-binary rewards are sampled from normal distributions.
+        
+
+    :Returns:
+        all_data: Pandas.Dataframe
+            Pandas DataFrame containing all the simulated data.
+    """
 
     scaler = ssm_param[0]
     alpha = rl_param[0]
