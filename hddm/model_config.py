@@ -229,6 +229,7 @@ model_config = {
             "t_std": 0.15,
             "sv": 0.5,  # AF-TODO: Might be worth adding std ?
         },
+    },
     "gamma_drift": {
         "doc": "Meant for use with the LAN extension",
         "params": ["v", "a", "z", "t", "shape", "scale", "c"],
@@ -254,7 +255,7 @@ model_config = {
             "scale_std": 1,
             "c": 1,
             "c_std": 1
-        }
+        },
     },
     "gamma_drift_angle": {
         "doc": "Meant for use with the LAN extension",
@@ -283,8 +284,81 @@ model_config = {
             "scale_std": 1,
             "c": 1,
             "c_std": 1
-        }
+        },
     },
+    "ds_conflict_drift": {
+        "doc": "Meant for use with LAN extension.",
+        "params": ['a', 'z', 't', 'tinit', 'dinit', 'tslope', 'dslope', 'tfixedp', 'tcoh', 'dcoh'],
+        "param_bounds": [[0.3, 0.1, 1e-3, 0, 0, 0.01, 0.01, 0, -1.0, -1.0],
+                         [3.0, 0.9, 2.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1.0, 1.0]],
+        "params_trans": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        "params_std_upper": [1.0, None, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0],
+        "hddm_include": ['a', 'z', 't', 'tinit', 'dinit', 'tslope', 'dslope', 'tfixedp', 'tcoh', 'dcoh'],
+        "boundary": bf.constant,
+        "choices": [-1, 1],
+        "slice_widhts": {
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "z_std": 1,
+            "z_trans_std": 1,
+            "t": 0.01,
+            "t_std": 1,
+            "tinit": 0.1,
+            "tinit_std": 1,
+            "dinit": 0.1,
+            "dinit_std": 1,
+            "tslope": 1,
+            "tslope_std": 1,
+            "dslope": 1,
+            "dslope_std": 1,
+            "tfixedp": 1,
+            "tfixedp_std": 1,
+            "tcoh": 1,
+            "tcoh_std": 1,
+            "dcoh": 1,
+            "dcohe_std": 1,
+        },
+    },
+    "ds_conflict_drift_angle": {
+        "doc": "Meant for use with LAN extension.",
+        "params": ['a', 'z', 't', 'tinit', 'dinit', 'tslope', 'dslope', 'tfixedp', 'tcoh', 'dcoh', 'angle'],
+        "param_bounds": [[0.3, 0.1, 1e-3, 0, 0, 0.01, 0.01, 0, -1.0, -1.0, -0.1],
+                         [3.0, 0.9, 2.0, 5.0, 5.0, 5.0, 5.0, 5.0, 1.0, 1.0, 1.3]],
+        "params_trans": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        "params_std_upper": [1.0, None, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
+        "params_default": [0.0, 0.0, 0.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.0],
+        "hddm_include": ['a', 'z', 't', 'tinit', 'dinit', 'tslope', 'dslope', 'tfixedp', 'tcoh', 'dcoh', 'theta'],
+        "boundary": bf.angle,
+        "choices": [-1, 1],
+        "slice_widhts": {
+            "a": 1,
+            "a_std": 1,
+            "z": 0.1,
+            "z_trans": 0.2,
+            "z_std": 1,
+            "z_trans_std": 1,
+            "t": 0.01,
+            "t_std": 1,
+            "tinit": 0.1,
+            "tinit_std": 1,
+            "dinit": 0.1,
+            "dinit_std": 1,
+            "tslope": 1,
+            "tslope_std": 1,
+            "dslope": 1,
+            "dslope_std": 1,
+            "tfixedp": 1,
+            "tfixedp_std": 1,
+            "tcoh": 1,
+            "tcoh_std": 1,
+            "dcoh": 1,
+            "dcoh_std": 1,
+            "theta": 0.1,
+            "theta_std": 0.2,
+        },
     },
     "ddm_par2": {
         "doc": "Currently undocumented, in testing phase.",
@@ -912,4 +986,5 @@ model_config = {
 
 # Models for which configs can be reused
 model_config["weibull_cdf"] = model_config["weibull"].copy()
+
 model_config["full_ddm2"] = model_config["full_ddm"].copy()
