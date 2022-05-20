@@ -2,8 +2,8 @@
 Introduction
 ************
 
-:Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Alexander Fengler, Michael J. Frank
-:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, alexander_fengler@brown.edu, michael_frank@brown.edu
+:Author: Thomas V. Wiecki, Imri Sofer, Mads L. Pedersen, Alexander Fengler, Lakshmi Govindarajan, Krishn Bera, Michael J. Frank
+:Contact: thomas.wiecki@gmail.com, imri_sofer@brown.edu, madslupe@gmail.com, alexander_fengler@brown.edu, krishn_bera@brown.edu, michael_frank@brown.edu
 :Web site: https://hddm.readthedocs.io
 :Github: http://github.com/hddm-devs/hddm
 :Mailing list: https://groups.google.com/group/hddm-users/
@@ -104,6 +104,17 @@ Features
 
              Note also that the usage of **indirect betas** as well as **indirect regressors** may affect the speed of sampling in general.
              Both translate into more computational work at the stage of regression likelihood evaluation.
+
+* HDDM 0.9.6 brings a host of new features. 
+             HDDM now includes use of `likelihood approximation networks`_ in conjunction with reinforcement learning models via the **HDDMnnRL** class. 
+             This allows researchers to study not only the across-trial dynamics of learning but the within-trial dynamics of choice processes, using a single model. 
+             This module greatly extends the previous functionality for fitting RL+DDM models (via HDDMrl class) by allowing fitting of a number of variants of sequential sampling models in conjuction with a learning process (RL+SSM models).
+
+             We have included a new **simulator**, which allows data generation for a host of variants of sequential sampling models 
+              in conjunction with the Rescorla-Wagner update rule on a 2-armed bandit task environment.
+             There are some new, out-of-the-box **plots** and **utility function** in the **hddm.plotting** and **hddm.utils** modules, respectively, to facilitate posterior visualization and posterior predictive checks.
+             Lastly you can also save and load **HDDMnnRL** models. 
+             Please see the **documentation** (under **HDDMnnRL Extension**) for illustrations on how to use the new features.
 
 
 Comparison to other packages
@@ -211,6 +222,11 @@ If HDDM was used in your research, please cite the publication_:
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
+If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the publication2_:
+
+Alexander Fengler, Lakshmi N Govindarajan, Tony Chen, Michael J Frank (2021). Likelihood approximation networks (LANs) for fast inference of simulation models in cognitive neuroscience.
+eLife 10:e65074. doi: 10.7554/eLife.65074
+
 Published papers using HDDM
 ===========================
 
@@ -245,5 +261,6 @@ Join our low-traffic `mailing list`_.
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
 .. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
+.. _publication2: https://elifesciences.org/articles/65074
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs
