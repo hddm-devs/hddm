@@ -2019,13 +2019,9 @@ def get_mean_correct_responses_rlssm(trials, nbins, data):
     data_ppc = data[data.trial <= trials].copy()
     data_ppc.loc[data_ppc['response'] < 1, 'response'] = 0
 
-    data_ppc['bin_trial'] = np.array(pd.cut(data_ppc.trial, nbins+1, labels=np.linspace(0,nbins,nbins+1)))
+    data_ppc['bin_trial'] = np.array(pd.cut(data_ppc.trial, nbins, labels=np.linspace(0,nbins,nbins)))
 
     sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index()
-    # if type == 'observed':
-    #     sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index()
-    # elif type == 'simulated':
-    #     sums = data_ppc.groupby(['bin_trial','split_by','trial']).mean().reset_index() # samp
 
     ppc_sim = sums.groupby(['bin_trial','split_by']).mean().reset_index()
 
@@ -2152,7 +2148,10 @@ def plot_ppc_choice_rlssm(obs_data, sim_data, trials, nbins, save_fig=False, sav
     return fig
 
 
-def plot_ppc_rt_rlssm(obs_data, sim_data, save_fig=False, save_name=None, save_path=None):  
+def plot_ppc_rt_rlssm(obs_data, sim_data, trials, bw=0.1, save_fig=False, save_name=None, save_path=None):  
+
+    obs_data_ppc = obs_data[obs_data.trial <= trials].copy()
+    sim_data_ppc = sim_data[sim_data.trial <= trials].copy()
 
     cond_list = np.unique(obs_data.split_by)
     rows = 1
@@ -2163,15 +2162,14 @@ def plot_ppc_rt_rlssm(obs_data, sim_data, save_fig=False, save_name=None, save_p
     for ay in range(cols):
         cond = cond_list[cond_index]
 
-        rt_ppc_sim = np.where(sim_data[sim_data.split_by==cond].response==1, sim_data[sim_data.split_by==cond].rt, 0-sim_data[sim_data.split_by==cond].rt)
-        rt_ppc_obs = np.where(obs_data[obs_data.split_by==cond].response==1, obs_data[obs_data.split_by==cond].rt, 0-obs_data[obs_data.split_by==cond].rt)
+        rt_ppc_sim = np.where(sim_data_ppc[sim_data_ppc.split_by==cond].response==1, sim_data_ppc[sim_data_ppc.split_by==cond].rt, 0-sim_data_ppc[sim_data_ppc.split_by==cond].rt)
+        rt_ppc_obs = np.where(obs_data_ppc[obs_data_ppc.split_by==cond].response==1, obs_data_ppc[obs_data_ppc.split_by==cond].rt, 0-obs_data_ppc[obs_data_ppc.split_by==cond].rt)
         
-        sns.kdeplot(rt_ppc_sim, label='simulated', ax=ax[ay]).set(ylabel=None)
-        sns.kdeplot(rt_ppc_obs, label='observed', ax=ax[ay]).set(ylabel=None)
+        sns.kdeplot(rt_ppc_sim, label='simulated', ax=ax[ay], bw_method=bw).set(ylabel=None)
+        sns.kdeplot(rt_ppc_obs, label='observed', ax=ax[ay], bw_method=bw).set(ylabel=None)
 
         ax[ay].legend()
         ax[ay].set_title('split_by='+str(cond), fontsize=12)
-        #ax[ay].get_yaxis().set_visible(False)
         ax[ay].grid()
         
         cond_index += 1
