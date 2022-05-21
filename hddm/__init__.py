@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext"
 
-__version__ = "0.9.5"
+__version__ = "0.9.6"
 
 from . import simulators
 from . import likelihoods
@@ -20,6 +20,7 @@ from . import plotting_old
 from . import network_inspectors
 from . import models
 from . import model_config
+from . import model_config_rl
 import cdfdif_wrapper
 
 from .models import *

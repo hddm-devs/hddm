@@ -13,6 +13,7 @@ def constant(t=0):
     """constant boundary"""
     return 1
 
+
 # Angle (additive)
 def angle(t=1, theta=1):
     """angle boundary
@@ -25,6 +26,7 @@ def angle(t=1, theta=1):
 
     """
     return np.multiply(t, (-np.sin(theta) / np.cos(theta)))
+
 
 # Generalized logistic bound (additive)
 def generalized_logistic_bnd(t=1, B=2.0, M=3.0, v=0.5):
@@ -43,6 +45,7 @@ def generalized_logistic_bnd(t=1, B=2.0, M=3.0, v=0.5):
     """
     return 1 - (1 / np.power(1 + np.exp(-B * (t - M)), 1 / v))
 
+
 # Weibull survival fun (multiplicative)
 def weibull_cdf(t=1, alpha=1, beta=1):
     """generalized logistic bound
@@ -59,12 +62,15 @@ def weibull_cdf(t=1, alpha=1, beta=1):
 
     return np.exp(-np.power(np.divide(t, beta), alpha))
 
-def conflict_gamma_bound(a = 0.5,
-                         theta = 0.5,
-                         scale = 1,
-                         alpha_gamma = 1.01,
-                         scale_gamma = 0.3,
-                         t = np.arange(0, 20, 0.1)):
+
+def conflict_gamma_bound(
+    a=0.5,
+    theta=0.5,
+    scale=1,
+    alpha_gamma=1.01,
+    scale_gamma=0.3,
+    t=np.arange(0, 20, 0.1),
+):
     """conflict bound that allows initial divergence then collapse
 
     :Arguments:
@@ -83,10 +89,13 @@ def conflict_gamma_bound(a = 0.5,
 
     """
 
-    return np.maximum(a + scale * gamma.pdf(t, a = alpha_gamma, 
-                                            loc = 0, 
-                                            scale = scale_gamma) + \
-                      np.multiply(t, (-np.sin(theta) / np.cos(theta))), 0)
+    return np.maximum(
+        a
+        + scale * gamma.pdf(t, a=alpha_gamma, loc=0, scale=scale_gamma)
+        + np.multiply(t, (-np.sin(theta) / np.cos(theta))),
+        0,
+    )
+
 
 # Gamma shape: (additive)
 def gamma_bnd(t=1, node=1, shape=1.01, scale=1, theta=0):

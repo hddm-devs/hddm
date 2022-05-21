@@ -632,14 +632,11 @@ def simulator_h_c(
         for covariate in regression_covariates.keys():
             tmp = regression_covariates[covariate]
             if tmp["type"] == "categorical":
-                cov_df[covariate] = (
-                    np.random.choice(
-                        np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
-                        replace=True,
-                        size=n_trials_per_subject,
-                    )
-                    / (tmp["range"][1])
-                )
+                cov_df[covariate] = np.random.choice(
+                    np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
+                    replace=True,
+                    size=n_trials_per_subject,
+                ) / (tmp["range"][1])
             else:
                 cov_df[covariate] = np.random.uniform(
                     low=tmp["range"][0], high=tmp["range"][1], size=n_trials_per_subject
@@ -966,7 +963,7 @@ def simulator_h_c(
         for param in model_config[model]["params"]:
             data[param] = 0
 
-        for subj_idx in data["subj_idx"].unique(): 
+        for subj_idx in data["subj_idx"].unique():
 
             # Fixed part
             if fixed_at_default is not None:
@@ -1107,9 +1104,7 @@ def simulator_h_c(
                         ][key]
 
                     for k in range(len(reg_param_names_tmp)):
-                        full_parameter_dict[
-                            reg_param_names_tmp[k]
-                        ] = reg_params_tmp[k]
+                        full_parameter_dict[reg_param_names_tmp[k]] = reg_params_tmp[k]
 
                     data.loc[data["subj_idx"] == int(subj_idx), [outcome]] = (
                         design_matrix * reg_params_tmp
@@ -1336,7 +1331,7 @@ def simulator_h_c(
                     if ("Intercept" in covariate) or (covariate == "1"):
 
                         # AF-COMMENT: Here instead of covariate_rv --> just use
-                        #print(reg_trace_dict)
+                        # print(reg_trace_dict)
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[
                             outcome
                         ]["rv"]()
@@ -1382,7 +1377,7 @@ def simulator_h_c(
 
     # Make conditions df
     if depends_on is not None:
-        #print("depends_on is: ", depends_on)
+        # print("depends_on is: ", depends_on)
         if type(depends_on) == dict:
             if len(list(depends_on.keys())) > 0:
                 # If data is None then conditions were supplied as an argument

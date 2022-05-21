@@ -5,6 +5,7 @@ import pandas as pd
 from numpy.random import rand
 from scipy.stats import uniform, norm
 from copy import copy
+from hddm.simulators.basic_simulator import *
 
 
 def gen_single_params_set(include=()):
@@ -473,6 +474,229 @@ def gen_rand_data(params=None, n_fast_outliers=0, n_slow_outliers=0, **kwargs):
     data = add_outliers(data, n_fast=n_fast_outliers, n_slow=n_slow_outliers, seed=seed)
 
     return data, subj_params
+
+
+def gen_rand_rlssm_data_MAB_RWupdate(
+    model,
+    ssm_param,
+    rl_param,
+    dual=False,
+    size=1,
+    p_upper=1,
+    p_lower=0,
+    q_init=0.5,
+    subjs=1,
+    split_by=0,
+    mu_upper=1,
+    mu_lower=0,
+    sd_upper=0.1,
+    sd_lower=0.1,
+    binary_outcome=True,
+    uncertainty=False,
+):
+    """Generate RLSSM datasets on 2-armed bandit task.
+
+    :Arguments:
+        model: str
+            String that determines which sequential sampling model to use.
+        ssm_param: list
+            List of sequential sampling model parameters (in the order of what you define in model_config).
+        rl_param: list
+            List of reinforcement learning parameters (in the order of what you define in model_config_rl).
+        dual: bool <default=False>
+            Flag to denote if use of separate learning rates for positive and negative RPEs.
+        size: int <default=1>
+            Number of trials to simulate.
+        p_upper: float <default=1>
+            Probability of reward for the upper action/choice.
+        p_lower: float <default=0>
+            Probability of reward for the lower action/choice.
+        q_init: int <default=0.5>
+            Initial q-values.
+        subjs: int <default=1>
+            Number of subjects to simulate.
+        split_by: int <default=0>
+            Denotes the condition number/index in the experiment.
+        mu_upper: float <default=1>
+            Mean of the (normal) reward distribution for the upper action/choice.
+        mu_lower: float <default=0>
+            Mean of the (normal) reward distribution for the lower action/choice.
+        sd_upper: float <default=0.1>
+            Std. dev. of the (normal) reward distribution for the upper action/choice.
+        sd_lower: float <default=0.1>
+            Std. dev. of the (normal) reward distribution for the lower action/choice.
+        binary_outcome: bool <default=True>
+            Denotes if the reward scheme is binary (as opposed to non-binary). Non-binary rewards are sampled from normal distributions.
+
+
+    :Returns:
+        all_data: Pandas.Dataframe
+            Pandas DataFrame containing all the simulated data.
+    """
+
+    scaler = ssm_param[0]
+    alpha = rl_param[0]
+    if dual:
+        pos_alfa = rl_param[1]
+    else:
+        pos_alfa = alpha
+
+    all_data = []
+
+    for s in range(0, subjs):
+        n = size
+        q_up = np.tile([q_init], n)
+        q_low = np.tile([q_init], n)
+        response = np.tile([0.5], n)
+        feedback = np.tile([0.5], n)
+        rt = np.tile([0], n)
+        if binary_outcome:
+            rew_up = np.random.binomial(1, p_upper, n).astype(float)
+            rew_low = np.random.binomial(1, p_lower, n).astype(float)
+        else:
+            rew_up = np.random.normal(mu_upper, sd_upper, n)
+            rew_low = np.random.normal(mu_lower, sd_lower, n)
+        sim_drift = np.tile([0], n)
+        subj_idx = np.tile([s], n)
+        d = {
+            "q_up": q_up,
+            "q_low": q_low,
+            "sim_drift": sim_drift,
+            "rew_up": rew_up,
+            "rew_low": rew_low,
+            "response": response,
+            "rt": rt,
+            "feedback": feedback,
+            "subj_idx": subj_idx,
+            "split_by": split_by,
+            "trial": 1,
+        }
+        df = pd.DataFrame(data=d)
+        df = df[
+            [
+                "q_up",
+                "q_low",
+                "sim_drift",
+                "rew_up",
+                "rew_low",
+                "response",
+                "rt",
+                "feedback",
+                "subj_idx",
+                "split_by",
+                "trial",
+            ]
+        ]
+
+        # Get sim_params for passing into the simulator
+        sim_params = np.append([df.loc[0, "sim_drift"]], ssm_param[1:])
+
+        # simulate model with given params
+        res = simulator(
+            sim_params,
+            model=model,
+            n_samples=1,
+            delta_t=0.001,  # n_trials
+            max_t=20,
+            no_noise=False,
+            bin_dim=None,
+            bin_pointwise=False,
+        )
+        # get the results in desired df format [rt, response] -- from np.array (1, 2)
+        tres = np.transpose(np.squeeze(np.array(list(res[0:2])), axis=1))
+        data = pd.DataFrame(tres, columns=["rt", "response"])
+        # flip the responses to [1,0]
+        data.loc[data["response"] < 1, "response"] = 0
+
+        df.loc[0, "response"] = data.response[0]
+        df.loc[0, "rt"] = data.rt[0]
+        if data.response[0] == 1.0:
+            df.loc[0, "feedback"] = df.loc[0, "rew_up"]
+            if df.loc[0, "feedback"] > df.loc[0, "q_up"]:
+                alfa = pos_alfa
+            else:
+                alfa = alpha
+        else:
+            df.loc[0, "feedback"] = df.loc[0, "rew_low"]
+            if df.loc[0, "feedback"] > df.loc[0, "q_low"]:
+                alfa = pos_alfa
+            else:
+                alfa = alpha
+
+        for i in range(1, n):
+            df.loc[i, "trial"] = i + 1
+            df.loc[i, "q_up"] = (
+                df.loc[i - 1, "q_up"] * (1 - df.loc[i - 1, "response"])
+            ) + (
+                (df.loc[i - 1, "response"])
+                * (
+                    df.loc[i - 1, "q_up"]
+                    + (alfa * (df.loc[i - 1, "rew_up"] - df.loc[i - 1, "q_up"]))
+                )
+            )
+            df.loc[i, "q_low"] = (
+                df.loc[i - 1, "q_low"] * (df.loc[i - 1, "response"])
+            ) + (
+                (1 - df.loc[i - 1, "response"])
+                * (
+                    df.loc[i - 1, "q_low"]
+                    + (alfa * (df.loc[i - 1, "rew_low"] - df.loc[i - 1, "q_low"]))
+                )
+            )
+            df.loc[i, "sim_drift"] = (df.loc[i, "q_up"] - df.loc[i, "q_low"]) * (scaler)
+
+            # Get sim_params for passing into the simulator
+            sim_params = np.append([df.loc[i, "sim_drift"]], ssm_param[1:])
+
+            # simulate model with given params
+            res = simulator(
+                sim_params,
+                model=model,
+                n_samples=1,
+                delta_t=0.001,  # n_trials
+                max_t=20,
+                no_noise=False,
+                bin_dim=None,
+                bin_pointwise=False,
+            )
+            # get the results in desired df format [rt, response] -- from np.array (1, 2)
+            tres = np.transpose(np.squeeze(np.array(list(res[0:2])), axis=1))
+            data = pd.DataFrame(tres, columns=["rt", "response"])
+            # flip the responses to [1,0]
+            data.loc[data["response"] < 1, "response"] = 0
+
+            df.loc[i, "response"] = data.response[0]
+            df.loc[i, "rt"] = data.rt[0]
+            if data.response[0] == 1.0:
+                df.loc[i, "feedback"] = df.loc[i, "rew_up"]
+                if df.loc[i, "feedback"] > df.loc[i, "q_up"]:
+                    alfa = pos_alfa
+                else:
+                    alfa = alpha
+            else:
+                df.loc[i, "feedback"] = df.loc[i, "rew_low"]
+                if df.loc[i, "feedback"] > df.loc[i, "q_low"]:
+                    alfa = pos_alfa
+                else:
+                    alfa = alpha
+
+        all_data.append(df)
+    all_data = pd.concat(all_data, axis=0)
+    all_data = all_data[
+        [
+            "q_up",
+            "q_low",
+            "sim_drift",
+            "response",
+            "rt",
+            "feedback",
+            "subj_idx",
+            "split_by",
+            "trial",
+        ]
+    ]
+
+    return all_data
 
 
 def gen_rand_rlddm_data(

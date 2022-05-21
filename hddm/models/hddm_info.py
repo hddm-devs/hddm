@@ -119,8 +119,8 @@ class HDDM(HDDMBase):
                     param: 0.1 for param in self.model_config["params"]
                 }
 
-            print(self.slice_widths)
-            
+            # print(self.slice_widths)
+
             self.slice_widths["p_outlier"] = 1.0
 
         else:
@@ -152,16 +152,119 @@ class HDDM(HDDMBase):
 
     def _create_stochastic_knodes(self, include):
         if self.nn:
-            if self.is_informative:
-                return self._create_stochastic_knodes_nn_info(include)
+            if self.rlssm_model:
+                if self.is_informative:
+                    # return self._create_stochastic_knodes_nn_info(include)
+                    raise NotImplementedError(
+                        "Informative priors are not supported with LANs."
+                    )
+                else:
+                    return self._create_stochastic_knodes_nn_rl_noninfo(include)
             else:
-                return self._create_stochastic_knodes_nn_noninfo(include)
+                if self.is_informative:
+                    # return self._create_stochastic_knodes_nn_info(include)
+                    raise NotImplementedError(
+                        "Informative priors are not supported with LANs."
+                    )
+                else:
+                    return self._create_stochastic_knodes_nn_noninfo(include)
 
         else:
             if self.is_informative:
                 return self._create_stochastic_knodes_info(include)
             else:
                 return self._create_stochastic_knodes_noninfo(include)
+
+    def _create_stochastic_knodes_nn_rl_noninfo(self, include):
+        """Creates knodes for HDDMnnRL class.
+
+        :Arguments:
+            include: list
+                List of all parameters to be included in the parameter recovery.
+
+        :Returns:
+            kabuki node object
+        """
+
+        knodes = self._create_stochastic_knodes_nn_noninfo(include)
+
+        for tmp_param in self.model_config_rl["params"]:
+            if tmp_param in include:
+                param_id = self.model_config_rl["params"].index(tmp_param)
+
+                # Perform some checks on the model_config to see if all expected keys are included
+                # If not, choose reasonable defaults for some of them.
+                if not "params_trans" in self.model_config_rl.keys():
+                    trans = 0
+                else:
+                    trans = self.model_config_rl["params_trans"][param_id]
+
+                if not "params_std_upper" in self.model_config_rl.keys():
+                    print(
+                        "Supplied model_config does not have a params_std_upper argument."
+                    )
+                    print("Set to a default of 10")
+                    param_std_upper = 10
+                elif self.model_config_rl["params_std_upper"][param_id] == None:
+                    print(
+                        "Supplied model_config specifies params_std_upper for ",
+                        tmp_param,
+                        "as ",
+                        "None.",
+                    )
+                    print("Changed to 10")
+                    param_std_upper = 10
+                else:
+                    param_std_upper = self.model_config_rl["params_std_upper"][param_id]
+
+                if not "params_default" in self.model_config_rl.keys():
+                    param_default = (
+                        self.model_config["param_bounds"][1][param_id]
+                        - self.model_config_rl["param_bounds"][0][param_id]
+                    ) / 2
+                else:
+                    param_default = self.model_config_rl["params_default"][param_id]
+
+                # Add to knodes
+                if trans:
+                    knodes.update(
+                        self._create_family_invlogit(
+                            tmp_param,
+                            g_tau=10**-2,
+                            std_std=0.5,
+                            lower=self.model_config_rl["param_bounds"][0][param_id],
+                            upper=self.model_config_rl["param_bounds"][1][param_id],
+                            value=param_default,
+                        )
+                    )
+                else:
+                    if self.non_centered:
+                        print("Using non-centered distributions.")
+                        knodes.update(
+                            self._create_family_normal_non_centered(
+                                tmp_param,
+                                value=0,
+                                g_mu=0.2,
+                                g_tau=3**-2,
+                                std_lower=1e-10,
+                                std_upper=10,
+                                std_value=0.1,
+                            )
+                        )
+                    else:
+                        knodes.update(
+                            self._create_family_normal(
+                                tmp_param,
+                                value=0,
+                                g_mu=0.2,
+                                g_tau=3**-2,
+                                std_lower=1e-10,
+                                std_upper=10,
+                                std_value=0.1,
+                            )
+                        )
+
+        return knodes
 
     def _create_stochastic_knodes_nn_noninfo(self, include):
         knodes = OrderedDict()
@@ -187,14 +290,21 @@ class HDDM(HDDMBase):
                     trans = 0
                 else:
                     trans = self.model_config["params_trans"][param_id]
-                
+
                 if not "params_std_upper" in self.model_config.keys():
-                    print('Supplied model_config does not have a params_std_upper argument.')
-                    print('Set to a default of 10')
+                    print(
+                        "Supplied model_config does not have a params_std_upper argument."
+                    )
+                    print("Set to a default of 10")
                     param_std_upper = 10
                 elif self.model_config["params_std_upper"][param_id] == None:
-                    print('Supplied model_config specifies params_std_upper for ', tmp_param, 'as ', 'None.')
-                    print('Changed to 10')
+                    print(
+                        "Supplied model_config specifies params_std_upper for ",
+                        tmp_param,
+                        "as ",
+                        "None.",
+                    )
+                    print("Changed to 10")
                     param_std_upper = 10
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
@@ -212,7 +322,7 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
-                            g_tau=10 ** -2,
+                            g_tau=10**-2,
                             std_std=0.5,
                             lower=self.model_config["param_bounds"][0][param_id],
                             upper=self.model_config["param_bounds"][1][param_id],
@@ -260,12 +370,19 @@ class HDDM(HDDMBase):
                     trans = self.model_config["params_trans"][param_id]
 
                 if not "params_std_upper" in self.model_config.keys():
-                    print('Supplied model_config does not have a params_std_upper argument.')
-                    print('Set to a default of 10')
+                    print(
+                        "Supplied model_config does not have a params_std_upper argument."
+                    )
+                    print("Set to a default of 10")
                     param_std_upper = 10
                 elif self.model_config["params_std_upper"][param_id] == None:
-                    print('Supplied model_config specifies params_std_upper for ', tmp_param, 'as ', 'None.')
-                    print('Changed to 10')
+                    print(
+                        "Supplied model_config specifies params_std_upper for ",
+                        tmp_param,
+                        "as ",
+                        "None.",
+                    )
+                    print("Changed to 10")
                     param_std_upper = 10
                 else:
                     param_std_upper = self.model_config["params_std_upper"][param_id]
@@ -282,7 +399,7 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
-                            g_tau=10 ** -2,
+                            g_tau=10**-2,
                             std_std=0.5,
                             lower=self.model_config["param_bounds"][0][param_id],
                             upper=self.model_config["param_bounds"][1][param_id],
@@ -312,7 +429,7 @@ class HDDM(HDDMBase):
         if "v" in include:
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "v", value=2, g_mu=2, g_tau=3 ** -2, std_std=2
+                    "v", value=2, g_mu=2, g_tau=3**-2, std_std=2
                 )
             )
         if "t" in include:
@@ -323,7 +440,7 @@ class HDDM(HDDMBase):
             )
         if "sv" in include:
             knodes["sv_bottom"] = Knode(
-                pm.HalfNormal, "sv", tau=2 ** -2, value=1, depends=self.depends["sv"]
+                pm.HalfNormal, "sv", tau=2**-2, value=1, depends=self.depends["sv"]
             )
         if "sz" in include:
             knodes["sz_bottom"] = Knode(
@@ -333,14 +450,14 @@ class HDDM(HDDMBase):
             knodes["st_bottom"] = Knode(
                 pm.HalfNormal,
                 "st",
-                tau=0.3 ** -2,
+                tau=0.3**-2,
                 value=0.001,
                 depends=self.depends["st"],
             )
         if "z" in include:
             knodes.update(
                 self._create_family_invlogit(
-                    "z", value=0.5, g_tau=0.5 ** -2, std_std=0.05
+                    "z", value=0.5, g_tau=0.5**-2, std_std=0.05
                 )
             )
         if "p_outlier" in include:
@@ -364,7 +481,7 @@ class HDDM(HDDMBase):
         if "v" in include:
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "v", value=0, g_tau=50 ** -2, std_std=10
+                    "v", value=0, g_tau=50**-2, std_std=10
                 )
             )
         if "t" in include:
@@ -396,7 +513,7 @@ class HDDM(HDDMBase):
         if "z" in include:
             knodes.update(
                 self._create_family_invlogit(
-                    "z", value=0.5, g_tau=10 ** -2, std_std=0.5
+                    "z", value=0.5, g_tau=10**-2, std_std=0.5
                 )
             )
         if "p_outlier" in include:

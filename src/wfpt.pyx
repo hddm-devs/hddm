@@ -14,6 +14,7 @@
 # GPLv3
 
 import hddm
+#from hddm.model_config import model_config
 
 import scipy.integrate as integrate
 from copy import copy
@@ -151,6 +152,267 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 alfa * (feedbacks[i] - qs[responses[i]])
     return sum_logp
 
+
+def wiener_like_rlssm_nn(str model, 
+                      np.ndarray[double, ndim=1] x,
+                      np.ndarray[long, ndim=1] response,
+                      np.ndarray[double, ndim=1] feedback,
+                      np.ndarray[long, ndim=1] split_by,
+                      double q,
+                      np.ndarray[double, ndim=1] params_ssm,
+                      np.ndarray[double, ndim=1] params_rl,
+                      np.ndarray[double, ndim=2] params_bnds,
+                      double p_outlier=0, double w_outlier=0, network = None):
+
+    cdef double v = params_ssm[0]
+    cdef double rl_alpha = params_rl[0]
+    #cdef double pos_alpha = params_rl[1]
+
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i, j, i_p
+    cdef Py_ssize_t s_size
+    cdef int s
+    cdef double log_p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    cdef double alfa
+    cdef double pos_alfa
+    cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
+    cdef np.ndarray[double, ndim=1] xs
+    cdef np.ndarray[double, ndim=1] feedbacks
+    cdef np.ndarray[long, ndim=1] responses
+    cdef np.ndarray[long, ndim=1] responses_qs
+    cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
+    #cdef Py_ssize_t n_params = len(model_config[model]['params_default']) #4 #params.shape[0]
+    cdef Py_ssize_t n_params = params_ssm.shape[0] #+ params_rl.shape[0]
+    cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+    cdef float ll_min = -16.11809
+    cdef int cumm_s_size = 0
+
+    #print("alpha test ==  ", alpha, pos_alfa)
+    #print("\n\n---> n_params ", n_params, params_ssm.shape[0], params_rl.shape[0])
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
+    
+    # Check for boundary violations -- if true, return -np.inf
+    # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
+    #     return -np.inf
+
+    for i_p in np.arange(1, len(params_ssm)):
+        lower_bnd = params_bnds[0][i_p]
+        upper_bnd = params_bnds[1][i_p]
+
+        if params_ssm[i_p] < lower_bnd or params_ssm[i_p] > upper_bnd:
+            #print("**", lower_bnd, upper_bnd, params[i_p])
+            return -np.inf
+
+    # if params[1] < 0.3 or params[1] > 2.5 or params[3] < 0.001 or params[3] > 2.0:
+    #     return -np.inf
+
+    if len(params_rl) == 2:
+        pos_alfa = params_rl[1]
+    else:
+        pos_alfa = params_rl[0]
+    # if pos_alpha==100.00:
+    #     pos_alfa = alpha
+    # else:
+    #     pos_alfa = pos_alpha
+
+
+    # unique represent # of conditions
+    for j in range(unique.shape[0]):
+        s = unique[j]
+        # select trials for current condition, identified by the split_by-array
+        feedbacks = feedback[split_by == s]
+        responses = response[split_by == s]
+        xs = x[split_by == s]
+        s_size = xs.shape[0]
+        qs[0] = q
+        qs[1] = q
+
+        responses_qs = responses
+        responses_qs[responses_qs == -1] = 0
+
+        # don't calculate pdf for first trial but still update q
+        if feedbacks[0] > qs[responses_qs[0]]:
+            alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
+        else:
+            alfa = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+        # alfa = alpha
+        
+        
+        # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
+        # received on current trial.
+        qs[responses_qs[0]] = qs[responses_qs[0]] + \
+            alfa * (feedbacks[0] - qs[responses_qs[0]])
+
+        #data[0, 0:4] = np.array([0.5, a, z, t])
+        data[0, 0] = 0.0
+        # loop through all trials in current condition
+        for i in range(1, s_size):
+            # p = full_pdf(xs[i], ((qs[1] - qs[0]) * v), sv, a, z,
+            #              sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            # ["v", "a", "z", "t"] [rt. response]
+            #v = (qs[0] - qs[1]) * 1 #scaling
+            #data[i, 0:4] = np.array([v, a, z, t])
+            data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * v
+            # Check for boundary violations -- if true, return -np.inf
+            if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
+                return -np.inf
+
+            # get learning rate for current trial. if pos_alpha is not in
+            # include it will be same as alpha so can still use this
+            # calculation:
+            if feedbacks[i] > qs[responses_qs[i]]:
+                alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
+            else:
+                alfa = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+
+            # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
+            # received on current trial.
+            qs[responses_qs[i]] = qs[responses_qs[i]] + \
+                alfa * (feedbacks[i] - qs[responses_qs[i]])
+        cumm_s_size += s_size
+
+    #print("here after loop")
+    #print("-- ", len(data), len(data[0, :]), len(data[1, :]), len(model_config[model]['params']), n_params)
+    data[:, 1:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
+    #print(">> ", data.shape, x.shape, response.shape, np.stack([x, response], axis = 1).shape)
+    data[:, n_params:] = np.stack([x, response], axis = 1)
+    
+    #print("create data arr")
+    #sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    #print("sum_logp: ", sum_logp)
+
+    # Call to network:
+    if p_outlier == 0:
+        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    else:
+        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+
+    return sum_logp
+
+'''
+def wiener_like_rlssm_nn_OLD(str model, 
+                      np.ndarray[double, ndim=1] x,
+                      np.ndarray[long, ndim=1] response,
+                      np.ndarray[double, ndim=1] feedback,
+                      np.ndarray[long, ndim=1] split_by,
+                      double q,
+                      np.ndarray[double, ndim=1] params,
+                      double alpha,
+                      double pos_alpha,
+                      double p_outlier=0, double w_outlier=0, network = None):
+
+    cdef double v = params[0]
+
+    cdef Py_ssize_t size = x.shape[0]
+    cdef Py_ssize_t i, j, i_p
+    cdef Py_ssize_t s_size
+    cdef int s
+    cdef double log_p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+    cdef double alfa
+    cdef double pos_alfa
+    cdef np.ndarray[double, ndim=1] qs = np.array([q, q])
+    cdef np.ndarray[double, ndim=1] xs
+    cdef np.ndarray[double, ndim=1] feedbacks
+    cdef np.ndarray[long, ndim=1] responses
+    cdef np.ndarray[long, ndim=1] responses_qs
+    cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
+    cdef Py_ssize_t n_params = len(model_config[model]['params_default']) #4 #params.shape[0]
+    cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+    cdef float ll_min = -16.11809
+    cdef int cumm_s_size = 0
+
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
+    
+    # Check for boundary violations -- if true, return -np.inf
+    # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
+    #     return -np.inf
+    for i_p in np.arange(1, len(params)):
+        lower_bnd = model_config[model]['param_bounds'][0][i_p]
+        upper_bnd = model_config[model]['param_bounds'][1][i_p]
+
+        if params[i_p] < lower_bnd or params[i_p] > upper_bnd:
+            #print("**", lower_bnd, upper_bnd, params[i_p])
+            return -np.inf
+
+    # if params[1] < 0.3 or params[1] > 2.5 or params[3] < 0.001 or params[3] > 2.0:
+    #     return -np.inf
+
+    if pos_alpha==100.00:
+        pos_alfa = alpha
+    else:
+        pos_alfa = pos_alpha
+
+
+    # unique represent # of conditions
+    for j in range(unique.shape[0]):
+        s = unique[j]
+        # select trials for current condition, identified by the split_by-array
+        feedbacks = feedback[split_by == s]
+        responses = response[split_by == s]
+        xs = x[split_by == s]
+        s_size = xs.shape[0]
+        qs[0] = q
+        qs[1] = q
+
+        responses_qs = responses
+        responses_qs[responses_qs == -1] = 0
+
+        # don't calculate pdf for first trial but still update q
+        if feedbacks[0] > qs[responses_qs[0]]:
+            alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
+        else:
+            alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
+
+        # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
+        # received on current trial.
+        qs[responses_qs[0]] = qs[responses_qs[0]] + \
+            alfa * (feedbacks[0] - qs[responses_qs[0]])
+
+        #data[0, 0:4] = np.array([0.5, a, z, t])
+        data[0, 0] = 0.0
+        # loop through all trials in current condition
+        for i in range(1, s_size):
+            # p = full_pdf(xs[i], ((qs[1] - qs[0]) * v), sv, a, z,
+            #              sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
+            # ["v", "a", "z", "t"] [rt. response]
+            #v = (qs[0] - qs[1]) * 1 #scaling
+            #data[i, 0:4] = np.array([v, a, z, t])
+            data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * v
+            # Check for boundary violations -- if true, return -np.inf
+            if data[cumm_s_size + i, 0] < model_config[model]['param_bounds'][0][0] or data[cumm_s_size + i, 0] > model_config[model]['param_bounds'][1][0]:
+                return -np.inf
+
+            # get learning rate for current trial. if pos_alpha is not in
+            # include it will be same as alpha so can still use this
+            # calculation:
+            if feedbacks[i] > qs[responses_qs[i]]:
+                alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
+            else:
+                alfa = (2.718281828459**alpha) / (1 + 2.718281828459**alpha)
+
+            # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
+            # received on current trial.
+            qs[responses_qs[i]] = qs[responses_qs[i]] + \
+                alfa * (feedbacks[i] - qs[responses_qs[i]])
+        cumm_s_size += s_size
+
+    #print("here after loop")
+    #print("-- ", len(data), len(data[0, :]), len(data[1, :]), len(model_config[model]['params']), n_params)
+    data[:, 1:n_params] = np.tile(params[1:], (size, 1)).astype(np.float32)
+    #print(">> ", data.shape, x.shape, response.shape, np.stack([x, response], axis = 1).shape)
+    data[:, n_params:] = np.stack([x, response], axis = 1)
+    
+    #print("create data arr")
+    sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    #print("sum_logp: ", sum_logp)
+    return sum_logp
+'''
 
 def wiener_like_rl(np.ndarray[long, ndim=1] response,
                    np.ndarray[double, ndim=1] feedback,

@@ -5,6 +5,7 @@ import hddm
 import kabuki
 import pandas as pd
 import string
+from copy import deepcopy
 
 from kabuki.analyze import post_pred_gen, post_pred_compare_stats
 import pymc.progressbar as pbar
@@ -17,6 +18,80 @@ from scipy.stats.mstats import mquantiles
 # Simply alias for exec function, to make the function call more expressive for a
 # single use case (define custom likelihoods)
 make_likelihood_fun_from_str = exec
+
+
+def make_likelihood_str_mlp_rlssm(
+    model,
+    config=None,
+    config_rl=None,
+    wiener_params=None,
+    fun_name="custom_likelihood",
+):
+    """Define string for a likelihood function for RLSSMs. This can be used as an mlp-likelihood
+    in the HDDMnnRL class. Also useful if you want to supply a custom LAN.
+
+    :Arguments:
+        model : str
+            Name of the sequential sampling model used.
+        config : dict <default = None>
+            Config dictionary for the sequential sampling model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+        config_rl : dict <default = None>
+            Config dictionary for the reinforcement learning model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config_rl.
+    :Returns:
+        str:
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+
+    param_bounds_lower = config["param_bounds"][0]
+    param_bounds_lower.extend(config_rl["param_bounds"][0])
+    param_bounds_upper = config["param_bounds"][1]
+    param_bounds_upper.extend(config_rl["param_bounds"][1])
+    param_bounds = [param_bounds_lower, param_bounds_upper]
+
+    params_str_ssm = ", ".join(config["params"])
+    params_str_rl = ", ".join(config_rl["params"])
+
+    t_params = deepcopy(config["params"])
+    t_params.extend(config_rl["params"])
+    all_params_str = ", ".join(t_params)
+
+    w_outlier_str = str(wiener_params["w_outlier"])
+
+    fun_str = (
+        "def "
+        + fun_name
+        + "(x, "
+        + all_params_str
+        + ", p_outlier=0.0, w_outlier="
+        + w_outlier_str
+        + ", network = None):\n    "
+        + "return hddm.wfpt.wiener_like_rlssm_nn('"
+        + model
+        + "', "
+        + 'x["rt"].values.astype(float), '
+        + 'x["response"].values.astype(int), '
+        + 'x["feedback"].values, '
+        + 'x["split_by"].values.astype(int), '
+        + 'x["q_init"].iloc[0], '
+        + "np.array(["
+        + params_str_ssm
+        + "]), "
+        + "np.array(["
+        + params_str_rl
+        + "]), "
+        + "params_bnds="
+        + "np.array("
+        + str(param_bounds)
+        + "), "
+        + "network=network, "
+        + "p_outlier=p_outlier, w_outlier=w_outlier)"
+    )
+
+    return fun_str
 
 
 def make_likelihood_str_mlp(
@@ -105,10 +180,13 @@ def make_likelihood_str_mlp_info(
     print(fun_str)
     return fun_str
 
+
 def make_reg_likelihood_str_mlp(
-    config=None, wiener_params=None,
-    param_links=None, param_links_betas=None,
-    fun_name="custom_likelihood_reg"
+    config=None,
+    wiener_params=None,
+    param_links=None,
+    param_links_betas=None,
+    fun_name="custom_likelihood_reg",
 ):
     """Define string for a likelihood function that can be used as a
     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
@@ -124,19 +202,19 @@ def make_reg_likelihood_str_mlp(
             to PyMC2. (Serves as a wrapper around the LAN forward pass)
 
     """
-    
+
     param_links_betas_str = str(param_links_betas)
     param_links_str = str(param_links)
     params_fun_def_str = ", ".join(config["params"])
-    
-    if 'indirect_regressors' in config:
-        for indirect_regressor in config['indirect_regressors'].keys():
-            params_fun_def_str += ', ' + indirect_regressor
-    
-    if 'indirect_betas' in config:
-        for indirect_beta in config['indirect_betas'].keys():
-            params_fun_def_str += ', ' + indirect_beta
-    
+
+    if "indirect_regressors" in config:
+        for indirect_regressor in config["indirect_regressors"].keys():
+            params_fun_def_str += ", " + indirect_regressor
+
+    if "indirect_betas" in config:
+        for indirect_beta in config["indirect_betas"].keys():
+            params_fun_def_str += ", " + indirect_beta
+
     w_outlier_str = str(wiener_params["w_outlier"])
     upper_bounds_str = str(config["param_bounds"][1])
     lower_bounds_str = str(config["param_bounds"][0])
@@ -157,10 +235,10 @@ def make_reg_likelihood_str_mlp(
         + "\n    data = np.zeros(((size, "
         + data_frame_width_str
         + ")), dtype=np.float32)"
-        + "\n    param_links = " # indirect regressor part 
-        + param_links_str        # indirect regressor part
-        + "\n    param_links_betas = " # indirect betas part
-        + param_links_betas_str        # indirect betas part
+        + "\n    param_links = "  # indirect regressor part
+        + param_links_str  # indirect regressor part
+        + "\n    param_links_betas = "  # indirect betas part
+        + param_links_betas_str  # indirect betas part
         + "\n    data[:, "
         + n_params_str
         + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)'
@@ -173,7 +251,7 @@ def make_reg_likelihood_str_mlp(
         + "\n            for linked_indirect_regressor in param_links[tmp_str]:"
         + '\n                data[:, cnt] = data[:, cnt] + params[linked_indirect_regressor].loc[value["rt"].index].values'
         + "\n            for linked_indirect_beta in param_links_betas[tmp_str]:"
-        + "\n                data[:, cnt] = data[:, cnt] + params[linked_indirect_beta[0]] * value[linked_indirect_beta[1]]"  
+        + "\n                data[:, cnt] = data[:, cnt] + params[linked_indirect_beta[0]] * value[linked_indirect_beta[1]]"
         + "\n            if (data[:, cnt].min() < "
         + lower_bounds_str
         + "[cnt]) or (data[:, cnt].max() > "
@@ -188,9 +266,9 @@ def make_reg_likelihood_str_mlp(
     )
     return fun_str
 
+
 def make_reg_likelihood_str_mlp_basic(
-    config=None, wiener_params=None,
-    fun_name="custom_likelihood_reg"
+    config=None, wiener_params=None, fun_name="custom_likelihood_reg"
 ):
     """Define string for a likelihood function that can be used as a
     mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
@@ -235,7 +313,7 @@ def make_reg_likelihood_str_mlp_basic(
         + params_str
         + ":"
         + "\n        if tmp_str in reg_outcomes:"
-        + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values' 
+        + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
         + "\n            if (data[:, cnt].min() < "
         + lower_bounds_str
         + "[cnt]) or (data[:, cnt].max() > "
@@ -249,6 +327,7 @@ def make_reg_likelihood_str_mlp_basic(
         + '\n    return hddm.wfpt.wiener_like_multi_nn_mlp(data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])'
     )
     return fun_str
+
 
 def flip_errors(data):
     """Flip sign for lower boundary responses.
@@ -484,12 +563,12 @@ def EZ(pc, vrt, mrt, s=1):
     if pc == 0 or pc == 0.5 or pc == 1:
         raise ValueError("Probability correct is either 0%, 50% or 100%")
 
-    s2 = s ** 2
+    s2 = s**2
     logit_p = np.log(pc / (1 - pc))
 
     # Eq. 7
-    x = (logit_p * (pc ** 2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
-    v = np.sign(pc - 0.5) * s * x ** 0.25
+    x = (logit_p * (pc**2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
+    v = np.sign(pc - 0.5) * s * x**0.25
     # Eq 5
     a = (s2 * logit_p) / v
 
@@ -997,7 +1076,58 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
 
     return q_lower, q_upper, p_upper
 
+
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
+
+
+def get_dataset_as_dataframe_rlssm(dataset):
+    """Get dataset as pandas DataFrame from dict format.
+
+    Arguments:
+        dataset: dict
+            Dictionary containing the dataset.
+
+    Return:
+        PR_data: pandas.DataFrame
+            Pandas DataFrame containing the dataset.
+    """
+
+    list_sub_data = list()
+    for itr in range(len(dataset["data"])):
+        data = dataset["data"][itr]["sim_data"]
+        data["q_up"]
+        data["q_low"]
+        data["sim_drift"]
+        data["subj_idx"] = itr
+
+        list_sub_data.append(data)
+    PR_data = pd.concat(list_sub_data, ignore_index=True)
+
+    return PR_data
+
+
+def get_traces_rlssm(tracefile):
+    """Get traces as pandas DataFrame from dict format.
+
+    Arguments:
+        tracefile: dict
+            Dictionary containing the trace data.
+
+    Return:
+        traces: pandas.DataFrame
+            Pandas DataFrame containing the trace data.
+    """
+
+    t_res = {}
+    for itr in tracefile.keys():
+        if itr in ["deviance", "_state_"]:
+            pass
+        else:
+            t_res[itr] = tracefile[itr][0]
+
+    traces = pd.DataFrame.from_dict(t_res)
+
+    return traces

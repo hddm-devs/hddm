@@ -160,7 +160,7 @@ class TestWfptFull(unittest.TestCase):
             t = rand() * 0.5 + (st / 2)
             a = 1.5 + rand()
             rt = (rand() * 4 + t) * np.sign(rand())
-            err = 10 ** -9
+            err = 10**-9
             sz = rand() * 0.3
             z = 0.5 * rand() + sz / 2
             logp = 0  # np.floor(rand()*2)
@@ -218,7 +218,7 @@ class TestWfptFull(unittest.TestCase):
             st = rand() * 0.3
             t = rand() * 0.5 + (st / 2)
             a = 1.5 + rand()
-            err = 10 ** -8
+            err = 10**-8
             sz = rand() * 0.3
             z = 0.5 * rand() + sz / 2
             func = lambda x: np.exp(
@@ -236,7 +236,7 @@ class TestWfptFull(unittest.TestCase):
             t = rand() * 0.5 + (st / 2)
             a = 1.5 + rand()
             rt = (rand() * 4 + t) * np.sign(rand())
-            err = 10 ** -8
+            err = 10**-8
             sz = rand() * 0.3
             z = 0.5 * rand() + sz / 2
             n_sz = 60

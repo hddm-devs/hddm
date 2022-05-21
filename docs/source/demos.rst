@@ -10,3 +10,4 @@ Demos
 
     demo_gonogo
     demo_RLHDDMtutorial
+    demo_HDDMnnRL
