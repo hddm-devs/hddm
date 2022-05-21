@@ -109,8 +109,7 @@ Features
              HDDM now includes use of `likelihood approximation networks`_ in conjunction with reinforcement learning models via the **HDDMnnRL** class. 
              This allows researchers to study not only the across-trial dynamics of learning but the within-trial dynamics of choice processes, using a single model. 
              This module greatly extends the previous functionality for fitting RL+DDM models (via HDDMrl class) by allowing fitting of a number of variants of sequential sampling models in conjuction with a learning process (RL+SSM models).
-             We have included a new **simulator**, which allows data generation for a host of variants of sequential sampling models 
-              in conjunction with the Rescorla-Wagner update rule on a 2-armed bandit task environment.
+             We have included a new **simulator**, which allows data generation for a host of variants of sequential sampling models in conjunction with the Rescorla-Wagner update rule on a 2-armed bandit task environment.
              There are some new, out-of-the-box **plots** and **utility function** in the **hddm.plotting** and **hddm.utils** modules, respectively, to facilitate posterior visualization and posterior predictive checks.
              Lastly you can also save and load **HDDMnnRL** models. 
              Please see the **documentation** (under **HDDMnnRL Extension**) for illustrations on how to use the new features.
