@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.5
+:Version: 0.9.6
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -109,7 +109,6 @@ Features
              HDDM now includes use of `likelihood approximation networks`_ in conjunction with reinforcement learning models via the **HDDMnnRL** class. 
              This allows researchers to study not only the across-trial dynamics of learning but the within-trial dynamics of choice processes, using a single model. 
              This module greatly extends the previous functionality for fitting RL+DDM models (via HDDMrl class) by allowing fitting of a number of variants of sequential sampling models in conjuction with a learning process (RL+SSM models).
-
              We have included a new **simulator**, which allows data generation for a host of variants of sequential sampling models 
               in conjunction with the Rescorla-Wagner update rule on a 2-armed bandit task environment.
              There are some new, out-of-the-box **plots** and **utility function** in the **hddm.plotting** and **hddm.utils** modules, respectively, to facilitate posterior visualization and posterior predictive checks.
@@ -217,12 +216,12 @@ And if you're a mac user, check out this `thread`_ for advice on installation.
 How to cite
 ===========
 
-If HDDM was used in your research, please cite the publication_:
+If HDDM was used in your research, please cite the `publication`__:
 
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
-If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the publication2_:
+If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the `publication`__:
 
 Alexander Fengler, Lakshmi N Govindarajan, Tony Chen, Michael J Frank (2021). Likelihood approximation networks (LANs) for fast inference of simulation models in cognitive neuroscience.
 eLife 10:e65074. doi: 10.7554/eLife.65074
@@ -260,7 +259,7 @@ Join our low-traffic `mailing list`_.
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
-.. _publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
-.. _publication2: https://elifesciences.org/articles/65074
+.. __: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
+.. __: https://elifesciences.org/articles/65074
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs
