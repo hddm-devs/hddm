@@ -85,6 +85,7 @@ class HDDMnnRegressor(HDDMRegressor):
         """
         # Signify as neural net class for later super() inits
         self.nn = True
+        self.rlssm_model = kwargs.pop("rlssm_model", False)
 
         if "informative" in kwargs.keys():
             pass

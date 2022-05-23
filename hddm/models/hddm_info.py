@@ -104,10 +104,17 @@ class HDDM(HDDMBase):
     """
 
     def __init__(self, *args, **kwargs):
+        # Check if this got passed down by one of the neural network classes
         if hasattr(self, "nn"):
             pass
         else:
             self.nn = False
+
+        # Check if this got passed down by the rl-ssm (hddm_nn_rl) class
+        if hasattr(self, "rlssm_model"):
+            pass
+        else:
+            self.rlssm_model = False
 
         if self.nn:
             # If the supplied model_config doesn't provide parameter wise slice_widths
@@ -118,8 +125,6 @@ class HDDM(HDDMBase):
                 self.slice_widths = {
                     param: 0.1 for param in self.model_config["params"]
                 }
-
-            # print(self.slice_widths)
 
             self.slice_widths["p_outlier"] = 1.0
 
