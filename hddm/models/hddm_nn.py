@@ -115,6 +115,7 @@ class HDDMnn(HDDM):
     def __init__(self, *args, **kwargs):
 
         self.nn = True
+        self.rlssm_model = False
 
         if "informative" in kwargs.keys():
             pass
