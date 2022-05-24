@@ -135,7 +135,6 @@ class HDDMnnRL(HDDMnn):
             model=self.model,
             network=self.network,
             non_centered=self.non_centered,
-            rlssm_model=self.rlssm_model,
             *args,
             **kwargs
         )
