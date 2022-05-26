@@ -79,15 +79,15 @@ class HDDMnnRL(HDDMnn):
 
         self.model = kwargs.pop("model", "ddm")
         self.rl_rule = kwargs.pop("rl_rule", "RWupdate")
-        self.model_config = kwargs.pop("model_config", None)
         self.non_centered = kwargs.pop("non_centered", False)
+        self.model_config = kwargs.pop("model_config", None)
+        self.model_config_rl = kwargs.pop("model_config_rl", None)
 
         print("\nPrinting model specifications -- ")
         print("ssm: ", self.model)
         print("rl rule: ", self.rl_rule)
         print("using non-centered dist.: ", self.non_centered)
 
-        self.model_config_rl = kwargs.pop("model_config_rl", None)
         if self.model_config_rl == None:
             try:
                 self.model_config_rl = deepcopy(
@@ -108,7 +108,16 @@ class HDDMnnRL(HDDMnn):
                     + "This works only if you supply a custom model_config dictionary."
                 )
 
-        self.network = load_torch_mlp(model=self.model)
+        if self.network is None:
+            try:
+                self.network = load_torch_mlp(model=self.model)
+            except:
+                print("Couldn't execute load_torch_mlp()...")
+                print("Option 1: pytorch not installed or version older than 1.7?")
+                print(
+                    "Option 2: pytorch model for your model string is not yet available"
+                )
+                return None
 
         kwargs_dict = {"network": self.network}
 
