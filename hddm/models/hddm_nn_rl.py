@@ -15,7 +15,7 @@ try:
 except:
     print(
         "It seems that you do not have pytorch installed."
-        + "The HDDMnn, HDDMnnRL, HDDMnnRegressor and HDDMnnStimCoding"
+        + "The HDDMnn, HDDMnnRL, HDDMnnRegressor, HDDMnnStimCoding, HDDMnnRL and HDDMnnRLRegressor"
         + "classes will not work"
     )
 
@@ -82,6 +82,8 @@ class HDDMnnRL(HDDMnn):
         self.non_centered = kwargs.pop("non_centered", False)
         self.model_config = kwargs.pop("model_config", None)
         self.model_config_rl = kwargs.pop("model_config_rl", None)
+
+        self.network = kwargs.pop("network", None)
 
         print("\nPrinting model specifications -- ")
         print("ssm: ", self.model)

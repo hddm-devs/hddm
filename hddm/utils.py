@@ -98,11 +98,16 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
     model=None, config=None, config_rl=None, wiener_params=None, fun_name="custom_likelihood_reg"
 ):
     """Define string for a likelihood function that can be used as a
-    mlp-likelihood in the HDDMnnRegressor class. Useful if you want to supply a custom LAN.
+    mlp-likelihood in the HDDMnnRLRegressor class. Useful if you want to supply a custom LAN.
 
     :Arguments:
+        model : str
+            Name of the sequential sampling model used.
         config : dict <default = None>
-            Config dictionary for the model for which you would like to construct a custom
+            Config dictionary for the sequential sampling model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+        config_rl : dict <default = None>
+            Config dictionary for the reinforcement learning model for which you would like to construct a custom
             likelihood. In the style of what you find under hddm.model_config.
 
     :Returns:
@@ -126,9 +131,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
 
     w_outlier_str = str(wiener_params["w_outlier"])
 
-    ### =====
-
-    #params_fun_def_str = ", ".join(config["params"])
+    # For regressors-
     w_outlier_str = str(wiener_params["w_outlier"])
     data_frame_width_str = str(len(config["params"]) + 2)
 
@@ -141,10 +144,9 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
     lower_bounds_rl_str = str(config_rl["param_bounds"][0])
     n_params_rl_str = str(len(config_rl["params"]))
     params_rl_str = str(config_rl["params"])
-    
-    
 
-
+    print("param bounds = ", param_bounds)
+    
     fun_str = (
         "def "
         + fun_name
@@ -153,6 +155,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ", reg_outcomes, p_outlier=0, w_outlier="
         + w_outlier_str
         + ", **kwargs):"
+        #+ "\n    print(v.min(), np.mean(v), v.max() )"
         + "\n    params = locals()"
         + "\n    size = int(value.shape[0])"
         + "\n    data = np.zeros(((size, "
@@ -167,17 +170,17 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ":"
         + "\n        if tmp_str in reg_outcomes:"
         + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
-        + "\n            if (data[:, cnt].min() < "
-        + lower_bounds_ssm_str
-        + "[cnt]) or (data[:, cnt].max() > "
-        + upper_bounds_ssm_str
-        + "[cnt]):"
-        + '\n                warnings.warn("Boundary violation of regressor part.")'
-        + "\n                return -np.inf"
+        # + "\n            if tmp_str != 'v' and ((data[:, cnt].min() < "
+        # + lower_bounds_ssm_str
+        # + "[cnt]) or (data[:, cnt].max() > "
+        # + upper_bounds_ssm_str
+        # + "[cnt])):"
+        # + '\n                warnings.warn("Boundary violation of regressor part.")'
+        # + "\n                return -np.inf"
         + "\n        else:"
         + "\n            data[:, cnt] = params[tmp_str]"
         + "\n        cnt += 1"
-        # ===
+        # for rl part - 
         + "\n    rl_arr = np.zeros(((size, "
         + n_params_rl_str
         + ")), dtype=np.float32)"
@@ -187,17 +190,9 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ":"
         + "\n        if tmp_str in reg_outcomes:"
         + '\n            rl_arr[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
-        + "\n            if (rl_arr[:, cnt].min() < "
-        + lower_bounds_rl_str
-        + "[cnt]) or (rl_arr[:, cnt].max() > "
-        + upper_bounds_rl_str
-        + "[cnt]):"
-        + '\n                warnings.warn("Boundary violation of regressor part.")'
-        + "\n                return -np.inf"
         + "\n        else:"
         + "\n            rl_arr[:, cnt] = params[tmp_str]"
         + "\n        cnt += 1"
-        #+ '\n    return hddm.wfpt.wiener_like_multi_nn_mlp(data, p_outlier=p_outlier, w_outlier=w_outlier, network=kwargs["network"])'
         + "\n    return hddm.wfpt.wiener_like_rlssm_nn_reg(data, rl_arr,"
         + 'value["rt"].values.astype(float), '
         + 'value["response"].values.astype(int), '
@@ -211,6 +206,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + 'network=kwargs["network"], '
         + "p_outlier=p_outlier, w_outlier=w_outlier)"
     )
+    
     print(fun_str)
     return fun_str
 

@@ -14,7 +14,7 @@ except:
 
 
 class HDDMnnRLRegressor(HDDMRegressor):
-    """HDDMnnRegressor allows estimation of the NNDDM where parameter
+    """HDDMnnRLRegressor allows estimation of the RLSSM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
     """
@@ -44,6 +44,16 @@ class HDDMnnRLRegressor(HDDMRegressor):
 
         :Optional:
 
+            model: str <default='ddm'>
+                String that determines which sequential sampling model you would like to fit your data to.
+                Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+            rl_rule: str <default='RWupdate'>
+                String that determines which reinforcement learning model you would like to fit your data to.
+            include: list <default=None>
+                A list with parameters we wish to include in the fitting procedure.
+                Which parameters you can include depends on the model you specified under the model parameters.
+            non_centered: bool <default=False>
+                Denotes whether non-centered distributions (a form of re-parameterization) should be used for reinforcement learning parameters.
             group_only_regressors : bool (default = True)
                 Do not estimate individual subject parameters for all regressors.
             keep_regressor_trace : bool (default = False)
@@ -53,7 +63,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
 
         :Note:
 
-            Internally, HDDMnnRegressor uses patsy which allows for
+            Internally, HDDMnnRLRegressor uses patsy which allows for
             simple yet powerful model specification. For more information see:
             http://patsy.readthedocs.org/en/latest/overview.html
 
@@ -65,7 +75,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
             drift-rate. The corresponding model might look like
             this:
                 ```python
-                HDDMnnRegressor(data, 'v ~ BOLD')
+                HDDMnnRLRegressor(data, 'a ~ BOLD', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
                 ```
 
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
@@ -77,7 +87,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
             in the 'conditions' column of your data you may
             specify:
                 ```python
-                HDDMnnRegressor(data, 'v ~ C(condition)')
+                HDDMnnRLRegressor(data, 'a ~ C(condition)', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
                 ```
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1 + cond2.

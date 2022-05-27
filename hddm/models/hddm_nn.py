@@ -14,7 +14,7 @@ try:
 except:
     print(
         "It seems that you do not have pytorch installed."
-        + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
+        + "The HDDMnn, HDDMnnRegressor, HDDMnnStimCoding, HDDMnnRL and HDDMnnRLRegressor"
         + "classes will not work"
     )
 

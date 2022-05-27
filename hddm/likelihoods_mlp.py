@@ -372,15 +372,16 @@ def make_mlp_likelihood_reg(
 def make_mlp_likelihood_reg_nn_rl(
     model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs
 ):
-    """Defines the regressor likelihoods for the MLP networks.
+    """Defines the regressor likelihoods for the LAN-based RLSSM class.
 
     :Arguments:
         model: str <default='ddm'>
             String that determines which model you would like to fit your data to.
             Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
         model_config: dict <default=None>
-            Model config supplied via the calling HDDM class. Necessary for construction of likelihood.
-            Should have the structure of model_configs in the hddm.model_config.model_config dictionary.
+            Config dictionary for the sequential sampling model, necessary for construction of likelihood. In the style of what you find under hddm.model_config.
+        model_config_rl: dict <default=None>
+            Config dictionary for the reinforcement learning model, necessary for construction of likelihood. In the style of what you find under hddm.model_config_rl.
         kwargs: dict
             Dictionary of additional keyword arguments.
             Importantly here, this carries the preloaded CNN.
@@ -389,85 +390,9 @@ def make_mlp_likelihood_reg_nn_rl(
         Returns a pymc.object stochastic object as defined by PyMC2
     """
 
-    # Need to rewrite these random parts !
-    def random(
-        self,
-        keep_negative_responses=True,
-        add_model=False,
-        add_model_parameters=False,
-        add_outliers=False,
-        keep_subj_idx=False,
-    ):
-        """
-        Function to sample from a regressor based likelihood. Conditions on the covariates.
-        """
-        param_dict = deepcopy(self.parents.value)
-        del param_dict["reg_outcomes"]
-
-        param_data = np.zeros(
-            (self.value.shape[0], len(model_config["params"])), dtype=np.float32
-        )
-
-        cnt = 0
-        for tmp_str in model_config["params"]:
-            if tmp_str in self.parents["reg_outcomes"]:
-                param_data[:, cnt] = param_dict[tmp_str].values
-                for linked_indirect_regressor in param_links[tmp_str]:
-                    param_data[:, cnt] = (
-                        param_data[:, cnt]
-                        + param_dict[linked_indirect_regressor].values
-                    )
-                for linked_indirect_beta in param_links_betas[tmp_str]:
-                    param_data[:, cnt] = (
-                        param_data[:, cnt]
-                        + param_dict[linked_indirect_beta[0]]
-                        * self.value[linked_indirect_beta[1]]
-                    )
-            else:
-                param_data[:, cnt] = param_dict[tmp_str]
-            cnt += 1
-
-        sim_out = simulator(
-            theta=param_data, model=model, n_samples=1, max_t=20  # n_trials = size,
-        )
-
-        # Add outliers:
-        if add_outliers:
-            if self.parents.value["p_outlier"] > 0.0:
-                sim_out = hddm_dataset_generators._add_outliers(
-                    sim_out=sim_out,
-                    p_outlier=self.parents.value["p_outlier"],
-                    max_rt_outlier=1 / wiener_params["w_outlier"],
-                )
-
-        sim_out_proc = hddm_preprocess(
-            sim_out,
-            keep_negative_responses=keep_negative_responses,
-            add_model_parameters=add_model_parameters,
-            keep_subj_idx=keep_subj_idx,
-        )
-
-        if add_model:
-            sim_out_proc["model"] = model
-
-        return sim_out_proc
-
-    def pdf(self, x):
-        return "Not yet implemented"
-
-    def cdf(self, x):
-        # TODO: Implement the CDF method for neural networks
-        return "Not yet implemented"
-
     def make_likelihood():
         if indirect_betas_present or indirect_regressors_present:
             raise NotImplementedError("Indirect regressors are not yet implemented for RLSSM models.")
-            # likelihood_str = make_reg_likelihood_str_mlp(
-            #     config=model_config,
-            #     wiener_params=wiener_params,
-            #     param_links=param_links,
-            #     param_links_betas=param_links_betas,
-            # )
         else:
             likelihood_str = make_reg_likelihood_str_mlp_basic_nn_rl(
                 model=model,
@@ -489,7 +414,4 @@ def make_mlp_likelihood_reg_nn_rl(
 
     likelihood_ = make_likelihood()
     stoch_nn_rl = stochastic_from_dist("wfpt_reg_nn_rl", partial(likelihood_, **kwargs))
-    stoch_nn_rl.pdf = pdf
-    stoch_nn_rl.cdf = cdf
-    stoch_nn_rl.random = random
     return stoch_nn_rl
