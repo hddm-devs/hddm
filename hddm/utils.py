@@ -155,7 +155,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ", reg_outcomes, p_outlier=0, w_outlier="
         + w_outlier_str
         + ", **kwargs):"
-        #+ "\n    print(v.min(), np.mean(v), v.max() )"
+        #+ "\n    print(v, len(a), z, t, rl_alpha )"
         + "\n    params = locals()"
         + "\n    size = int(value.shape[0])"
         + "\n    data = np.zeros(((size, "

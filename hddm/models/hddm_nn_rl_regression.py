@@ -96,6 +96,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
         # Signify as neural net class for later super() inits
         self.nn = True
         self.rlssm_model = True
+        self.nn_rl_reg = True
 
         if "informative" in kwargs.keys():
             pass
@@ -182,6 +183,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+
 
         return Knode(
             self.wfpt_nn_rl_reg_class,

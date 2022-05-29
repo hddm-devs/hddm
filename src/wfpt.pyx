@@ -493,13 +493,12 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
         return -np.inf
     
     # Check for boundary violations -- if true, return -np.inf
-    # for i_p in np.arange(1, data.shape[1]-2):
-    #     lower_bnd = params_bnds[0][i_p]
-    #     upper_bnd = params_bnds[1][i_p]
+    for i_p in np.arange(1, data.shape[1]-2):
+        lower_bnd = params_bnds[0][i_p]
+        upper_bnd = params_bnds[1][i_p]
 
-    #     if data[:,i_p].min() < lower_bnd or data[:,i_p].max() > upper_bnd:
-    #         print("**", lower_bnd, upper_bnd)
-    #         return -np.inf
+        if data[:,i_p].min() < lower_bnd or data[:,i_p].max() > upper_bnd:
+            return -np.inf
 
     # unique represent # of conditions
     for j in range(unique.shape[0]):
@@ -520,12 +519,11 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
             tp_scale = data[cumm_s_size + i, 0]
             # if tp_scale < 0:
             #     return -np.inf
-
             data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * tp_scale 
 
             # Check for boundary violations -- if true, return -np.inf
-            # if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
-            #     return -np.inf
+            if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
+                return -np.inf
 
             rl_alpha = rl_arr[cumm_s_size + i, 0]
             alfa = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
