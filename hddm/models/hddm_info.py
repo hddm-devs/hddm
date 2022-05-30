@@ -229,16 +229,6 @@ class HDDM(HDDMBase):
                     ) / 2
                 else:
                     param_default = self.model_config_rl["params_default"][param_id]
-                
-
-                # if self.nn_rl_reg:
-                #     print("@@@ normal normal knode -- rl")
-                #     knodes.update(
-                #         self._create_family_normal_normal_hnormal(
-                #         tmp_param, value=0, g_tau=50**-2, std_std=10
-                #         )
-                #     )
-                #     pass
 
                 # Add to knodes
                 if trans:

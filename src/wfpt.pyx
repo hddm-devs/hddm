@@ -166,7 +166,6 @@ def wiener_like_rlssm_nn(str model,
 
     cdef double v = params_ssm[0]
     cdef double rl_alpha = params_rl[0]
-    #cdef double pos_alpha = params_rl[1]
 
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i, j, i_p
@@ -183,40 +182,27 @@ def wiener_like_rlssm_nn(str model,
     cdef np.ndarray[long, ndim=1] responses
     cdef np.ndarray[long, ndim=1] responses_qs
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
-    #cdef Py_ssize_t n_params = len(model_config[model]['params_default']) #4 #params.shape[0]
     cdef Py_ssize_t n_params = params_ssm.shape[0] #+ params_rl.shape[0]
     cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
     cdef float ll_min = -16.11809
     cdef int cumm_s_size = 0
 
-    #print("alpha test ==  ", alpha, pos_alfa)
-    #print("\n\n---> n_params ", n_params, params_ssm.shape[0], params_rl.shape[0])
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
     # Check for boundary violations -- if true, return -np.inf
-    # if a < 0.3 or a > 2.5 or t < 0.001 or t > 2.0:
-    #     return -np.inf
-
     for i_p in np.arange(1, len(params_ssm)):
         lower_bnd = params_bnds[0][i_p]
         upper_bnd = params_bnds[1][i_p]
 
         if params_ssm[i_p] < lower_bnd or params_ssm[i_p] > upper_bnd:
-            #print("**", lower_bnd, upper_bnd, params[i_p])
             return -np.inf
 
-    # if params[1] < 0.3 or params[1] > 2.5 or params[3] < 0.001 or params[3] > 2.0:
-    #     return -np.inf
 
     if len(params_rl) == 2:
         pos_alfa = params_rl[1]
     else:
         pos_alfa = params_rl[0]
-    # if pos_alpha==100.00:
-    #     pos_alfa = alpha
-    # else:
-    #     pos_alfa = pos_alpha
 
 
     # unique represent # of conditions
@@ -238,23 +224,17 @@ def wiener_like_rlssm_nn(str model,
             alfa = (2.718281828459**pos_alfa) / (1 + 2.718281828459**pos_alfa)
         else:
             alfa = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
-        # alfa = alpha
         
-        
+
         # qs[1] is upper bound, qs[0] is lower bound. feedbacks is reward
         # received on current trial.
         qs[responses_qs[0]] = qs[responses_qs[0]] + \
             alfa * (feedbacks[0] - qs[responses_qs[0]])
 
-        #data[0, 0:4] = np.array([0.5, a, z, t])
+
         data[0, 0] = 0.0
         # loop through all trials in current condition
         for i in range(1, s_size):
-            # p = full_pdf(xs[i], ((qs[1] - qs[0]) * v), sv, a, z,
-            #              sz, t, st, err, n_st, n_sz, use_adaptive, simps_err)
-            # ["v", "a", "z", "t"] [rt. response]
-            #v = (qs[0] - qs[1]) * 1 #scaling
-            #data[i, 0:4] = np.array([v, a, z, t])
             data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * v
             # Check for boundary violations -- if true, return -np.inf
             if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
@@ -274,15 +254,9 @@ def wiener_like_rlssm_nn(str model,
                 alfa * (feedbacks[i] - qs[responses_qs[i]])
         cumm_s_size += s_size
 
-    #print("here after loop")
-    #print("-- ", len(data), len(data[0, :]), len(data[1, :]), len(model_config[model]['params']), n_params)
+
     data[:, 1:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
-    #print(">> ", data.shape, x.shape, response.shape, np.stack([x, response], axis = 1).shape)
     data[:, n_params:] = np.stack([x, response], axis = 1)
-    
-    #print("create data arr")
-    #sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
-    #print("sum_logp: ", sum_logp)
 
     # Call to network:
     if p_outlier == 0:
@@ -459,9 +433,6 @@ def wiener_like_multi_rlddm(np.ndarray[double, ndim=1] x,
         return sum_logp
 
 
-
-
-
 def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
                       np.ndarray[float, ndim=2] rl_arr,
                       np.ndarray[double, ndim=1] x,
@@ -518,8 +489,8 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
         # loop through all trials in current condition
         for i in range(0, s_size):
             tp_scale = data[cumm_s_size + i, 0]
-            # if tp_scale < 0:
-            #     return -np.inf
+            if tp_scale < 0:
+                return -np.inf
 
             data_copy[cumm_s_size + i, 0] = (qs[1] - qs[0]) * tp_scale 
 

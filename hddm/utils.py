@@ -122,9 +122,6 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
     param_bounds_upper.extend(config_rl["param_bounds"][1])
     param_bounds = [param_bounds_lower, param_bounds_upper]
 
-    params_str_ssm = ", ".join(config["params"])
-    params_str_rl = ", ".join(config_rl["params"])
-
     t_params = deepcopy(config["params"])
     t_params.extend(config_rl["params"])
     all_params_str = ", ".join(t_params)
@@ -140,12 +137,8 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
     n_params_ssm_str = str(len(config["params"]))
     params_ssm_str = str(config["params"])
 
-    upper_bounds_rl_str = str(config_rl["param_bounds"][1])
-    lower_bounds_rl_str = str(config_rl["param_bounds"][0])
     n_params_rl_str = str(len(config_rl["params"]))
     params_rl_str = str(config_rl["params"])
-
-    print("param bounds = ", param_bounds)
     
     fun_str = (
         "def "
@@ -155,7 +148,6 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ", reg_outcomes, p_outlier=0, w_outlier="
         + w_outlier_str
         + ", **kwargs):"
-        #+ "\n    print(v, len(a), z, t, rl_alpha )"
         + "\n    params = locals()"
         + "\n    size = int(value.shape[0])"
         + "\n    data = np.zeros(((size, "
@@ -170,13 +162,13 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ":"
         + "\n        if tmp_str in reg_outcomes:"
         + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
-        # + "\n            if tmp_str != 'v' and ((data[:, cnt].min() < "
-        # + lower_bounds_ssm_str
-        # + "[cnt]) or (data[:, cnt].max() > "
-        # + upper_bounds_ssm_str
-        # + "[cnt])):"
-        # + '\n                warnings.warn("Boundary violation of regressor part.")'
-        # + "\n                return -np.inf"
+        + "\n            if tmp_str != 'v' and ((data[:, cnt].min() < "
+        + lower_bounds_ssm_str
+        + "[cnt]) or (data[:, cnt].max() > "
+        + upper_bounds_ssm_str
+        + "[cnt])):"
+        + '\n                warnings.warn("Boundary violation of regressor part.")'
+        + "\n                return -np.inf"
         + "\n        else:"
         + "\n            data[:, cnt] = params[tmp_str]"
         + "\n        cnt += 1"
@@ -207,7 +199,6 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + "p_outlier=p_outlier, w_outlier=w_outlier)"
     )
     
-    print(fun_str)
     return fun_str
 
 

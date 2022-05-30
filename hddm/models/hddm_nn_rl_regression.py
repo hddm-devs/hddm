@@ -236,22 +236,21 @@ class HDDMnnRLRegressor(HDDMRegressor):
                     indirect_regressor_targets.append(target_tmp)
 
             self.model_config["indirect_regressor_targets"] = indirect_regressor_targets
-            # print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
 
-    # May need debugging --> set_state(), get_state()
+
     def __getstate__(self):
         d = super(HDDMnnRLRegressor, self).__getstate__()
-        # del d["network"]
         del d["wfpt_nn_rl_reg_class"]
+
         return d
 
     def __setstate__(self, d):
-        # d["network"] = load_torch_mlp(model=d["model"])
         network_dict = {"network": d["network"]}
 
         d["wfpt_nn_rl_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg_nn_rl(
             model=d["model"],
             model_config=d["model_config"],
+            model_config_rl=d["model_config_rl"],
             wiener_params=d["wiener_params"],
             **network_dict
         )
