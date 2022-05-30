@@ -148,6 +148,10 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + ", reg_outcomes, p_outlier=0, w_outlier="
         + w_outlier_str
         + ", **kwargs):"
+        + "\n    print('here', reg_outcomes)"
+        + "\n    if 'v' in reg_outcomes:"
+        + "\n        print('hello world')"
+        + "\n        raise Exception('For RLSSM models, v cannot be the regression target.')"
         + "\n    params = locals()"
         + "\n    size = int(value.shape[0])"
         + "\n    data = np.zeros(((size, "
