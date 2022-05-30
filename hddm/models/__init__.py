@@ -13,6 +13,7 @@ from .hddm_nn_regression import HDDMnnRegressor
 from .hddm_nn_stimcoding import HDDMnnStimCoding
 from .hddm_nn_rl import HDDMnnRL
 from .hddm_nn_rl_regression import HDDMnnRLRegressor
+from .hddm_rl_regression_test import HDDMnnRLRegressorTest
 
 __all__ = [
     "AccumulatorModel",
@@ -29,5 +30,6 @@ __all__ = [
     "HDDMnnRegressor",
     "HDDMnnStimCoding",
     "HDDMnnRL",
-    "HDDMnnRLRegressor"
+    "HDDMnnRLRegressor",
+    "HDDMnnRLRegressorTest"
 ]
