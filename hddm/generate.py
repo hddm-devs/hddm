@@ -777,7 +777,7 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
         response = np.tile([0.5], n)
         feedback = np.tile([0.5], n)
         rt = np.tile([0], n)
-        neural_reg = np.random.normal(0,1,size=n)
+        neural_reg = np.random.normal(0, 1, size=n)
         if binary_outcome:
             rew_up = np.random.binomial(1, p_upper, n).astype(float)
             rew_low = np.random.binomial(1, p_lower, n).astype(float)
@@ -798,7 +798,7 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
             "subj_idx": subj_idx,
             "split_by": split_by,
             "trial": 1,
-            'neural_reg': neural_reg
+            "neural_reg": neural_reg,
         }
         df = pd.DataFrame(data=d)
         df = df[
@@ -814,12 +814,18 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
                 "subj_idx",
                 "split_by",
                 "trial",
-                "neural_reg"
+                "neural_reg",
             ]
         ]
 
         # Get sim_params for passing into the simulator
-        sim_params = np.concatenate(([df.loc[0, "sim_drift"]], [ssm_param[1] + neural*df.loc[0, 'neural_reg']], ssm_param[2:]))
+        sim_params = np.concatenate(
+            (
+                [df.loc[0, "sim_drift"]],
+                [ssm_param[1] + neural * df.loc[0, "neural_reg"]],
+                ssm_param[2:],
+            )
+        )
 
         # simulate model with given params
         res = simulator(
@@ -876,8 +882,14 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
             df.loc[i, "sim_drift"] = (df.loc[i, "q_up"] - df.loc[i, "q_low"]) * (scaler)
 
             # Get sim_params for passing into the simulator
-            #sim_params = np.append([df.loc[i, "sim_drift"]], ssm_param[1:])
-            sim_params = np.concatenate(([df.loc[i, "sim_drift"]], [ssm_param[1] + neural*df.loc[i, 'neural_reg']], ssm_param[2:]))
+            # sim_params = np.append([df.loc[i, "sim_drift"]], ssm_param[1:])
+            sim_params = np.concatenate(
+                (
+                    [df.loc[i, "sim_drift"]],
+                    [ssm_param[1] + neural * df.loc[i, "neural_reg"]],
+                    ssm_param[2:],
+                )
+            )
 
             # simulate model with given params
             res = simulator(
@@ -924,7 +936,7 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
             "subj_idx",
             "split_by",
             "trial",
-            "neural_reg"
+            "neural_reg",
         ]
     ]
 

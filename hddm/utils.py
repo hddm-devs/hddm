@@ -95,7 +95,11 @@ def make_likelihood_str_mlp_rlssm(
 
 
 def make_reg_likelihood_str_mlp_basic_nn_rl(
-    model=None, config=None, config_rl=None, wiener_params=None, fun_name="custom_likelihood_reg"
+    model=None,
+    config=None,
+    config_rl=None,
+    wiener_params=None,
+    fun_name="custom_likelihood_reg",
 ):
     """Define string for a likelihood function that can be used as a
     mlp-likelihood in the HDDMnnRLRegressor class. Useful if you want to supply a custom LAN.
@@ -139,7 +143,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
 
     n_params_rl_str = str(len(config_rl["params"]))
     params_rl_str = str(config_rl["params"])
-    
+
     fun_str = (
         "def "
         + fun_name
@@ -176,7 +180,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + "\n        else:"
         + "\n            data[:, cnt] = params[tmp_str]"
         + "\n        cnt += 1"
-        # for rl part - 
+        # for rl part -
         + "\n    rl_arr = np.zeros(((size, "
         + n_params_rl_str
         + ")), dtype=np.float32)"
@@ -202,9 +206,8 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
         + 'network=kwargs["network"], '
         + "p_outlier=p_outlier, w_outlier=w_outlier)"
     )
-    
-    return fun_str
 
+    return fun_str
 
 
 def make_likelihood_str_mlp(

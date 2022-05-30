@@ -137,8 +137,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
                 print(
                     "It seems that you supplied a model string that refers to an undefined model"
                 )
-        
-        
+
         if self.model_config_rl == None:
             try:
                 self.model_config_rl = deepcopy(
@@ -183,7 +182,6 @@ class HDDMnnRLRegressor(HDDMRegressor):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
-
 
         return Knode(
             self.wfpt_nn_rl_reg_class,
@@ -236,7 +234,6 @@ class HDDMnnRLRegressor(HDDMRegressor):
                     indirect_regressor_targets.append(target_tmp)
 
             self.model_config["indirect_regressor_targets"] = indirect_regressor_targets
-
 
     def __getstate__(self):
         d = super(HDDMnnRLRegressor, self).__getstate__()

@@ -392,7 +392,9 @@ def make_mlp_likelihood_reg_nn_rl(
 
     def make_likelihood():
         if indirect_betas_present or indirect_regressors_present:
-            raise NotImplementedError("Indirect regressors are not yet implemented for RLSSM models.")
+            raise NotImplementedError(
+                "Indirect regressors are not yet implemented for RLSSM models."
+            )
         else:
             likelihood_str = make_reg_likelihood_str_mlp_basic_nn_rl(
                 model=model,

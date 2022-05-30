@@ -2179,7 +2179,7 @@ def gen_ppc_rlssm(
                 )
 
                 # append the conditions
-                #sub_data = sub_data.append([ind_cond_data], ignore_index=False)
+                # sub_data = sub_data.append([ind_cond_data], ignore_index=False)
                 sub_data = pd.concat([sub_data, ind_cond_data], ignore_index=False)
 
             # assign subj_idx
@@ -2189,7 +2189,7 @@ def gen_ppc_rlssm(
             sub_data["samp"] = i
 
             # append data from each subject
-            #sim_data = sim_data.append(sub_data, ignore_index=True)
+            # sim_data = sim_data.append(sub_data, ignore_index=True)
             sim_data = pd.concat([sim_data, sub_data], ignore_index=True)
 
     ppc_sdata = sim_data[
