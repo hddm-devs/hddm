@@ -486,6 +486,7 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
     cdef np.ndarray[long, ndim=1] responses
     cdef np.ndarray[long, ndim=1] responses_qs
     cdef np.ndarray[long, ndim=1] unique = np.unique(split_by)
+    cdef np.ndarray[float, ndim=2] data_copy = data
     cdef float ll_min = -16.11809
     cdef int cumm_s_size = 0
 
@@ -519,10 +520,11 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
             tp_scale = data[cumm_s_size + i, 0]
             # if tp_scale < 0:
             #     return -np.inf
-            data[cumm_s_size + i, 0] = (qs[1] - qs[0]) * tp_scale 
+
+            data_copy[cumm_s_size + i, 0] = (qs[1] - qs[0]) * tp_scale 
 
             # Check for boundary violations -- if true, return -np.inf
-            if data[cumm_s_size + i, 0] < params_bnds[0][0] or data[cumm_s_size + i, 0] > params_bnds[1][0]:
+            if data_copy[cumm_s_size + i, 0] < params_bnds[0][0] or data_copy[cumm_s_size + i, 0] > params_bnds[1][0]:
                 return -np.inf
 
             rl_alpha = rl_arr[cumm_s_size + i, 0]
@@ -534,9 +536,9 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
 
     # Call to network:
     if p_outlier == 0:
-        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data_copy), ll_min))
     else:
-        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data_copy), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
 
     return sum_logp
 
