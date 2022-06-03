@@ -2261,23 +2261,30 @@ def plot_ppc_choice_rlssm(
             res_obs[cond],
             yerr=[low_err_obs[cond], up_err_obs[cond]],
             label="observed",
+            color='royalblue',
         )
         ax[ay].errorbar(
             1 + np.arange(len(res_sim[cond])),
             res_sim[cond],
             yerr=[low_err_sim[cond], up_err_sim[cond]],
             label="simulated",
+            color='tomato',
         )
 
         ax[ay].set_ylim((0, 1))
 
-        ax[ay].legend()
+        #ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
         cond_index += 1
 
+    
+
     fig = plt.gcf()
+    lines, labels = fig.axes[-1].get_legend_handles_labels()
+    fig.legend(lines, labels, loc = 'lower right')
+    
     fig.supxlabel("Trial bins", fontsize=12)
     fig.supylabel("Proportion of Correct Responses", fontsize=12)
     fig.set_size_inches(4 * len(cond_list), 4)
@@ -2349,20 +2356,23 @@ def plot_ppc_rt_rlssm(
             0 - obs_data_ppc[obs_data_ppc.split_by == cond].rt,
         )
 
-        sns.kdeplot(rt_ppc_sim, label="simulated", ax=ax[ay], bw_method=bw).set(
+        sns.kdeplot(rt_ppc_sim, label="simulated", color='tomato', ax=ax[ay], bw_method=bw).set(
             ylabel=None
         )
-        sns.kdeplot(rt_ppc_obs, label="observed", ax=ax[ay], bw_method=bw).set(
+        sns.kdeplot(rt_ppc_obs, label="observed", color='royalblue', ax=ax[ay], bw_method=bw).set(
             ylabel=None
         )
 
-        ax[ay].legend()
+        #ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
         cond_index += 1
 
     fig = plt.gcf()
+    lines, labels = fig.axes[-1].get_legend_handles_labels()
+    fig.legend(lines, labels, loc = 'lower right')
+
     fig.supxlabel("Reaction Time", fontsize=12)
     fig.supylabel("Density", fontsize=12)
     fig.set_size_inches(4 * len(cond_list), 4)
