@@ -1,4 +1,4 @@
-.. index:: Demos
+.. index:: Tutorials
 .. _chap_gonogo:
 
 Fitting go/no-go using the chi-qsuare approach

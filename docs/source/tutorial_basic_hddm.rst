@@ -1,3 +1,6 @@
+.. index:: Tutorials
+.. _chap_basic_tutorial:
+
 Basic HDDM Tutorial
 -------------------
 
