@@ -1,4 +1,4 @@
-.. index:: Tutorial
+.. index:: Tutorials
 .. _chap_tutorial:
 
 ***************
