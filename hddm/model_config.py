@@ -871,7 +871,7 @@ model_config = {
         "param_bounds": [[-4.0, -4.0, -4.0, 0.0, 0.0, 0.3, 0.0, 0.0, 1.1, 0.5], 
                          [4.0, 4.0, 4.0, 1.0, 2.0, 2.5, 0.5, 5.0, 5.0, 5.0]],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        "boundary": bf.gamma_conflict_bound,
+        "boundary": bf.conflict_gamma_bound,
         "boundary_multiplicative": False,
         "n_params": 10,
         "default_params": [0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 2., 2.],

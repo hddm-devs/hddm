@@ -25,7 +25,6 @@ from hddm.model_config import model_config
 
 # Basic simulators and basic preprocessing
 
-
 def bin_simulator_output_pointwise(
     out=[0, 0], bin_dt=0.04, nbins=0
 ):  # ['v', 'a', 'w', 't', 'angle']

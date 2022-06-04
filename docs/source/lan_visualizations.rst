@@ -1,5 +1,5 @@
-New Visualization
------------------
+New Visualizations
+------------------
 
 .. code:: ipython3
 
