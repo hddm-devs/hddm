@@ -1959,3 +1959,180 @@ def ddm_flexbound_mic2_adj(np.ndarray[float, ndim = 1] v_h,
                            'trajectory': 'This simulator does not yet allow for trajectory simulation',
                            'boundary': boundary})
 # -----------------------------------------------------------------------------------------------
+
+# Simulate (rt, choice) tuples from: DDM WITH FLEXIBLE BOUNDARIES ------------------------------------
+# @cythonboundscheck(False)
+# @cythonwraparound(False)
+def ddm_flexbound_tradeoff(np.ndarray[float, ndim = 1] v_h, 
+                           np.ndarray[float, ndim = 1] v_l_1,
+                           np.ndarray[float, ndim = 1] v_l_2,
+                           np.ndarray[float, ndim = 1] a,
+                           np.ndarray[float, ndim = 1] z_h,
+                           np.ndarray[float, ndim = 1] z_l_1,
+                           np.ndarray[float, ndim = 1] z_l_2,
+                           np.ndarray[float, ndim = 1] d, # d for 'dampen' effect on drift parameter
+                           np.ndarray[float, ndim = 1] t,
+                           float s = 1,
+                           float delta_t = 0.001,
+                           float max_t = 20,
+                           int n_samples = 20000,
+                           int n_trials = 1,
+                           print_info = True,
+                           boundary_fun = None, # function of t (and potentially other parameters) that takes in (t, *args)
+                           boundary_multiplicative = True,
+                           boundary_params = {}
+                           ):
+    # Param views
+    cdef float[:] v_h_view = v_h
+    cdef float[:] v_l_1_view = v_l_1
+    cdef float[:] v_l_2_view = v_l_2
+    cdef float[:] a_view = a
+    cdef float[:] z_h_view = z_h
+    cdef float[:] z_l_1_view = z_l_1
+    cdef float[:] z_l_2_view = z_l_2
+    cdef float[:] d_view = d
+    cdef float[:] t_view = t
+
+    # TD: Add trajectory --> same issue as with par2 model above... might need to make a separate simulator for trajectories
+
+    rts = np.zeros((n_samples, n_trials, 1), dtype = DTYPE)
+    choices = np.zeros((n_samples, n_trials, 1), dtype = np.intc)
+
+    cdef float[:, :, :] rts_view = rts
+    cdef int[:, :, :] choices_view = choices
+
+    cdef float delta_t_sqrt = sqrt(delta_t) # correct scalar so we can use standard normal samples for the brownian motion
+    cdef float sqrt_st = delta_t_sqrt * s # scalar to ensure the correct variance for the gaussian step
+
+    # Boundary storage for the upper bound
+    cdef int num_draws = int((max_t / delta_t) + 1)
+    t_s = np.arange(0, max_t + delta_t, delta_t).astype(DTYPE)
+    boundary = np.zeros(t_s.shape, dtype = DTYPE)
+    cdef float[:] boundary_view = boundary
+
+    # Y particle trace
+    bias_trace = np.zeros(num_draws, dtype = DTYPE)
+    cdef float[:] bias_trace_view = bias_trace
+
+    cdef float y_h, y_l, v_l, t_h, t_l, tmp_pos_dep
+    cdef Py_ssize_t n, ix, ix_tmp, k
+    cdef Py_ssize_t m = 0
+    cdef float[:] gaussian_values = draw_gaussian(num_draws)
+
+    for k in range(n_trials):
+        # Precompute boundary evaluations
+        boundary_params_tmp = {key: boundary_params[key][k] for key in boundary_params.keys()}
+
+        # Precompute boundary evaluations
+        if boundary_multiplicative:
+            boundary[:] = np.multiply(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
+        else:
+            boundary[:] = np.add(a_view[k], boundary_fun(t = t_s, **boundary_params_tmp)).astype(DTYPE)
+    
+        # Loop over samples
+        for n in range(n_samples):
+            choices_view[n, k, 0] = 0 # reset choice
+            t_h = 0 # reset time high dimension
+            t_l = 0 # reset time low dimension
+            ix = 0 # reset boundary index
+
+            # Initialize walkers
+            y_h = (-1) * boundary_view[0] + (z_h_view[k] * 2 * (boundary_view[0])) 
+            bias_trace_view[0] = ((y_h + boundary_view[0]) / (2 * boundary_view[0]))
+
+            # Random walks until y_h hits bound
+            while (y_h >= ((-1) * boundary_view[ix])) and ((y_h <= boundary_view[ix])) and (t_h <= max_t):
+                y_h += (v_h_view[k] * delta_t) + (sqrt_st * gaussian_values[m])
+                bias_trace_view[ix] = ((y_h + boundary_view[ix]) / (2 * boundary_view[ix]))
+                t_h += delta_t
+                ix += 1
+                m += 1
+                if m == num_draws:
+                    gaussian_values = draw_gaussian(num_draws)
+                    m = 0
+
+            # The probability of making a 'mistake' 1 - (relative y position)
+            # y at upper bound --> choices_view[n, k, 0] add 2 deterministically
+            # y at lower bound --> choice_view[n, k, 0] stay the same deterministically
+            if random_uniform() <= ((y_h + boundary_view[ix]) / (2 * boundary_view[ix])):
+                choices_view[n, k, 0] += 2
+           
+            if choices_view[n, k, 0] == 2:
+                y_l = (- 1) * boundary_view[0] + (z_l_2_view[k] * 2 * (boundary_view[0])) 
+                v_l = v_l_2_view[k]
+
+                # Fill bias trace until max_rt reached
+                ix_tmp = ix + 1
+                while ix_tmp < num_draws:
+                    bias_trace_view[ix_tmp] = 1.0
+                    ix_tmp += 1
+
+            else: # Store intermediate choice
+                y_l = (- 1) * boundary_view[0] + (z_l_1_view[k] * 2 * (boundary_view[0])) 
+                v_l = v_l_1_view[k]
+
+                # Fill bias trace until max_rt reached
+                ix_tmp = ix + 1
+                while ix_tmp < num_draws:
+                    bias_trace_view[ix_tmp] = 0.0
+                    ix_tmp += 1
+
+                #We need to reverse the bias_trace if we took the lower choice
+                ix_tmp = 0 
+                while ix_tmp < num_draws:
+                    bias_trace_view[ix_tmp] = 1.0 - bias_trace_view[ix_tmp]
+                    ix_tmp += 1
+
+                #print('new bias_trace: ', bias_trace)
+            
+            # Random walks until the y_l corresponding to y_h hits bound
+            ix = 0
+            while (y_l >= ((-1) * boundary_view[ix])) and (y_l <= boundary_view[ix]) and (t_l <= max_t):
+                # Compute local position dependence
+                tmp_pos_dep = (1 + (d_view[k] * (bias_trace_view[ix] - 1.0))) / (2 - d_view[k])
+
+                if (bias_trace_view[ix] < 1) and (bias_trace_view[ix] > 0):
+                    # Before high-dim choice is taken
+                    y_l += tmp_pos_dep * (v_l * delta_t) # Add drift
+                    y_l += tmp_pos_dep * sqrt_st * gaussian_values[m] # Add noise
+                else:
+                    # After high-dim choice is taken
+                    y_l += (v_l * delta_t) # Add drift
+                    y_l += sqrt_st * gaussian_values[m] # Add noise
+    
+                t_l += delta_t # update time for low_dim choice
+                ix += 1 # update time index
+                m += 1 # update rv couter
+
+                if m == num_draws:
+                    gaussian_values = draw_gaussian(num_draws)
+                    m = 0
+
+            rts_view[n, k, 0] = fmax(t_h, t_l) + t_view[k]
+
+            # The probability of making a 'mistake' 1 - (relative y position)
+            # y at upper bound --> choices_view[n, k, 0] add one deterministically
+            # y at lower bound --> choice_view[n, k, 0] stays the same deterministically
+            if random_uniform() <= ((y_l + boundary_view[ix]) / (2 * boundary_view[ix])):
+                choices_view[n, k, 0] += 1
+
+    return {'rts': rts, 'choices': choices, 'metadata': {'vh': v_h,
+                                                         'vl1': v_l_1,
+                                                         'vl2': v_l_2,
+                                                         'a': a,
+                                                         'zh': z_h,
+                                                         'zl1': z_l_1,
+                                                         'zl2': z_l_2,
+                                                         'd': d,
+                                                         't': t,
+                                                         's': s,
+                                                         **boundary_params,
+                                                         'delta_t': delta_t,
+                                                         'max_t': max_t,
+                                                         'n_samples': n_samples,
+                                                         'simulator': 'ddm_flexbound_mic2_adj',
+                                                         'boundary_fun_type': boundary_fun.__name__,
+                                                         'possible_choices': [0, 1, 2, 3],
+                                                         'trajectory': 'This simulator does not yet allow for trajectory simulation',
+                                                         'boundary': boundary}}
+# -----------------------------------------------------------------------------------------------
