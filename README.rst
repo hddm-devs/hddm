@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.6
+:Version: 0.9.7
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -114,6 +114,9 @@ Features
              Lastly you can also save and load **HDDMnnRL** models. 
              Please see the **documentation** (under **HDDMnnRL Extension**) for illustrations on how to use the new features.
 
+* HDDM 0.9.7 adds the **HDDMnnRLRegressor** class, the equivalent to the **HDDMrlRegressor** with support for many more *SSMs* via *LANs*. 
+             Please check the documentation for usage examples.
+
 
 Comparison to other packages
 ============================
@@ -161,7 +164,7 @@ install via **github**. In a fresh environment type.
 :: 
 
     pip install cython
-    pip install pymc
+    pip install pymc==2.3.8
     pip install git+https://github.com/hddm-devs/kabuki
     pip install git+https://github.com/hddm-devs/hddm
     # Optional
@@ -182,7 +185,7 @@ In case you do not have the **brew** command, install `Homebrew <https://brew.sh
 You usually do not run into problems with **linux** machines.
 
 
-(Previous instructions for **HDDM <= 0.8.0**)
+(Previous instructions for **HDDM <= 0.8.0**, DISCOURAGED)
 As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
 
 The easiest way to install HDDM is through Anaconda (available for
@@ -200,7 +203,7 @@ If you want to use pip instead of conda, type:
 ::
 
     pip install pandas
-    pip install pymc
+    pip install pymc==2.3.8
     pip install kabuki
     pip install hddm
 
