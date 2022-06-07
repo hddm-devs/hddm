@@ -1214,10 +1214,10 @@ def get_dataset_as_dataframe_rlssm(dataset):
     list_sub_data = list()
     for itr in range(len(dataset["data"])):
         data = dataset["data"][itr]["sim_data"]
-        data["q_up"]
-        data["q_low"]
-        data["sim_drift"]
+        data = data.drop(columns=['q_up', 'q_low', 'sim_drift'])
         data["subj_idx"] = itr
+
+        data.loc[data['response'] == -1, 'response'] = 0
 
         list_sub_data.append(data)
     PR_data = pd.concat(list_sub_data, ignore_index=True)

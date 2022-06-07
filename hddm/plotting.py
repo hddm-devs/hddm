@@ -22,6 +22,7 @@ from kabuki.analyze import _post_pred_generate, _parents_to_random_posterior_sam
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from hddm.model_config import model_config
+from hddm.model_config_rl import model_config_rl
 
 # Basic utility
 def prettier_tag(tag):
@@ -1818,14 +1819,22 @@ def _plot_func_pair(
 # ONE OFF PLOTS
 def _group_node_names_by_param(model):
     tmp_params_allowed = model_config[model.model]["params"].copy()
+    if hasattr(model, 'rlssm_model'):
+        print("rlssm_model", tmp_params_allowed)
+        tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"])
+        print("updated ", tmp_params_allowed)
     tmp_params_allowed.append("dc")  # to accomodate HDDMStimcoding class
     keys_by_param = {}
 
     # Cycle through all nodes
     for key_ in model.nodes_db.index:
 
+        if 'offset' in key_ :
+            continue
+
+
         # Cycle through model relevant parameters
-        for param_tmp in model_config[model.model]["params"]:
+        for param_tmp in tmp_params_allowed: #model_config[model.model]["params"]:
 
             # Initialize param_tmp key if not yet done
             if param_tmp not in keys_by_param.keys():
@@ -1907,8 +1916,6 @@ def plot_caterpillar(
         keep_key: list <default=None>
             If you want to keep only a specific list of parameters in the caterpillar plot, supply those here as
             a list. All other parameters for which you supply traces in the posterior samples are going to be ignored.
-        x_limits: float <default=2>
-            Sets the limit on the x-axis
         save: bool <default=False>
             Whether to save the plot
         format: str <default='png'>
@@ -1924,6 +1931,9 @@ def plot_caterpillar(
 
     out = _group_node_names_by_param(model=hddm_model)
     traces_by_param = _group_traces_via_grouped_nodes(model=hddm_model, group_dict=out)
+
+    if "rl_alpha" in traces_by_param:
+        print("found")
 
     ncolumns = columns
     nrows = int(np.ceil(len(out.keys()) / ncolumns))
@@ -1944,7 +1954,7 @@ def plot_caterpillar(
         for k in traces_tmp.keys():
             # If we want to keep only a specific parameter we skip all traces which don't include it in
             # their names !
-            if keep_key is not None and keep_key not in k:
+            if (keep_key is not None and k not in keep_key):
                 continue
 
             # Deal with
@@ -1959,14 +1969,28 @@ def plot_caterpillar(
                         ok_ = 0
                 if ok_:
                     # Make empirical CDFs and extract the 10th, 1th / 99th, 90th percentiles
-                    ecdfs[k] = ECDF(traces_tmp[k].values)
-                    tmp_sorted = sorted(traces_tmp[k].values)
+                    if hasattr(hddm_model, 'rlssm_model'):
+                        if 'rl_alpha' in k:
+                            print("doing transform")
+                            vals = traces_tmp[k].values 
+                            print(type(vals), np.mean(vals))
+                            transformed_trace = np.exp(vals)/(1+np.exp(vals))
+                            print(np.mean(transformed_trace))
+                            ecdfs[k] = ECDF(transformed_trace)
+                            tmp_sorted = sorted(transformed_trace)
+                        else:
+                            ecdfs[k] = ECDF(traces_tmp[k].values)
+                            tmp_sorted = sorted(traces_tmp[k].values)
+                    else:
+                        ecdfs[k] = ECDF(traces_tmp[k].values)
+                        tmp_sorted = sorted(traces_tmp[k].values)
                     _p01 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.01) - 1]
                     _p99 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.99) - 1]
                     _p1 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.1) - 1]
                     _p9 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.9) - 1]
                     _pmean = traces_tmp[k].mean()
                     plot_vals[k] = [[_p01, _p99], [_p1, _p9], _pmean]
+
 
         x = [plot_vals[k][2] for k in plot_vals.keys()]
 
