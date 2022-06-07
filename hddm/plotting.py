@@ -1820,9 +1820,7 @@ def _plot_func_pair(
 def _group_node_names_by_param(model):
     tmp_params_allowed = model_config[model.model]["params"].copy()
     if hasattr(model, 'rlssm_model'):
-        print("rlssm_model", tmp_params_allowed)
         tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"])
-        print("updated ", tmp_params_allowed)
     tmp_params_allowed.append("dc")  # to accomodate HDDMStimcoding class
     keys_by_param = {}
 
@@ -1932,9 +1930,6 @@ def plot_caterpillar(
     out = _group_node_names_by_param(model=hddm_model)
     traces_by_param = _group_traces_via_grouped_nodes(model=hddm_model, group_dict=out)
 
-    if "rl_alpha" in traces_by_param:
-        print("found")
-
     ncolumns = columns
     nrows = int(np.ceil(len(out.keys()) / ncolumns))
 
@@ -1970,12 +1965,9 @@ def plot_caterpillar(
                 if ok_:
                     # Make empirical CDFs and extract the 10th, 1th / 99th, 90th percentiles
                     if hasattr(hddm_model, 'rlssm_model'):
-                        if 'rl_alpha' in k:
-                            print("doing transform")
+                        if 'rl_alpha' in k and not 'std' in k:
                             vals = traces_tmp[k].values 
-                            print(type(vals), np.mean(vals))
                             transformed_trace = np.exp(vals)/(1+np.exp(vals))
-                            print(np.mean(transformed_trace))
                             ecdfs[k] = ECDF(transformed_trace)
                             tmp_sorted = sorted(transformed_trace)
                         else:
