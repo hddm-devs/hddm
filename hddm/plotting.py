@@ -22,6 +22,7 @@ from kabuki.analyze import _post_pred_generate, _parents_to_random_posterior_sam
 from statsmodels.distributions.empirical_distribution import ECDF
 
 from hddm.model_config import model_config
+from hddm.model_config_rl import model_config_rl
 
 # Basic utility
 def prettier_tag(tag):
@@ -1818,14 +1819,20 @@ def _plot_func_pair(
 # ONE OFF PLOTS
 def _group_node_names_by_param(model):
     tmp_params_allowed = model_config[model.model]["params"].copy()
+    if hasattr(model, 'rlssm_model'):
+        tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"])
     tmp_params_allowed.append("dc")  # to accomodate HDDMStimcoding class
     keys_by_param = {}
 
     # Cycle through all nodes
     for key_ in model.nodes_db.index:
 
+        if 'offset' in key_ :
+            continue
+
+
         # Cycle through model relevant parameters
-        for param_tmp in model_config[model.model]["params"]:
+        for param_tmp in tmp_params_allowed: #model_config[model.model]["params"]:
 
             # Initialize param_tmp key if not yet done
             if param_tmp not in keys_by_param.keys():
@@ -1907,8 +1914,6 @@ def plot_caterpillar(
         keep_key: list <default=None>
             If you want to keep only a specific list of parameters in the caterpillar plot, supply those here as
             a list. All other parameters for which you supply traces in the posterior samples are going to be ignored.
-        x_limits: float <default=2>
-            Sets the limit on the x-axis
         save: bool <default=False>
             Whether to save the plot
         format: str <default='png'>
@@ -1944,7 +1949,7 @@ def plot_caterpillar(
         for k in traces_tmp.keys():
             # If we want to keep only a specific parameter we skip all traces which don't include it in
             # their names !
-            if keep_key is not None and keep_key not in k:
+            if (keep_key is not None and k not in keep_key):
                 continue
 
             # Deal with
@@ -1959,14 +1964,25 @@ def plot_caterpillar(
                         ok_ = 0
                 if ok_:
                     # Make empirical CDFs and extract the 10th, 1th / 99th, 90th percentiles
-                    ecdfs[k] = ECDF(traces_tmp[k].values)
-                    tmp_sorted = sorted(traces_tmp[k].values)
+                    if hasattr(hddm_model, 'rlssm_model'):
+                        if 'rl_alpha' in k and not 'std' in k:
+                            vals = traces_tmp[k].values 
+                            transformed_trace = np.exp(vals)/(1+np.exp(vals))
+                            ecdfs[k] = ECDF(transformed_trace)
+                            tmp_sorted = sorted(transformed_trace)
+                        else:
+                            ecdfs[k] = ECDF(traces_tmp[k].values)
+                            tmp_sorted = sorted(traces_tmp[k].values)
+                    else:
+                        ecdfs[k] = ECDF(traces_tmp[k].values)
+                        tmp_sorted = sorted(traces_tmp[k].values)
                     _p01 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.01) - 1]
                     _p99 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.99) - 1]
                     _p1 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.1) - 1]
                     _p9 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.9) - 1]
                     _pmean = traces_tmp[k].mean()
                     plot_vals[k] = [[_p01, _p99], [_p1, _p9], _pmean]
+
 
         x = [plot_vals[k][2] for k in plot_vals.keys()]
 
@@ -2179,7 +2195,7 @@ def gen_ppc_rlssm(
                 )
 
                 # append the conditions
-                #sub_data = sub_data.append([ind_cond_data], ignore_index=False)
+                # sub_data = sub_data.append([ind_cond_data], ignore_index=False)
                 sub_data = pd.concat([sub_data, ind_cond_data], ignore_index=False)
 
             # assign subj_idx
@@ -2189,7 +2205,7 @@ def gen_ppc_rlssm(
             sub_data["samp"] = i
 
             # append data from each subject
-            #sim_data = sim_data.append(sub_data, ignore_index=True)
+            # sim_data = sim_data.append(sub_data, ignore_index=True)
             sim_data = pd.concat([sim_data, sub_data], ignore_index=True)
 
     ppc_sdata = sim_data[
@@ -2261,23 +2277,30 @@ def plot_ppc_choice_rlssm(
             res_obs[cond],
             yerr=[low_err_obs[cond], up_err_obs[cond]],
             label="observed",
+            color='royalblue',
         )
         ax[ay].errorbar(
             1 + np.arange(len(res_sim[cond])),
             res_sim[cond],
             yerr=[low_err_sim[cond], up_err_sim[cond]],
             label="simulated",
+            color='tomato',
         )
 
         ax[ay].set_ylim((0, 1))
 
-        ax[ay].legend()
+        #ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
         cond_index += 1
 
+    
+
     fig = plt.gcf()
+    lines, labels = fig.axes[-1].get_legend_handles_labels()
+    fig.legend(lines, labels, loc = 'lower right')
+    
     fig.supxlabel("Trial bins", fontsize=12)
     fig.supylabel("Proportion of Correct Responses", fontsize=12)
     fig.set_size_inches(4 * len(cond_list), 4)
@@ -2349,20 +2372,23 @@ def plot_ppc_rt_rlssm(
             0 - obs_data_ppc[obs_data_ppc.split_by == cond].rt,
         )
 
-        sns.kdeplot(rt_ppc_sim, label="simulated", ax=ax[ay], bw_method=bw).set(
+        sns.kdeplot(rt_ppc_sim, label="simulated", color='tomato', ax=ax[ay], bw_method=bw).set(
             ylabel=None
         )
-        sns.kdeplot(rt_ppc_obs, label="observed", ax=ax[ay], bw_method=bw).set(
+        sns.kdeplot(rt_ppc_obs, label="observed", color='royalblue', ax=ax[ay], bw_method=bw).set(
             ylabel=None
         )
 
-        ax[ay].legend()
+        #ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
         cond_index += 1
 
     fig = plt.gcf()
+    lines, labels = fig.axes[-1].get_legend_handles_labels()
+    fig.legend(lines, labels, loc = 'lower right')
+
     fig.supxlabel("Reaction Time", fontsize=12)
     fig.supylabel("Density", fontsize=12)
     fig.set_size_inches(4 * len(cond_list), 4)

@@ -14,7 +14,7 @@ try:
 except:
     print(
         "It seems that you do not have pytorch installed."
-        + "The HDDMnn, HDDMnnRegressor and HDDMnnStimCoding"
+        + "The HDDMnn, HDDMnnRegressor, HDDMnnStimCoding, HDDMnnRL and HDDMnnRLRegressor"
         + "classes will not work"
     )
 
@@ -115,7 +115,6 @@ class HDDMnn(HDDM):
     def __init__(self, *args, **kwargs):
 
         self.nn = True
-        self.rlssm_model = kwargs.pop("rlssm_model", False)
 
         if "informative" in kwargs.keys():
             pass

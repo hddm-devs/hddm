@@ -367,3 +367,53 @@ def make_mlp_likelihood_reg(
     stoch.cdf = cdf
     stoch.random = random
     return stoch
+
+
+def make_mlp_likelihood_reg_nn_rl(
+    model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs
+):
+    """Defines the regressor likelihoods for the LAN-based RLSSM class.
+
+    :Arguments:
+        model: str <default='ddm'>
+            String that determines which model you would like to fit your data to.
+            Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+        model_config: dict <default=None>
+            Config dictionary for the sequential sampling model, necessary for construction of likelihood. In the style of what you find under hddm.model_config.
+        model_config_rl: dict <default=None>
+            Config dictionary for the reinforcement learning model, necessary for construction of likelihood. In the style of what you find under hddm.model_config_rl.
+        kwargs: dict
+            Dictionary of additional keyword arguments.
+            Importantly here, this carries the preloaded CNN.
+
+    :Returns:
+        Returns a pymc.object stochastic object as defined by PyMC2
+    """
+
+    def make_likelihood():
+        if indirect_betas_present or indirect_regressors_present:
+            raise NotImplementedError(
+                "Indirect regressors are not yet implemented for RLSSM models."
+            )
+        else:
+            likelihood_str = make_reg_likelihood_str_mlp_basic_nn_rl(
+                model=model,
+                config=model_config,
+                config_rl=model_config_rl,
+                wiener_params=wiener_params,
+            )
+
+        exec(likelihood_str)
+        my_fun = locals()["custom_likelihood_reg"]
+        return my_fun
+
+    param_links, indirect_regressors_present = __prepare_indirect_regressors(
+        model_config=model_config
+    )
+    param_links_betas, indirect_betas_present = __prepare_indirect_betas(
+        model_config=model_config
+    )
+
+    likelihood_ = make_likelihood()
+    stoch_nn_rl = stochastic_from_dist("wfpt_reg_nn_rl", partial(likelihood_, **kwargs))
+    return stoch_nn_rl

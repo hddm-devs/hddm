@@ -13,8 +13,8 @@ except:
     )
 
 
-class HDDMnnRegressor(HDDMRegressor):
-    """HDDMnnRegressor allows estimation of the NNDDM where parameter
+class HDDMnnRLRegressor(HDDMRegressor):
+    """HDDMnnRLRegressor allows estimation of the RLSSM where parameter
     values are linear models of a covariate (e.g. a brain measure like
     fMRI or different conditions).
     """
@@ -44,6 +44,16 @@ class HDDMnnRegressor(HDDMRegressor):
 
         :Optional:
 
+            model: str <default='ddm'>
+                String that determines which sequential sampling model you would like to fit your data to.
+                Currently available models are: 'ddm', 'full_ddm', 'angle', 'weibull', 'ornstein', 'levy'
+            rl_rule: str <default='RWupdate'>
+                String that determines which reinforcement learning model you would like to fit your data to.
+            include: list <default=None>
+                A list with parameters we wish to include in the fitting procedure.
+                Which parameters you can include depends on the model you specified under the model parameters.
+            non_centered: bool <default=False>
+                Denotes whether non-centered distributions (a form of re-parameterization) should be used for reinforcement learning parameters.
             group_only_regressors : bool (default = True)
                 Do not estimate individual subject parameters for all regressors.
             keep_regressor_trace : bool (default = False)
@@ -53,7 +63,7 @@ class HDDMnnRegressor(HDDMRegressor):
 
         :Note:
 
-            Internally, HDDMnnRegressor uses patsy which allows for
+            Internally, HDDMnnRLRegressor uses patsy which allows for
             simple yet powerful model specification. For more information see:
             http://patsy.readthedocs.org/en/latest/overview.html
 
@@ -65,7 +75,7 @@ class HDDMnnRegressor(HDDMRegressor):
             drift-rate. The corresponding model might look like
             this:
                 ```python
-                HDDMnnRegressor(data, 'v ~ BOLD')
+                HDDMnnRLRegressor(data, 'a ~ BOLD', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
                 ```
 
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
@@ -77,7 +87,7 @@ class HDDMnnRegressor(HDDMRegressor):
             in the 'conditions' column of your data you may
             specify:
                 ```python
-                HDDMnnRegressor(data, 'v ~ C(condition)')
+                HDDMnnRLRegressor(data, 'a ~ C(condition)', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
                 ```
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1 + cond2.
@@ -85,7 +95,8 @@ class HDDMnnRegressor(HDDMRegressor):
         """
         # Signify as neural net class for later super() inits
         self.nn = True
-        self.rlssm_model = kwargs.pop("rlssm_model", False)
+        self.rlssm_model = True
+        self.nn_rl_reg = True
 
         if "informative" in kwargs.keys():
             pass
@@ -98,7 +109,14 @@ class HDDMnnRegressor(HDDMRegressor):
 
         self.w_outlier = kwargs.pop("w_outlier", 0.1)
         self.model = kwargs.pop("model", "ddm")
+        self.rl_rule = kwargs.pop("rl_rule", "RWupdate")
         self.model_config = kwargs.pop("model_config", None)
+        self.model_config_rl = kwargs.pop("model_config_rl", None)
+
+        print("\nPrinting model specifications -- ")
+        print("ssm: ", self.model)
+        print("rl rule: ", self.rl_rule)
+        print("using non-centered dist.: ", self.non_centered)
 
         if not "wiener_params" in kwargs.keys():
             kwargs["wiener_params"] = {
@@ -120,6 +138,17 @@ class HDDMnnRegressor(HDDMRegressor):
                     "It seems that you supplied a model string that refers to an undefined model"
                 )
 
+        if self.model_config_rl == None:
+            try:
+                self.model_config_rl = deepcopy(
+                    hddm.model_config_rl.model_config_rl[self.rl_rule]
+                )
+            except:
+                print(
+                    "It seems that you supplied a model string that refers to an undefined model."
+                    + "This works only if you supply a custom model_config_rl dictionary."
+                )
+
         # Add indirect_regressors to model_config, if they were supplied
         self._add_indirect_regressors(indirect_regressors=indirect_regressors)
 
@@ -139,14 +168,15 @@ class HDDMnnRegressor(HDDMRegressor):
 
         network_dict = {"network": self.network}
 
-        self.wfpt_nn_reg_class = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
+        self.wfpt_nn_rl_reg_class = hddm.likelihoods_mlp.make_mlp_likelihood_reg_nn_rl(
             model=self.model,
             model_config=self.model_config,
+            model_config_rl=self.model_config_rl,
             wiener_params=kwargs["wiener_params"],
             **network_dict
         )
 
-        super(HDDMnnRegressor, self).__init__(
+        super(HDDMnnRLRegressor, self).__init__(
             data, models, group_only_regressors, keep_regressor_trace, **kwargs
         )
 
@@ -154,10 +184,10 @@ class HDDMnnRegressor(HDDMRegressor):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
         return Knode(
-            self.wfpt_nn_reg_class,
+            self.wfpt_nn_rl_reg_class,
             "wfpt",
             observed=True,
-            col_name=["response", "rt"]
+            col_name=["split_by", "feedback", "response", "rt", "q_init"]
             + self.model_config["likelihood_relevant_covariates"],
             reg_outcomes=self.reg_outcomes,
             **wfpt_parents
@@ -204,24 +234,22 @@ class HDDMnnRegressor(HDDMRegressor):
                     indirect_regressor_targets.append(target_tmp)
 
             self.model_config["indirect_regressor_targets"] = indirect_regressor_targets
-            # print('Indirect regressor targets: ', self.model_config['indirect_regressor_targets'])
 
-    # May need debugging --> set_state(), get_state()
     def __getstate__(self):
-        d = super(HDDMnnRegressor, self).__getstate__()
-        # del d["network"]
-        del d["wfpt_nn_reg_class"]
+        d = super(HDDMnnRLRegressor, self).__getstate__()
+        del d["wfpt_nn_rl_reg_class"]
+
         return d
 
     def __setstate__(self, d):
-        # d["network"] = load_torch_mlp(model=d["model"])
         network_dict = {"network": d["network"]}
 
-        d["wfpt_nn_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg(
+        d["wfpt_nn_rl_reg_class"] = hddm.likelihoods_mlp.make_mlp_likelihood_reg_nn_rl(
             model=d["model"],
             model_config=d["model_config"],
+            model_config_rl=d["model_config_rl"],
             wiener_params=d["wiener_params"],
             **network_dict
         )
 
-        super(HDDMnnRegressor, self).__setstate__(d)
+        super(HDDMnnRLRegressor, self).__setstate__(d)

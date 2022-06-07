@@ -94,6 +94,122 @@ def make_likelihood_str_mlp_rlssm(
     return fun_str
 
 
+def make_reg_likelihood_str_mlp_basic_nn_rl(
+    model=None,
+    config=None,
+    config_rl=None,
+    wiener_params=None,
+    fun_name="custom_likelihood_reg",
+):
+    """Define string for a likelihood function that can be used as a
+    mlp-likelihood in the HDDMnnRLRegressor class. Useful if you want to supply a custom LAN.
+
+    :Arguments:
+        model : str
+            Name of the sequential sampling model used.
+        config : dict <default = None>
+            Config dictionary for the sequential sampling model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+        config_rl : dict <default = None>
+            Config dictionary for the reinforcement learning model for which you would like to construct a custom
+            likelihood. In the style of what you find under hddm.model_config.
+
+    :Returns:
+        str:
+            A string that holds the code to define a likelihood function as needed by HDDM to pass
+            to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+    """
+    param_bounds_lower = config["param_bounds"][0]
+    param_bounds_lower.extend(config_rl["param_bounds"][0])
+    param_bounds_upper = config["param_bounds"][1]
+    param_bounds_upper.extend(config_rl["param_bounds"][1])
+    param_bounds = [param_bounds_lower, param_bounds_upper]
+
+    t_params = deepcopy(config["params"])
+    t_params.extend(config_rl["params"])
+    all_params_str = ", ".join(t_params)
+
+    w_outlier_str = str(wiener_params["w_outlier"])
+
+    # For regressors-
+    w_outlier_str = str(wiener_params["w_outlier"])
+    data_frame_width_str = str(len(config["params"]) + 2)
+
+    upper_bounds_ssm_str = str(config["param_bounds"][1])
+    lower_bounds_ssm_str = str(config["param_bounds"][0])
+    n_params_ssm_str = str(len(config["params"]))
+    params_ssm_str = str(config["params"])
+
+    n_params_rl_str = str(len(config_rl["params"]))
+    params_rl_str = str(config_rl["params"])
+
+    fun_str = (
+        "def "
+        + fun_name
+        + "(value, "
+        + all_params_str
+        + ", reg_outcomes, p_outlier=0, w_outlier="
+        + w_outlier_str
+        + ", **kwargs):"
+        + "\n    print('here', reg_outcomes)"
+        + "\n    if 'v' in reg_outcomes:"
+        + "\n        print('hello world')"
+        + "\n        raise Exception('For RLSSM models, v cannot be the regression target.')"
+        + "\n    params = locals()"
+        + "\n    size = int(value.shape[0])"
+        + "\n    data = np.zeros(((size, "
+        + data_frame_width_str
+        + ")), dtype=np.float32)"
+        + "\n    data[:, "
+        + n_params_ssm_str
+        + ':] = np.stack([np.absolute(value["rt"]).astype(np.float32), value["response"].astype(np.float32)], axis=1)'
+        + "\n    cnt=0"
+        + "\n    for tmp_str in "
+        + params_ssm_str
+        + ":"
+        + "\n        if tmp_str in reg_outcomes:"
+        + '\n            data[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
+        + "\n            if tmp_str != 'v' and ((data[:, cnt].min() < "
+        + lower_bounds_ssm_str
+        + "[cnt]) or (data[:, cnt].max() > "
+        + upper_bounds_ssm_str
+        + "[cnt])):"
+        + '\n                warnings.warn("Boundary violation of regressor part.")'
+        + "\n                return -np.inf"
+        + "\n        else:"
+        + "\n            data[:, cnt] = params[tmp_str]"
+        + "\n        cnt += 1"
+        # for rl part -
+        + "\n    rl_arr = np.zeros(((size, "
+        + n_params_rl_str
+        + ")), dtype=np.float32)"
+        + "\n    cnt=0"
+        + "\n    for tmp_str in "
+        + params_rl_str
+        + ":"
+        + "\n        if tmp_str in reg_outcomes:"
+        + '\n            rl_arr[:, cnt] = params[tmp_str].loc[value["rt"].index].values'
+        + "\n        else:"
+        + "\n            rl_arr[:, cnt] = params[tmp_str]"
+        + "\n        cnt += 1"
+        + "\n    return hddm.wfpt.wiener_like_rlssm_nn_reg(data, rl_arr,"
+        + 'value["rt"].values.astype(float), '
+        + 'value["response"].values.astype(int), '
+        + 'value["feedback"].values, '
+        + 'value["split_by"].values.astype(int), '
+        + 'value["q_init"].iloc[0], '
+        + "params_bnds="
+        + "np.array("
+        + str(param_bounds)
+        + "), "
+        + 'network=kwargs["network"], '
+        + "p_outlier=p_outlier, w_outlier=w_outlier)"
+    )
+
+    return fun_str
+
+
 def make_likelihood_str_mlp(
     config=None, wiener_params=None, fun_name="custom_likelihood"
 ):
@@ -1098,10 +1214,10 @@ def get_dataset_as_dataframe_rlssm(dataset):
     list_sub_data = list()
     for itr in range(len(dataset["data"])):
         data = dataset["data"][itr]["sim_data"]
-        data["q_up"]
-        data["q_low"]
-        data["sim_drift"]
+        data = data.drop(columns=['q_up', 'q_low', 'sim_drift'])
         data["subj_idx"] = itr
+
+        data.loc[data['response'] == -1, 'response'] = 0
 
         list_sub_data.append(data)
     PR_data = pd.concat(list_sub_data, ignore_index=True)
