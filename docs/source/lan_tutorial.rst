@@ -1,5 +1,5 @@
-Tutorial
-========
+LAN Tutorial
+============
 
 This tutorial is a rather comprehensive introduction to **HDDM** with
 focus on the new **LAN extension**. The methods behind the **new**
@@ -102,6 +102,8 @@ Imports
     
     # HDDM
     import hddm
+    from hddm.simulators.hddm_dataset_generators import simulator_h_c
+
 
 Section 1: Model Info / Simulation / Basic Plotting
 ---------------------------------------------------
@@ -219,7 +221,7 @@ of freedom when it comes to optimizing your sampler.
 
 .. parsed-literal::
 
-    dict_keys(['ddm_vanilla', 'full_ddm_vanilla', 'ddm', 'angle', 'weibull', 'levy', 'full_ddm', 'ornstein', 'ddm_sdv', 'ddm_par2', 'ddm_par2_no_bias', 'ddm_par2_angle_no_bias', 'ddm_par2_weibull_no_bias', 'ddm_seq2', 'ddm_seq2_no_bias', 'ddm_seq2_angle_no_bias', 'ddm_seq2_weibull_no_bias', 'ddm_mic2_adj', 'ddm_mic2_adj_no_bias', 'ddm_mic2_adj_angle_no_bias', 'ddm_mic2_adj_weibull_no_bias', 'race_no_bias_3', 'race_no_bias_angle_3', 'race_no_bias_4', 'race_no_bias_angle_4', 'lca_no_bias_3', 'lca_no_bias_angle_3', 'lca_no_bias_4', 'lca_no_bias_angle_4', 'weibull_cdf', 'full_ddm2'])
+    dict_keys(['ddm_vanilla', 'full_ddm_vanilla', 'ddm', 'angle', 'weibull', 'levy', 'full_ddm', 'ornstein', 'ddm_sdv', 'gamma_drift', 'gamma_drift_angle', 'ds_conflict_drift', 'ds_conflict_drift_angle', 'ddm_par2', 'ddm_par2_no_bias', 'ddm_par2_angle_no_bias', 'ddm_par2_weibull_no_bias', 'ddm_seq2', 'ddm_seq2_no_bias', 'ddm_seq2_angle_no_bias', 'ddm_seq2_weibull_no_bias', 'ddm_mic2_adj', 'ddm_mic2_adj_no_bias', 'ddm_mic2_adj_angle_no_bias', 'ddm_mic2_adj_weibull_no_bias', 'race_no_bias_3', 'race_no_bias_angle_3', 'race_no_bias_4', 'race_no_bias_angle_4', 'lca_no_bias_3', 'lca_no_bias_angle_3', 'lca_no_bias_4', 'lca_no_bias_angle_4', 'weibull_cdf', 'full_ddm2'])
 
 
 
@@ -298,17 +300,18 @@ it.
 
 .. code:: ipython3
 
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_trials_per_subject = n_samples,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = None, 
-                                                                                      depends_on = None, 
-                                                                                      regression_models = None,
-                                                                                      regression_covariates = None,
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    from hddm.simulators.hddm_dataset_generators import simulator_h_c
+    data, full_parameter_dict = simulator_h_c(n_subjects = 1,
+                                              n_trials_per_subject = n_samples,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = None, 
+                                              depends_on = None, 
+                                              regression_models = None,
+                                              regression_covariates = None,
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 A quick look into what the simulator spits out (you can also read about
 it in the docs). We get back a ``tuple`` of two:
@@ -621,17 +624,18 @@ parameters suggested under ``hddm.model_config.model_config``.
 .. code:: ipython3
 
     # Generate some simulatred data
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_trials_per_subject = n_samples,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = None,
-                                                                                      depends_on = None,
-                                                                                      regression_models = None,
-                                                                                      regression_covariates = None, # need this to make initial covariate matrix from which to use dmatrix (patsy)
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    from hddm.simulators.hddm_dataset_generators import simulator_h_c
+    data, full_parameter_dict = simulator_h_c(n_subjects = 1,
+                                              n_trials_per_subject = n_samples,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = None,
+                                              depends_on = None,
+                                              regression_models = None,
+                                              regression_covariates = None, # need this to make initial covariate matrix from which to use dmatrix (patsy)
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 .. code:: ipython3
 
@@ -673,58 +677,58 @@ parameters suggested under ``hddm.model_config.model_config``.
       <tbody>
         <tr>
           <th>0</th>
-          <td>1.302310</td>
+          <td>2.096904</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>1</th>
-          <td>1.300310</td>
+          <td>2.154903</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>2</th>
-          <td>1.321310</td>
+          <td>1.862907</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>3</th>
-          <td>1.709305</td>
-          <td>1.0</td>
+          <td>1.847907</td>
+          <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>4</th>
-          <td>1.152311</td>
+          <td>1.927906</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>...</th>
@@ -739,58 +743,58 @@ parameters suggested under ``hddm.model_config.model_config``.
         </tr>
         <tr>
           <th>995</th>
-          <td>1.366309</td>
-          <td>0.0</td>
+          <td>2.260902</td>
+          <td>1.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>996</th>
-          <td>1.824303</td>
+          <td>1.895906</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>997</th>
-          <td>1.206311</td>
+          <td>1.782908</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>998</th>
-          <td>1.523307</td>
+          <td>1.864907</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
         <tr>
           <th>999</th>
-          <td>1.127311</td>
+          <td>1.812907</td>
           <td>0.0</td>
           <td>0</td>
-          <td>-0.469642</td>
-          <td>1.427666</td>
-          <td>0.31696</td>
-          <td>0.971311</td>
-          <td>0.74697</td>
+          <td>-1.688219</td>
+          <td>1.945201</td>
+          <td>0.543195</td>
+          <td>1.33591</td>
+          <td>0.875893</td>
         </tr>
       </tbody>
     </table>
@@ -809,6 +813,13 @@ parameters suggested under ``hddm.model_config.model_config``.
                                w_outlier = 0.1,
                                model = model,)
 
+
+.. parsed-literal::
+
+    Supplied model_config specifies params_std_upper for  z as  None.
+    Changed to 10
+
+
 .. code:: ipython3
 
     # Sample
@@ -818,13 +829,13 @@ parameters suggested under ``hddm.model_config.model_config``.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1500 of 1500 complete in 121.6 sec
+     [-----------------100%-----------------] 1500 of 1500 complete in 103.2 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14c61ce50>
+    <pymc.MCMC.MCMC at 0x141b8e410>
 
 
 
@@ -885,6 +896,12 @@ Use the ``help()`` function to check out all the functionality.
                                             'ylim': 3,
                                             'samples': 200})
     plt.show()
+
+
+.. parsed-literal::
+
+    passing
+
 
 
 .. image:: lan_tutorial_files/lan_tutorial_39_1.png
@@ -995,18 +1012,18 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
     # test regressors only False
     # add p_outliers to the generator !
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(data = None, 
-                                                                                      n_subjects = n_subjects,
-                                                                                      n_trials_per_subject = n_trials_per_subject,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = None, 
-                                                                                      depends_on = None, 
-                                                                                      regression_models = None,
-                                                                                      regression_covariates = None,
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    data, full_parameter_dict = simulator_h_c(data = None, 
+                                              n_subjects = n_subjects,
+                                              n_trials_per_subject = n_trials_per_subject,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = None, 
+                                              depends_on = None, 
+                                              regression_models = None,
+                                              regression_covariates = None,
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 .. code:: ipython3
 
@@ -1017,6 +1034,14 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
                                include = hddm.simulators.model_config[model]['hddm_include'],
                                p_outlier = 0.0)
 
+
+.. parsed-literal::
+
+    {'v': 1.5, 'v_std': 1, 'a': 1, 'a_std': 1, 'z': 0.1, 'z_trans': 0.2, 't': 0.01, 't_std': 0.15, 'theta': 0.1, 'theta_std': 0.2}
+    Supplied model_config specifies params_std_upper for  z as  None.
+    Changed to 10
+
+
 .. code:: ipython3
 
     hddmnn_model.sample(nmcmc,
@@ -1025,13 +1050,13 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
 
 .. parsed-literal::
 
-     [-----------------100%-----------------] 1001 of 1000 complete in 463.1 sec
+     [-----------------100%-----------------] 1000 of 1000 complete in 339.0 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14f459d10>
+    <pymc.MCMC.MCMC at 0x14bb81390>
 
 
 
@@ -1068,7 +1093,9 @@ distribution of our **ddm / angle / weibull / you name it** mdoels.
                                             'samples': 200,
                                             'legend_fontsize': 7.})
 
-.. image:: lan_tutorial_files/lan_tutorial_49_1.png
+
+
+.. image:: lan_tutorial_files/lan_tutorial_49_0.png
 
 
 Section 4: Parameter varies by Condition
@@ -1124,17 +1151,17 @@ The resulting model would be of the form,
 
 .. code:: ipython3
 
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_trials_per_subject = n_trials_per_subject,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = conditions,
-                                                                                      depends_on = depends_on, 
-                                                                                      regression_models = None,
-                                                                                      regression_covariates = None,
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    data, full_parameter_dict = simulator_h_c(n_subjects = 1,
+                                              n_trials_per_subject = n_trials_per_subject,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = conditions,
+                                              depends_on = depends_on, 
+                                              regression_models = None,
+                                              regression_covariates = None,
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 
 .. parsed-literal::
@@ -1222,11 +1249,28 @@ The resulting model would be of the form,
                                             'samples': 200})
     plt.show()
 
+
+.. parsed-literal::
+
+    passing
+
+
+
 .. image:: lan_tutorial_files/lan_tutorial_58_1.png
+
+
+.. parsed-literal::
+
+    passing
 
 
 
 .. image:: lan_tutorial_files/lan_tutorial_58_3.png
+
+
+.. parsed-literal::
+
+    passing
 
 
 
@@ -1246,17 +1290,17 @@ The resulting model would be of the form,
 
 .. code:: ipython3
 
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = n_subjects,
-                                                                                      n_trials_per_subject = n_trials_per_subject,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = {'c_one': ['low', 'medium', 'high']}, #, 'c_three': ['low', 'medium', 'high']},
-                                                                                      depends_on = {'v': ['c_one']}, # 'theta': ['c_two']}, # 'theta': ['c_two']}, #regression_models = None, #
-                                                                                      regression_models = None, #regression_covariates = None, 
-                                                                                      regression_covariates = None, # need this to make initial covariate matrix from which to use dmatrix (patsy)
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    data, full_parameter_dict = simulator_h_c(n_subjects = n_subjects,
+                                              n_trials_per_subject = n_trials_per_subject,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = {'c_one': ['low', 'medium', 'high']}, #, 'c_three': ['low', 'medium', 'high']},
+                                              depends_on = {'v': ['c_one']}, # 'theta': ['c_two']}, # 'theta': ['c_two']}, #regression_models = None, #
+                                              regression_models = None, #regression_covariates = None, 
+                                              regression_covariates = None, # need this to make initial covariate matrix from which to use dmatrix (patsy)
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 
 .. parsed-literal::
@@ -1324,10 +1368,40 @@ The resulting model would be of the form,
     plt.show()
 
 
+.. parsed-literal::
+
+    passing
+    passing
+    passing
+    passing
+    passing
+
+
+
 .. image:: lan_tutorial_files/lan_tutorial_65_1.png
 
 
+.. parsed-literal::
+
+    passing
+    passing
+    passing
+    passing
+    passing
+
+
+
 .. image:: lan_tutorial_files/lan_tutorial_65_3.png
+
+
+.. parsed-literal::
+
+    passing
+    passing
+    passing
+    passing
+    passing
+
 
 
 .. image:: lan_tutorial_files/lan_tutorial_65_5.png
@@ -1343,23 +1417,24 @@ parameters to trial-by-trial covariates via a (general) linear model.
 .. code:: ipython3
 
     # Metadata
-    nmcmc = 200
+    nmcmc = 1000
     model = 'angle'
     n_samples_by_subject = 500
 
 .. code:: ipython3
 
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 3,
-                                                                                      n_samples_by_subject = n_samples_by_subject,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = None, 
-                                                                                      depends_on = None, 
-                                                                                      regression_models = ['t ~ 1 + covariate_name', 'v ~ 1 + covariate_name'], 
-                                                                                      regression_covariates = {'covariate_name': {'type': 'continuous', 'range': (0, 1)}},
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    from hddm.simulators.hddm_dataset_generators import simulator_h_c
+    data, full_parameter_dict = simulator_h_c(n_subjects = 5,
+                                              n_samples_by_subject = n_samples_by_subject,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = None, 
+                                              depends_on = None, 
+                                              regression_models = ['t ~ 1 + covariate_name', 'v ~ 1 + covariate_name'], 
+                                              regression_covariates = {'covariate_name': {'type': 'continuous', 'range': (0, 1)}},
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 .. code:: ipython3
 
@@ -1381,12 +1456,8 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-    Reg Model:
-    {'outcome': 't', 'model': ' 1 + covariate_name', 'params': ['t_Intercept', 't_covariate_name'], 'link_func': <function <lambda> at 0x1550739e0>}
-    Uses Identity Link
-    Reg Model:
-    {'outcome': 'v', 'model': ' 1 + covariate_name', 'params': ['v_Intercept', 'v_covariate_name'], 'link_func': <function <lambda> at 0x1550730e0>}
-    Uses Identity Link
+    Supplied model_config specifies params_std_upper for  z as  None.
+    Changed to 10
 
 
 .. code:: ipython3
@@ -1397,23 +1468,13 @@ parameters to trial-by-trial covariates via a (general) linear model.
 
 .. parsed-literal::
 
-     [----             12%                  ] 25 of 200 complete in 6.6 sec
-
-.. parsed-literal::
-
-    /Users/afengler/OneDrive/project_hddm_extension/hddm/hddm/likelihoods_mlp.py:11: UserWarning: boundary violation of regressor part
-      
-
-
-.. parsed-literal::
-
-     [-----------------100%-----------------] 200 of 200 complete in 56.9 sec
+     [-----------------100%-----------------] 1001 of 1000 complete in 369.4 sec
 
 
 
 .. parsed-literal::
 
-    <pymc.MCMC.MCMC at 0x14d7f6990>
+    <pymc.MCMC.MCMC at 0x149a07890>
 
 
 
@@ -1812,17 +1873,17 @@ the **true** model.
 
     # test regressors only False
     # add p_outliers to the generator !
-    data, full_parameter_dict = hddm.simulators.hddm_dataset_generators.simulator_h_c(n_subjects = 1,
-                                                                                      n_samples_by_subject = n_samples,
-                                                                                      model = model,
-                                                                                      p_outlier = 0.00,
-                                                                                      conditions = None, 
-                                                                                      depends_on = None, 
-                                                                                      regression_models = None,
-                                                                                      regression_covariates = None,
-                                                                                      group_only_regressors = False,
-                                                                                      group_only = None,
-                                                                                      fixed_at_default = None)
+    data, full_parameter_dict = simulator_h_c(n_subjects = 1,
+                                              n_samples_by_subject = n_samples,
+                                              model = model,
+                                              p_outlier = 0.00,
+                                              conditions = None, 
+                                              depends_on = None, 
+                                              regression_models = None,
+                                              regression_covariates = None,
+                                              group_only_regressors = False,
+                                              group_only = None,
+                                              fixed_at_default = None)
 
 .. code:: ipython3
 
@@ -2073,6 +2134,12 @@ Posterior Predictive: Do the ‘Posterior Models’ also make sense?
                                             'add_posterior_mean_rts': True,
                                             'samples': 200})
     plt.show()
+
+
+.. parsed-literal::
+
+    passing
+
 
 
 .. image:: lan_tutorial_files/lan_tutorial_92_1.png

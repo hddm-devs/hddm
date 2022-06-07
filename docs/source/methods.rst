@@ -75,38 +75,6 @@ likelihood function for variability in drift-rate and numerical
 integration for variability in non-decision time and bias. More
 information on the model specifics can be found in :cite: `SoferWieckiFrank`.
 
-
-Linear Ballistic Accumulator
-****************************
-
-The Linear Ballistic Accumulator (LBA) model belongs to the class of
-race models (:cite:`BrownHeathcote08`). Instead of one drift process
-and two boundaries, the LBA contains one drift process for each
-possible response with a single boundary each. Thus, the LBA can model
-decision making when more than two responses are possible. Moreover,
-unlike the DDM, the LBA drift process has no intra-trial variance. RT
-variability is obtained by including inter-trial variability in the
-drift-rate and the starting point distribution. Note that the
-simplifying assumption of a noiseless drift-process simplifies the
-math significantly leading to a computationally more efficient
-likelihood function for this model.
-
-In a simulation study it was shown that the LBA and DDM lead to
-similar results as to which parameters are affected by certain
-manipulations (:cite:`DonkinBrownHeathcoteEtAl11`).
-
-.. figure:: lba.png
-
-    Two linear ballistic accumulators (left and right) with different
-    noiseless drifts (arrows) sampled from a normal distribution
-    initiated at different starting points sampled from a uniform
-    distribution. In this case, the accumulator for response
-    alternative 1 is more likely to reach the criterion first, and
-    therefore gets selected more often. Because of this race between
-    two accumulators towards a common threshold these model are called
-    race-models. Reproduced from :cite:`DonkinBrownHeathcoteEtAl11`.
-
-
 Hierarchical Bayesian Estimation
 ################################
 

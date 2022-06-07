@@ -1,4 +1,4 @@
-.. index:: Demos
+.. index:: Tutorials
 .. _chap_rl:
 
 Tutorial for analyzing instrumental learning data with the HDDMnnRL module

@@ -150,7 +150,7 @@ examine its parameters and fit.
 
 
 For more information about the software and theories behind it,
-please see the main `publication`_.
+please see the `main publication`_.
 
 Installation
 ============
@@ -215,12 +215,12 @@ And if you're a mac user, check out this `thread`_ for advice on installation.
 How to cite
 ===========
 
-If HDDM was used in your research, please cite the `publication`__:
+If HDDM was used in your research, please cite the `main publication`_:
 
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
-If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the `publication`__:
+If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the `lan extension`_:
 
 Alexander Fengler, Lakshmi N Govindarajan, Tony Chen, Michael J Frank (2021). Likelihood approximation networks (LANs) for fast inference of simulation models in cognitive neuroscience.
 eLife 10:e65074. doi: 10.7554/eLife.65074
@@ -258,7 +258,7 @@ Join our low-traffic `mailing list`_.
 .. _mailing list: https://groups.google.com/group/hddm-users/
 .. _SciPy Superpack: http://fonnesbeck.github.com/ScipySuperpack/
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
-.. __: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
-.. __: https://elifesciences.org/articles/65074
+.. _main publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
+.. _lan extension: https://elifesciences.org/articles/65074
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs

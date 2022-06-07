@@ -1,3 +1,4 @@
+from this import d
 import pandas as pd
 import numpy as np
 from copy import deepcopy
@@ -16,13 +17,13 @@ from data_simulators import lca
 from data_simulators import ddm_flexbound_seq2
 from data_simulators import ddm_flexbound_par2
 from data_simulators import ddm_flexbound_mic2_adj
+from data_simulators import ddm_flexbound_tradeoff
 
 from . import boundary_functions as bf
 from . import drift_functions as df
 from hddm.model_config import model_config
 
 # Basic simulators and basic preprocessing
-
 
 def bin_simulator_output_pointwise(
     out=[0, 0], bin_dt=0.04, nbins=0
@@ -710,6 +711,7 @@ def simulator(
 
     # Precompute z_vector for no_bias models
     z_vec = np.tile(np.array([0.5], dtype=np.float32), reps=n_trials)
+    a_zero_vec = np.tile(np.array([0.0], dtype = np.float32), reps = n_trials)
 
     if model == "ddm_seq2":
         x = ddm_flexbound_seq2(
@@ -955,6 +957,88 @@ def simulator(
             boundary_params={"alpha": theta[:, 6], "beta": theta[:, 7]},
         )
 
+    if model == "tradeoff_no_bias":
+        x = ddm_flexbound_tradeoff(v_h = theta[:, 0],
+                                   v_l_1 = theta[:, 1],
+                                   v_l_2 = theta[:, 2],
+                                   a = theta[:, 3], 
+                                   z_h = z_vec,
+                                   z_l_1 = z_vec,
+                                   z_l_2 = z_vec,
+                                   d = theta[:, 4],
+                                   t = theta[:, 5],
+                                   s = s,
+                                   n_samples = n_samples,
+                                   n_trials = n_trials,
+                                   delta_t = delta_t,
+                                   max_t = max_t,
+                                   boundary_fun = bf.constant,
+                                   boundary_multiplicative = True,
+                                   boundary_params = {})
+
+
+    if model == "tradeoff_angle_no_bias":
+        x = ddm_flexbound_tradeoff(v_h = theta[:, 0],
+                                   v_l_1 = theta[:, 1],
+                                   v_l_2 = theta[:, 2],
+                                   a = theta[:, 3], 
+                                   z_h = z_vec,
+                                   z_l_1 = z_vec,
+                                   z_l_2 = z_vec,
+                                   d = theta[:, 4],
+                                   t = theta[:, 5],
+                                   s = s,
+                                   n_samples = n_samples,
+                                   n_trials = n_trials,
+                                   delta_t = delta_t,
+                                   max_t = max_t,
+                                   boundary_fun = bf.angle,
+                                   boundary_multiplicative = False,
+                                   boundary_params = {"theta": theta[:, 6]})
+
+    if model == "tradeoff_weibull_no_bias":
+        x = ddm_flexbound_tradeoff(v_h = theta[:, 0],
+                                   v_l_1 = theta[:, 1],
+                                   v_l_2 = theta[:, 2],
+                                   a = theta[:, 3], 
+                                   z_h = z_vec,
+                                   z_l_1 = z_vec,
+                                   z_l_2 = z_vec,
+                                   d = theta[:, 4],
+                                   t = theta[:, 5],
+                                   s = s,
+                                   n_samples = n_samples,
+                                   n_trials = n_trials,
+                                   delta_t = delta_t,
+                                   max_t = max_t,
+                                   boundary_fun = bf.weibull_cdf,
+                                   boundary_multiplicative = True,
+                                   boundary_params = {"alpha": theta[:, 6],
+                                                      "beta": theta[:, 7]})
+    
+    if model == "tradeoff_gamma_conflict_no_bias":
+        x = ddm_flexbound_tradeoff(v_h = theta[:, 0],
+                                   v_l_1 = theta[:, 1],
+                                   v_l_2 = theta[:, 2],
+                                   a = a_zero_vec, 
+                                   z_h = z_vec,
+                                   z_l_1 = z_vec,
+                                   z_l_2 = z_vec,
+                                   d = theta[:, 3],
+                                   t = theta[:, 4],
+                                   s = s,
+                                   n_samples = n_samples,
+                                   n_trials = n_trials,
+                                   delta_t = delta_t,
+                                   max_t = max_t,
+                                   boundary_fun = bf.conflict_gamma_bound,
+                                   boundary_multiplicative = True,
+                                   boundary_params = {"a": theta[:, 5],
+                                                      "theta": theta[:, 6],
+                                                      "scale": theta[:, 7],
+                                                      "alphagamma": theta[:, 8],
+                                                      "scalegamma": theta[:, 9]})
+   
     # Output compatibility
     if n_trials == 1:
         x = (np.squeeze(x[0], axis=1), np.squeeze(x[1], axis=1), x[2])
