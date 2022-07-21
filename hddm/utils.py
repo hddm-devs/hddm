@@ -21,6 +21,7 @@ make_likelihood_fun_from_str = exec
 
 
 def make_likelihood_str_mlp_rlssm(
+    rl_rule,
     model,
     config=None,
     config_rl=None,
@@ -52,44 +53,83 @@ def make_likelihood_str_mlp_rlssm(
     param_bounds_upper.extend(config_rl["param_bounds"][1])
     param_bounds = [param_bounds_lower, param_bounds_upper]
 
-    params_str_ssm = ", ".join(config["params"])
-    params_str_rl = ", ".join(config_rl["params"])
-
-    t_params = deepcopy(config["params"])
-    t_params.extend(config_rl["params"])
-    all_params_str = ", ".join(t_params)
-
     w_outlier_str = str(wiener_params["w_outlier"])
 
-    fun_str = (
-        "def "
-        + fun_name
-        + "(x, "
-        + all_params_str
-        + ", p_outlier=0.0, w_outlier="
-        + w_outlier_str
-        + ", network = None):\n    "
-        + "return hddm.wfpt.wiener_like_rlssm_nn('"
-        + model
-        + "', "
-        + 'x["rt"].values.astype(float), '
-        + 'x["response"].values.astype(int), '
-        + 'x["feedback"].values, '
-        + 'x["split_by"].values.astype(int), '
-        + 'x["q_init"].iloc[0], '
-        + "np.array(["
-        + params_str_ssm
-        + "]), "
-        + "np.array(["
-        + params_str_rl
-        + "]), "
-        + "params_bnds="
-        + "np.array("
-        + str(param_bounds)
-        + "), "
-        + "network=network, "
-        + "p_outlier=p_outlier, w_outlier=w_outlier)"
-    )
+    if rl_rule == 'RWupdate':
+        params_str_ssm = ", ".join(config["params"])
+        params_str_rl = ", ".join(config_rl["params"])
+
+        t_params = deepcopy(config["params"])
+        t_params.extend(config_rl["params"])
+        all_params_str = ", ".join(t_params)
+
+        fun_str = (
+            "def "
+            + fun_name
+            + "(x, "
+            + all_params_str
+            + ", p_outlier=0.0, w_outlier="
+            + w_outlier_str
+            + ", network = None):\n    "
+            + "return hddm.wfpt.wiener_like_rlssm_nn('"
+            + model
+            + "', "
+            + 'x["rt"].values.astype(float), '
+            + 'x["response"].values.astype(int), '
+            + 'x["feedback"].values, '
+            + 'x["split_by"].values.astype(int), '
+            + 'x["q_init"].iloc[0], '
+            + "np.array(["
+            + params_str_ssm
+            + "]), "
+            + "np.array(["
+            + params_str_rl
+            + "]), "
+            + "params_bnds="
+            + "np.array("
+            + str(param_bounds)
+            + "), "
+            + "network=network, "
+            + "p_outlier=p_outlier, w_outlier=w_outlier)"
+        )
+    elif rl_rule == 'RLWM':
+        params_str_ssm = ", ".join(['v0', 'a', 'z', 't'])
+        params_str_rl = ", ".join(config_rl["params"])
+
+        t_params = deepcopy(['v0', 'a', 'z', 't']) # config["params"]
+        t_params.extend(config_rl["params"])
+        all_params_str = ", ".join(t_params)
+
+        fun_str = (
+            "def "
+            + fun_name
+            + "(x, "
+            + all_params_str
+            + ", p_outlier=0.0, w_outlier="
+            + w_outlier_str
+            + ", network = None):\n    "
+            #+ "print(type(x['block_num'][0]))\n    "
+            + "return hddm.wfpt.wiener_like_rlssm_nn_rlwm('"
+            + model
+            + "', "
+            + 'x["block_num"].values.astype(int), '
+            + 'x["stim"].values.astype(float), '
+            + 'x["rt"].values.astype(float), '
+            + 'x["response"].values.astype(int), '
+            + 'x["feedback"].values, '
+            + "np.array(["
+            + params_str_ssm
+            + "]), "
+            + "np.array(["
+            + params_str_rl
+            + "]), "
+            + "params_bnds="
+            + "np.array("
+            + str(param_bounds)
+            + "), "
+            + "network=network, "
+            + "p_outlier=p_outlier, w_outlier=w_outlier)"
+        )
 
     return fun_str
 

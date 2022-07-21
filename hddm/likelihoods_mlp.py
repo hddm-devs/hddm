@@ -205,7 +205,7 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
 
 
 def make_mlp_likelihood_rlssm(
-    model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs
+    rl_rule=None, model=None, model_config=None, model_config_rl=None, wiener_params=None, **kwargs
 ):
     """Defines the likelihoods for the MLP networks for RLSSMs.
 
@@ -227,6 +227,7 @@ def make_mlp_likelihood_rlssm(
 
     def make_likelihood():
         likelihood_str = make_likelihood_str_mlp_rlssm(
+            rl_rule=rl_rule,
             model=model,
             config=model_config,
             config_rl=model_config_rl,

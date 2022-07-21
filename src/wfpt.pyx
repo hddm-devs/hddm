@@ -152,6 +152,135 @@ def wiener_like_rlddm(np.ndarray[double, ndim=1] x,
                 alfa * (feedbacks[i] - qs[responses[i]])
     return sum_logp
 
+def softmax(np.ndarray[double, ndim=1] q_val, double beta):
+    q_val = np.array(q_val)*beta
+    q_val = np.exp(q_val)
+    q_val = q_val / np.sum(q_val)
+    return q_val
+
+def wiener_like_rlssm_nn_rlwm(str model, 
+                      np.ndarray[long, ndim=1] block_num,
+                      np.ndarray[double, ndim=1] stim,
+                      np.ndarray[double, ndim=1] rt,
+                      np.ndarray[long, ndim=1] response,
+                      np.ndarray[double, ndim=1] feedback,
+                      np.ndarray[double, ndim=1] params_ssm,
+                      np.ndarray[double, ndim=1] params_rl,
+                      np.ndarray[double, ndim=2] params_bnds,
+                      double p_outlier=0, double w_outlier=0, network = None):
+
+    cdef double v = params_ssm[0]
+    cdef double rl_alpha = params_rl[0]
+    cdef double gamma = params_rl[1]
+    cdef double phi = params_rl[2] 
+    cdef double rho = params_rl[3]
+    cdef double beta = params_rl[4]
+
+    cdef Py_ssize_t size = rt.shape[0]
+    cdef Py_ssize_t tr
+    cdef Py_ssize_t s_size
+    cdef int num_actions = 3
+    cdef int C = 3
+
+    cdef double log_p = 0
+    cdef double sum_logp = 0
+    cdef double wp_outlier = w_outlier * p_outlier
+
+    cdef np.ndarray[double, ndim=1] stims
+    cdef np.ndarray[long, ndim=1] responses
+    cdef np.ndarray[double, ndim=1] feedbacks
+    cdef np.ndarray[double, ndim=1] rts
+
+    cdef Py_ssize_t n_params = 7 # this should be num of params in ssm (eg. race model 4 no bias has 7)
+    cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+
+    cdef double weight
+    cdef np.ndarray[double, ndim=2] q_RL
+    cdef np.ndarray[double, ndim=2] q_WM
+    cdef np.ndarray[double, ndim=1] pol_RL
+    cdef np.ndarray[double, ndim=1] pol_WM
+    cdef np.ndarray[double, ndim=1] pol
+
+    cdef int cumm_s_size = 0
+    cdef float ll_min = -16.11809
+
+    if not p_outlier_in_range(p_outlier):
+        return -np.inf
+    
+    # Check for boundary violations -- if true, return -np.inf
+    # for i_p in np.arange(4, len(params_ssm)):
+    #     lower_bnd = params_bnds[0][i_p]
+    #     upper_bnd = params_bnds[1][i_p]
+
+    #     if params_ssm[i_p] < lower_bnd or params_ssm[i_p] > upper_bnd:
+    #         return -np.inf
+
+    for bl in np.unique(block_num):
+        stims = stim[block_num == bl]
+        responses = response[block_num == bl]
+        feedbacks = feedback[block_num == bl]
+        rts = rt[block_num == bl]
+
+        bl_size = rts.shape[0]
+
+        q_RL = np.ones((bl_size, num_actions)) * 1/num_actions
+        q_WM = np.ones((bl_size, num_actions)) * 1/num_actions
+        weight = rho * min(1, C/bl_size)
+
+
+        # loop through all trials in current condition
+        for tr in range(0, bl_size):
+            rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+
+            state = int(stims[tr])
+            action = responses[tr]
+            reward = feedbacks[tr]
+
+            #print("state ", state, q_RL[state,:], q_WM[state, :])
+            pol_RL = softmax(q_RL[state, :], beta)
+            pol_WM = softmax(q_WM[state, :], beta)
+
+            pol = weight * pol_WM + (1-weight) * pol_RL
+
+            if tr != 0:
+                data[cumm_s_size + tr, 0] = v * pol[0]
+                data[cumm_s_size + tr, 1] = v * pol[1]
+                data[cumm_s_size + tr, 2] = v * pol[2]
+                data[cumm_s_size + tr, 3] = v * pol[3]
+
+            # Check for boundary violations -- if true, return -np.inf
+            if data[cumm_s_size + tr, 0] < params_bnds[0][0] or data[cumm_s_size + tr, 0] > params_bnds[1][0]:
+                return -np.inf
+            if data[cumm_s_size + tr, 1] < params_bnds[0][0] or data[cumm_s_size + tr, 1] > params_bnds[1][0]:
+                return -np.inf
+            if data[cumm_s_size + tr, 2] < params_bnds[0][0] or data[cumm_s_size + tr, 2] > params_bnds[1][0]:
+                return -np.inf
+            if data[cumm_s_size + tr, 3] < params_bnds[0][0] or data[cumm_s_size + tr, 3] > params_bnds[1][0]:
+                return -np.inf
+
+            if reward == 1:
+                q_RL[state, action] = q_RL[state, action] + rl_alpha * (reward - q_RL[state, action])
+                q_WM[state, action] = q_WM[state, action] + 1 * (reward - q_WM[state, action])
+            elif reward == 0:
+                q_RL[state, action] = q_RL[state, action] + gamma * rl_alpha * (reward - q_RL[state, action])
+                q_WM[state, action] = q_WM[state, action] + gamma * 1 * (reward - q_WM[state, action])
+
+            q_WM = q_WM + phi * ((1/num_actions)-q_WM)
+
+        cumm_s_size += s_size
+
+    #print("creating data ndarray")
+    data[:, 4:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
+    data[:, n_params:] = np.stack([rt, response], axis = 1)
+
+    # Call to network:
+    if p_outlier == 0:
+        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
+    else:
+        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+
+    return sum_logp
+
 
 def wiener_like_rlssm_nn(str model, 
                       np.ndarray[double, ndim=1] x,

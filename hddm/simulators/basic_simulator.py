@@ -174,6 +174,7 @@ def simulator(
     no_noise=False,
     bin_dim=None,
     bin_pointwise=False,
+    verbose=True,
 ):
     """Basic data simulator for the models included in HDDM.
 
@@ -206,7 +207,8 @@ def simulator(
 
     # Useful for sbi
     if type(theta) == list:
-        print("theta is supplied as list --> simulator assumes n_trials = 1")
+        if verbose:
+            print("theta is supplied as list --> simulator assumes n_trials = 1")
         theta = np.asarray(theta).astype(np.float32)
     elif type(theta) == np.ndarray:
         theta = theta.astype(np.float32)

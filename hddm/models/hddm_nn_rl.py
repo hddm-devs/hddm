@@ -134,6 +134,7 @@ class HDDMnnRL(HDDMnn):
             }
 
         self.wfpt_nn_rlssm = hddm.likelihoods_mlp.make_mlp_likelihood_rlssm(
+            rl_rule=self.rl_rule,
             model=self.model,
             model_config=self.model_config,
             model_config_rl=self.model_config_rl,
@@ -153,16 +154,23 @@ class HDDMnnRL(HDDMnn):
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)
 
+        print("\n\nwfpt_parents = ", wfpt_parents)
+
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
 
+        if self.rl_rule == 'RWupdate':
+            col_name = ["split_by", "feedback", "response", "rt", "q_init"]
+        elif self.rl_rule == 'RLWM':
+            col_name = ["block_num", "stim", "feedback", "response", "rt"]
+
         return Knode(
             self.wfpt_nn_rlssm,
             "wfpt",
             observed=True,
-            col_name=["split_by", "feedback", "response", "rt", "q_init"],
+            col_name=col_name,
             **wfpt_parents
         )
 
