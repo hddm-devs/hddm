@@ -90,6 +90,9 @@ def plot_posterior_pair(
         This function changes the current value and logp of the nodes.
 
     """
+    if hasattr(model, 'reg_outcomes'):
+        return "Note: The posterior pair plot does not support regression models at this point! Aborting..."
+
     if hasattr(model, "model"):
         kwargs["model_"] = model.model
     else:
