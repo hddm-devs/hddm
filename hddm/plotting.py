@@ -32,7 +32,6 @@ def prettier_tag(tag):
     else:
         return "(" + ", ".join([str(t) for t in tag]) + ")"
 
-
 # Plot Composer Functions
 def plot_posterior_pair(
     model,
@@ -1820,16 +1819,18 @@ def _plot_func_pair(
 def _group_node_names_by_param(model):
     tmp_params_allowed = model_config[model.model]["params"].copy()
     if hasattr(model, 'rlssm_model'):
-        tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"])
+        if model.rlssm_model: # TODO: Turns out basic hddm classes have rlssm_model attribute but set to false ....
+            tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"]) 
     tmp_params_allowed.append("dc")  # to accomodate HDDMStimcoding class
     keys_by_param = {}
 
     # Cycle through all nodes
+    #m.nodes_db[m.nodes_db['stochastic'] == True]
+    #tmp_nodes_db = model.nodes_db[model.nodes_db['stochastic'] == True]
     for key_ in model.nodes_db.index:
 
         if 'offset' in key_ :
             continue
-
 
         # Cycle through model relevant parameters
         for param_tmp in tmp_params_allowed: #model_config[model.model]["params"]:
@@ -1845,10 +1846,12 @@ def _group_node_names_by_param(model):
 
             # Take out 'trans' and 'tau' and observed nodes
             if (
-                ("trans" not in key_)
-                and ("tau" not in key_)
+                not ("trans" in key_)
+                and not ("tau"  in key_)
                 and not ((param_tmp + "_reg") in key_)
-                and (model.nodes_db.loc[key_].observed == False)
+                and not ("_rate" in key_)
+                and not ("_shape" in key_)
+                and not (model.nodes_db.loc[key_].observed)
             ):
 
                 if param_id == 0:
@@ -1964,6 +1967,9 @@ def plot_caterpillar(
                         ok_ = 0
                 if ok_:
                     # Make empirical CDFs and extract the 10th, 1th / 99th, 90th percentiles
+                    print('tracename: ')
+                    print(k)
+
                     if hasattr(hddm_model, 'rlssm_model'):
                         if 'rl_alpha' in k and not 'std' in k:
                             vals = traces_tmp[k].values 
@@ -1976,13 +1982,13 @@ def plot_caterpillar(
                     else:
                         ecdfs[k] = ECDF(traces_tmp[k].values)
                         tmp_sorted = sorted(traces_tmp[k].values)
+                    
                     _p01 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.01) - 1]
                     _p99 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.99) - 1]
                     _p1 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.1) - 1]
                     _p9 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.9) - 1]
                     _pmean = traces_tmp[k].mean()
                     plot_vals[k] = [[_p01, _p99], [_p1, _p9], _pmean]
-
 
         x = [plot_vals[k][2] for k in plot_vals.keys()]
 

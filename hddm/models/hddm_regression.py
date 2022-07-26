@@ -96,8 +96,9 @@ def generate_wfpt_reg_stochastic_class(
             cnt = 0
             for tmp_str in model_config["full_ddm_vanilla"]["params"]:
                 if tmp_str in self.parents["reg_outcomes"]:
-                    param_data[:, cnt] = param_dict[tmp_str].values
-                    # changed from iloc[self.value.index]
+                    # NOTE: Need to use .loc here to subset the regression parameters
+                    # to account for eventual grouping
+                    param_data[:, cnt] = param_dict[tmp_str].loc[self.value.index].values
                 else:
                     param_data[:, cnt] = param_dict[tmp_str]
                 cnt += 1

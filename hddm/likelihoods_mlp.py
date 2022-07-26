@@ -288,12 +288,21 @@ def make_mlp_likelihood_reg(
         cnt = 0
         for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
-                param_data[:, cnt] = param_dict[tmp_str].values
+                
+                #param_data[:, cnt] = param_dict[tmp_str].values
+                param_data[:, cnt] = param_dict[tmp_str].loc[self.value.index].values
+
                 for linked_indirect_regressor in param_links[tmp_str]:
+                    # param_data[:, cnt] = (
+                    #     param_data[:, cnt]
+                    #     + param_dict[linked_indirect_regressor].values
+                    # )
+                    
                     param_data[:, cnt] = (
                         param_data[:, cnt]
-                        + param_dict[linked_indirect_regressor].values
+                        + param_dict[linked_indirect_regressor].loc[self.value.index].values
                     )
+                
                 for linked_indirect_beta in param_links_betas[tmp_str]:
                     param_data[:, cnt] = (
                         param_data[:, cnt]
