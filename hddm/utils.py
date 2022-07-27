@@ -1192,12 +1192,6 @@ def data_quantiles(data, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
     return q_lower, q_upper, p_upper
 
 
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
-
-
 def get_dataset_as_dataframe_rlssm(dataset):
     """Get dataset as pandas DataFrame from dict format.
 
@@ -1246,3 +1240,8 @@ def get_traces_rlssm(tracefile):
     traces = pd.DataFrame.from_dict(t_res)
 
     return traces
+
+if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()
