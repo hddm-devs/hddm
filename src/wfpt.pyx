@@ -717,7 +717,6 @@ def wiener_like_nn_mlp_pdf(np.ndarray[float, ndim = 1] rt,
         log_p = np.exp(log_p) # shouldn't be called log_p anymore but no need for an extra array here
     return log_p
 
-
 ################
 # Regression style likelihoods: (Can prob simplify and make all mlp likelihoods of this form)
 

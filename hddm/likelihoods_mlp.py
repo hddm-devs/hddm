@@ -193,6 +193,10 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
         my_fun = locals()["custom_likelihood"]
         return my_fun
 
+    # TODO: Allow for rt's of -999 in LAN likelihoods
+    def make_likelihood_missing_data():
+        return 
+
     likelihood_ = make_likelihood()
 
     wfpt_nn = stochastic_from_dist("Wienernn_" + model, partial(likelihood_, **kwargs))
@@ -362,6 +366,10 @@ def make_mlp_likelihood_reg(
         exec(likelihood_str)
         my_fun = locals()["custom_likelihood_reg"]
         return my_fun
+
+    # TODO: Allow for missing data in LAN likelihoods
+    def make_likelihood_missing_data():
+        return
 
     param_links, indirect_regressors_present = __prepare_indirect_regressors(
         model_config=model_config
