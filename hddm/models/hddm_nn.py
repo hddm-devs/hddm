@@ -113,7 +113,6 @@ class HDDMnn(HDDM):
     """
 
     def __init__(self, *args, **kwargs):
-
         self.nn = True
 
         if "informative" in kwargs.keys():

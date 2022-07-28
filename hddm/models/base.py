@@ -1292,6 +1292,12 @@ class HDDMBase(AccumulatorModel):
         if not hasattr(self, "model_config"):
             self.model_config = deepcopy(model_config[self.model])
 
+        if hasattr(self, "nn"):
+            # Checking for missing data (LANs do not support this out of the box)
+            # TODO: Add choice probability networks to allow missing values to be accounted for.
+            if data['rt'].abs().max() >= 998:
+                raise NotImplementedError("The HDDMnn classes can not yet deal with missing values. Support coming soon!")
+
         # For 2-choice models adjust include statement
         if len(self.model_config["choices"]) == 2:
             # print("Includes supplied: ", include)

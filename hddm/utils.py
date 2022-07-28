@@ -208,6 +208,45 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
 
     return fun_str
 
+# AF-COMMENT: Includes check for missing values
+# TODO: Train choice probability models to make this useful
+# at the moment it just makes sampling slower
+
+# def make_likelihood_str_mlp(
+#     config=None, wiener_params=None, fun_name="custom_likelihood"
+# ):
+#     """Define string for a likelihood function that can be used as an mlp-likelihood
+#     in the HDDMnn and HDDMnnStimCoding classes Useful if you want to supply a custom LAN.
+
+#     :Arguments:
+#         config : dict <default = None>
+#             Config dictionary for the model for which you would like to construct a custom
+#             likelihood. In the style of what you find under hddm.model_config.
+#     :Returns:
+#         str:
+#             A string that holds the code to define a likelihood function as needed by HDDM to pass
+#             to PyMC2. (Serves as a wrapper around the LAN forward pass)
+
+#     """
+#     params_str = ", ".join(config["params"])
+#     w_outlier_str = str(wiener_params["w_outlier"])
+
+#     fun_str = (
+#         "def "
+#         + fun_name
+#         + "(x, "
+#         + params_str
+#         + ", p_outlier=0.0, w_outlier="
+#         + w_outlier_str
+#         + ", network = None):"
+#         + '\n    if x["rt"].abs().max() < 998:'
+#         + '\n        return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, '
+#         + "np.array([" + params_str + "], dtype = np.float32), "
+#         + "p_outlier=p_outlier, w_outlier=w_outlier, network=network)"
+#         + "\n    else:"
+#         + '\n        raise NotImplementedError("LAN based likelihoods can currently not deal with missing data")'
+#     )
+#     return fun_str
 
 def make_likelihood_str_mlp(
     config=None, wiener_params=None, fun_name="custom_likelihood"
@@ -235,15 +274,13 @@ def make_likelihood_str_mlp(
         + params_str
         + ", p_outlier=0.0, w_outlier="
         + w_outlier_str
-        + ", network = None):\n    "
-        + 'return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, '
-        + "np.array(["
-        + params_str
-        + "], dtype = np.float32), "
+        + ", network = None):"
+        + '\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, '
+        + "np.array([" + params_str + "], dtype = np.float32), "
         + "p_outlier=p_outlier, w_outlier=w_outlier, network=network)"
-    )
-    return fun_str
+        )
 
+    return fun_str
 
 def make_likelihood_str_mlp_info(
     config=None, wiener_params=None, fun_name="custom_likelihood"

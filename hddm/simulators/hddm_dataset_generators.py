@@ -372,7 +372,7 @@ def simulator_stimcoding(
             on the RT of outliers. Outlier RTs are sampled uniformly from [0, max_rt_outlier]
         drift_criterion: float <default=0.0>
             Parameter that can be treated as the 'bias part' of the slope, in case we split_by 'v'.
-        n_samples_by_condition: int <default=1000>
+        n_trials_per_condition: int <default=1000>
             Number of samples to simulate per condition (here 2 condition by design).
         delta_t: float <default=0.001>
             Size fo timesteps in simulator (conceptually measured in seconds)
@@ -469,8 +469,8 @@ def simulator_stimcoding(
     data_out = pd.concat(dataframes)
     data_out = data_out.rename(columns={"subj_idx": "stim"})
     data_out["subj_idx"] = "none"
+    data_out = data_out.reset_index(drop = True)
     return (data_out, gt)
-
 
 def simulator_h_c(
     data=None,
