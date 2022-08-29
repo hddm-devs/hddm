@@ -55,6 +55,7 @@ def make_likelihood_str_mlp_rlssm(
 
     w_outlier_str = str(wiener_params["w_outlier"])
 
+
     if rl_rule == 'RWupdate':
         params_str_ssm = ", ".join(config["params"])
         params_str_rl = ", ".join(config_rl["params"])
@@ -93,11 +94,12 @@ def make_likelihood_str_mlp_rlssm(
             + "p_outlier=p_outlier, w_outlier=w_outlier)"
         )
     elif rl_rule == 'RLWM':
-        params_str_ssm = ", ".join(['v0', 'a', 'z', 't'])
-        params_str_rl = ", ".join(config_rl["params"])
+        n_actions = 4
+        params_str_ssm = ", ".join(["v", "a", "t"]) # can introduce a check here: do this only for no_bias race models
+        params_str_rl = ", ".join(config_rl["params"][1:]) # v is part of config_rl (but here we put under params_str_ssm)
 
-        t_params = deepcopy(['v0', 'a', 'z', 't']) # config["params"]
-        t_params.extend(config_rl["params"])
+        t_params = ["v", "a", "t"] 
+        t_params.extend(config_rl["params"][1:])
         all_params_str = ", ".join(t_params)
 
         fun_str = (

@@ -29,7 +29,7 @@ try:
             # AF Q: IS THIS REDUNDANT NOW?
 
             self.net.eval()
-
+            
         @torch.no_grad()
         def predict_on_batch(self, x=None):
             return self.net(torch.from_numpy(x).to(self.dev)).cpu().numpy()

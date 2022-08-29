@@ -171,15 +171,15 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
     cdef double v = params_ssm[0]
     cdef double rl_alpha = params_rl[0]
-    cdef double gamma = params_rl[1]
-    cdef double phi = params_rl[2] 
-    cdef double rho = params_rl[3]
-    cdef double beta = params_rl[4]
+    cdef double rl_gamma = params_rl[1]
+    cdef double rl_phi = params_rl[2] 
+    cdef double rl_rho = params_rl[3]
+    cdef double rl_beta = 50
 
     cdef Py_ssize_t size = rt.shape[0]
     cdef Py_ssize_t tr
-    cdef Py_ssize_t s_size
-    cdef int num_actions = 3
+
+    cdef int num_actions = 4
     cdef int C = 3
 
     cdef double log_p = 0
@@ -193,6 +193,7 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
     cdef Py_ssize_t n_params = 7 # this should be num of params in ssm (eg. race model 4 no bias has 7)
     cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
+    cdef np.ndarray[long, ndim=1] bl_unique = np.unique(block_num)
 
     cdef double weight
     cdef np.ndarray[double, ndim=2] q_RL
@@ -203,42 +204,61 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
     cdef int cumm_s_size = 0
     cdef float ll_min = -16.11809
+    
+    cdef float [:, :] mv_data = data
+    cdef double [:, :] mv_q_RL
+    cdef double [:, :] mv_q_WM
+    
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
     
-    # Check for boundary violations -- if true, return -np.inf
-    # for i_p in np.arange(4, len(params_ssm)):
-    #     lower_bnd = params_bnds[0][i_p]
-    #     upper_bnd = params_bnds[1][i_p]
-
-    #     if params_ssm[i_p] < lower_bnd or params_ssm[i_p] > upper_bnd:
+    # if params_ssm[1] < params_bnds[0][4] or params_ssm[1] > params_bnds[1][4]:
     #         return -np.inf
+    # if params_ssm[2] < params_bnds[0][6] or params_ssm[2] > params_bnds[1][6]:
+    #         return -np.inf 
 
-    for bl in np.unique(block_num):
+    rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+    rl_gamma = (2.718281828459**rl_gamma) / (1 + 2.718281828459**rl_gamma)
+    rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
+    rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
+    
+    # if rl_alpha < params_bnds[0][7] or rl_alpha > params_bnds[1][7]:
+    #     return -np.inf
+    # if rl_gamma < params_bnds[0][7] or rl_gamma > params_bnds[1][7]:
+    #     return -np.inf
+    # if rl_phi < params_bnds[0][7] or rl_phi > params_bnds[1][7]:
+    #     return -np.inf
+    # if rl_rho < params_bnds[0][7] or rl_rho > params_bnds[1][7]:
+    #     return -np.inf
+
+    for j in range(bl_unique.shape[0]):
+        bl = bl_unique[j]
         stims = stim[block_num == bl]
         responses = response[block_num == bl]
         feedbacks = feedback[block_num == bl]
         rts = rt[block_num == bl]
 
         bl_size = rts.shape[0]
-
+        
         q_RL = np.ones((bl_size, num_actions)) * 1/num_actions
         q_WM = np.ones((bl_size, num_actions)) * 1/num_actions
-        weight = rho * min(1, C/bl_size)
-
+        weight = rl_rho * min(1, C/bl_size)
+        
+        # mv_q_RL = q_RL
+        # mv_q_WM = q_WM
+        #print("bl_size = ", bl_size, cumm_s_size, size, bl_unique.shape[0])
 
         # loop through all trials in current condition
         for tr in range(0, bl_size):
-            rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
 
             state = int(stims[tr])
             action = responses[tr]
             reward = feedbacks[tr]
 
             #print("state ", state, q_RL[state,:], q_WM[state, :])
-            pol_RL = softmax(q_RL[state, :], beta)
-            pol_WM = softmax(q_WM[state, :], beta)
+            pol_RL = softmax(q_RL[state], rl_beta)
+            pol_WM = softmax(q_WM[state], rl_beta)
 
             pol = weight * pol_WM + (1-weight) * pol_RL
 
@@ -249,28 +269,30 @@ def wiener_like_rlssm_nn_rlwm(str model,
                 data[cumm_s_size + tr, 3] = v * pol[3]
 
             # Check for boundary violations -- if true, return -np.inf
-            if data[cumm_s_size + tr, 0] < params_bnds[0][0] or data[cumm_s_size + tr, 0] > params_bnds[1][0]:
-                return -np.inf
-            if data[cumm_s_size + tr, 1] < params_bnds[0][0] or data[cumm_s_size + tr, 1] > params_bnds[1][0]:
-                return -np.inf
-            if data[cumm_s_size + tr, 2] < params_bnds[0][0] or data[cumm_s_size + tr, 2] > params_bnds[1][0]:
-                return -np.inf
-            if data[cumm_s_size + tr, 3] < params_bnds[0][0] or data[cumm_s_size + tr, 3] > params_bnds[1][0]:
-                return -np.inf
+            # if data[cumm_s_size + tr, 0] < params_bnds[0][0] or data[cumm_s_size + tr, 0] > params_bnds[1][0]:
+            #     return -np.inf
+            # if data[cumm_s_size + tr, 1] < params_bnds[0][0] or data[cumm_s_size + tr, 1] > params_bnds[1][0]:
+            #     return -np.inf
+            # if data[cumm_s_size + tr, 2] < params_bnds[0][0] or data[cumm_s_size + tr, 2] > params_bnds[1][0]:
+            #     return -np.inf
+            # if data[cumm_s_size + tr, 3] < params_bnds[0][0] or data[cumm_s_size + tr, 3] > params_bnds[1][0]:
+            #     return -np.inf
 
             if reward == 1:
                 q_RL[state, action] = q_RL[state, action] + rl_alpha * (reward - q_RL[state, action])
                 q_WM[state, action] = q_WM[state, action] + 1 * (reward - q_WM[state, action])
             elif reward == 0:
-                q_RL[state, action] = q_RL[state, action] + gamma * rl_alpha * (reward - q_RL[state, action])
-                q_WM[state, action] = q_WM[state, action] + gamma * 1 * (reward - q_WM[state, action])
+                q_RL[state, action] = q_RL[state, action] + rl_gamma * rl_alpha * (reward - q_RL[state, action])
+                q_WM[state, action] = q_WM[state, action] + rl_gamma * 1 * (reward - q_WM[state, action])
 
-            q_WM = q_WM + phi * ((1/num_actions)-q_WM)
+            q_WM = q_WM + rl_phi * ((1/num_actions)-q_WM)
 
-        cumm_s_size += s_size
+        cumm_s_size += bl_size
 
     #print("creating data ndarray")
-    data[:, 4:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
+    #data[:, 4:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
+    data[:, 4:5] = np.tile(params_ssm[1:2], (size, 1)).astype(np.float32)
+    data[:, 6:7] = np.tile(params_ssm[2:3], (size, 1)).astype(np.float32)
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
     # Call to network:
@@ -332,8 +354,7 @@ def wiener_like_rlssm_nn(str model,
         pos_alfa = params_rl[1]
     else:
         pos_alfa = params_rl[0]
-
-
+    
     # unique represent # of conditions
     for j in range(unique.shape[0]):
         s = unique[j]

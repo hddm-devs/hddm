@@ -26,6 +26,7 @@ class TorchConfig(object):
             "lca_no_bias_angle_4": "362f8656175911ecbe8c3cecef057438_lca_no_bias_angle_4_torch_state_dict.pt",
             "race_no_bias_4": "ff29c116173611ecbdba3cecef05595c_race_no_bias_4_torch_state_dict.pt",
             "race_no_bias_angle_4": "179c5a6e175111ec93f13cecef056d26_race_no_bias_angle_4_torch_state_dict.pt",
+            "race_no_bias_3": "43fca738264311eda9d1a0423f3e9b42_race_no_bias_3_torch_state_dict.pt",
         }
 
         self.network_config_files = {
@@ -48,6 +49,7 @@ class TorchConfig(object):
             "lca_no_bias_angle_4": "362f8656175911ecbe8c3cecef057438_lca_no_bias_angle_4_torch__network_config.pickle",
             "race_no_bias_4": "ff29c116173611ecbdba3cecef05595c_race_no_bias_4_torch__network_config.pickle",
             "race_no_bias_angle_4": "179c5a6e175111ec93f13cecef056d26_race_no_bias_angle_4_torch__network_config.pickle",
+            "race_no_bias_3": "43fca738264311eda9d1a0423f3e9b42_race_no_bias_3_torch__network_config.pickle",
         }
 
         self.network_config = self.get_network_config(
