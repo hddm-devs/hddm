@@ -154,8 +154,6 @@ class HDDMnnRL(HDDMnn):
     def _create_wfpt_parents_dict(self, knodes):
         wfpt_parents = super(HDDMnnRL, self)._create_wfpt_parents_dict(knodes)
 
-        print("\n\nwfpt_parents = ", wfpt_parents)
-
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):

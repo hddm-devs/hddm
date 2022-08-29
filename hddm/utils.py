@@ -96,7 +96,7 @@ def make_likelihood_str_mlp_rlssm(
     elif rl_rule == 'RLWM':
         n_actions = 4
         params_str_ssm = ", ".join(["v", "a", "t"]) # can introduce a check here: do this only for no_bias race models
-        params_str_rl = ", ".join(config_rl["params"][1:]) # v is part of config_rl (but here we put under params_str_ssm)
+        params_str_rl = ", ".join(config_rl["params"][1:]) # v is part of config_rl (but here we put it under params_str_ssm)
 
         t_params = ["v", "a", "t"] 
         t_params.extend(config_rl["params"][1:])
