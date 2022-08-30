@@ -247,7 +247,6 @@ def wiener_like_rlssm_nn_rlwm(str model,
         
         mv_q_RL = q_RL
         mv_q_WM = q_WM
-        #print("bl_size = ", bl_size, cumm_s_size, size, bl_unique.shape[0])
 
         # loop through all trials in current condition
         for tr in range(0, bl_size):
@@ -256,9 +255,8 @@ def wiener_like_rlssm_nn_rlwm(str model,
             action = responses[tr]
             reward = feedbacks[tr]
 
-            #print("state ", state, q_RL[state,:], q_WM[state, :])
-            pol_RL = softmax(mv_q_RL[state], rl_beta)
-            pol_WM = softmax(mv_q_WM[state], rl_beta)
+            pol_RL = softmax(q_RL[state], rl_beta)
+            pol_WM = softmax(q_WM[state], rl_beta)
 
             pol = weight * pol_WM + (1-weight) * pol_RL
 
@@ -282,18 +280,16 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
         cumm_s_size += bl_size
 
-    #print("creating data ndarray")
-    #data[:, 4:n_params] = np.tile(params_ssm[1:], (size, 1)).astype(np.float32)
-    mv_data[:, num_actions:num_actions+1] = np.tile(params_ssm[1:2], (size, 1)).astype(np.float32) # a
-    mv_data[:, num_actions+1:num_actions+2] = 0.5 # z
-    mv_data[:, num_actions+2:num_actions+3] = np.tile(params_ssm[2:3], (size, 1)).astype(np.float32) # t
-    mv_data[:, n_params:] = np.stack([rt, response], axis = 1)
+    data[:, num_actions] = params_ssm[1] #np.tile(params_ssm[1:2], (size, 1)).astype(np.float32) # a
+    data[:, num_actions+1] = 0.5 # z
+    data[:, num_actions+3] = params_ssm[2] #np.tile(params_ssm[2:3], (size, 1)).astype(np.float32) # t
+    data[:, n_params:] = np.stack([rt, response], axis = 1)
 
     # Call to network:
     if p_outlier == 0:
-        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(mv_data), ll_min))
+        sum_logp = np.sum(np.core.umath.maximum(network.predict_on_batch(data), ll_min))
     else:
-        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(mv_data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
+        sum_logp = np.sum(np.log(np.exp(np.core.umath.maximum(network.predict_on_batch(data), ll_min)) * (1.0 - p_outlier) + (w_outlier * p_outlier)))
 
     return sum_logp
 
