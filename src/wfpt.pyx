@@ -282,7 +282,7 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
     data[:, num_actions] = params_ssm[1] #np.tile(params_ssm[1:2], (size, 1)).astype(np.float32) # a
     data[:, num_actions+1] = 0.5 # z
-    data[:, num_actions+3] = params_ssm[2] #np.tile(params_ssm[2:3], (size, 1)).astype(np.float32) # t
+    data[:, num_actions+2] = params_ssm[2] #np.tile(params_ssm[2:3], (size, 1)).astype(np.float32) # t
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
     # Call to network:

@@ -55,7 +55,7 @@ def make_likelihood_str_mlp_rlssm(
 
     w_outlier_str = str(wiener_params["w_outlier"])
 
-
+    print("param_bounds = ", param_bounds)
     if rl_rule == 'RWupdate':
         params_str_ssm = ", ".join(config["params"])
         params_str_rl = ", ".join(config_rl["params"])
@@ -102,6 +102,7 @@ def make_likelihood_str_mlp_rlssm(
         t_params.extend(config_rl["params"][1:])
         all_params_str = ", ".join(t_params)
 
+        print("all_params_str = ", all_params_str, params_str_ssm, params_str_rl)
         fun_str = (
             "def "
             + fun_name
