@@ -3,6 +3,7 @@
 *.c
 *.cpp
 *~
+hddm/examples/lan_to_hddm_tmp_data
 build/
 dist/
 docs/build

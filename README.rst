@@ -159,7 +159,7 @@ Installation
 ============
 
 For **HDDM >= 0.9.0**, currently in beta release, the most convenient way to install HDDM, is to directly 
-install via **github**. In a fresh environment type.
+install via **github**. In a fresh environment (we recommend to use **python 3.7**) type.
 
 :: 
 
@@ -223,10 +223,19 @@ If HDDM was used in your research, please cite the `main publication`_:
 Wiecki TV, Sofer I and Frank MJ (2013). HDDM: Hierarchical Bayesian estimation of the Drift-Diffusion Model in Python.
 Front. Neuroinform. 7:14. doi: 10.3389/fninf.2013.00014
 
-If you use the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL class, please cite the `lan extension`_:
+If you use the HDDMrl, please cite the `original HDDM RL tutorial paper`_:
+
+Pedersen, M. L., & Frank, M. J. (2020). Simultaneous hierarchical bayesian parameter estimation for reinforcement learning and drift diffusion models: a tutorial and links to neural data. 
+Computational Brain & Behavior, 3(4), 458-471.
+
+If you use any of the HDDMnn, HDDMnnRegressor, HDDMnnStimCoding or HDDMnnRL classes, please cite the `lan extension`_ and the `new tutorial paper`_:
 
 Alexander Fengler, Lakshmi N Govindarajan, Tony Chen, Michael J Frank (2021). Likelihood approximation networks (LANs) for fast inference of simulation models in cognitive neuroscience.
 eLife 10:e65074. doi: 10.7554/eLife.65074
+
+Fengler, A., Bera, K., Pedersen, M. L., & Frank, M. J. (2022). Beyond Drift Diffusion Models: Fitting a Broad Class of Decision and Reinforcement Learning Models with HDDM. 
+Journal of Cognitive Neuroscience, 34(10), 1780-1805.
+
 
 Published papers using HDDM
 ===========================
@@ -254,7 +263,7 @@ Join our low-traffic `mailing list`_.
 .. _DMAT: http://ppw.kuleuven.be/okp/software/dmat/
 .. _fast-dm: http://seehuhn.de/pages/fast-dm
 .. _documentation: https://hddm.readthedocs.io
-.. _tutorial: https://hddm.readthedocs.io/en/latest/tutorial.html
+.. _tutorial: https://hddm.readthedocs.io/en/latest/tutorial_basic_hddm.html
 .. _howto: https://hddm.readthedocs.io/en/latest/howto.html
 .. _manual: http://ski.clps.brown.edu/hddm_docs/manual.html
 .. _kabuki: https://github.com/hddm-devs/kabuki
@@ -263,5 +272,7 @@ Join our low-traffic `mailing list`_.
 .. _Anaconda: http://docs.continuum.io/anaconda/install.html
 .. _main publication: http://www.frontiersin.org/Journal/10.3389/fninf.2013.00014/abstract
 .. _lan extension: https://elifesciences.org/articles/65074
+.. _new tutorial paper: https://direct.mit.edu/jocn/article/34/10/1780/112585/Beyond-Drift-Diffusion-Models-Fitting-a-Broad
+.. _original HDDM RL tutorial paper: https://link.springer.com/article/10.1007/s42113-020-00084-w
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs

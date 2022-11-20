@@ -548,6 +548,9 @@ def simulator_h_c(
     for key_ in kwargs.keys():
         meta_params[key_] = kwargs[key_]
 
+    if depends_on is None:
+        depends_on = {}
+
     def check_params(data=None, model=None, is_nn=True):
         """
         Function checks if parameters are within legal bounds
