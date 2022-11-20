@@ -4,6 +4,7 @@
 *.cpp
 *~
 hddm/examples/lan_to_hddm_tmp_data
+hddm/examples/sbi-logs
 build/
 dist/
 docs/build
