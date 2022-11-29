@@ -1237,18 +1237,25 @@ def _plot_func_model(
 
 
 def _add_model_cartoon_to_ax(
-    sample=None,
-    axis=None,
-    tmp_model=None,
-    delta_t_graph=None,
-    sample_hist_alpha=None,
-    lw_m=None,
-    tmp_label=None,
-    ylim=None,
-    t_s=None,
-    zorder_cnt=1,
-    color="black",
-):
+        sample=None,
+        axis=None,
+        tmp_model=None,
+        delta_t_graph=None,
+        sample_hist_alpha=None,
+        lw_m=None,
+        tmp_label=None,
+        ylim=None,
+        t_s=None,
+        zorder_cnt=1,
+        n_trajectories = 10,
+        supplied_trajectory = None,
+        maxid_trajectories = 1, #useful for gifs
+        lw_trajectories = 1,
+        alpha_trajectories = 0.5,
+        color_trajectories = "black",
+        color="black",
+    ):
+
     if (
         tmp_model == "weibull_cdf"
         or tmp_model == "weibull_cdf2"
@@ -1286,13 +1293,13 @@ def _add_model_cartoon_to_ax(
 
     # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
     out = simulator(
-        theta=sample[model_config[tmp_model]["params"]].values[0],
-        model=tmp_model,
-        n_samples=1,
-        no_noise=True,
-        delta_t=delta_t_graph,
-        bin_dim=None,
-    )
+                    theta=sample[model_config[tmp_model]["params"]].values[0],
+                    model=tmp_model,
+                    n_samples=1,
+                    no_noise=True,
+                    delta_t=delta_t_graph,
+                    bin_dim=None,
+                    )
 
     # AF-TODO: Add trajectories
     tmp_traj = out[2]["trajectory"]
@@ -1343,6 +1350,40 @@ def _add_model_cartoon_to_ax(
         linewidth=lw_m,
         alpha=sample_hist_alpha,
     )
+
+    # Trajectories
+    if supplied_trajectory is None:
+        for i in range(n_trajectories):
+            out_traj = simulator(
+                                theta=sample[model_config[tmp_model]["params"]].values[0],
+                                model=tmp_model,
+                                n_samples=1,
+                                no_noise=False,
+                                delta_t=delta_t_graph,
+                                bin_dim=None,
+                                )
+            
+            tmp_traj = out_traj[2]["trajectory"]
+            maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+
+            axis.plot(
+                      t_s[:maxid] + sample.t.values[0],
+                      tmp_traj[:maxid],
+                      color = color_trajectories,
+                      alpha = alpha_trajectories,
+                      linewidth = lw_trajectories,
+                      )
+    else:
+        maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+        maxid_traj = min(maxid, maxid_trajectories)
+
+        axis.plot(
+                  t_s[:maxid_traj] + sample.t.values[0],
+                  tmp_traj[:maxid_traj],
+                  color = color_trajectories,
+                  alpha = alpha_trajectories,
+                  linewidth = lw_trajectories,
+                 )
 
 
 def _plot_func_model_n(
