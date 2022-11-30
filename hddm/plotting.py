@@ -244,7 +244,7 @@ def plot_from_data(
             tag += groupby[j] + "(" + str(group_id[j]) + ")"
             if j < (len(groupby) - 1):
                 tag += "_"
-        print(tag)
+        #print(tag)
 
         ax.set_title(tag, fontsize=ax_title_size)
 
@@ -252,6 +252,7 @@ def plot_from_data(
         # This function should manipulate the ax object, and is expected to not return anything.
         plot_func(df_tmp, ax, **kwargs)
         if not keep_frame:
+            print('passing')
             ax.set_frame_on(False)
         
         i += 1
