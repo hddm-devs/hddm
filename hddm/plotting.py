@@ -150,7 +150,8 @@ def plot_from_data(
     groupby="subj_idx",
     figsize=(8, 6),
     format="png",
-    #keep_frame=True,
+    keep_frame=True,
+    keep_title=True,
     **kwargs
 ):
     """Plot data from a hddm ready DataFrame.
@@ -245,14 +246,15 @@ def plot_from_data(
             if j < (len(groupby) - 1):
                 tag += "_"
         #print(tag)
-
-        ax.set_title(tag, fontsize=ax_title_size)
-        ax.set(frame_on=False)
-        ax.set_axis_off()
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
+        if keep_title:
+            ax.set_title(tag, fontsize=ax_title_size)
+        #ax.set(frame_on=False)
+        if not keep_frame:
+            ax.set_axis_off()
+        #ax.spines['top'].set_visible(False)
+        #ax.spines['right'].set_visible(False)
+        #ax.spines['bottom'].set_visible(False)
+        #ax.spines['left'].set_visible(False)
 
         # Call plot function on ax
         # This function should manipulate the ax object, and is expected to not return anything.
@@ -941,8 +943,7 @@ def _plot_func_model(
     posterior_uncertainty_color="black",
     alpha=0.05,
     delta_t_model=0.01,
-    add_legend=True,
-    keep_frame=False,
+    add_legend=True, #keep_frame=False,
     **kwargs
 ):
     """Calculate posterior predictive for a certain bottom node.
@@ -1054,10 +1055,10 @@ def _plot_func_model(
     axis_twin_down = axis.twinx()
     axis_twin_up.set_ylim(-ylim, ylim)
     axis_twin_up.set_yticks([])
-    axis_twin_up.set_axis_off()
     axis_twin_down.set_ylim(ylim, -ylim)
     axis_twin_down.set_yticks([])
     axis_twin_down.set_axis_off()
+    axis_twin_up.set_axis_off()
     
     # ADD HISTOGRAMS
     # -------------------------------
@@ -1264,9 +1265,9 @@ def _plot_func_model(
                           **kwargs)
 
 
-    # Frame ---
-    if not keep_frame:
-        axis.axis("off")
+    # # Frame ---
+    # if not keep_frame:
+    #     axis.axis("off")
 
 def _add_trajectories(
         axis = None,
