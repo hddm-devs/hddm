@@ -1036,17 +1036,8 @@ def _plot_func_model(
 
     # ---------------------------
     ylim = kwargs.pop("ylim", 3)
+    hist_bottom = kwargs.pop("hist_bottom", 2)
 
-
-    # # trajectory kwargs -------
-    # n_trajectories = kwargs.pop("n_trajectories", 0)
-    # supplied_trajectory = kwargs.pop("supplied_trajectory", None)
-    # maxid_supplied_trajectory = kwargs.pop("maxid_trajectory", 1) #useful for gifs
-    # lw_trajectories = kwargs.pop("lw_trajectories", 1) 
-    # alpha_trajectories = kwargs.pop("alpha_trajectories", 0.5)
-    # color_trajectories = kwargs.pop("color_trajectories", "black")
-    # # -------------------------
-    
 
     axis.set_xlim(value_range[0], value_range[-1])
     axis.set_ylim(-ylim, ylim)
@@ -1083,6 +1074,7 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_up,
                 histtype="step",
+                bottom=hist_bottom,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
                 edgecolor=posterior_uncertainty_color,
@@ -1096,6 +1088,7 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_down,
                 histtype="step",
+                bottom=-hist_bottom,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
                 edgecolor=posterior_uncertainty_color,
