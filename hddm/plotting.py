@@ -248,7 +248,7 @@ def plot_from_data(
 
         ax.set_title(tag, fontsize=ax_title_size)
         ax.set(frame_on=False)
-        ax.set_axis_off("off")
+        ax.axis('off')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
