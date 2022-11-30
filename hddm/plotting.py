@@ -1249,12 +1249,15 @@ def _plot_func_model(
 
     if add_trajectories:
         _add_trajectories(axis = axis,
+                          sample = node_data_full,
                           t_s = t_s,
                           **kwargs)
 
 def _add_trajectories(
         axis = None,
+        sample = None,
         t_s = None,
+        sample = None,
         n_trajectories = 10,
         supplied_trajectory = None,
         maxid_trajectories = 1, #useful for gifs
