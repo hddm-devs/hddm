@@ -255,6 +255,7 @@ def plot_from_data(
             #print('passing')
             #ax.set_frame_on(False)
         
+        ax.axis("off")
         i += 1
 
         # Save figure if necessary
