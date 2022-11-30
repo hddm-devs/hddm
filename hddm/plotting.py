@@ -1252,12 +1252,14 @@ def _plot_func_model(
                           sample = samples_tmp[0],
                           tmp_model = tmp_model,
                           t_s = t_s,
+                          delta_t_graph = delta_t_model
                           **kwargs)
 
 def _add_trajectories(
         axis = None,
         sample = None,
         t_s = None,
+        delta_t_graph = 0.01,
         tmp_model = None,
         n_trajectories = 10,
         supplied_trajectory = None,
