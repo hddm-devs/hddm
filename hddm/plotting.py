@@ -1371,7 +1371,7 @@ def _add_model_cartoon_to_ax(
 
     # Upper bound
     axis.plot(
-        t_s + sample.t.values[0],
+        t_s, # + sample.t.values[0],
         b,
         color=color,
         alpha=sample_hist_alpha,
@@ -1382,7 +1382,7 @@ def _add_model_cartoon_to_ax(
 
     # Lower bound
     axis.plot(
-        t_s + sample.t.values[0],
+        t_s, # + sample.t.values[0],
         -b,
         color=color,
         alpha=sample_hist_alpha,
