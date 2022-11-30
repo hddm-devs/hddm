@@ -1037,6 +1037,7 @@ def _plot_func_model(
     # ---------------------------
     ylim = kwargs.pop("ylim", 3)
     hist_bottom = kwargs.pop("hist_bottom", 2)
+    hist_histtype = kwargs.pop("hist_histtype", "step")
 
 
     axis.set_xlim(value_range[0], value_range[-1])
@@ -1073,7 +1074,7 @@ def _plot_func_model(
                 np.abs(sample.rt[sample.response == 1]),
                 bins=bins,
                 weights=weights_up,
-                histtype="step",
+                histtype=hist_histtype,
                 bottom=hist_bottom,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
@@ -1087,7 +1088,7 @@ def _plot_func_model(
                 np.abs(sample.loc[(sample.response != 1), :].rt),
                 bins=bins,
                 weights=weights_down,
-                histtype="step",
+                histtype=hist_histtype,
                 bottom=-hist_bottom,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
@@ -1117,7 +1118,8 @@ def _plot_func_model(
             np.abs(concat_data.rt[concat_data.response == 1]),
             bins=bins,
             weights=weights_up,
-            histtype="step",
+            histtype=hist_histtype,
+            bottom=hist_bottom,
             alpha=1.0,
             color=posterior_mean_color,
             edgecolor=posterior_mean_color,
@@ -1130,7 +1132,8 @@ def _plot_func_model(
             np.abs(concat_data.loc[(concat_data.response != 1), :].rt),
             bins=bins,
             weights=weights_down,
-            histtype="step",
+            histtype=hist_histtype,
+            bottom=-hist_bottom,
             alpha=1.0,
             color=posterior_mean_color,
             edgecolor=posterior_mean_color,
@@ -1157,7 +1160,8 @@ def _plot_func_model(
             np.abs(data_tmp[data_tmp.response == 1].rt),
             bins=bins,
             weights=weights_up,
-            histtype="step",
+            histtype=hist_histtype,
+            bottom=hist_bottom,
             alpha=1,
             color=data_color,
             edgecolor=data_color,
@@ -1170,7 +1174,8 @@ def _plot_func_model(
             np.abs(data_tmp[(data_tmp.response != 1)].rt),
             bins=bins,
             weights=weights_down,
-            histtype="step",
+            histtype=hist_histtype,
+            bottom=-hist_bottom,
             alpha=1,
             color=data_color,
             edgecolor=data_color,
