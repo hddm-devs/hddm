@@ -247,16 +247,16 @@ def plot_from_data(
         #print(tag)
 
         ax.set_title(tag, fontsize=ax_title_size)
+        ax.set(frame_on=False)
+        ax.set_axis_off("off")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
 
         # Call plot function on ax
         # This function should manipulate the ax object, and is expected to not return anything.
         plot_func(df_tmp, ax, **kwargs)
-        #if not keep_frame:
-            #print('passing')
-            #ax.set_frame_on(False)
-
-        ax.set(frame_on=False)
-        ax.axis("off")
         i += 1
 
         # Save figure if necessary
