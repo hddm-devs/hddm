@@ -935,6 +935,7 @@ def _plot_func_model(
     alpha=0.05,
     delta_t_model=0.01,
     add_legend=True,
+    keep_frame=False,
     **kwargs
 ):
     """Calculate posterior predictive for a certain bottom node.
@@ -1252,6 +1253,11 @@ def _plot_func_model(
                           t_s = t_s,
                           delta_t_graph = delta_t_model,
                           **kwargs)
+
+
+    # Frame ---
+    if not keep_frame:
+        axis.set_frame_on(False)
 
 def _add_trajectories(
         axis = None,
