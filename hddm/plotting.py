@@ -1249,7 +1249,7 @@ def _plot_func_model(
 
     if add_trajectories:
         _add_trajectories(axis = axis,
-                          sample = node_data_full,
+                          sample = samples_tmp[0],
                           tmp_model = tmp_model,
                           t_s = t_s,
                           **kwargs)
