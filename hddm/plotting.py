@@ -1430,6 +1430,7 @@ def _plot_func_model_n(
     delta_t_model=0.01,
     add_legend=True,
     alpha=0.01,
+    keep_frame=False,
     **kwargs
 ):
     """Calculate posterior predictive for a certain bottom node.
@@ -1712,6 +1713,10 @@ def _plot_func_model_n(
                 shadow=legend_shadow,
                 loc=legend_location,
             )
+
+    # FRAME
+    if not keep_frame:
+        axis.set_frame_on(False)
 
 
 def _add_model_n_cartoon_to_ax(
