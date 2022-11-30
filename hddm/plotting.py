@@ -1054,9 +1054,11 @@ def _plot_func_model(
     axis_twin_down = axis.twinx()
     axis_twin_up.set_ylim(-ylim, ylim)
     axis_twin_up.set_yticks([])
+    axis_twin_up.set_axis_off()
     axis_twin_down.set_ylim(ylim, -ylim)
     axis_twin_down.set_yticks([])
-
+    axis_twin_down.set_axis_off()
+    
     # ADD HISTOGRAMS
     # -------------------------------
 
