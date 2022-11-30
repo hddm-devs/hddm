@@ -150,6 +150,7 @@ def plot_from_data(
     groupby="subj_idx",
     figsize=(8, 6),
     format="png",
+    keep_frame=True,
     **kwargs
 ):
     """Plot data from a hddm ready DataFrame.
@@ -250,6 +251,9 @@ def plot_from_data(
         # Call plot function on ax
         # This function should manipulate the ax object, and is expected to not return anything.
         plot_func(df_tmp, ax, **kwargs)
+        if not keep_frame:
+            ax.set_frame_on(False)
+        
         i += 1
 
         # Save figure if necessary
