@@ -1263,7 +1263,7 @@ def _add_trajectories(
         tmp_model = None,
         n_trajectories = 10,
         supplied_trajectory = None,
-        maxid_trajectories = 1, #useful for gifs
+        maxid_supplied_trajectory = 1, #useful for gifs
         lw_trajectories = 1,
         alpha_trajectories = 0.5,
         color_trajectories = "black",
@@ -1294,11 +1294,11 @@ def _add_trajectories(
                       )
     else:
         maxid = np.minimum(np.argmax(np.where(supplied_trajectory > -999)), t_s.shape[0])
-        maxid_traj = min(maxid, maxid_trajectories)
+        maxid_traj = min(maxid, maxid_supplied_trajectory)
 
         axis.plot(
                   t_s[:maxid_traj] + sample.t.values[0],
-                  tmp_traj[:maxid_traj],
+                  supplied_trajectory[:maxid_traj],
                   color = color_trajectories,
                   alpha = alpha_trajectories,
                   linewidth = lw_trajectories,
