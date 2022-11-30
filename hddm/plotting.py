@@ -923,6 +923,7 @@ def _plot_func_model(
     add_posterior_uncertainty_rts=False,
     add_posterior_mean_model=True,
     add_posterior_mean_rts=True,
+    add_trajectories=False,
     linewidth_histogram=0.5,
     linewidth_model=0.5,
     legend_fontsize=12,
@@ -1035,6 +1036,17 @@ def _plot_func_model(
 
     # ---------------------------
     ylim = kwargs.pop("ylim", 3)
+
+
+    # # trajectory kwargs -------
+    # n_trajectories = kwargs.pop("n_trajectories", 0)
+    # supplied_trajectory = kwargs.pop("supplied_trajectory", None)
+    # maxid_supplied_trajectory = kwargs.pop("maxid_trajectory", 1) #useful for gifs
+    # lw_trajectories = kwargs.pop("lw_trajectories", 1) 
+    # alpha_trajectories = kwargs.pop("alpha_trajectories", 0.5)
+    # color_trajectories = kwargs.pop("color_trajectories", "black")
+    # # -------------------------
+    
 
     axis.set_xlim(value_range[0], value_range[-1])
     axis.set_ylim(-ylim, ylim)
@@ -1235,6 +1247,57 @@ def _plot_func_model(
             zorder_cnt=j + 2,
         )
 
+    if add_trajectories:
+        _add_trajectories(axis = axis,
+                          t_s = t_s,
+                          **kwargs)
+
+def _add_trajectories(
+        axis = None,
+        t_s = None,
+        n_trajectories = 10,
+        supplied_trajectory = None,
+        maxid_trajectories = 1, #useful for gifs
+        lw_trajectories = 1,
+        alpha_trajectories = 0.5,
+        color_trajectories = "black",
+        **kwargs,
+    ):
+
+    # Trajectories
+    if supplied_trajectory is None:
+        for i in range(n_trajectories):
+            out_traj = simulator(
+                                theta=sample[model_config[tmp_model]["params"]].values[0],
+                                model=tmp_model,
+                                n_samples=1,
+                                no_noise=False,
+                                delta_t=delta_t_graph,
+                                bin_dim=None,
+                                )
+            
+            tmp_traj = out_traj[2]["trajectory"]
+            maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+
+            axis.plot(
+                      t_s[:maxid] + sample.t.values[0],
+                      tmp_traj[:maxid],
+                      color = color_trajectories,
+                      alpha = alpha_trajectories,
+                      linewidth = lw_trajectories,
+                      )
+    else:
+        maxid = np.minimum(np.argmax(np.where(supplied_trajectory > -999)), t_s.shape[0])
+        maxid_traj = min(maxid, maxid_trajectories)
+
+        axis.plot(
+                  t_s[:maxid_traj] + sample.t.values[0],
+                  tmp_traj[:maxid_traj],
+                  color = color_trajectories,
+                  alpha = alpha_trajectories,
+                  linewidth = lw_trajectories,
+                 )
+
 
 def _add_model_cartoon_to_ax(
         sample=None,
@@ -1247,12 +1310,6 @@ def _add_model_cartoon_to_ax(
         ylim=None,
         t_s=None,
         zorder_cnt=1,
-        n_trajectories = 10,
-        supplied_trajectory = None,
-        maxid_trajectories = 1, #useful for gifs
-        lw_trajectories = 1,
-        alpha_trajectories = 0.5,
-        color_trajectories = "black",
         color="black",
     ):
 
@@ -1350,40 +1407,6 @@ def _add_model_cartoon_to_ax(
         linewidth=lw_m,
         alpha=sample_hist_alpha,
     )
-
-    # Trajectories
-    if supplied_trajectory is None:
-        for i in range(n_trajectories):
-            out_traj = simulator(
-                                theta=sample[model_config[tmp_model]["params"]].values[0],
-                                model=tmp_model,
-                                n_samples=1,
-                                no_noise=False,
-                                delta_t=delta_t_graph,
-                                bin_dim=None,
-                                )
-            
-            tmp_traj = out_traj[2]["trajectory"]
-            maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
-
-            axis.plot(
-                      t_s[:maxid] + sample.t.values[0],
-                      tmp_traj[:maxid],
-                      color = color_trajectories,
-                      alpha = alpha_trajectories,
-                      linewidth = lw_trajectories,
-                      )
-    else:
-        maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
-        maxid_traj = min(maxid, maxid_trajectories)
-
-        axis.plot(
-                  t_s[:maxid_traj] + sample.t.values[0],
-                  tmp_traj[:maxid_traj],
-                  color = color_trajectories,
-                  alpha = alpha_trajectories,
-                  linewidth = lw_trajectories,
-                 )
 
 
 def _plot_func_model_n(
