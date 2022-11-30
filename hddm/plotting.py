@@ -150,7 +150,7 @@ def plot_from_data(
     groupby="subj_idx",
     figsize=(8, 6),
     format="png",
-    keep_frame=True,
+    #keep_frame=True,
     **kwargs
 ):
     """Plot data from a hddm ready DataFrame.
@@ -251,9 +251,9 @@ def plot_from_data(
         # Call plot function on ax
         # This function should manipulate the ax object, and is expected to not return anything.
         plot_func(df_tmp, ax, **kwargs)
-        if not keep_frame:
-            print('passing')
-            ax.set_frame_on(False)
+        #if not keep_frame:
+            #print('passing')
+            #ax.set_frame_on(False)
         
         i += 1
 
@@ -1262,7 +1262,7 @@ def _plot_func_model(
 
     # Frame ---
     if not keep_frame:
-        axis.set_frame_on(False)
+        axis.axis("off")
 
 def _add_trajectories(
         axis = None,
