@@ -230,8 +230,6 @@ def plot_from_data(
 
         # Plot individual subjects (if present)
         ax = fig.add_subplot(nrows, columns, i)
-        ax.set(frame_on=False)
-        ax.axis("off")
 
         # Allow kwargs to pass to the plot_func, whether this is the first plot
         # (useful to generate legends only for the first subplot)
@@ -256,6 +254,9 @@ def plot_from_data(
         #if not keep_frame:
             #print('passing')
             #ax.set_frame_on(False)
+
+        ax.set(frame_on=False)
+        ax.axis("off")
         i += 1
 
         # Save figure if necessary
