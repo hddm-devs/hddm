@@ -1252,7 +1252,7 @@ def _plot_func_model(
                           sample = samples_tmp[0],
                           tmp_model = tmp_model,
                           t_s = t_s,
-                          delta_t_graph = delta_t_model
+                          delta_t_graph = delta_t_model,
                           **kwargs)
 
 def _add_trajectories(
@@ -1303,7 +1303,6 @@ def _add_trajectories(
                   alpha = alpha_trajectories,
                   linewidth = lw_trajectories,
                  )
-
 
 def _add_model_cartoon_to_ax(
         sample=None,
