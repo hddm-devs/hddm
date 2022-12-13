@@ -10,41 +10,41 @@ cimport cython
 include 'pdf.pxi'
 
 cdef double simpson_1D(double x, double v, double sv, double a, double z, double t, double err,
-                        double lb_z, double ub_z, int n_sz, double lb_t, double ub_t, int n_st) nogil:
+                        double lb_a, double ub_a, int n_sa, double lb_t, double ub_t, int n_st) nogil:
     #assert ((n_sz&1)==0 and (n_st&1)==0), "n_st and n_sz have to be even"
     #assert ((ub_t-lb_t)*(ub_z-lb_z)==0 and (n_sz*n_st)==0), "the function is defined for 1D-integration only"
 
-    cdef double ht, hz
-    cdef int n = max(n_st, n_sz)
-    if n_st==0: #integration over z
-        hz = (ub_z-lb_z)/n
+    cdef double ht, ha
+    cdef int n = max(n_st, n_sa)
+    if n_st==0: #integration over a, note we want to integrate over a gamma, not a uniform. This is a for now case.
+        ha = (ub_a-lb_a)/n
         ht = 0
         lb_t = t
         ub_t = t
     else: #integration over t
-        hz = 0
+        ha = 0
         ht = (ub_t-lb_t)/n
-        lb_z = z
-        ub_z = z
+        lb_a = a
+        ub_a = a
 
-    cdef double S = pdf_sv(x - lb_t, v, sv, a, lb_z, err)
-    cdef double z_tag, t_tag, y
+    cdef double S = pdf_sv(x - lb_t, v, sv, lb_a, z, err)
+    cdef double a_tag, t_tag, y
     cdef int i
 
     for i from 1 <= i <= n:
-        z_tag = lb_z + hz * i
+        a_tag = lb_a + ha * i
         t_tag = lb_t + ht * i
-        y = pdf_sv(x - t_tag, v, sv, a, z_tag, err)
+        y = pdf_sv(x - t_tag, v, sv, a_tag, z, err)
         if i&1: #check if i is odd
             S += (4 * y)
         else:
             S += (2 * y)
     S = S - y #the last term should be f(b) and not 2*f(b) so we subtract y
-    S = S / ((ub_t-lb_t)+(ub_z-lb_z)) #the right function if pdf_sv()/sz or pdf_sv()/st
+    S = S / ((ub_t-lb_t)+(ub_a-lb_a)) #the right function if pdf_sv()/sa or pdf_sv()/st
 
-    return ((ht+hz) * S / 3)
+    return ((ht+ha) * S / 3)
 
-cdef double simpson_2D(double x, double v, double sv, double a, double z, double t, double err, double lb_z, double ub_z, int n_sz, double lb_t, double ub_t, int n_st) nogil:
+cdef double simpson_2D(double x, double v, double sv, double a, double z, double t, double err, double lb_a, double ub_a, int n_sa, double lb_t, double ub_t, int n_st) nogil:
     #assert ((n_sz&1)==0 and (n_st&1)==0), "n_st and n_sz have to be even"
     #assert ((ub_t-lb_t)*(ub_z-lb_z)>0 and (n_sz*n_st)>0), "the function is defined for 2D-integration only, lb_t: %f, ub_t %f, lb_z %f, ub_z %f, n_sz: %d, n_st %d" % (lb_t, ub_t, lb_z, ub_z, n_sz, n_st)
 
@@ -55,11 +55,11 @@ cdef double simpson_2D(double x, double v, double sv, double a, double z, double
 
     ht = (ub_t-lb_t)/n_st
 
-    S = simpson_1D(x, v, sv, a, z, lb_t, err, lb_z, ub_z, n_sz, 0, 0, 0)
+    S = simpson_1D(x, v, sv, a, z, lb_t, err, lb_a, ub_a, n_sa, 0, 0, 0)
 
     for i_t  from 1 <= i_t <= n_st:
         t_tag = lb_t + ht * i_t
-        y = simpson_1D(x, v, sv, a, z, t_tag, err, lb_z, ub_z, n_sz, 0, 0, 0)
+        y = simpson_1D(x, v, sv, a, z, t_tag, err, lb_a, ub_a, n_sa, 0, 0, 0)
         if i_t&1: #check if i is odd
             S += (4 * y)
         else:
@@ -69,6 +69,7 @@ cdef double simpson_2D(double x, double v, double sv, double a, double z, double
 
     return (ht * S / 3)
 
+# we will leave the adaptive alone for now 
 cdef double adaptiveSimpsonsAux(double x, double v, double sv, double a, double z, double t, double pdf_err,
                                  double lb_z, double ub_z, double lb_t, double ub_t, double ZT, double simps_err,
                                  double S, double f_beg, double f_end, double f_mid, int bottom) nogil:

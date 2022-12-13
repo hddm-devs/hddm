@@ -102,17 +102,17 @@ cdef double pdf_sv(double x, double v, double sv, double a, double z, double err
     return exp(log(p) + ((a*z*sv)**2 - 2*a*v*z - (v**2)*x)/(2*(sv**2)*x+2))/sqrt((sv**2)*x+1)/(a**2)
 
 cpdef double full_pdf(double x, double v, double sv, double a, double
-                      z, double sz, double t, double st, double err, int
-                      n_st=2, int n_sz=2, bint use_adaptive=1, double
+                      z, double sa, double t, double st, double err, int
+                      n_st=2, int n_sa=2, bint use_adaptive=0, double
                       simps_err=1e-3) nogil:
     """full pdf"""
 
     # Check if parpameters are valid
-    if (z<0) or (z>1) or (a<0) or (t<0) or (st<0) or (sv<0) or (sz<0) or (sz>1) or \
-       ((fabs(x)-(t-st/2.))<0) or (z+sz/2.>1) or (z-sz/2.<0) or (t-st/2.<0):
+    if (z<0) or (z>1) or (a<0) or (t<0) or (st<0) or (sv<0) or (sa<0) or \
+       ((fabs(x)-(t-st/2.))<0) or (a-sa<0) or (t-st/2.<0):
         return 0
 
-    # transform x,v,z if x is upper bound response
+    # transform x,v,a if x is upper bound response
     if x > 0:
         v = -v
         z = 1.-z
@@ -121,26 +121,26 @@ cpdef double full_pdf(double x, double v, double sv, double a, double
 
     if st<1e-3:
         st = 0
-    if sz <1e-3:
-        sz = 0
+    if sa <1e-3:
+        sa = 0
 
-    if (sz==0):
-        if (st==0): #sv=0,sz=0,st=0
+    if (sa==0):
+        if (st==0): #sv=0,sa=0,st=0
             return pdf_sv(x - t, v, sv, a, z, err)
-        else:      #sv=0,sz=0,st=$
+        else:      #sv=0,sa=0,st=$
             if use_adaptive>0:
-                return adaptiveSimpsons_1D(x,  v, sv, a, z, t, err, z, z, t-st/2., t+st/2., simps_err, n_st)
+                return adaptiveSimpsons_1D(x,  v, sv, a, z, t, err, a, a, t-st/2., t+st/2., simps_err, n_st)
             else:
-                return simpson_1D(x, v, sv, a, z, t, err, z, z, 0, t-st/2., t+st/2., n_st)
+                return simpson_1D(x, v, sv, a, z, t, err, a, a, 0, t-st/2., t+st/2., n_st)
 
-    else: #sz=$
+    else: #sa=$
         if (st==0): #sv=0,sz=$,st=0
             if use_adaptive:
-                return adaptiveSimpsons_1D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., t, t, simps_err, n_sz)
+                return adaptiveSimpsons_1D(x, v, sv, a, z, t, err, a-sa/2., a+sa/2., t, t, simps_err, n_sa)
             else:
-                return simpson_1D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., n_sz, t, t , 0)
-        else:      #sv=0,sz=$,st=$
+                return simpson_1D(x, v, sv, a, z, t, err, a-sa/2., a+sa/2., n_sa, t, t , 0)
+        else:      #sv=0,sa=$,st=$
             if use_adaptive:
-                return adaptiveSimpsons_2D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., t-st/2., t+st/2., simps_err, n_sz, n_st)
+                return adaptiveSimpsons_2D(x, v, sv, a, z, t, err, a-sa/2., a+sa/2., t-st/2., t+st/2., simps_err, n_sa, n_st)
             else:
-                return simpson_2D(x, v, sv, a, z, t, err, z-sz/2., z+sz/2., n_sz, t-st/2., t+st/2., n_st)
+                return simpson_2D(x, v, sv, a, z, t, err, a-sa/2., a+sa/2., n_sa, t-st/2., t+st/2., n_st)

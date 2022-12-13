@@ -11,6 +11,8 @@
 # reference version.
 #
 # Copyleft Thomas Wiecki (thomas_wiecki[at]brown.edu) & Imri Sofer, 2011
+# updated for sa Blair S  & Kiante F, 2022
+
 # GPLv3
 
 import hddm
@@ -29,8 +31,8 @@ from cython.parallel import *
 # include "pdf.pxi"
 include 'integrate.pxi'
 
-def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz,
-              double t, double st, double err=1e-4, bint logp=0, int n_st=2, int n_sz=2, bint use_adaptive=1,
+def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sa,
+              double t, double st, double err=1e-4, bint logp=0, int n_st=2, int n_sa=2, bint use_adaptive=0,
               double simps_err=1e-3, double p_outlier=0, double w_outlier=0):
 
     cdef Py_ssize_t size = x.shape[0]
@@ -38,8 +40,8 @@ def pdf_array(np.ndarray[double, ndim=1] x, double v, double sv, double a, doubl
     cdef np.ndarray[double, ndim = 1] y = np.empty(size, dtype=np.double)
 
     for i in prange(size, nogil=True):
-        y[i] = full_pdf(x[i], v, sv, a, z, sz, t, st, err,
-                        n_st, n_sz, use_adaptive, simps_err)
+        y[i] = full_pdf(x[i], v, sv, a, z, sa, t, st, err,
+                        n_st, n_sa, use_adaptive, simps_err)
 
     y = y * (1 - p_outlier) + (w_outlier * p_outlier)
     if logp == 1:
@@ -51,8 +53,8 @@ cdef inline bint p_outlier_in_range(double p_outlier):
     return (p_outlier >= 0) & (p_outlier <= 1)
 
 
-def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sz, double t,
-                double st, double err, int n_st=10, int n_sz=10, bint use_adaptive=1, double simps_err=1e-8,
+def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, double z, double sa, double t,
+                double st, double err, int n_st=10, int n_sa=10, bint use_adaptive=0, double simps_err=1e-8,
                 double p_outlier=0, double w_outlier=0.1):
     cdef Py_ssize_t size = x.shape[0]
     cdef Py_ssize_t i
@@ -64,8 +66,8 @@ def wiener_like(np.ndarray[double, ndim=1] x, double v, double sv, double a, dou
         return -np.inf
 
     for i in range(size):
-        p = full_pdf(x[i], v, sv, a, z, sz, t, st, err,
-                     n_st, n_sz, use_adaptive, simps_err)
+        p = full_pdf(x[i], v, sv, a, z, sa, t, st, err,
+                     n_st, n_sa, use_adaptive, simps_err)
         # If one probability = 0, the log sum will be -Inf
         p = p * (1 - p_outlier) + wp_outlier
         if p == 0:
@@ -514,7 +516,7 @@ def wiener_like_rlssm_nn_reg(np.ndarray[float, ndim=2] data,
     return sum_logp
 
 
-def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double t,
+def gen_rts_from_cdf(double v, double sv, double a, double z, double sa, double t,
                      double st, int samples=1000, double cdf_lb=-6, double cdf_ub=6, double dt=1e-2):
 
     cdef np.ndarray[double, ndim = 1] x = np.arange(cdf_lb, cdf_ub, dt)
@@ -526,7 +528,7 @@ def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double 
 
     l_cdf[0] = 0
     for i from 1 <= i < size:
-        pdf = full_pdf(x[i], v, sv, a, z, sz, 0, 0, 1e-4)
+        pdf = full_pdf(x[i], v, sv, a, z, sa, 0, 0, 1e-4)
         l_cdf[i] = l_cdf[i - 1] + pdf
 
     l_cdf /= l_cdf[x.shape[0] - 1]
@@ -549,8 +551,8 @@ def gen_rts_from_cdf(double v, double sv, double a, double z, double sz, double 
 
 
 def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1] cont_x, double v,
-                            double sv, double a, double z, double sz, double t, double st, double t_min,
-                            double t_max, double err, int n_st=10, int n_sz=10, bint use_adaptive=1,
+                            double sv, double a, double z, double sa, double t, double st, double t_min,
+                            double t_max, double err, int n_st=10, int n_sa=10, bint use_adaptive=0,
                             double simps_err=1e-8):
     """Wiener likelihood function where RTs could come from a
     separate, uniform contaminant distribution.
@@ -566,8 +568,8 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     for i in prange(size, nogil=True):
         if cont_x[i] == 0:
-            p = full_pdf(x[i], v, sv, a, z, sz, t, st, err,
-                         n_st, n_sz, use_adaptive, simps_err)
+            p = full_pdf(x[i], v, sv, a, z, sa, t, st, err,
+                         n_st, n_sa, use_adaptive, simps_err)
             if p == 0:
                 with gil:
                     return -np.inf
@@ -579,14 +581,14 @@ def wiener_like_contaminant(np.ndarray[double, ndim=1] x, np.ndarray[int, ndim=1
 
     return sum_logp
 
-def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double t, double st, double err,
-                      int N=500, double time=5., int n_st=2, int n_sz=2, bint use_adaptive=1, double simps_err=1e-3,
+def gen_cdf_using_pdf(double v, double sv, double a, double z, double sa, double t, double st, double err,
+                      int N=500, double time=5., int n_st=2, int n_sa=2, bint use_adaptive=0, double simps_err=1e-3,
                       double p_outlier=0, double w_outlier=0):
     """
     generate cdf vector using the pdf
     """
-    if (sv < 0) or (a <= 0 ) or (z < 0) or (z > 1) or (sz < 0) or (sz > 1) or (z + sz / 2. > 1) or \
-            (z - sz / 2. < 0) or (t - st / 2. < 0) or (t < 0) or (st < 0) or not p_outlier_in_range(p_outlier):
+    if (sv < 0) or (a <= 0 ) or (z < 0) or (z > 1) or (sa < 0) or \
+            (a - sa < 0) or (t - st / 2. < 0) or (t < 0) or (st < 0) or not p_outlier_in_range(p_outlier):
         raise ValueError(
             "at least one of the parameters is out of the support")
 
@@ -595,8 +597,8 @@ def gen_cdf_using_pdf(double v, double sv, double a, double z, double sz, double
     cdef int idx
 
     # compute pdf on the real line
-    cdf_array = pdf_array(x, v, sv, a, z, sz, t, st, err, 0,
-                          n_st, n_sz, use_adaptive, simps_err, p_outlier, w_outlier)
+    cdf_array = pdf_array(x, v, sv, a, z, sa, t, st, err, 0,
+                          n_st, n_sa, use_adaptive, simps_err, p_outlier, w_outlier)
 
     # integrate
     cdf_array[1:] = integrate.cumtrapz(cdf_array)
