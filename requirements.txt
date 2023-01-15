@@ -13,5 +13,5 @@ patsy>=0.5.1
 #pytz==2012d
 #wsgiref==0.1.2
 matplotlib>=1.1.0
-pymc>=2.3.8
+pymc>=2.3.8,<3
 git+https://github.com/hddm-devs/kabuki
