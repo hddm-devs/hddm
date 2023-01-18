@@ -6,6 +6,8 @@ build:
   os: "ubuntu-20.04"
   tools:
     python: "3.7"
+  apt_packages:
+    - gfortran-7
   jobs:
     pre_install:
       - bash ./readthedocs_preinstall.sh
