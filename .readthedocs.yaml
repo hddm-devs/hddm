@@ -6,6 +6,9 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.7"
+  jobs:
+    pre_install:
+      - bash ./readthedocs_preinstall.sh
 
 # Build from the docs/ directory with Sphinx
 sphinx:
@@ -13,7 +16,5 @@ sphinx:
 
 # Explicitly set the version of Python and its requirements
 python:
-  install:
-    - requirements: docs/requirements_2.txt
   install:
     - requirements: docs/requirements.txt
