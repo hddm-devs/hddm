@@ -30,12 +30,12 @@ dictionary, which allows you to investigate metadata for all the new
 
     ['test',
      'ddm',
-     'ddm_vanilla',
+     'ddm_hddm_base',
      'angle',
      'weibull',
      'levy',
      'full_ddm',
-     'full_ddm_vanilla',
+     'full_ddm_hddm_base',
      'ornstein',
      'ddm_sdv']
 

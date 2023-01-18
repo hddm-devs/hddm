@@ -188,7 +188,7 @@ together. The general for this is ``[{'model': 'outcome_parameter ~ patsy_design
 The last step before running the model is to construct the complete hddm regression model by adding data etc.
 ::
 
-    m_reg = hddm.HDDMRegressor(mydata, reg_descr, include='z')
+    m_reg = hddm.HDDMRegressor(mydata, reg_descr, include=['v', 'a', 't', 'z'])
 
 Now we start the model, and wait for a while (you can go and get
 several coffees, or read a paper). 

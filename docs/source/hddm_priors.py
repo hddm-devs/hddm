@@ -106,7 +106,7 @@ def sample_from_group_distrbution(n_rows=5, n_cols=4):
 	"""
 
 	data, _ = hddm.generate.gen_rand_data(subjs=5, size=2)
-	h = hddm.models.hddm_gamma.HDDMGamma(data, include=['st', 'sz', 'sv', 'z'])
+	h = hddm.models.hddm_gamma.HDDMGamma(data, include=['v', 'a', 't', 'z', 'st', 'sz', 'sv'])
 
 	params = ['a', 'v', 't','z']
 	for p in params:

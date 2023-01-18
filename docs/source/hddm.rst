@@ -46,6 +46,14 @@ hddm.model\_config module
    :undoc-members:
    :show-inheritance:
 
+hddm.model\_config\_rl module
+-----------------------------
+
+.. automodule:: hddm.model_config_rl
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hddm.network\_inspectors module
 -------------------------------
 
@@ -62,13 +70,6 @@ hddm.plotting module
    :undoc-members:
    :show-inheritance:
 
-hddm.plotting\_old module
--------------------------
-
-.. automodule:: hddm.plotting_old
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 hddm.utils module
 -----------------

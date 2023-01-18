@@ -29,8 +29,8 @@ dictionary, which allows you to investigate metadata for all the new
 
 .. parsed-literal::
 
-    ['ddm_vanilla',
-     'full_ddm_vanilla',
+    ['ddm_hddm_base',
+     'full_ddm_hddm_base',
      'ddm',
      'angle',
      'weibull',

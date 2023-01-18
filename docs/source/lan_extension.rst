@@ -14,3 +14,6 @@ LAN Extension
     lan_visualizations
     lan_add_custom_lans
     lan_network_inspectors
+    lan_to_hddm_end_to_end
+    mnle_to_hddm_end_to_end
+

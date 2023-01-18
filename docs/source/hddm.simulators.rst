@@ -12,14 +12,6 @@ hddm.simulators.basic\_simulator module
    :undoc-members:
    :show-inheritance:
 
-hddm.simulators.boundary\_functions module
-------------------------------------------
-
-.. automodule:: hddm.simulators.boundary_functions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 hddm.simulators.hddm\_dataset\_generators module
 ------------------------------------------------
 

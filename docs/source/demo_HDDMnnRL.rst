@@ -43,7 +43,7 @@ Initialize the HDDMnnRL model and sample
 
 .. code:: ipython3
 
-    m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', non_centered=True, include=['z', 'theta', 'rl_alpha'], p_outlier = 0.0)
+    m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', non_centered=True, include=['v', 'a', 't', 'z', 'theta', 'rl_alpha'], p_outlier = 0.0)
     m.sample(nsamples, burn=nburn, dbname='traces.db', db='pickle')
 
 

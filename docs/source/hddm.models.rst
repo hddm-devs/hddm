@@ -36,6 +36,22 @@ hddm.models.hddm\_nn\_regression module
    :undoc-members:
    :show-inheritance:
 
+hddm.models.hddm\_nn\_rl module
+-------------------------------
+
+.. automodule:: hddm.models.hddm_nn_rl
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+hddm.models.hddm\_nn\_rl\_regression module
+-------------------------------------------
+
+.. automodule:: hddm.models.hddm_nn_rl_regression
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 hddm.models.hddm\_nn\_stimcoding module
 ---------------------------------------
 

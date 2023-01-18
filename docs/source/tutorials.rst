@@ -13,5 +13,7 @@ Basic Tutorials
    tutorial_regression_stimcoding
    tutorial_gonogo_chisquare
    lan_tutorial
+   tutorial_set_parameter_defaults
+   tutorial_model_plot
    demo_RLHDDMtutorial
    demo_HDDMnnRL

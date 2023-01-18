@@ -32,7 +32,7 @@ which stimulus was correct and instantiate the model like this:
 
 ::
 
-    model = hddm.HDDMStimCoding(data, include='z', stim_col='stim', split_param='v')
+    model = hddm.HDDMStimCoding(data, include=['v', 'a', 'z', 't'], stim_col='stim', split_param='v')
 
 This model expects data to have a column named stim with two distinct
 identifiers. For identifier **1**, drift-rate ``v`` will be used while for
@@ -49,13 +49,13 @@ included as follows:
 
 ::
 
-   model = hddm.HDDM(data, bias=True, include=('sv', 'st', 'sz'))
+   model = hddm.HDDM(data, bias=True, include=('v', 'a', 'z', 't', 'sv', 'st', 'sz'))
 
 or:
 
 ::
 
-   model = hddm.HDDM(data, include=('z', 'sv', 'st', 'sz'))
+   model = hddm.HDDM(data, include=('v', 'a', 't', 'z', 'sv', 'st', 'sz'))
 
 Where *sv* is inter-trial variability in drift-rate, *st* is inter-trial
 variability in non-decision time and *sz* is inter-trial variability in
@@ -332,7 +332,7 @@ the group_only_nodes keyword argument:
 
 ::
 
-    model = hddm.HDDM(data, include=['sv', 'st'], group_only_nodes=['sv', 'st'])
+    model = hddm.HDDM(data, include=['v', 'a', 't', 'z', 'sv', 'st'], group_only_nodes=['sv', 'st'])
 
 The resulting model will still have subject nodes for all parameters
 but sv and st.
@@ -406,13 +406,13 @@ To specify a complete model you have to define a complete regression model and s
     z_reg = {'model': 'z ~ 1 + C(condition)', 'link_func': z_link_func}
     v_reg = {'model': 'v ~ 1 + C(condition)', 'link_func': lambda x: x}
     reg_model = [z_reg, v_reg]
-    hddm_regrssion_model = hddm.HDDMRegressor(data, reg_model, include='z')
+    hddm_regrssion_model = hddm.HDDMRegressor(data, reg_model, include=['v', 'a', 't', 'z'])
 
 Of course, your model could also regress either z or v. For example
 ::
 
     v_reg =  [{'model': 'v ~ 1 + C(condition)', 'link_func': v_link_func, group_only_regressors=True}]
-    hddm_regrssion_model = hddm.HDDMRegressor(data, v_reg, include='z')
+    hddm_regrssion_model = hddm.HDDMRegressor(data, v_reg, include=['v', 'a', 't', 'z'])
 
 For a more elaborate example and parameter recovery study using
 ``HDDMRegression``, see the :ref:`tutorial on using HDDMRegression for
