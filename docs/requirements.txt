@@ -8,4 +8,6 @@ traits
 traitlets
 traitsui
 PyQt5
+git+https://github.com/AlexanderFengler/ssm_simulators@main
+git+https://github.com/hddm-devs/kabuki
 #wxpython

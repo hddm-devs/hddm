@@ -9,5 +9,5 @@ tqdm>=4.1.0
 patsy>=0.5.1
 matplotlib>=1.1.0
 pymc>=2.3.8,<3
-git+https://github.com/AlexanderFengler/ssm_simulators
+git+https://github.com/AlexanderFengler/ssm_simulators@main
 git+https://github.com/hddm-devs/kabuki
