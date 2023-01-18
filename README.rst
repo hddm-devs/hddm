@@ -173,11 +173,12 @@ install via **github**. In a fresh environment (we recommend to use **python 3.7
 :: 
 
     pip install cython
-    pip install pymc==2.3.8
-    pip install git+https://github.com/hddm-devs/kabuki
-    pip install git+https://github.com/hddm-devs/hddm
+    pip install pymc==2.3.8 # backend probabilistic programming framework (DO NOT USE CONDA HERE)
+    pip install git+https://github.com/AlexanderFengler/ssms@main  # package for data simulation
+    pip install git+https://github.com/hddm-devs/kabuki # backbone package for hddm to connect to pymc
+    pip install git+https://github.com/hddm-devs/hddm 
     # Optional
-    pip install torch torchvision torchaudio
+    pip install torch torchvision torchaudio # The LAN extension makes use of these
 
 To make use of the LAN fuctionalities, you need to install `pytorch`_ .
 

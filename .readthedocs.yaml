@@ -7,7 +7,7 @@ build:
   tools:
     python: "3.7"
   apt_packages:
-    - gfortran-7
+    - gfortran
   jobs:
     pre_install:
       - bash ./readthedocs_preinstall.sh
