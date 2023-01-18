@@ -1,5 +1,7 @@
 from setuptools import setup
 from setuptools import Extension
+from setuptools.dist import Distribution
+Distribution().fetch_build_eggs(['Cython>=0.29', 'numpy>=1.20']) # necessary to allow cold install into empty environment / otherwise complains about lack of numpy
 import numpy as np
 
 try:
@@ -26,8 +28,8 @@ setup(
     package_data={'hddm':['examples/*.csv', 'examples/*.conf', 'examples/demo_HDDMnnRL/*.csv', 'torch_models/*', 'simulators/*']},
     scripts=['scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
-    install_requires=['NumPy >=1.20.0', 'SciPy >= 1.6.1', 'cython >= 0.29.0', 'pandas >= 1.0.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz >= 0.11', 'ssms >= 0.2.0'],
-    setup_requires=['NumPy >=1.20.0', 'SciPy >= 1.6.1',  'cython >= 0.29.0', 'pandas >= 1.0.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz >= 0.11', 'ssms >= 0.2.0'],
+    install_requires=['numpy >=1.20.0', 'scipy >= 1.6.1', 'cython >= 0.29.0', 'pandas >= 1.0.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz >= 0.11', 'ssms >= 0.2.0'],
+    setup_requires=['numpy >=1.20.0', 'scipy >= 1.6.1',  'cython >= 0.29.0', 'pandas >= 1.0.0', 'patsy', 'seaborn >= 0.11.0', 'statsmodels >= 0.12.0', 'tqdm >= 4.1.0', 'scikit-learn >= 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz >= 0.11', 'ssms >= 0.2.0'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
