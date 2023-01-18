@@ -1,5 +1,6 @@
 from setuptools import setup
 from setuptools import Extension
+import numpy as np
 
 try:
     from Cython.Build import cythonize
@@ -14,8 +15,6 @@ except ImportError:
                    Extension('wfpt', ['src/wfpt.cpp'], language='c++'),
                    Extension('cdfdif_wrapper', ['src/cdfdif_wrapper.c', 'src/cdfdif.c']),
                    ]
-
-import numpy as np
 
 setup(
     name='HDDM',
