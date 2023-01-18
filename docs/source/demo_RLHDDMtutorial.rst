@@ -1,6 +1,3 @@
-.. index:: Tutorials
-.. _chap_rlnn:
-
 Tutorial for analyzing instrumental learning data with the HDDMrl module
 ========================================================================
 
@@ -125,7 +122,7 @@ elegant method of allowing users to set inital value for expected
 rewards, but it works for now.
 
 Required columns in data:
-^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  **rt**: in seconds, same as in HDDM
 -  **response**: 0 or 1. defines chosen stimulus, not accuracy.
@@ -161,7 +158,7 @@ The dataset is included in the data-folder in your installation of HDDM.
 
 .. code:: ipython3
 
-    #import
+    # import
     import pandas as pd
     import numpy as np
     import hddm
@@ -170,10 +167,12 @@ The dataset is included in the data-folder in your installation of HDDM.
     import matplotlib.pyplot as plt
     import pymc
     import kabuki
+    
     sns.set(style="white")
     %matplotlib inline
     from tqdm import tqdm
     import warnings
+    
     warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
@@ -185,9 +184,9 @@ The dataset is included in the data-folder in your installation of HDDM.
 
 .. code:: ipython3
 
-    #load data. you will find this dataset in your hddm-folder under hddm/examples/rlddm_data.csv
-    data = hddm.load_csv('rlddm_data.csv')
-    #check structure
+    # load data. you will find this dataset in your hddm-folder under hddm/examples/rlddm_data.csv
+    data = hddm.load_csv("rlddm_data.csv")
+    # check structure
     data.head()
 
 
@@ -295,11 +294,11 @@ initial q-value used for the model, explained above).
 
 .. code:: ipython3
 
-    #run the model by calling hddm.HDDMrl (instead of hddm.HDDM for normal HDDM)
+    # run the model by calling hddm.HDDMrl (instead of hddm.HDDM for normal HDDM)
     m = hddm.HDDMrl(data)
-    #set sample and burn-in
-    m.sample(1500,burn=500,dbname='traces.db',db='pickle')
-    #print stats to get an overview of posterior distribution of estimated parameters
+    # set sample and burn-in
+    m.sample(1500, burn=500, dbname="traces.db", db="pickle")
+    # print stats to get an overview of posterior distribution of estimated parameters
     m.print_stats()
 
 
@@ -464,7 +463,7 @@ equivalent drift rate when the difference in Q values is exactly 1).
 
 .. code:: ipython3
 
-    # plot the posteriors of parameters 
+    # plot the posteriors of parameters
     m.plot_posteriors()
 
 
@@ -534,7 +533,7 @@ multiple models, combine them and perform the Gelman-Rubin statistic:
     models = []
     for i in range(3):
         m = hddm.HDDMrl(data=data)
-        m.sample(1500, burn=500,dbname='traces.db',db='pickle')
+        m.sample(1500, burn=500, dbname="traces.db", db="pickle")
         models.append(m)
     
     gelman_rubin(models)
@@ -733,22 +732,23 @@ for RL models that uses softmax as the choice rule (e.g. `Daw,
 
 .. code:: ipython3
 
-    alpha, t, a, v = m.nodes_db.node[['alpha', 't', 'a','v']]
-    samples = {'alpha':alpha.trace(),'t':t.trace(),'a':a.trace(),'v':v.trace()}
+    alpha, t, a, v = m.nodes_db.node[["alpha", "t", "a", "v"]]
+    samples = {"alpha": alpha.trace(), "t": t.trace(), "a": a.trace(), "v": v.trace()}
     samp = pd.DataFrame(data=samples)
+    
     
     def corrfunc(x, y, **kws):
         r, _ = stats.pearsonr(x, y)
         ax = plt.gca()
-        ax.annotate("r = {:.2f}".format(r),
-                    xy=(.1, .9), xycoords=ax.transAxes)
+        ax.annotate("r = {:.2f}".format(r), xy=(0.1, 0.9), xycoords=ax.transAxes)
+    
     
     g = sns.PairGrid(samp, palette=["red"])
     g.map_upper(plt.scatter, s=10)
     g.map_diag(sns.distplot, kde=False)
     g.map_lower(sns.kdeplot, cmap="Blues_d")
     g.map_lower(corrfunc)
-    g.savefig('matrix_plot.png')
+    g.savefig("matrix_plot.png")
 
 
 
@@ -974,7 +974,17 @@ from different conditions. **size** = number of trials per subject.
 
 .. code:: ipython3
 
-    hddm.generate.gen_rand_rlddm_data(a=1,t=0.3,alpha=0.2,scaler=2,p_upper=0.8,p_lower=0.2,subjs=1,split_by=0,size=10)
+    hddm.generate.gen_rand_rlddm_data(
+        a=1,
+        t=0.3,
+        alpha=0.2,
+        scaler=2,
+        p_upper=0.8,
+        p_lower=0.2,
+        subjs=1,
+        split_by=0,
+        size=10,
+    )
 
 
 
@@ -1156,51 +1166,89 @@ dataset we analyzed above.
 
 .. code:: ipython3
 
-    from tqdm import tqdm #progress tracker
-    #create empty dataframe to store simulated data
+    from tqdm import tqdm  # progress tracker
+    
+    # create empty dataframe to store simulated data
     sim_data = pd.DataFrame()
-    #create a column samp to be used to identify the simulated data sets
-    data['samp'] = 0
-    #load traces
+    # create a column samp to be used to identify the simulated data sets
+    data["samp"] = 0
+    # load traces
     traces = m.get_traces()
-    #decide how many times to repeat simulation process. repeating this multiple times is generally recommended, 
-    #as it better captures the uncertainty in the posterior distribution, but will also take some time
-    for i in tqdm(range(1,51)):
-        #randomly select a row in the traces to use for extracting parameter values
-        sample = np.random.randint(0,traces.shape[0]-1)
-        #loop through all subjects in observed data
+    # decide how many times to repeat simulation process. repeating this multiple times is generally recommended,
+    # as it better captures the uncertainty in the posterior distribution, but will also take some time
+    for i in tqdm(range(1, 51)):
+        # randomly select a row in the traces to use for extracting parameter values
+        sample = np.random.randint(0, traces.shape[0] - 1)
+        # loop through all subjects in observed data
         for s in data.subj_idx.unique():
-            #get number of trials for each condition.
-            size0 = len(data[(data['subj_idx']==s) & (data['split_by']==0)].trial.unique())
-            size1 = len(data[(data['subj_idx']==s) & (data['split_by']==1)].trial.unique())
-            size2 = len(data[(data['subj_idx']==s) & (data['split_by']==2)].trial.unique())
-            #set parameter values for simulation
-            a = traces.loc[sample,'a_subj.'+str(s)]
-            t = traces.loc[sample,'t_subj.'+str(s)]
-            scaler = traces.loc[sample,'v_subj.'+str(s)]
-            alphaInv = traces.loc[sample,'alpha_subj.'+str(s)]
-            #take inverse logit of estimated alpha
-            alpha = np.exp(alphaInv)/(1+np.exp(alphaInv))
-            #simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
-            sim_data0 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,size=size0,p_upper=0.8,p_lower=0.2,split_by=0)
-            sim_data1 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,size=size1,p_upper=0.7,p_lower=0.3,split_by=1)
-            sim_data2 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,size=size2,p_upper=0.6,p_lower=0.4,split_by=2)
-            #append the conditions
-            sim_data0 = sim_data0.append([sim_data1,sim_data2],ignore_index=True)
-            #assign subj_idx
-            sim_data0['subj_idx'] = s
-            #identify that these are simulated data
-            sim_data0['type'] = 'simulated'
-            #identify the simulated data
-            sim_data0['samp'] = i
-            #append data from each subject
-            sim_data = sim_data.append(sim_data0,ignore_index=True)
-    #combine observed and simulated data
-    ppc_data = data[['subj_idx','response','split_by','rt','trial','feedback','samp']].copy()
-    ppc_data['type'] = 'observed'
-    ppc_sdata = sim_data[['subj_idx','response','split_by','rt','trial','feedback','type','samp']].copy()
+            # get number of trials for each condition.
+            size0 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 0)].trial.unique()
+            )
+            size1 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 1)].trial.unique()
+            )
+            size2 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 2)].trial.unique()
+            )
+            # set parameter values for simulation
+            a = traces.loc[sample, "a_subj." + str(s)]
+            t = traces.loc[sample, "t_subj." + str(s)]
+            scaler = traces.loc[sample, "v_subj." + str(s)]
+            alphaInv = traces.loc[sample, "alpha_subj." + str(s)]
+            # take inverse logit of estimated alpha
+            alpha = np.exp(alphaInv) / (1 + np.exp(alphaInv))
+            # simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
+            sim_data0 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                size=size0,
+                p_upper=0.8,
+                p_lower=0.2,
+                split_by=0,
+            )
+            sim_data1 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                size=size1,
+                p_upper=0.7,
+                p_lower=0.3,
+                split_by=1,
+            )
+            sim_data2 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                size=size2,
+                p_upper=0.6,
+                p_lower=0.4,
+                split_by=2,
+            )
+            # append the conditions
+            sim_data0 = sim_data0.append([sim_data1, sim_data2], ignore_index=True)
+            # assign subj_idx
+            sim_data0["subj_idx"] = s
+            # identify that these are simulated data
+            sim_data0["type"] = "simulated"
+            # identify the simulated data
+            sim_data0["samp"] = i
+            # append data from each subject
+            sim_data = sim_data.append(sim_data0, ignore_index=True)
+    # combine observed and simulated data
+    ppc_data = data[
+        ["subj_idx", "response", "split_by", "rt", "trial", "feedback", "samp"]
+    ].copy()
+    ppc_data["type"] = "observed"
+    ppc_sdata = sim_data[
+        ["subj_idx", "response", "split_by", "rt", "trial", "feedback", "type", "samp"]
+    ].copy()
     ppc_data = ppc_data.append(ppc_sdata)
-    ppc_data.to_csv('ppc_data_tutorial.csv')
+    ppc_data.to_csv("ppc_data_tutorial.csv")
 
 
 .. parsed-literal::
@@ -1231,49 +1279,68 @@ alpha set to 0.1, which means that we are describing the range of the
 
 .. code:: ipython3
 
-    #for practical reasons we only look at the first 40 trials for each subject in a given condition
-    plot_ppc_data = ppc_data[ppc_data.trial<41].copy()
+    # for practical reasons we only look at the first 40 trials for each subject in a given condition
+    plot_ppc_data = ppc_data[ppc_data.trial < 41].copy()
 
 Choice
 ~~~~~~
 
 .. code:: ipython3
 
-    #bin trials to for smoother estimate of response proportion across learning
-    plot_ppc_data['bin_trial'] = pd.cut(plot_ppc_data.trial,11,labels=np.linspace(0, 10,11)).astype('int64')
-    #calculate means for each sample
-    sums = plot_ppc_data.groupby(['bin_trial','split_by','samp','type']).mean().reset_index()
-    #calculate the overall mean response across samples
-    ppc_sim = sums.groupby(['bin_trial','split_by','type']).mean().reset_index()
-    #initiate columns that will have the upper and lower bound of the hpd
-    ppc_sim['upper_hpd'] = 0
-    ppc_sim['lower_hpd'] = 0
-    for i in range(0,ppc_sim.shape[0]):
-        #calculate the hpd/hdi of the predicted mean responses across bin_trials
-        hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_sim.bin_trial[i]) & (sums['split_by']==ppc_sim.split_by[i]) & (sums['type']==ppc_sim.type[i])],alpha=0.1)
-        ppc_sim.loc[i,'upper_hpd'] = hdi[1]
-        ppc_sim.loc[i,'lower_hpd'] = hdi[0]
-    #calculate error term as the distance from upper bound to mean
-    ppc_sim['up_err'] = ppc_sim['upper_hpd']-ppc_sim['response']
-    ppc_sim['low_err'] = ppc_sim['response']-ppc_sim['lower_hpd']
-    ppc_sim['model'] = 'RLDDM_single_learning'
-    ppc_sim.to_csv('ppc_choicedata_tutorial.csv')
+    # bin trials to for smoother estimate of response proportion across learning
+    plot_ppc_data["bin_trial"] = pd.cut(
+        plot_ppc_data.trial, 11, labels=np.linspace(0, 10, 11)
+    ).astype("int64")
+    # calculate means for each sample
+    sums = (
+        plot_ppc_data.groupby(["bin_trial", "split_by", "samp", "type"])
+        .mean()
+        .reset_index()
+    )
+    # calculate the overall mean response across samples
+    ppc_sim = sums.groupby(["bin_trial", "split_by", "type"]).mean().reset_index()
+    # initiate columns that will have the upper and lower bound of the hpd
+    ppc_sim["upper_hpd"] = 0
+    ppc_sim["lower_hpd"] = 0
+    for i in range(0, ppc_sim.shape[0]):
+        # calculate the hpd/hdi of the predicted mean responses across bin_trials
+        hdi = pymc.utils.hpd(
+            sums.response[
+                (sums["bin_trial"] == ppc_sim.bin_trial[i])
+                & (sums["split_by"] == ppc_sim.split_by[i])
+                & (sums["type"] == ppc_sim.type[i])
+            ],
+            alpha=0.1,
+        )
+        ppc_sim.loc[i, "upper_hpd"] = hdi[1]
+        ppc_sim.loc[i, "lower_hpd"] = hdi[0]
+    # calculate error term as the distance from upper bound to mean
+    ppc_sim["up_err"] = ppc_sim["upper_hpd"] - ppc_sim["response"]
+    ppc_sim["low_err"] = ppc_sim["response"] - ppc_sim["lower_hpd"]
+    ppc_sim["model"] = "RLDDM_single_learning"
+    ppc_sim.to_csv("ppc_choicedata_tutorial.csv")
 
 .. code:: ipython3
 
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data.
-    fig, axs = plt.subplots(figsize=(15, 5),nrows=1, ncols=3, sharex=True,sharey=True)
-    for i in range(0,3):
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data.
+    fig, axs = plt.subplots(figsize=(15, 5), nrows=1, ncols=3, sharex=True, sharey=True)
+    for i in range(0, 3):
         ax = axs[i]
-        d = ppc_sim[(ppc_sim.split_by==i) & (ppc_sim.type=='simulated')]
-        ax.errorbar(d.bin_trial, d.response, yerr=[d.low_err,d.up_err], label='simulated',color='orange')
-        d = ppc_sim[(ppc_sim.split_by==i) & (ppc_sim.type=='observed')]
-        ax.plot(d.bin_trial, d.response,linewidth=3,label='observed')
-        ax.set_title('split_by = %i' %i,fontsize=20)
-        ax.set_ylabel('mean response')
-        ax.set_xlabel('trial')
+        d = ppc_sim[(ppc_sim.split_by == i) & (ppc_sim.type == "simulated")]
+        ax.errorbar(
+            d.bin_trial,
+            d.response,
+            yerr=[d.low_err, d.up_err],
+            label="simulated",
+            color="orange",
+        )
+        d = ppc_sim[(ppc_sim.split_by == i) & (ppc_sim.type == "observed")]
+        ax.plot(d.bin_trial, d.response, linewidth=3, label="observed")
+        ax.set_title("split_by = %i" % i, fontsize=20)
+        ax.set_ylabel("mean response")
+        ax.set_xlabel("trial")
     plt.legend()
-    fig.savefig('PPCchoice.pdf')
+    fig.savefig("PPCchoice.pdf")
 
 
 
@@ -1292,13 +1359,15 @@ RT
 
 .. code:: ipython3
 
-    #set reaction time to be negative for lower bound responses (response=0)
-    plot_ppc_data['reaction time'] = np.where(plot_ppc_data['response']==1,plot_ppc_data.rt,0-plot_ppc_data.rt)
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data. We use bins of trials because plotting individual trials would be very noisy. 
-    g = sns.FacetGrid(plot_ppc_data,col='split_by',hue='type')
-    g.map(sns.kdeplot, 'reaction time',bw=0.05).set_ylabels("Density")
+    # set reaction time to be negative for lower bound responses (response=0)
+    plot_ppc_data["reaction time"] = np.where(
+        plot_ppc_data["response"] == 1, plot_ppc_data.rt, 0 - plot_ppc_data.rt
+    )
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data. We use bins of trials because plotting individual trials would be very noisy.
+    g = sns.FacetGrid(plot_ppc_data, col="split_by", hue="type")
+    g.map(sns.kdeplot, "reaction time", bw=0.05).set_ylabels("Density")
     g.add_legend()
-    g.savefig('PPCrt_dist.pdf')
+    g.savefig("PPCrt_dist.pdf")
 
 
 
@@ -1330,14 +1399,14 @@ that are more difficult to recover than others.
 
 .. code:: ipython3
 
-    param_recovery = hddm.load_csv('recovery_sim_est_rlddm.csv')
+    param_recovery = hddm.load_csv("recovery_sim_est_rlddm.csv")
 
 .. code:: ipython3
 
-    g = sns.catplot(x='a',y='e_a',data=param_recovery,palette='Set1')
+    g = sns.catplot(x="a", y="e_a", data=param_recovery, palette="Set1")
     g.set_axis_labels("Simulated threshold", "Estimated threshold")
     plt.title("Decision threshold")
-    g.savefig('Threshold_recovery.pdf')
+    g.savefig("Threshold_recovery.pdf")
 
 
 
@@ -1346,10 +1415,10 @@ that are more difficult to recover than others.
 
 .. code:: ipython3
 
-    g = sns.catplot(x='alpha',y='e_alphaT',data=param_recovery,palette='Set1')
+    g = sns.catplot(x="alpha", y="e_alphaT", data=param_recovery, palette="Set1")
     g.set_axis_labels("Simulated alpha", "Estimated alpha")
     plt.title("Learning rate")
-    g.savefig('Alpha_recovery.pdf')
+    g.savefig("Alpha_recovery.pdf")
 
 
 
@@ -1358,10 +1427,10 @@ that are more difficult to recover than others.
 
 .. code:: ipython3
 
-    g = sns.catplot(x='scaler',y='e_v',data=param_recovery,palette='Set1')
+    g = sns.catplot(x="scaler", y="e_v", data=param_recovery, palette="Set1")
     g.set_axis_labels("Simulated scaling", "Estimated scaling")
     plt.title("Scaling drift rate")
-    g.savefig('Scaler_recovery.pdf')
+    g.savefig("Scaler_recovery.pdf")
 
 
 
@@ -1370,10 +1439,10 @@ that are more difficult to recover than others.
 
 .. code:: ipython3
 
-    g = sns.catplot(x='t',y='e_t',data=param_recovery,palette='Set1')
+    g = sns.catplot(x="t", y="e_t", data=param_recovery, palette="Set1")
     g.set_axis_labels("Simulated NDT", "Estimated NDT")
     plt.title("Non-decision time")
-    g.savefig('NDT_recovery.pdf')
+    g.savefig("NDT_recovery.pdf")
 
 
 
@@ -1398,11 +1467,11 @@ estimated learning rate for negative prediction errors.
 
 .. code:: ipython3
 
-    #set dual=True to model separate learning rates for positive and negative prediction errors.
-    m_dual = hddm.HDDMrl(data,dual=True)
-    #set sample and burn-in
-    m_dual.sample(1500,burn=500,dbname='traces.db',db='pickle')
-    #print stats to get an overview of posterior distribution of estimated parameters
+    # set dual=True to model separate learning rates for positive and negative prediction errors.
+    m_dual = hddm.HDDMrl(data, dual=True)
+    # set sample and burn-in
+    m_dual.sample(1500, burn=500, dbname="traces.db", db="pickle")
+    # print stats to get an overview of posterior distribution of estimated parameters
     m_dual.print_stats()
 
 
@@ -1631,11 +1700,11 @@ with a single learning rate. First, let’s test whether it converges.
     # estimate convergence
     models = []
     for i in range(3):
-        m = hddm.HDDMrl(data=data,dual=True)
-        m.sample(1500, burn=500,dbname='traces.db',db='pickle')
+        m = hddm.HDDMrl(data=data, dual=True)
+        m.sample(1500, burn=500, dbname="traces.db", db="pickle")
         models.append(m)
     
-    #get max gelman-statistic value. shouldn't be higher than 1.1
+    # get max gelman-statistic value. shouldn't be higher than 1.1
     np.max(list(gelman_rubin(models).values()))
 
 
@@ -1846,22 +1915,29 @@ And then we can have a look at the joint posterior distribution:
 
 .. code:: ipython3
 
-    alpha, t, a, v, pos_alpha = m_dual.nodes_db.node[['alpha', 't', 'a','v','pos_alpha']]
-    samples = {'alpha':alpha.trace(),'pos_alpha':pos_alpha.trace(),'t':t.trace(),'a':a.trace(),'v':v.trace()}
+    alpha, t, a, v, pos_alpha = m_dual.nodes_db.node[["alpha", "t", "a", "v", "pos_alpha"]]
+    samples = {
+        "alpha": alpha.trace(),
+        "pos_alpha": pos_alpha.trace(),
+        "t": t.trace(),
+        "a": a.trace(),
+        "v": v.trace(),
+    }
     samp = pd.DataFrame(data=samples)
+    
     
     def corrfunc(x, y, **kws):
         r, _ = stats.pearsonr(x, y)
         ax = plt.gca()
-        ax.annotate("r = {:.2f}".format(r),
-                    xy=(.1, .9), xycoords=ax.transAxes)
+        ax.annotate("r = {:.2f}".format(r), xy=(0.1, 0.9), xycoords=ax.transAxes)
+    
     
     g = sns.PairGrid(samp, palette=["red"])
     g.map_upper(plt.scatter, s=10)
     g.map_diag(sns.distplot, kde=False)
     g.map_lower(sns.kdeplot, cmap="Blues_d")
     g.map_lower(corrfunc)
-    g.savefig('matrix_plot.png')
+    g.savefig("matrix_plot.png")
 
 
 
@@ -1879,50 +1955,90 @@ improvement in the ability to recreate choice and RT patterns:
 
 .. code:: ipython3
 
-    #create empty dataframe to store simulated data
+    # create empty dataframe to store simulated data
     sim_data = pd.DataFrame()
-    #create a column samp to be used to identify the simulated data sets
-    data['samp'] = 0
-    #get traces, note here we extract traces from m_dual
+    # create a column samp to be used to identify the simulated data sets
+    data["samp"] = 0
+    # get traces, note here we extract traces from m_dual
     traces = m_dual.get_traces()
-    #decide how many times to repeat simulation process. repeating this multiple times is generally recommended as it better captures the uncertainty in the posterior distribution, but will also take some time
-    for i in tqdm(range(1,51)):
-        #randomly select a row in the traces to use for extracting parameter values
-        sample = np.random.randint(0,traces.shape[0]-1)
-        #loop through all subjects in observed data
+    # decide how many times to repeat simulation process. repeating this multiple times is generally recommended as it better captures the uncertainty in the posterior distribution, but will also take some time
+    for i in tqdm(range(1, 51)):
+        # randomly select a row in the traces to use for extracting parameter values
+        sample = np.random.randint(0, traces.shape[0] - 1)
+        # loop through all subjects in observed data
         for s in data.subj_idx.unique():
-            #get number of trials for each condition.
-            size0 = len(data[(data['subj_idx']==s) & (data['split_by']==0)].trial.unique())
-            size1 = len(data[(data['subj_idx']==s) & (data['split_by']==1)].trial.unique())
-            size2 = len(data[(data['subj_idx']==s) & (data['split_by']==2)].trial.unique())
-            #set parameter values for simulation
-            a = traces.loc[sample,'a_subj.'+str(s)]
-            t = traces.loc[sample,'t_subj.'+str(s)]
-            scaler = traces.loc[sample,'v_subj.'+str(s)]
-            #when generating data with two learning rates pos_alpha represents learning rate for positive prediction errors and alpha for negative prediction errors
-            alphaInv = traces.loc[sample,'alpha_subj.'+str(s)]
-            pos_alphaInv = traces.loc[sample,'pos_alpha_subj.'+str(s)]
-            #take inverse logit of estimated alpha and pos_alpha
-            alpha = np.exp(alphaInv)/(1+np.exp(alphaInv))
-            pos_alpha = np.exp(pos_alphaInv)/(1+np.exp(pos_alphaInv))
-            #simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
-            sim_data0 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,pos_alpha=pos_alpha,size=size0,p_upper=0.8,p_lower=0.2,split_by=0)
-            sim_data1 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,pos_alpha=pos_alpha,size=size1,p_upper=0.7,p_lower=0.3,split_by=1)
-            sim_data2 = hddm.generate.gen_rand_rlddm_data(a=a,t=t,scaler=scaler,alpha=alpha,pos_alpha=pos_alpha,size=size2,p_upper=0.6,p_lower=0.4,split_by=2)
-            #append the conditions
-            sim_data0 = sim_data0.append([sim_data1,sim_data2],ignore_index=True)
-            #assign subj_idx
-            sim_data0['subj_idx'] = s
-            #identify that these are simulated data
-            sim_data0['type'] = 'simulated'
-            #identify the simulated data
-            sim_data0['samp'] = i
-            #append data from each subject
-            sim_data = sim_data.append(sim_data0,ignore_index=True)
-    #combine observed and simulated data
-    ppc_dual_data = data[['subj_idx','response','split_by','rt','trial','feedback','samp']].copy()
-    ppc_dual_data['type'] = 'observed'
-    ppc_dual_sdata = sim_data[['subj_idx','response','split_by','rt','trial','feedback','type','samp']].copy()
+            # get number of trials for each condition.
+            size0 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 0)].trial.unique()
+            )
+            size1 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 1)].trial.unique()
+            )
+            size2 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 2)].trial.unique()
+            )
+            # set parameter values for simulation
+            a = traces.loc[sample, "a_subj." + str(s)]
+            t = traces.loc[sample, "t_subj." + str(s)]
+            scaler = traces.loc[sample, "v_subj." + str(s)]
+            # when generating data with two learning rates pos_alpha represents learning rate for positive prediction errors and alpha for negative prediction errors
+            alphaInv = traces.loc[sample, "alpha_subj." + str(s)]
+            pos_alphaInv = traces.loc[sample, "pos_alpha_subj." + str(s)]
+            # take inverse logit of estimated alpha and pos_alpha
+            alpha = np.exp(alphaInv) / (1 + np.exp(alphaInv))
+            pos_alpha = np.exp(pos_alphaInv) / (1 + np.exp(pos_alphaInv))
+            # simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
+            sim_data0 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                pos_alpha=pos_alpha,
+                size=size0,
+                p_upper=0.8,
+                p_lower=0.2,
+                split_by=0,
+            )
+            sim_data1 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                pos_alpha=pos_alpha,
+                size=size1,
+                p_upper=0.7,
+                p_lower=0.3,
+                split_by=1,
+            )
+            sim_data2 = hddm.generate.gen_rand_rlddm_data(
+                a=a,
+                t=t,
+                scaler=scaler,
+                alpha=alpha,
+                pos_alpha=pos_alpha,
+                size=size2,
+                p_upper=0.6,
+                p_lower=0.4,
+                split_by=2,
+            )
+            # append the conditions
+            sim_data0 = sim_data0.append([sim_data1, sim_data2], ignore_index=True)
+            # assign subj_idx
+            sim_data0["subj_idx"] = s
+            # identify that these are simulated data
+            sim_data0["type"] = "simulated"
+            # identify the simulated data
+            sim_data0["samp"] = i
+            # append data from each subject
+            sim_data = sim_data.append(sim_data0, ignore_index=True)
+    # combine observed and simulated data
+    ppc_dual_data = data[
+        ["subj_idx", "response", "split_by", "rt", "trial", "feedback", "samp"]
+    ].copy()
+    ppc_dual_data["type"] = "observed"
+    ppc_dual_sdata = sim_data[
+        ["subj_idx", "response", "split_by", "rt", "trial", "feedback", "type", "samp"]
+    ].copy()
     ppc_dual_data = ppc_dual_data.append(ppc_dual_sdata)
 
 
@@ -1941,46 +2057,65 @@ improvement in the ability to recreate choice and RT patterns:
 
 .. code:: ipython3
 
-    #for practical reasons we only look at the first 40 trials for each subject in a given condition
-    plot_ppc_dual_data = ppc_dual_data[ppc_dual_data.trial<41].copy()
+    # for practical reasons we only look at the first 40 trials for each subject in a given condition
+    plot_ppc_dual_data = ppc_dual_data[ppc_dual_data.trial < 41].copy()
 
 Choice
 ~~~~~~
 
 .. code:: ipython3
 
-    #bin trials to for smoother estimate of response proportion across learning
-    plot_ppc_dual_data['bin_trial'] = pd.cut(plot_ppc_dual_data.trial,11,labels=np.linspace(0, 10,11)).astype('int64')
-    #calculate means for each sample
-    sums = plot_ppc_dual_data.groupby(['bin_trial','split_by','samp','type']).mean().reset_index()
-    #calculate the overall mean response across samples
-    ppc_dual_sim = sums.groupby(['bin_trial','split_by','type']).mean().reset_index()
-    #initiate columns that will have the upper and lower bound of the hpd
-    ppc_dual_sim['upper_hpd'] = 0
-    ppc_dual_sim['lower_hpd'] = 0
-    for i in range(0,ppc_dual_sim.shape[0]):
-        #calculate the hpd/hdi of the predicted mean responses across bin_trials
-        hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_dual_sim.bin_trial[i]) & (sums['split_by']==ppc_dual_sim.split_by[i]) & (sums['type']==ppc_dual_sim.type[i])],alpha=0.1)
-        ppc_dual_sim.loc[i,'upper_hpd'] = hdi[1]
-        ppc_dual_sim.loc[i,'lower_hpd'] = hdi[0]
-    #calculate error term as the distance from upper bound to mean
-    ppc_dual_sim['up_err'] = ppc_dual_sim['upper_hpd']-ppc_dual_sim['response']
-    ppc_dual_sim['low_err'] = ppc_dual_sim['response']-ppc_dual_sim['lower_hpd']
-    ppc_dual_sim['model'] = 'RLDDM_dual_learning'
+    # bin trials to for smoother estimate of response proportion across learning
+    plot_ppc_dual_data["bin_trial"] = pd.cut(
+        plot_ppc_dual_data.trial, 11, labels=np.linspace(0, 10, 11)
+    ).astype("int64")
+    # calculate means for each sample
+    sums = (
+        plot_ppc_dual_data.groupby(["bin_trial", "split_by", "samp", "type"])
+        .mean()
+        .reset_index()
+    )
+    # calculate the overall mean response across samples
+    ppc_dual_sim = sums.groupby(["bin_trial", "split_by", "type"]).mean().reset_index()
+    # initiate columns that will have the upper and lower bound of the hpd
+    ppc_dual_sim["upper_hpd"] = 0
+    ppc_dual_sim["lower_hpd"] = 0
+    for i in range(0, ppc_dual_sim.shape[0]):
+        # calculate the hpd/hdi of the predicted mean responses across bin_trials
+        hdi = pymc.utils.hpd(
+            sums.response[
+                (sums["bin_trial"] == ppc_dual_sim.bin_trial[i])
+                & (sums["split_by"] == ppc_dual_sim.split_by[i])
+                & (sums["type"] == ppc_dual_sim.type[i])
+            ],
+            alpha=0.1,
+        )
+        ppc_dual_sim.loc[i, "upper_hpd"] = hdi[1]
+        ppc_dual_sim.loc[i, "lower_hpd"] = hdi[0]
+    # calculate error term as the distance from upper bound to mean
+    ppc_dual_sim["up_err"] = ppc_dual_sim["upper_hpd"] - ppc_dual_sim["response"]
+    ppc_dual_sim["low_err"] = ppc_dual_sim["response"] - ppc_dual_sim["lower_hpd"]
+    ppc_dual_sim["model"] = "RLDDM_dual_learning"
 
 .. code:: ipython3
 
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data.
-    fig, axs = plt.subplots(figsize=(15, 5),nrows=1, ncols=3, sharex=True,sharey=True)
-    for i in range(0,3):
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data.
+    fig, axs = plt.subplots(figsize=(15, 5), nrows=1, ncols=3, sharex=True, sharey=True)
+    for i in range(0, 3):
         ax = axs[i]
-        d = ppc_dual_sim[(ppc_dual_sim.split_by==i) & (ppc_dual_sim.type=='simulated')]
-        ax.errorbar(d.bin_trial, d.response, yerr=[d.low_err,d.up_err], label='simulated',color='orange')
-        d = ppc_sim[(ppc_dual_sim.split_by==i) & (ppc_dual_sim.type=='observed')]
-        ax.plot(d.bin_trial, d.response,linewidth=3,label='observed')
-        ax.set_title('split_by = %i' %i,fontsize=20)
-        ax.set_ylabel('mean response')
-        ax.set_xlabel('trial')
+        d = ppc_dual_sim[(ppc_dual_sim.split_by == i) & (ppc_dual_sim.type == "simulated")]
+        ax.errorbar(
+            d.bin_trial,
+            d.response,
+            yerr=[d.low_err, d.up_err],
+            label="simulated",
+            color="orange",
+        )
+        d = ppc_sim[(ppc_dual_sim.split_by == i) & (ppc_dual_sim.type == "observed")]
+        ax.plot(d.bin_trial, d.response, linewidth=3, label="observed")
+        ax.set_title("split_by = %i" % i, fontsize=20)
+        ax.set_ylabel("mean response")
+        ax.set_xlabel("trial")
     plt.legend()
 
 
@@ -2010,22 +2145,36 @@ the single and dual learning rate model we can plot them together:
 
 .. code:: ipython3
 
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data. Compared for model with single and dual learning rate.
-    fig, axs = plt.subplots(figsize=(15, 5),nrows=1, ncols=3, sharex=True,sharey=True)
-    for i in range(0,3):
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data. Compared for model with single and dual learning rate.
+    fig, axs = plt.subplots(figsize=(15, 5), nrows=1, ncols=3, sharex=True, sharey=True)
+    for i in range(0, 3):
         ax = axs[i]
-        d_single = ppc_sim[(ppc_sim.split_by==i) & (ppc_sim.type=='simulated')]
-        #slightly move bin_trial to avoid overlap in errorbars
-        d_single['bin_trial'] += 0.2
-        ax.errorbar(d_single.bin_trial, d_single.response, yerr=[d_single.low_err,d_single.up_err],label='simulated_single',color='orange')
-        d_dual = ppc_dual_sim[(ppc_dual_sim.split_by==i) & (ppc_dual_sim.type=='simulated')]
-        ax.errorbar(d_dual.bin_trial, d_dual.response, yerr=[d_dual.low_err,d_dual.up_err],label='simulated_dual',color='green')
-        d = ppc_sim[(ppc_dual_sim.split_by==i) & (ppc_dual_sim.type=='observed')]
-        ax.plot(d.bin_trial, d.response,linewidth=3,label='observed')
-        ax.set_title('split_by = %i' %i,fontsize=20)
-        ax.set_ylabel('mean response')
-        ax.set_xlabel('trial')
-    plt.xlim(-0.5,10.5)
+        d_single = ppc_sim[(ppc_sim.split_by == i) & (ppc_sim.type == "simulated")]
+        # slightly move bin_trial to avoid overlap in errorbars
+        d_single["bin_trial"] += 0.2
+        ax.errorbar(
+            d_single.bin_trial,
+            d_single.response,
+            yerr=[d_single.low_err, d_single.up_err],
+            label="simulated_single",
+            color="orange",
+        )
+        d_dual = ppc_dual_sim[
+            (ppc_dual_sim.split_by == i) & (ppc_dual_sim.type == "simulated")
+        ]
+        ax.errorbar(
+            d_dual.bin_trial,
+            d_dual.response,
+            yerr=[d_dual.low_err, d_dual.up_err],
+            label="simulated_dual",
+            color="green",
+        )
+        d = ppc_sim[(ppc_dual_sim.split_by == i) & (ppc_dual_sim.type == "observed")]
+        ax.plot(d.bin_trial, d.response, linewidth=3, label="observed")
+        ax.set_title("split_by = %i" % i, fontsize=20)
+        ax.set_ylabel("mean response")
+        ax.set_xlabel("trial")
+    plt.xlim(-0.5, 10.5)
     plt.legend()
 
 
@@ -2060,13 +2209,25 @@ RT
 
 .. code:: ipython3
 
-    plot_ppc_data['type_compare'] = np.where(plot_ppc_data['type']=='observed',plot_ppc_data['type'],'simulated_single_learning')
-    plot_ppc_dual_data['type_compare'] = np.where(plot_ppc_dual_data['type']=='observed',plot_ppc_dual_data['type'],'simulated_dual_learning')
+    plot_ppc_data["type_compare"] = np.where(
+        plot_ppc_data["type"] == "observed",
+        plot_ppc_data["type"],
+        "simulated_single_learning",
+    )
+    plot_ppc_dual_data["type_compare"] = np.where(
+        plot_ppc_dual_data["type"] == "observed",
+        plot_ppc_dual_data["type"],
+        "simulated_dual_learning",
+    )
     dual_vs_single_pcc = plot_ppc_data.append(plot_ppc_dual_data)
-    dual_vs_single_pcc['reaction time'] = np.where(dual_vs_single_pcc['response']==1,dual_vs_single_pcc.rt,0-dual_vs_single_pcc.rt)
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data. We use bins of trials because plotting individual trials would be very noisy. 
-    g = sns.FacetGrid(dual_vs_single_pcc,col='split_by',hue='type_compare',height=5)
-    g.map(sns.kdeplot, 'reaction time',bw=0.01).set_ylabels("Density")
+    dual_vs_single_pcc["reaction time"] = np.where(
+        dual_vs_single_pcc["response"] == 1,
+        dual_vs_single_pcc.rt,
+        0 - dual_vs_single_pcc.rt,
+    )
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data. We use bins of trials because plotting individual trials would be very noisy.
+    g = sns.FacetGrid(dual_vs_single_pcc, col="split_by", hue="type_compare", height=5)
+    g.map(sns.kdeplot, "reaction time", bw=0.01).set_ylabels("Density")
     g.add_legend()
 
 
@@ -2099,12 +2260,16 @@ be higher for positive than negative prediction errors.
 
 .. code:: ipython3
 
-    #plot alpha for positive and negative learning rate
+    # plot alpha for positive and negative learning rate
     traces = m_dual.get_traces()
-    neg_alpha = np.exp(traces['alpha'])/(1+np.exp(traces['alpha']))
-    pos_alpha = np.exp(traces['pos_alpha'])/(1+np.exp(traces['pos_alpha']))
-    sns.kdeplot(neg_alpha, color='r', label="neg_alpha: " + str(np.round(np.mean(neg_alpha),3)))
-    sns.kdeplot(pos_alpha, color='b', label="pos_alpha: " + str(np.round(np.mean(pos_alpha),3)))
+    neg_alpha = np.exp(traces["alpha"]) / (1 + np.exp(traces["alpha"]))
+    pos_alpha = np.exp(traces["pos_alpha"]) / (1 + np.exp(traces["pos_alpha"]))
+    sns.kdeplot(
+        neg_alpha, color="r", label="neg_alpha: " + str(np.round(np.mean(neg_alpha), 3))
+    )
+    sns.kdeplot(
+        pos_alpha, color="b", label="pos_alpha: " + str(np.round(np.mean(pos_alpha), 3))
+    )
 
 
 
@@ -2133,7 +2298,9 @@ negative predictions of 0.2 and 0.4, respectively:
 
 .. code:: ipython3
 
-    hddm.generate.gen_rand_rlddm_data(a=1,t=0.3,alpha=0.2,pos_alpha=0.4,scaler=2,p_upper=0.8,p_lower=0.2,size=10)
+    hddm.generate.gen_rand_rlddm_data(
+        a=1, t=0.3, alpha=0.2, pos_alpha=0.4, scaler=2, p_upper=0.8, p_lower=0.2, size=10
+    )
 
 
 
@@ -2311,14 +2478,20 @@ thresholds:
 
 .. code:: ipython3
 
-    data1 = hddm.generate.gen_rand_rlddm_data(a=1,t=0.3,alpha=0.4,scaler=2,p_upper=0.8,p_lower=0.2,subjs=50,size=50)
-    data1['group'] = 'group1'
-    data2 = hddm.generate.gen_rand_rlddm_data(a=2,t=0.3,alpha=0.4,scaler=2,p_upper=0.8,p_lower=0.2,subjs=50,size=50)
-    data2['group'] = 'group2'
+    data1 = hddm.generate.gen_rand_rlddm_data(
+        a=1, t=0.3, alpha=0.4, scaler=2, p_upper=0.8, p_lower=0.2, subjs=50, size=50
+    )
+    data1["group"] = "group1"
+    data2 = hddm.generate.gen_rand_rlddm_data(
+        a=2, t=0.3, alpha=0.4, scaler=2, p_upper=0.8, p_lower=0.2, subjs=50, size=50
+    )
+    data2["group"] = "group2"
     group_data = data1.append(data2)
-    group_data['q_init'] = 0.5
-    m = hddm.HDDMrl(group_data,depends_on={'v':'group','a':'group','t':'group','alpha':'group'})
-    m.sample(1500,burn=500,dbname='traces.db',db='pickle')
+    group_data["q_init"] = 0.5
+    m = hddm.HDDMrl(
+        group_data, depends_on={"v": "group", "a": "group", "t": "group", "alpha": "group"}
+    )
+    m.sample(1500, burn=500, dbname="traces.db", db="pickle")
 
 
 .. parsed-literal::
@@ -2335,13 +2508,13 @@ thresholds:
 
 .. code:: ipython3
 
-    #the plot shows that the model was able to recover the different decision threshold across groups.
-    a_group1, a_group2 = m.nodes_db.node[['a(group1)', 'a(group2)']]
+    # the plot shows that the model was able to recover the different decision threshold across groups.
+    a_group1, a_group2 = m.nodes_db.node[["a(group1)", "a(group2)"]]
     hddm.analyze.plot_posterior_nodes([a_group1, a_group2])
-    plt.xlabel('decision threshold')
-    plt.ylabel('Posterior probability')
-    plt.xlim(0.7,2.3)
-    plt.title('Posterior of decision threshold group means')
+    plt.xlabel("decision threshold")
+    plt.ylabel("Posterior probability")
+    plt.xlim(0.7, 2.3)
+    plt.title("Posterior of decision threshold group means")
 
 
 
@@ -2372,7 +2545,9 @@ outcomes because the combined drift rate needs to be plausible.
 
     # This is how we generated data so far, defining the probability of reward (1) for actions/stimuli associated with upper and lower boundary.
     # binary probabilistic outcomes
-    hddm.generate.gen_rand_rlddm_data(a=2,t=0.3,scaler=2,alpha=0.2,size=10,p_upper=0.2,p_lower=0.8)
+    hddm.generate.gen_rand_rlddm_data(
+        a=2, t=0.3, scaler=2, alpha=0.2, size=10, p_upper=0.2, p_lower=0.8
+    )
 
 
 
@@ -2537,10 +2712,22 @@ outcomes because the combined drift rate needs to be plausible.
 
 .. code:: ipython3
 
-    # If instead the outcomes are drawn from a normal distribution you will have to set binary_outcome to False and instead of p_upper and p_upper define the mean (mu) and sd 
+    # If instead the outcomes are drawn from a normal distribution you will have to set binary_outcome to False and instead of p_upper and p_upper define the mean (mu) and sd
     # of the normal distribution for both alternatives. Note that we change the initial q-value to 0, and that we reduce the scaling factor.
     # normally distributed outcomes
-    hddm.generate.gen_rand_rlddm_data(a=2,t=0.3,scaler=0.2,alpha=0.2,size=10,mu_upper=8,mu_lower=2,sd_upper=1,sd_lower=1,binary_outcome=False,q_init=0)
+    hddm.generate.gen_rand_rlddm_data(
+        a=2,
+        t=0.3,
+        scaler=0.2,
+        alpha=0.2,
+        size=10,
+        mu_upper=8,
+        mu_lower=2,
+        sd_upper=1,
+        sd_lower=1,
+        binary_outcome=False,
+        q_init=0,
+    )
 
 
 
@@ -2705,17 +2892,30 @@ outcomes because the combined drift rate needs to be plausible.
 
 .. code:: ipython3
 
-    # We can generate a dataset where 30 subjects perform 50 trials each. Note that we set the scaler to be lower than for the binary outcomes as otherwise 
+    # We can generate a dataset where 30 subjects perform 50 trials each. Note that we set the scaler to be lower than for the binary outcomes as otherwise
     # the resulting drift will be unrealistically high.
-    norm_data = hddm.generate.gen_rand_rlddm_data(a=2,t=0.3,scaler=0.2,alpha=0.2,size=50,subjs=30,mu_upper=8,mu_lower=2,sd_upper=2,sd_lower=2,binary_outcome=False,q_init=0)
+    norm_data = hddm.generate.gen_rand_rlddm_data(
+        a=2,
+        t=0.3,
+        scaler=0.2,
+        alpha=0.2,
+        size=50,
+        subjs=30,
+        mu_upper=8,
+        mu_lower=2,
+        sd_upper=2,
+        sd_lower=2,
+        binary_outcome=False,
+        q_init=0,
+    )
 
 .. code:: ipython3
 
-    #and then we can do estimation as usual
-    #but first we need to define inital q-value
-    norm_data['q_init'] = 0
+    # and then we can do estimation as usual
+    # but first we need to define inital q-value
+    norm_data["q_init"] = 0
     m_norm = hddm.HDDMrl(norm_data)
-    m_norm.sample(1500,burn=500,dbname='traces.db',db='pickle')
+    m_norm.sample(1500, burn=500, dbname="traces.db", db="pickle")
     m_norm.print_stats()
 
 
@@ -2871,8 +3071,21 @@ tutorial for HDDM.
 
 .. code:: ipython3
 
-    #function to generate rlddm-data that adds a neural regressor to decision threshold
-    def gen_rand_reg_rlddm_data(a, t, scaler, alpha, neural, size=1, p_upper=1, p_lower=0, z=0.5, q_init=0.5, split_by=0, subjs=1):
+    # function to generate rlddm-data that adds a neural regressor to decision threshold
+    def gen_rand_reg_rlddm_data(
+        a,
+        t,
+        scaler,
+        alpha,
+        neural,
+        size=1,
+        p_upper=1,
+        p_lower=0,
+        z=0.5,
+        q_init=0.5,
+        split_by=0,
+        subjs=1,
+    ):
         all_data = []
         n = size
         # set sd for variables to generate subject-parameters from group distribution
@@ -2880,20 +3093,38 @@ tutorial for HDDM.
         sd_a = 0.1
         sd_alpha = 0.1
         sd_v = 0.25
-        #save parameter values as group-values
+        # save parameter values as group-values
         tg = t
         ag = a
         alphag = alpha
         scalerg = scaler
         for s in range(0, subjs):
-            t = np.maximum(0.05, np.random.normal(
-                loc=tg, scale=sd_t, size=1)) if subjs > 1 else tg
-            a = np.maximum(0.05, np.random.normal(
-                loc=ag, scale=sd_a, size=1)) if subjs > 1 else ag
-            alpha = np.minimum(np.minimum(np.maximum(0.001, np.random.normal(loc=alphag, scale=sd_a, size=1)), alphag+alphag),1) if subjs > 1 else alphag
-            scaler = np.random.normal(loc=scalerg, scale=sd_v, size=1) if subjs > 1 else scalerg
-            #create a normalized regressor that is combined with the neural coefficient to create trial-by-trial values for decision threshold
-            neural_reg = np.random.normal(0,1,size=n)
+            t = (
+                np.maximum(0.05, np.random.normal(loc=tg, scale=sd_t, size=1))
+                if subjs > 1
+                else tg
+            )
+            a = (
+                np.maximum(0.05, np.random.normal(loc=ag, scale=sd_a, size=1))
+                if subjs > 1
+                else ag
+            )
+            alpha = (
+                np.minimum(
+                    np.minimum(
+                        np.maximum(0.001, np.random.normal(loc=alphag, scale=sd_a, size=1)),
+                        alphag + alphag,
+                    ),
+                    1,
+                )
+                if subjs > 1
+                else alphag
+            )
+            scaler = (
+                np.random.normal(loc=scalerg, scale=sd_v, size=1) if subjs > 1 else scalerg
+            )
+            # create a normalized regressor that is combined with the neural coefficient to create trial-by-trial values for decision threshold
+            neural_reg = np.random.normal(0, 1, size=n)
             q_up = np.tile([q_init], n)
             q_low = np.tile([q_init], n)
             response = np.tile([0.5], n)
@@ -2903,50 +3134,128 @@ tutorial for HDDM.
             rew_low = np.random.binomial(1, p_lower, n).astype(float)
             sim_drift = np.tile([0], n)
             subj_idx = np.tile([s], n)
-            d = {'q_up': q_up, 'q_low': q_low, 'sim_drift': sim_drift, 'rew_up': rew_up, 'rew_low': rew_low,
-                 'response': response, 'rt': rt, 'feedback': feedback, 'subj_idx': subj_idx, 'split_by': split_by, 'trial': 1, 'neural_reg': neural_reg}
+            d = {
+                "q_up": q_up,
+                "q_low": q_low,
+                "sim_drift": sim_drift,
+                "rew_up": rew_up,
+                "rew_low": rew_low,
+                "response": response,
+                "rt": rt,
+                "feedback": feedback,
+                "subj_idx": subj_idx,
+                "split_by": split_by,
+                "trial": 1,
+                "neural_reg": neural_reg,
+            }
             df = pd.DataFrame(data=d)
-            df = df[['q_up', 'q_low', 'sim_drift', 'rew_up', 'rew_low',
-                     'response', 'rt', 'feedback', 'subj_idx', 'split_by', 'trial','neural_reg']]
-            #generate data trial-by-trial using the Intercept (a), regressor (neural_reg) and coefficient (neural) for decision threshold.
+            df = df[
+                [
+                    "q_up",
+                    "q_low",
+                    "sim_drift",
+                    "rew_up",
+                    "rew_low",
+                    "response",
+                    "rt",
+                    "feedback",
+                    "subj_idx",
+                    "split_by",
+                    "trial",
+                    "neural_reg",
+                ]
+            ]
+            # generate data trial-by-trial using the Intercept (a), regressor (neural_reg) and coefficient (neural) for decision threshold.
             data, params = hddm.generate.gen_rand_data(
-                {'a': a + neural*df.loc[0, 'neural_reg'], 't': t, 'v': df.loc[0, 'sim_drift'], 'z': z}, subjs=1, size=1)
-            df.loc[0, 'response'] = data.response[0]
-            df.loc[0, 'rt'] = data.rt[0]
-            if (data.response[0] == 1.0):
-                df.loc[0, 'feedback'] = df.loc[0, 'rew_up']
+                {
+                    "a": a + neural * df.loc[0, "neural_reg"],
+                    "t": t,
+                    "v": df.loc[0, "sim_drift"],
+                    "z": z,
+                },
+                subjs=1,
+                size=1,
+            )
+            df.loc[0, "response"] = data.response[0]
+            df.loc[0, "rt"] = data.rt[0]
+            if data.response[0] == 1.0:
+                df.loc[0, "feedback"] = df.loc[0, "rew_up"]
             else:
-                df.loc[0, 'feedback'] = df.loc[0, 'rew_low']
+                df.loc[0, "feedback"] = df.loc[0, "rew_low"]
     
             for i in range(1, n):
-                df.loc[i, 'trial'] = i + 1
-                df.loc[i, 'q_up'] = (df.loc[i - 1, 'q_up'] * (1 - df.loc[i - 1, 'response'])) + ((df.loc[i - 1, 'response'])
-                                                                                                 * (df.loc[i - 1, 'q_up'] + (alpha * (df.loc[i - 1, 'rew_up'] - df.loc[i - 1, 'q_up']))))
-                df.loc[i, 'q_low'] = (df.loc[i - 1, 'q_low'] * (df.loc[i - 1, 'response'])) + ((1 - df.loc[i - 1, 'response'])
-                                                                                               * (df.loc[i - 1, 'q_low'] + (alpha * (df.loc[i - 1, 'rew_low'] - df.loc[i - 1, 'q_low']))))
-                df.loc[i, 'sim_drift'] = (df.loc[i, 'q_up'] - df.loc[i, 'q_low']) * (scaler)
+                df.loc[i, "trial"] = i + 1
+                df.loc[i, "q_up"] = (
+                    df.loc[i - 1, "q_up"] * (1 - df.loc[i - 1, "response"])
+                ) + (
+                    (df.loc[i - 1, "response"])
+                    * (
+                        df.loc[i - 1, "q_up"]
+                        + (alpha * (df.loc[i - 1, "rew_up"] - df.loc[i - 1, "q_up"]))
+                    )
+                )
+                df.loc[i, "q_low"] = (
+                    df.loc[i - 1, "q_low"] * (df.loc[i - 1, "response"])
+                ) + (
+                    (1 - df.loc[i - 1, "response"])
+                    * (
+                        df.loc[i - 1, "q_low"]
+                        + (alpha * (df.loc[i - 1, "rew_low"] - df.loc[i - 1, "q_low"]))
+                    )
+                )
+                df.loc[i, "sim_drift"] = (df.loc[i, "q_up"] - df.loc[i, "q_low"]) * (scaler)
                 data, params = hddm.generate.gen_rand_data(
-                    {'a': a + neural*df.loc[i, 'neural_reg'], 't': t, 'v': df.loc[i, 'sim_drift'] , 'z': z}, subjs=1, size=1)
-                df.loc[i, 'response'] = data.response[0]
-                df.loc[i, 'rt'] = data.rt[0]
-                if (data.response[0] == 1.0):
-                    df.loc[i, 'feedback'] = df.loc[i, 'rew_up']
+                    {
+                        "a": a + neural * df.loc[i, "neural_reg"],
+                        "t": t,
+                        "v": df.loc[i, "sim_drift"],
+                        "z": z,
+                    },
+                    subjs=1,
+                    size=1,
+                )
+                df.loc[i, "response"] = data.response[0]
+                df.loc[i, "rt"] = data.rt[0]
+                if data.response[0] == 1.0:
+                    df.loc[i, "feedback"] = df.loc[i, "rew_up"]
                 else:
-                    df.loc[i, 'feedback'] = df.loc[i, 'rew_low']
+                    df.loc[i, "feedback"] = df.loc[i, "rew_low"]
             all_data.append(df)
         all_data = pd.concat(all_data, axis=0)
-        all_data = all_data[['q_up', 'q_low', 'sim_drift', 'response',
-                             'rt', 'feedback', 'subj_idx', 'split_by', 'trial','neural_reg']]
+        all_data = all_data[
+            [
+                "q_up",
+                "q_low",
+                "sim_drift",
+                "response",
+                "rt",
+                "feedback",
+                "subj_idx",
+                "split_by",
+                "trial",
+                "neural_reg",
+            ]
+        ]
     
         return all_data
 
 .. code:: ipython3
 
-    #Create data with function defined above. 
-    #This will create trial-by-trial values for decision threshold (a) by adding the coefficient neural (here set to 0.2) 
-    #multiplied by a normalized regressor (neural_reg) to the 'Intercept' value of a (here set to 1) 
-    data_neural = gen_rand_reg_rlddm_data(a=1,t=0.3,scaler=2,alpha=0.2,neural = 0.2,size=100,p_upper=0.7,p_lower=0.3,subjs=25)
-    data_neural['q_init'] = 0.5
+    # Create data with function defined above.
+    # This will create trial-by-trial values for decision threshold (a) by adding the coefficient neural (here set to 0.2)
+    # multiplied by a normalized regressor (neural_reg) to the 'Intercept' value of a (here set to 1)
+    data_neural = gen_rand_reg_rlddm_data(
+        a=1,
+        t=0.3,
+        scaler=2,
+        alpha=0.2,
+        neural=0.2,
+        size=100,
+        p_upper=0.7,
+        p_lower=0.3,
+        subjs=25,
+    )
+    data_neural["q_init"] = 0.5
     data_neural.head()
 
 
@@ -3064,10 +3373,10 @@ tutorial for HDDM.
 
 .. code:: ipython3
 
-    #run a regressor model estimating the impact of 'neural' on decision threshold a. This should estimate the coefficient a_neural_reg to be 0.2
-    #to run the HDDMrlRegressor you need to include alpha
-    m_reg = hddm.HDDMrlRegressor(data_neural,'a ~ neural_reg',include=['v', 'a', 't', 'alpha'])
-    m_reg.sample(1000,burn=250)
+    # run a regressor model estimating the impact of 'neural' on decision threshold a. This should estimate the coefficient a_neural_reg to be 0.2
+    # to run the HDDMrlRegressor you need to include alpha
+    m_reg = hddm.HDDMrlRegressor(data_neural, "a ~ neural_reg", include=["v", "a", "t", "alpha")
+    m_reg.sample(1000, burn=250)
     m_reg.print_stats()
 
 
@@ -3213,11 +3522,11 @@ transformation when z=0.5.
 
 .. code:: ipython3
 
-    #run the model by calling hddm.Hrl (instead of hddm.HDDM for normal model and hddm.HDDMrl for rlddm-model)
+    # run the model by calling hddm.Hrl (instead of hddm.HDDM for normal model and hddm.HDDMrl for rlddm-model)
     m_rl = hddm.Hrl(data)
-    #set sample and burn-in
-    m_rl.sample(1500,burn=500,dbname='traces.db',db='pickle')
-    #print stats to get an overview of posterior distribution of estimated parameters
+    # set sample and burn-in
+    m_rl.sample(1500, burn=500, dbname="traces.db", db="pickle")
+    # print stats to get an overview of posterior distribution of estimated parameters
     m_rl.print_stats()
 
 
@@ -3332,9 +3641,9 @@ q-values.
     models = []
     for i in range(3):
         m = hddm.Hrl(data=data)
-        m.sample(1500, burn=500,dbname='traces.db',db='pickle')
+        m.sample(1500, burn=500, dbname="traces.db", db="pickle")
         models.append(m)
-    #get max gelman-statistic value. shouldn't be higher than 1.1
+    # get max gelman-statistic value. shouldn't be higher than 1.1
     np.max(list(gelman_rubin(models).values()))
 
 
@@ -3381,15 +3690,16 @@ Convergence looks good, i.e. no parameters with gelman-rubin statistic >
 
 .. code:: ipython3
 
-    alpha, v = m_rl.nodes_db.node[['alpha','v']]
-    samples = {'alpha':alpha.trace(),'v':v.trace()}
+    alpha, v = m_rl.nodes_db.node[["alpha", "v"]]
+    samples = {"alpha": alpha.trace(), "v": v.trace()}
     samp = pd.DataFrame(data=samples)
+    
     
     def corrfunc(x, y, **kws):
         r, _ = stats.pearsonr(x, y)
         ax = plt.gca()
-        ax.annotate("r = {:.2f}".format(r),
-                    xy=(.1, .9), xycoords=ax.transAxes)
+        ax.annotate("r = {:.2f}".format(r), xy=(0.1, 0.9), xycoords=ax.transAxes)
+    
     
     g = sns.PairGrid(samp, palette=["red"])
     g.map_upper(plt.scatter, s=10)
@@ -3422,45 +3732,61 @@ new data with hddm.generate.gen_rand_rl_data.
 
 .. code:: ipython3
 
-    #create empty dataframe to store simulated data
+    # create empty dataframe to store simulated data
     sim_data = pd.DataFrame()
-    #create a column samp to be used to identify the simulated data sets
-    data['samp'] = 0
-    #load traces
+    # create a column samp to be used to identify the simulated data sets
+    data["samp"] = 0
+    # load traces
     traces = m_rl.get_traces()
-    #decide how many times to repeat simulation process. repeating this multiple times is generally recommended as it better captures the uncertainty in the posterior distribution, but will also take some time
-    for i in tqdm(range(1,51)):
-        #randomly select a row in the traces to use for extracting parameter values
-        sample = np.random.randint(0,traces.shape[0]-1)
-        #loop through all subjects in observed data
+    # decide how many times to repeat simulation process. repeating this multiple times is generally recommended as it better captures the uncertainty in the posterior distribution, but will also take some time
+    for i in tqdm(range(1, 51)):
+        # randomly select a row in the traces to use for extracting parameter values
+        sample = np.random.randint(0, traces.shape[0] - 1)
+        # loop through all subjects in observed data
         for s in data.subj_idx.unique():
-            #get number of trials for each condition.
-            size0 = len(data[(data['subj_idx']==s) & (data['split_by']==0)].trial.unique())
-            size1 = len(data[(data['subj_idx']==s) & (data['split_by']==1)].trial.unique())
-            size2 = len(data[(data['subj_idx']==s) & (data['split_by']==2)].trial.unique())
-            #set parameter values for simulation
-            scaler = traces.loc[sample,'v_subj.'+str(s)]
-            alphaInv = traces.loc[sample,'alpha_subj.'+str(s)]
-            #take inverse logit of estimated alpha
-            alpha = np.exp(alphaInv)/(1+np.exp(alphaInv))
-            #simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
-            sim_data0 = hddm.generate.gen_rand_rl_data(scaler=scaler,alpha=alpha,size=size0,p_upper=0.8,p_lower=0.2,split_by=0)
-            sim_data1 = hddm.generate.gen_rand_rl_data(scaler=scaler,alpha=alpha,size=size1,p_upper=0.7,p_lower=0.3,split_by=1)
-            sim_data2 = hddm.generate.gen_rand_rl_data(scaler=scaler,alpha=alpha,size=size2,p_upper=0.6,p_lower=0.4,split_by=2)
-            #append the conditions
-            sim_data0 = sim_data0.append([sim_data1,sim_data2],ignore_index=True)
-            #assign subj_idx
-            sim_data0['subj_idx'] = s
-            #identify that these are simulated data
-            sim_data0['type'] = 'simulated'
-            #identify the simulated data
-            sim_data0['samp'] = i
-            #append data from each subject
-            sim_data = sim_data.append(sim_data0,ignore_index=True)
-    #combine observed and simulated data
-    ppc_rl_data = data[['subj_idx','response','split_by','trial','feedback','samp']].copy()
-    ppc_rl_data['type'] = 'observed'
-    ppc_rl_sdata = sim_data[['subj_idx','response','split_by','trial','feedback','type','samp']].copy()
+            # get number of trials for each condition.
+            size0 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 0)].trial.unique()
+            )
+            size1 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 1)].trial.unique()
+            )
+            size2 = len(
+                data[(data["subj_idx"] == s) & (data["split_by"] == 2)].trial.unique()
+            )
+            # set parameter values for simulation
+            scaler = traces.loc[sample, "v_subj." + str(s)]
+            alphaInv = traces.loc[sample, "alpha_subj." + str(s)]
+            # take inverse logit of estimated alpha
+            alpha = np.exp(alphaInv) / (1 + np.exp(alphaInv))
+            # simulate data for each condition changing only values of size, p_upper, p_lower and split_by between conditions.
+            sim_data0 = hddm.generate.gen_rand_rl_data(
+                scaler=scaler, alpha=alpha, size=size0, p_upper=0.8, p_lower=0.2, split_by=0
+            )
+            sim_data1 = hddm.generate.gen_rand_rl_data(
+                scaler=scaler, alpha=alpha, size=size1, p_upper=0.7, p_lower=0.3, split_by=1
+            )
+            sim_data2 = hddm.generate.gen_rand_rl_data(
+                scaler=scaler, alpha=alpha, size=size2, p_upper=0.6, p_lower=0.4, split_by=2
+            )
+            # append the conditions
+            sim_data0 = sim_data0.append([sim_data1, sim_data2], ignore_index=True)
+            # assign subj_idx
+            sim_data0["subj_idx"] = s
+            # identify that these are simulated data
+            sim_data0["type"] = "simulated"
+            # identify the simulated data
+            sim_data0["samp"] = i
+            # append data from each subject
+            sim_data = sim_data.append(sim_data0, ignore_index=True)
+    # combine observed and simulated data
+    ppc_rl_data = data[
+        ["subj_idx", "response", "split_by", "trial", "feedback", "samp"]
+    ].copy()
+    ppc_rl_data["type"] = "observed"
+    ppc_rl_sdata = sim_data[
+        ["subj_idx", "response", "split_by", "trial", "feedback", "type", "samp"]
+    ].copy()
     ppc_rl_data = ppc_rl_data.append(ppc_rl_sdata)
 
 
@@ -3479,50 +3805,75 @@ new data with hddm.generate.gen_rand_rl_data.
 
 .. code:: ipython3
 
-    #for practical reasons we only look at the first 40 trials for each subject in a given condition
-    plot_ppc_rl_data = ppc_rl_data[ppc_rl_data.trial<41].copy()
+    # for practical reasons we only look at the first 40 trials for each subject in a given condition
+    plot_ppc_rl_data = ppc_rl_data[ppc_rl_data.trial < 41].copy()
 
 .. code:: ipython3
 
-    #bin trials to for smoother estimate of response proportion across learning
-    plot_ppc_rl_data['bin_trial'] = pd.cut(plot_ppc_rl_data.trial,11,labels=np.linspace(0, 10,11)).astype('int64')
-    #calculate means for each sample
-    sums = plot_ppc_rl_data.groupby(['bin_trial','split_by','samp','type']).mean().reset_index()
-    #calculate the overall mean response across samples
-    ppc_rl_sim = sums.groupby(['bin_trial','split_by','type']).mean().reset_index()
-    #initiate columns that will have the upper and lower bound of the hpd
-    ppc_rl_sim['upper_hpd'] = 0
-    ppc_rl_sim['lower_hpd'] = 0
-    for i in range(0,ppc_rl_sim.shape[0]):
-        #calculate the hpd/hdi of the predicted mean responses across bin_trials
-        hdi = pymc.utils.hpd(sums.response[(sums['bin_trial']==ppc_rl_sim.bin_trial[i]) & (sums['split_by']==ppc_rl_sim.split_by[i]) & (sums['type']==ppc_rl_sim.type[i])],alpha=0.1)
-        ppc_rl_sim.loc[i,'upper_hpd'] = hdi[1]
-        ppc_rl_sim.loc[i,'lower_hpd'] = hdi[0]
-    #calculate error term as the distance from upper bound to mean
-    ppc_rl_sim['up_err'] = ppc_rl_sim['upper_hpd']-ppc_rl_sim['response']
-    ppc_rl_sim['low_err'] = ppc_rl_sim['response']-ppc_rl_sim['lower_hpd']
-    ppc_rl_sim['model'] = 'RL'
+    # bin trials to for smoother estimate of response proportion across learning
+    plot_ppc_rl_data["bin_trial"] = pd.cut(
+        plot_ppc_rl_data.trial, 11, labels=np.linspace(0, 10, 11)
+    ).astype("int64")
+    # calculate means for each sample
+    sums = (
+        plot_ppc_rl_data.groupby(["bin_trial", "split_by", "samp", "type"])
+        .mean()
+        .reset_index()
+    )
+    # calculate the overall mean response across samples
+    ppc_rl_sim = sums.groupby(["bin_trial", "split_by", "type"]).mean().reset_index()
+    # initiate columns that will have the upper and lower bound of the hpd
+    ppc_rl_sim["upper_hpd"] = 0
+    ppc_rl_sim["lower_hpd"] = 0
+    for i in range(0, ppc_rl_sim.shape[0]):
+        # calculate the hpd/hdi of the predicted mean responses across bin_trials
+        hdi = pymc.utils.hpd(
+            sums.response[
+                (sums["bin_trial"] == ppc_rl_sim.bin_trial[i])
+                & (sums["split_by"] == ppc_rl_sim.split_by[i])
+                & (sums["type"] == ppc_rl_sim.type[i])
+            ],
+            alpha=0.1,
+        )
+        ppc_rl_sim.loc[i, "upper_hpd"] = hdi[1]
+        ppc_rl_sim.loc[i, "lower_hpd"] = hdi[0]
+    # calculate error term as the distance from upper bound to mean
+    ppc_rl_sim["up_err"] = ppc_rl_sim["upper_hpd"] - ppc_rl_sim["response"]
+    ppc_rl_sim["low_err"] = ppc_rl_sim["response"] - ppc_rl_sim["lower_hpd"]
+    ppc_rl_sim["model"] = "RL"
 
 .. code:: ipython3
 
-    #plotting evolution of choice proportion for best option across learning for observed and simulated data. Compared for RL and RLDDM models, both with single learnign rate.
-    fig, axs = plt.subplots(figsize=(15, 5),nrows=1, ncols=3, sharex=True,sharey=True)
-    for i in range(0,3):
+    # plotting evolution of choice proportion for best option across learning for observed and simulated data. Compared for RL and RLDDM models, both with single learnign rate.
+    fig, axs = plt.subplots(figsize=(15, 5), nrows=1, ncols=3, sharex=True, sharey=True)
+    for i in range(0, 3):
         ax = axs[i]
-        d_single = ppc_sim[(ppc_sim.split_by==i) & (ppc_sim.type=='simulated')]
-        #slightly move bin_trial to avoid overlap in errorbars
-        d_single['bin_trial'] += 0.2
-        ax.errorbar(d_single.bin_trial, d_single.response, yerr=[d_single.low_err,d_single.up_err], label='simulated_RLDDM',color='orange')
+        d_single = ppc_sim[(ppc_sim.split_by == i) & (ppc_sim.type == "simulated")]
+        # slightly move bin_trial to avoid overlap in errorbars
+        d_single["bin_trial"] += 0.2
+        ax.errorbar(
+            d_single.bin_trial,
+            d_single.response,
+            yerr=[d_single.low_err, d_single.up_err],
+            label="simulated_RLDDM",
+            color="orange",
+        )
         ax = axs[i]
-        d_rl = ppc_rl_sim[(ppc_rl_sim.split_by==i) & (ppc_rl_sim.type=='simulated')]
-        ax.errorbar(d_rl.bin_trial, d_rl.response, yerr=[d_rl.low_err,d_rl.up_err], label='simulated_RL',color='green')
+        d_rl = ppc_rl_sim[(ppc_rl_sim.split_by == i) & (ppc_rl_sim.type == "simulated")]
+        ax.errorbar(
+            d_rl.bin_trial,
+            d_rl.response,
+            yerr=[d_rl.low_err, d_rl.up_err],
+            label="simulated_RL",
+            color="green",
+        )
         ax = axs[i]
-        d = ppc_sim[(ppc_dual_sim.split_by==i) & (ppc_dual_sim.type=='observed')]
-        ax.plot(d.bin_trial, d.response,linewidth=3,label='observed')
-        ax.set_title('split_by = %i' %i,fontsize=20)
-        ax.set_ylabel('mean response')
-        ax.set_xlabel('trial')
-    plt.xlim(-0.5,10.5)
+        d = ppc_sim[(ppc_dual_sim.split_by == i) & (ppc_dual_sim.type == "observed")]
+        ax.plot(d.bin_trial, d.response, linewidth=3, label="observed")
+        ax.set_title("split_by = %i" % i, fontsize=20)
+        ax.set_ylabel("mean response")
+        ax.set_xlabel("trial")
+    plt.xlim(-0.5, 10.5)
     plt.legend()
 
 
@@ -3563,20 +3914,41 @@ the other plots we see that the two methods are very similar.
 
 .. code:: ipython3
 
-    #rl
-    error_prediction = plot_ppc_rl_data.groupby(['split_by','type','bin_trial'])['response'].mean().reset_index()
-    ep = error_prediction.pivot_table(index=['split_by','bin_trial'],columns='type',values='response').reset_index()
-    ep['diff'] = ep['simulated']-ep['observed']
-    ep['model'] = 'RL'
-    #rlddm
-    error_prediction = plot_ppc_data.groupby(['split_by','type','bin_trial'])['response'].mean().reset_index()
-    ep_rlddm = error_prediction.pivot_table(index=['split_by','bin_trial'],columns='type',values='response').reset_index()
-    ep_rlddm['diff'] = ep_rlddm['simulated']-ep_rlddm['observed']
-    ep_rlddm['model'] = 'RLDDM'
-    #combine
+    # rl
+    error_prediction = (
+        plot_ppc_rl_data.groupby(["split_by", "type", "bin_trial"])["response"]
+        .mean()
+        .reset_index()
+    )
+    ep = error_prediction.pivot_table(
+        index=["split_by", "bin_trial"], columns="type", values="response"
+    ).reset_index()
+    ep["diff"] = ep["simulated"] - ep["observed"]
+    ep["model"] = "RL"
+    # rlddm
+    error_prediction = (
+        plot_ppc_data.groupby(["split_by", "type", "bin_trial"])["response"]
+        .mean()
+        .reset_index()
+    )
+    ep_rlddm = error_prediction.pivot_table(
+        index=["split_by", "bin_trial"], columns="type", values="response"
+    ).reset_index()
+    ep_rlddm["diff"] = ep_rlddm["simulated"] - ep_rlddm["observed"]
+    ep_rlddm["model"] = "RLDDM"
+    # combine
     ep = ep.append(ep_rlddm)
-    #plot
-    g = sns.relplot(x='bin_trial',y='diff',col='split_by',hue='model',kind='line',ci=False,data=ep,palette="Set2_r")
+    # plot
+    g = sns.relplot(
+        x="bin_trial",
+        y="diff",
+        col="split_by",
+        hue="model",
+        kind="line",
+        ci=False,
+        data=ep,
+        palette="Set2_r",
+    )
     g.map(plt.axhline, y=0, ls=":", c=".5")
 
 
@@ -3590,5 +3962,4 @@ the other plots we see that the two methods are very similar.
 
 
 .. image:: demo_RLHDDMtutorial_files/demo_RLHDDMtutorial_106_1.png
-
 
