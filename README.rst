@@ -117,13 +117,14 @@ Features
 * HDDM 0.9.7 adds the **HDDMnnRLRegressor** class, the equivalent to the **HDDMrlRegressor** with support for many more *SSMs* via *LANs*. 
              Please check the documentation for usage examples.
 
-* HDDM 0.9.8 adds a **breaking change**. To accomodate some user requests, **all parameters** that should be estimated for a given model should be made explicitly
+* HDDM 0.9.8 adds a **breaking change**. 
+             To accommodate some user requests, **all parameters** that should be estimated for a given model should be made explicitly
              in the *include* argument of the calling class (HDDM, HDDMnn, etc.). The remaining parameters can now be set to arbitrary, user defined, defaults.
              Check the documentation for a **new tutorial on parameter defaults**.
              Moreover, **model plot** is made much more flexible (new tutorial included to showcase some of the options).
              Two **tutorials** are added to showcase the capabilities for simulation based inference via **custom likelihoods**. 
              The legacy models with "vanilla" in their name are globally renamed to instead include "hddm_base". 
-             The simulator backend is completely outsourced to the  `ssms`_ package (severe code simplifications).
+             The simulator backend is now completely outsourced to the  `ssms`_ package (severe code simplifications).
 
 
 Comparison to other packages
