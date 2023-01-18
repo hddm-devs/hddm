@@ -8,6 +8,8 @@ traits
 traitlets
 traitsui
 PyQt5
+cython>=0.20
+pymc>=2.3.8,<3
 git+https://github.com/AlexanderFengler/ssm_simulators@main
 git+https://github.com/hddm-devs/kabuki
 #wxpython
