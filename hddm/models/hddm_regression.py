@@ -90,21 +90,26 @@ def generate_wfpt_reg_stochastic_class(
 
         if sampling_method == "cssm":
             param_data = np.zeros(
-                (self.value.shape[0], len(model_config["full_ddm_vanilla"]["params"])),
+                (
+                    self.value.shape[0],
+                    len(model_config["full_ddm_hddm_base"]["params"]),
+                ),
                 dtype=np.float32,
             )
             cnt = 0
-            for tmp_str in model_config["full_ddm_vanilla"]["params"]:
+            for tmp_str in model_config["full_ddm_hddm_base"]["params"]:
                 if tmp_str in self.parents["reg_outcomes"]:
                     # NOTE: Need to use .loc here to subset the regression parameters
                     # to account for eventual grouping
-                    param_data[:, cnt] = param_dict[tmp_str].loc[self.value.index].values
+                    param_data[:, cnt] = (
+                        param_dict[tmp_str].loc[self.value.index].values
+                    )
                 else:
                     param_data[:, cnt] = param_dict[tmp_str]
                 cnt += 1
 
             sim_out = simulator(
-                theta=param_data, model="full_ddm_vanilla", n_samples=1, max_t=20
+                theta=param_data, model="full_ddm_hddm_base", n_samples=1, max_t=20
             )
 
             sim_out_proc = hddm_preprocess(
@@ -542,7 +547,7 @@ class HDDMRegressor(HDDM):
                             std_lower=1e-10,
                             std_upper=param_std_upper,
                             g_mu=0,
-                            g_tau=15**-2,
+                            g_tau=15 ** -2,
                         )
 
                     # Rename nodes to avoid collissions

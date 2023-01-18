@@ -349,7 +349,7 @@ def filter_subject_condition_traces(
             hddm_model.model
         )  # AF-TODO --> Make 'model' part of args for all HDDM classes
 
-    # If hddm vanilla --> more labor
+    # If hddm hddm_base --> more labor
     else:
         if "sv" in includes_full or "st" in includes_full or "sz" in includes_full:
             model = "full_ddm"
@@ -595,7 +595,7 @@ def _make_plot_sub_data(
 
 def _convert_params(data=None):
     """
-    This is called if we supply a vanilla hddm model to the plot listed below.
+    This is called if we supply a hddm_base hddm model to the plot listed below.
     We need to execute some parameter conversion to allow the new simulators to generate
     the correct rt distributions.
     Specifically any (subject wise etc.) 'a' parameter needs to be converted to a / 2.
@@ -1059,12 +1059,7 @@ def model_plot(
                         continue
 
                     # MAKE BOUNDS (FROM MODEL CONFIG) !
-                    if (
-                        tmp_model == "weibull_cdf"
-                        or tmp_model == "weibull_cdf2"
-                        or tmp_model == "weibull_cdf_concave"
-                        or tmp_model == "weibull"
-                    ):
+                    if tmp_model == "weibull":
                         b = np.maximum(
                             tmp_samples[1]
                             * model_config[tmp_model]["boundary"](

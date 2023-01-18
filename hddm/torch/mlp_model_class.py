@@ -54,6 +54,7 @@ try:
                 x = self.layers[i](x)
             return self.layers[-1](x)
 
+
 except:
     print(
         "Error loading pytorch capabilities. Neural network functionality cannot be used."

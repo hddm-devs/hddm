@@ -469,14 +469,15 @@ def simulator_stimcoding(
     data_out = pd.concat(dataframes)
     data_out = data_out.rename(columns={"subj_idx": "stim"})
     data_out["subj_idx"] = "none"
-    data_out = data_out.reset_index(drop = True)
+    data_out = data_out.reset_index(drop=True)
     return (data_out, gt)
+
 
 def simulator_h_c(
     data=None,
     n_subjects=10,
     n_trials_per_subject=100,
-    model="ddm_vanilla",
+    model="ddm_hddm_base",
     conditions=None,
     depends_on=None,
     regression_models=None,
@@ -500,8 +501,8 @@ def simulator_h_c(
             Number of subjects in the datasets
         n_trials_per_subject: int <default=500>
             Number of trials for each subject
-        model: str <default = 'ddm_vanilla'>
-            Model to sample from. For traditional hddm supported models, append '_vanilla' to the model. Omitting 'vanilla'
+        model: str <default = 'ddm_hddm_base'>
+            Model to sample from. For traditional hddm supported models, append '_hddm_base' to the model. Omitting 'hddm_base'
             imposes constraints on the parameter sets to not violate the trained parameter space of our LANs.
         conditions: dict <default=None>
             Keys represent condition relevant columns, and values are lists of unique items for each condition relevant column.
@@ -635,11 +636,14 @@ def simulator_h_c(
         for covariate in regression_covariates.keys():
             tmp = regression_covariates[covariate]
             if tmp["type"] == "categorical":
-                cov_df[covariate] = np.random.choice(
-                    np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
-                    replace=True,
-                    size=n_trials_per_subject,
-                ) / (tmp["range"][1])
+                cov_df[covariate] = (
+                    np.random.choice(
+                        np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
+                        replace=True,
+                        size=n_trials_per_subject,
+                    )
+                    / (tmp["range"][1])
+                )
             else:
                 cov_df[covariate] = np.random.uniform(
                     low=tmp["range"][0], high=tmp["range"][1], size=n_trials_per_subject

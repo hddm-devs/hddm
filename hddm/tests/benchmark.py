@@ -16,7 +16,7 @@ np.random.seed(3123)
 
 
 def compare_cdf_from_pdf_to_cdf_from_fastdm(
-    repeats=500, bins=25, include=("sv", "st", "sz", "z")
+    repeats=500, bins=25, include=("v", "a", "t", "z", "sv", "st", "sz")
 ):
     """Comparing the numerical integration of wfpt PDF to fastdm CDF."""
     N = 500

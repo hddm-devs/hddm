@@ -5,7 +5,7 @@ import hddm
 
 # Help on function simulator_h_c in module hddm.simulators.hddm_dataset_generators:
 
-# simulator_h_c(data=None, n_subjects=10, n_trials_per_subject=100, model='ddm_vanilla', conditions={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}, depends_on={'v': ['c_one', 'c_two']}, regression_models=['z ~ covariate_name'], regression_covariates={'covariate_name': {'type': 'categorical', 'range': (0, 4)}}, group_only_regressors=True, group_only=['z'], fixed_at_default=['t'], p_outlier=0.0, outlier_max_t=10.0, **kwargs)
+# simulator_h_c(data=None, n_subjects=10, n_trials_per_subject=100, model='ddm_hddm_base', conditions={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}, depends_on={'v': ['c_one', 'c_two']}, regression_models=['z ~ covariate_name'], regression_covariates={'covariate_name': {'type': 'categorical', 'range': (0, 4)}}, group_only_regressors=True, group_only=['z'], fixed_at_default=['t'], p_outlier=0.0, outlier_max_t=10.0, **kwargs)
 #     Flexible simulator that allows specification of models very similar to the hddm model classes.
 
 #     :Arguments:
@@ -15,8 +15,8 @@ import hddm
 #             Number of subjects in the datasets
 #         n_trials_per_subject: int <default=500>
 #             Number of trials for each subject
-#         model: str <default = 'ddm_vanilla'>
-#             Model to sample from. For traditional hddm supported models, append '_vanilla' to the model. Omitting 'vanilla'
+#         model: str <default = 'ddm_hddm_base'>
+#             Model to sample from. For traditional hddm supported models, append '_hddm_base' to the model. Omitting 'hddm_base'
 #             imposes constraints on the parameter sets to not violate the trained parameter space of our LANs.
 #         conditions: dict <default={'c_one': ['high', 'low'], 'c_two': ['high', 'low'], 'c_three': ['high', 'medium', 'low']}>
 #             Keys represent condition relevant columns, and values are lists of unique items for each condition relevant column.
@@ -48,7 +48,7 @@ class SimulatorTests(unittest.TestCase):
         print("Passing setUp")
         self.models = list(
             hddm.torch.torch_config.TorchConfig(model="ddm").network_files.keys()
-        ) + ["ddm_vanilla", "full_ddm_vanilla"]
+        ) + ["ddm_hddm_base", "full_ddm_hddm_base"]
         self.n_samples_per_subject = 100
         self.n_trials = 10
 

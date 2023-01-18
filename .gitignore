@@ -5,6 +5,8 @@
 *~
 hddm/examples/lan_to_hddm_tmp_data
 hddm/examples/sbi-logs
+hddm/examples/tmp_figures
+hddm/examples/tmp_gifs
 build/
 dist/
 docs/build

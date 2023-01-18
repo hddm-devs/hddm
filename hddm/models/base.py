@@ -10,6 +10,8 @@
 """
 
 # AF - New:
+import warnings
+from copy import deepcopy
 from hddm.simulators import *
 from hddm.model_config import model_config
 
@@ -339,7 +341,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             while inf_objective:
                 values_iter += 1
                 values = original_values + np.random.randn(len(values)) * (
-                    2**-values_iter
+                    2 ** -values_iter
                 )
                 self.set_values(dict(list(zip(names, values))))
                 inf_objective = np.isinf(objective(values))
@@ -384,7 +386,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15**-2,
+        g_tau=15 ** -2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -443,7 +445,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -519,7 +521,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -584,7 +586,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std**2),
+                tau=1 / (g_std ** 2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -604,7 +606,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -634,7 +636,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std**2),
+                tau=1 / (g_std ** 2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -670,7 +672,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std**2),
+                tau=1 / (g_std ** 2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -681,7 +683,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std**-2,
+                tau=std_std ** -2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -689,7 +691,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -719,7 +721,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std**2),
+                tau=1 / (g_std ** 2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -734,7 +736,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15**-2,
+        g_tau=15 ** -2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -772,7 +774,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Normal,
                 "%s_offset_subj" % name,
                 mu=0,
-                tau=5**-2,
+                tau=5 ** -2,
                 value=0,
                 depends=("subj_idx",),
                 subj=True,
@@ -816,7 +818,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value,
         g_mu=None,
-        g_tau=15**-2,
+        g_tau=15 ** -2,
         std_std=0.2,
         std_value=0.1,
         lower=0.0,  # previously the lower and upper arguments were not there !
@@ -879,7 +881,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std**-2,
+                tau=std_std ** -2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -888,7 +890,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -975,7 +977,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15**-2,
+        g_tau=15 ** -2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -1027,7 +1029,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             tau = Knode(
                 pm.Deterministic,
                 "%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1090,7 +1092,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_normal_normal_hnormal(
-        self, name, value=0, g_mu=None, g_tau=15**-2, std_std=2, std_value=0.1
+        self, name, value=0, g_mu=None, g_tau=15 ** -2, std_std=2, std_value=0.1
     ):
         """Create a family of knodes. A family is a group of knodes
         that belong together.
@@ -1137,7 +1139,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std**-2,
+                tau=std_std ** -2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1145,7 +1147,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x**-2,
+                eval=lambda x: x ** -2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1194,8 +1196,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         # AF-Comment: previously std_std = 2, std_value = 0.1 --> inconsistent with paper ?
 
         knodes = OrderedDict()
-        g_shape = (g_mean**2) / (g_std**2)
-        g_rate = g_mean / (g_std**2)
+        g_shape = (g_mean ** 2) / (g_std ** 2)
+        g_rate = g_mean / (g_std ** 2)
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(
                 pm.Gamma,
@@ -1210,7 +1212,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std**-2,
+                tau=std_std ** -2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1218,7 +1220,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             shape = Knode(
                 pm.Deterministic,
                 "%s_shape" % name,
-                eval=lambda x, y: (x**2) / (y**2),
+                eval=lambda x, y: (x ** 2) / (y ** 2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1229,7 +1231,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             rate = Knode(
                 pm.Deterministic,
                 "%s_rate" % name,
-                eval=lambda x, y: x / (y**2),
+                eval=lambda x, y: x / (y ** 2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1285,9 +1287,9 @@ class HDDMBase(AccumulatorModel):
         if not hasattr(self, "model"):
             print("No model attribute --> setting up standard HDDM")
             if ("st" in include) or ("sz" in include) or ("sv" in include):
-                self.model = "full_ddm_vanilla"
+                self.model = "full_ddm_hddm_base"
             else:
-                self.model = "ddm_vanilla"
+                self.model = "ddm_hddm_base"
 
         if not hasattr(self, "model_config"):
             self.model_config = deepcopy(model_config[self.model])
@@ -1296,13 +1298,30 @@ class HDDMBase(AccumulatorModel):
             if self.nn:
                 # Checking for missing data (LANs do not support this out of the box)
                 # TODO: Add choice probability networks to allow missing values to be accounted for.
-                if data['rt'].abs().max() >= 998:
-                    raise NotImplementedError("The HDDMnn classes can not yet deal with missing values. Support coming soon!")
+                if data["rt"].abs().max() >= 998:
+                    raise NotImplementedError(
+                        "The HDDMnn classes can not yet deal with missing values. Support coming soon!"
+                    )
+
+        # Deal with include argument
+        assert include is not None, (
+            "The include argument is not supplied. \n"
+            + "HDDM needs you to be explicit about the parameters you want to fit. \n"
+            + "This behavior changed with the 0.9.8 release!"
+        )
 
         # For 2-choice models adjust include statement
         if len(self.model_config["choices"]) == 2:
             # print("Includes supplied: ", include)
-            self.include = set(["v", "a", "t"])
+            if (not "v" in include) or (not "a" in include) or (not "t" in include):
+                warnings.warn(
+                    " \n Your include statement misses either the v, a or t parameters. \n"
+                    + "Parameters not explicitly included will be set to the defaults, \n"
+                    + "which you can find in the model_config dictionary!"
+                )
+            # AF - Changed !
+            # self.include = set(["v", "a", "t"])
+            self.include = set()
             if include is not None:
                 if include == "all":
                     [
@@ -1345,9 +1364,6 @@ class HDDMBase(AccumulatorModel):
                 "p_outlier",
                 "alpha",
             )
-
-        # possible_parameters = ("v", "a", "t", "z", "st", "sz", "sv", "p_outlier", "dual_alpha",
-        #     "theta", "alpha", "beta", "g", "alpha_diff", "zh", "zl1", "zl2", "vh", "vl1", "vl2", "d")
 
         assert self.include.issubset(
             possible_parameters
@@ -1440,16 +1456,25 @@ class HDDMBase(AccumulatorModel):
             wfpt_parents["w_outlier"] = self.w_outlier  # likelihood of an outlier point
 
         else:
+            # AF - w_outlier?
             # This defines parents for basic hddm
             wfpt_parents["p_outlier"] = (
                 knodes["p_outlier_bottom"]
                 if "p_outlier" in self.include
                 else self.p_outlier
             )
+            for tmp_param in self.model_config["params"]:
+                wfpt_parents[tmp_param] = (
+                    knodes[tmp_param + "_bottom"]
+                    if tmp_param in self.include
+                    else self.model_config["params_default"][
+                        self.model_config["params"].index(tmp_param)
+                    ]
+                )
 
-            wfpt_parents["a"] = knodes["a_bottom"]
-            wfpt_parents["v"] = knodes["v_bottom"]
-            wfpt_parents["t"] = knodes["t_bottom"]
+            # wfpt_parents["a"] = knodes["a_bottom"]
+            # wfpt_parents["v"] = knodes["v_bottom"]
+            # wfpt_parents["t"] = knodes["t_bottom"]
 
             wfpt_parents["sv"] = (
                 knodes["sv_bottom"]
@@ -1466,7 +1491,8 @@ class HDDMBase(AccumulatorModel):
                 if "st" in self.include
                 else self.default_intervars["st"]
             )
-            wfpt_parents["z"] = knodes["z_bottom"] if "z" in self.include else 0.5
+
+            # wfpt_parents["z"] = knodes["z_bottom"] if "z" in self.include else 0.5
         return wfpt_parents
 
     def _create_wfpt_knode(self, knodes):

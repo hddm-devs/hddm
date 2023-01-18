@@ -126,7 +126,7 @@ class HDDMnnStimCoding(HDDMStimCoding):
             col_name=[
                 "rt",
                 "response",
-            ],  # Note: This is different from vanilla stimcoding class where it was set to col_name = 'rt',
+            ],  # Note: This is different from hddm_base stimcoding class where it was set to col_name = 'rt',
             depends=[self.stim_col],
             split_param=self.split_param,
             stims=self.stims,

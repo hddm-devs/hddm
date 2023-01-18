@@ -171,7 +171,7 @@ def test(np.ndarray[float, ndim = 1] v, # drift by timestep 'delta_t'
 # Simulate (rt, choice) tuples from: Full DDM with flexible bounds --------------------------------
 # @cythonboundscheck(False)
 # @cythonwraparound(False)
-def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
+def full_ddm_hddm_base(np.ndarray[float, ndim = 1] v, # = 0,
                      np.ndarray[float, ndim = 1] a, # = 1,
                      np.ndarray[float, ndim = 1] z, # = 0.5,
                      np.ndarray[float, ndim = 1] t, # = 0.0,
@@ -279,7 +279,7 @@ def full_ddm_vanilla(np.ndarray[float, ndim = 1] v, # = 0,
                             'delta_t': delta_t,
                             'max_t': max_t,
                             'n_samples': n_samples,
-                            'simulator': 'full_ddm_vanilla',
+                            'simulator': 'full_ddm_hddm_base',
                             'possible_choices': [0, 1],
                             'trajectory': traj})
 # -------------------------------------------------------------------------------------------------

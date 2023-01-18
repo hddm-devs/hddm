@@ -397,7 +397,7 @@ class TestHDDMRegressor(unittest.TestCase):
             data,
             {"model": "z ~ cov", "link_func": link_func},
             group_only_regressors=False,
-            include="z",
+            include=["v", "a", "t", "z"],
         )
         m.sample(self.iter, burn=self.burn)
 
@@ -557,7 +557,9 @@ class TestHDDMRegressor(unittest.TestCase):
         data, params_true = hddm.generate.gen_rand_data(params, size=10, subjs=4)
         data = pd.DataFrame(data)
         data["cov"] = 1.0
-        m = hddm.HDDMRegressor(data, "v ~ cov", group_only_regressors=True)
+        m = hddm.HDDMRegressor(
+            data, "v ~ cov", group_only_regressors=True, include=["v", "a", "t", "z"]
+        )
         m.sample(self.iter, burn=self.burn)
 
         self.assertTrue(
@@ -650,7 +652,10 @@ class TestHDDMRegressor(unittest.TestCase):
         data = pd.DataFrame(data)
         data["cov"] = 1.0
         m = hddm.HDDMRegressor(
-            data, "a ~ 0 + C(condition) * cov", group_only_regressors=False
+            data,
+            "a ~ 0 + C(condition) * cov",
+            group_only_regressors=False,
+            include=["v", "a", "t", "z"],
         )
         m.sample(self.iter, burn=self.burn)
 

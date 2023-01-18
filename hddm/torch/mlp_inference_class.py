@@ -44,5 +44,6 @@ try:
 
         return infer_model
 
+
 except:
     print("HDDM: pytorch module seems missing. No LAN functionality can be loaded.")

@@ -208,6 +208,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
 
     return fun_str
 
+
 # AF-COMMENT: Includes check for missing values
 # TODO: Train choice probability models to make this useful
 # at the moment it just makes sampling slower
@@ -248,6 +249,7 @@ def make_reg_likelihood_str_mlp_basic_nn_rl(
 #     )
 #     return fun_str
 
+
 def make_likelihood_str_mlp(
     config=None, wiener_params=None, fun_name="custom_likelihood"
 ):
@@ -276,11 +278,14 @@ def make_likelihood_str_mlp(
         + w_outlier_str
         + ", network = None):"
         + '\n    return hddm.wfpt.wiener_like_nn_mlp(x["rt"].values, x["response"].values, '
-        + "np.array([" + params_str + "], dtype = np.float32), "
+        + "np.array(["
+        + params_str
+        + "], dtype = np.float32), "
         + "p_outlier=p_outlier, w_outlier=w_outlier, network=network)"
-        )
+    )
 
     return fun_str
+
 
 def make_likelihood_str_mlp_info(
     config=None, wiener_params=None, fun_name="custom_likelihood"
@@ -715,12 +720,12 @@ def EZ(pc, vrt, mrt, s=1):
     if pc == 0 or pc == 0.5 or pc == 1:
         raise ValueError("Probability correct is either 0%, 50% or 100%")
 
-    s2 = s**2
+    s2 = s ** 2
     logit_p = np.log(pc / (1 - pc))
 
     # Eq. 7
-    x = (logit_p * (pc**2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
-    v = np.sign(pc - 0.5) * s * x**0.25
+    x = (logit_p * (pc ** 2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
+    v = np.sign(pc - 0.5) * s * x ** 0.25
     # Eq 5
     a = (s2 * logit_p) / v
 
@@ -1244,10 +1249,10 @@ def get_dataset_as_dataframe_rlssm(dataset):
     list_sub_data = list()
     for itr in range(len(dataset["data"])):
         data = dataset["data"][itr]["sim_data"]
-        data = data.drop(columns=['q_up', 'q_low', 'sim_drift'])
+        data = data.drop(columns=["q_up", "q_low", "sim_drift"])
         data["subj_idx"] = itr
 
-        data.loc[data['response'] == -1, 'response'] = 0
+        data.loc[data["response"] == -1, "response"] = 0
 
         list_sub_data.append(data)
     PR_data = pd.concat(list_sub_data, ignore_index=True)
@@ -1277,6 +1282,7 @@ def get_traces_rlssm(tracefile):
     traces = pd.DataFrame.from_dict(t_res)
 
     return traces
+
 
 if __name__ == "__main__":
     import doctest

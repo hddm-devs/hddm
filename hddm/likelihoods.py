@@ -12,6 +12,7 @@ np.seterr(divide="ignore")
 
 import hddm
 
+
 def wiener_like_contaminant(
     value,
     cont_x,
@@ -180,12 +181,15 @@ def generate_wfpt_stochastic_class(
             cnt = 0
             theta = np.zeros(len(list(keys_tmp)), dtype=np.float32)
 
-            for param in model_config["full_ddm_vanilla"]["params"]:
+            for param in model_config["full_ddm_hddm_base"]["params"]:
                 theta[cnt] = np.array(self.parents.value[param]).astype(np.float32)
                 cnt += 1
 
             sim_out = simulator(
-                theta=theta, model="full_ddm_vanilla", n_samples=self.shape[0], max_t=20
+                theta=theta,
+                model="full_ddm_hddm_base",
+                n_samples=self.shape[0],
+                max_t=20,
             )
 
             if add_outliers:
@@ -209,9 +213,9 @@ def generate_wfpt_stochastic_class(
                     and (self.parents.value["sv"] == 0)
                     and (self.parents.value["st"] == 0)
                 ):
-                    sim_out_proc["model"] = "ddm_vanilla"
+                    sim_out_proc["model"] = "ddm_hddm_base"
                 else:
-                    sim_out_proc["model"] = "full_ddm_vanilla"
+                    sim_out_proc["model"] = "full_ddm_hddm_base"
 
             sim_out_proc = hddm.utils.flip_errors(
                 sim_out_proc

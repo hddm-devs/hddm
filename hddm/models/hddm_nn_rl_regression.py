@@ -75,7 +75,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
             drift-rate. The corresponding model might look like
             this:
                 ```python
-                HDDMnnRLRegressor(data, 'a ~ BOLD', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
+                HDDMnnRLRegressor(data, 'a ~ BOLD', model='angle', rl_rule='RWupdate', include=['v', 'a', 't', 'z', 'theta', 'rl_alpha'])
                 ```
 
             This will estimate an v_Intercept and v_BOLD. If v_BOLD is
@@ -87,7 +87,7 @@ class HDDMnnRLRegressor(HDDMRegressor):
             in the 'conditions' column of your data you may
             specify:
                 ```python
-                HDDMnnRLRegressor(data, 'a ~ C(condition)', model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'])
+                HDDMnnRLRegressor(data, 'a ~ C(condition)', model='angle', rl_rule='RWupdate', include=['v', 'a', 't', 'z', 'theta', 'rl_alpha'])
                 ```
             This will lead to estimation of 'v_Intercept' for cond1
             and v_C(condition)[T.cond2] for cond1 + cond2.

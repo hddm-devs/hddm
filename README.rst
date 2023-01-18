@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.7
+:Version: 0.9.8
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -116,6 +116,14 @@ Features
 
 * HDDM 0.9.7 adds the **HDDMnnRLRegressor** class, the equivalent to the **HDDMrlRegressor** with support for many more *SSMs* via *LANs*. 
              Please check the documentation for usage examples.
+
+* HDDM 0.9.8 adds a **breaking change**. To accomodate some user requests, **all parameters** that should be estimated for a given model should be made explicitly
+             in the *include* argument of the calling class (HDDM, HDDMnn, etc.). The remaining parameters can now be set to arbitrary, user defined, defaults.
+             Check the documentation for a **new tutorial on parameter defaults**.
+             Moreover, **model plot** is made much more flexible (new tutorial included to showcase some of the options).
+             Two **tutorials** are added to showcase the capabilities for simulation based inference via **custom likelihoods**. 
+             The legacy models with "vanilla" in their name are globally renamed to instead include "hddm_base". 
+             The simulator backend is completely outsourced to the  `ssms`_ package (severe code simplifications).
 
 
 Comparison to other packages
@@ -276,3 +284,4 @@ Join our low-traffic `mailing list`_.
 .. _original HDDM RL tutorial paper: https://link.springer.com/article/10.1007/s42113-020-00084-w
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs
+.. _ssms: https://github.com/AlexanderFengler/ssm_simulators

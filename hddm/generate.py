@@ -27,6 +27,7 @@ def gen_single_params_set(include=()):
                 * 'all_inter': include all of the above except 'z'
 
     """
+    # AF-TODO: Align with new philosophy of supplying every parameter explicitly
     params = {}
     if include == "all":
         include = ["z", "sv", "sz", "st"]
@@ -593,7 +594,7 @@ def gen_rand_rlssm_data_MAB_RWupdate(
 
         # simulate model with given params
         res = simulator(
-            sim_params,
+            theta=sim_params,
             model=model,
             n_samples=1,
             delta_t=0.001,  # n_trials
@@ -650,7 +651,7 @@ def gen_rand_rlssm_data_MAB_RWupdate(
 
             # simulate model with given params
             res = simulator(
-                sim_params,
+                theta=sim_params,
                 model=model,
                 n_samples=1,
                 delta_t=0.001,  # n_trials
@@ -829,7 +830,7 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
 
         # simulate model with given params
         res = simulator(
-            sim_params,
+            theta=sim_params,
             model=model,
             n_samples=1,
             delta_t=0.001,  # n_trials
@@ -893,7 +894,7 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
 
             # simulate model with given params
             res = simulator(
-                sim_params,
+                theta=sim_params,
                 model=model,
                 n_samples=1,
                 delta_t=0.001,  # n_trials

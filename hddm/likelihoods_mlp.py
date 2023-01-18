@@ -195,7 +195,7 @@ def make_mlp_likelihood(model=None, model_config=None, wiener_params=None, **kwa
 
     # TODO: Allow for rt's of -999 in LAN likelihoods
     def make_likelihood_missing_data():
-        return 
+        return
 
     likelihood_ = make_likelihood()
 
@@ -292,8 +292,8 @@ def make_mlp_likelihood_reg(
         cnt = 0
         for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
-                
-                #param_data[:, cnt] = param_dict[tmp_str].values
+
+                # param_data[:, cnt] = param_dict[tmp_str].values
                 param_data[:, cnt] = param_dict[tmp_str].loc[self.value.index].values
 
                 for linked_indirect_regressor in param_links[tmp_str]:
@@ -301,12 +301,14 @@ def make_mlp_likelihood_reg(
                     #     param_data[:, cnt]
                     #     + param_dict[linked_indirect_regressor].values
                     # )
-                    
+
                     param_data[:, cnt] = (
                         param_data[:, cnt]
-                        + param_dict[linked_indirect_regressor].loc[self.value.index].values
+                        + param_dict[linked_indirect_regressor]
+                        .loc[self.value.index]
+                        .values
                     )
-                
+
                 for linked_indirect_beta in param_links_betas[tmp_str]:
                     param_data[:, cnt] = (
                         param_data[:, cnt]

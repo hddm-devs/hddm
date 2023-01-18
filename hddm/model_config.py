@@ -1,9 +1,8 @@
-from .simulators import boundary_functions as bf
-from .simulators import drift_functions as df
-import numpy as np
+import ssms.basic_simulators.boundary_functions as bf
+import ssms.basic_simulators.drift_functions as df
 
 model_config = {
-    "ddm_vanilla": {
+    "ddm_hddm_base": {
         "doc": "Model used internally for simulation purposes. Do NOT use with the LAN extension.",
         "params": ["v", "a", "z", "t"],
         "params_trans": [0, 0, 1, 0],
@@ -11,7 +10,7 @@ model_config = {
         "param_bounds": [[-5.0, 0.1, 0.05, 0], [5.0, 5.0, 0.95, 3.0]],
         "boundary": bf.constant,
         "params_default": [0.0, 2.0, 0.5, 0],
-        "hddm_include": ["z"],
+        "hddm_include": ["v", "a", "t", "z"],
         "choices": [0, 1],
         "slice_widths": {
             "v": 1.5,
@@ -24,7 +23,7 @@ model_config = {
             "t_std": 0.15,
         },
     },
-    "full_ddm_vanilla": {
+    "full_ddm_hddm_base": {
         "doc": "Model used internally for simulation purposes. Do NOT use with the LAN extension.",
         "params": ["v", "a", "z", "t", "sz", "sv", "st"],
         "params_trans": [0, 0, 1, 0, 0, 0, 0],
@@ -35,7 +34,7 @@ model_config = {
         ],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 0.25, 0, 0, 0],
-        "hddm_include": ["z", "st", "sv", "sz"],
+        "hddm_include": ["v", "a", "t", "z", "st", "sv", "sz"],
         "choices": [0, 1],
         "slice_widths": {
             "v": 1.5,
@@ -64,7 +63,7 @@ model_config = {
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3], [3.0, 2.5, 0.9, 2.0]],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 1e-3],
-        "hddm_include": ["z"],
+        "hddm_include": ["v", "a", "t", "z"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -86,7 +85,7 @@ model_config = {
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, -0.1], [3.0, 3.0, 0.9, 2.0, 1.3]],
         "boundary": bf.angle,
         "params_default": [0.0, 1.0, 0.5, 1e-3, 0.1],
-        "hddm_include": ["z", "theta"],
+        "hddm_include": ["v", "a", "t", "z", "theta"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -113,7 +112,7 @@ model_config = {
         ],
         "boundary": bf.weibull_cdf,
         "params_default": [0.0, 1.0, 0.5, 1e-3, 3.0, 3.0],
-        "hddm_include": ["z", "alpha", "beta"],
+        "hddm_include": ["v", "a", "t", "z", "alpha", "beta"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -139,7 +138,7 @@ model_config = {
         "param_bounds": [[-3.0, 0.3, 0.1, 1.0, 1e-3], [3.0, 2.0, 0.9, 2.0, 2]],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 1.5, 1e-3],
-        "hddm_include": ["z", "alpha"],
+        "hddm_include": ["v", "a", "t", "z", "alpha"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -166,7 +165,7 @@ model_config = {
         ],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 0.25, 1e-3, 1e-3, 1e-3],
-        "hddm_include": ["z", "st", "sv", "sz"],
+        "hddm_include": ["v", "a", "t", "z", "st", "sv", "sz"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -191,7 +190,7 @@ model_config = {
         "param_bounds": [[-2.0, 0.3, 0.2, -1.0, 1e-3], [2.0, 2.0, 0.8, 1.0, 2]],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 0.0, 1e-3],
-        "hddm_include": ["z", "g"],
+        "hddm_include": ["v", "a", "t", "z", "g"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -216,7 +215,7 @@ model_config = {
         "param_bounds": [[-3.0, 0.3, 0.1, 1e-3, 1e-3], [3.0, 2.5, 0.9, 2.0, 2.5]],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 1e-3, 1e-3],
-        "hddm_include": ["z", "sv"],
+        "hddm_include": ["v", "a", "t", "z", "sv"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -241,7 +240,7 @@ model_config = {
         ],
         "boundary": bf.constant,
         "params_default": [0.0, 1.0, 0.5, 0.25, 5.0, 0.5, 1.0],
-        "hddm_include": ["z", "shape", "scale", "c"],
+        "hddm_include": ["v", "a", "t", "z", "shape", "scale", "c"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -271,7 +270,7 @@ model_config = {
         ],
         "boundary": bf.angle,
         "params_default": [0.0, 1.0, 0.5, 0.25, 0.0, 5.0, 0.5, 1.0],
-        "hddm_include": ["z", "shape", "scale", "c", "theta"],
+        "hddm_include": ["v", "a", "t", "z", "shape", "scale", "c", "theta"],
         "choices": [-1, 1],
         "slice_widths": {
             "v": 1.5,
@@ -778,8 +777,10 @@ model_config = {
         "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t"],
         "params_trans": [0, 0, 0, 0, 0, 0],
-        "param_bounds": [[-4.0, -4.0, -4.0, 0.3, 0.0, 0.0], 
-                         [4.0, 4.0, 4.0, 2.5, 1.0, 2.0]],
+        "param_bounds": [
+            [-4.0, -4.0, -4.0, 0.3, 0.0, 0.0],
+            [4.0, 4.0, 4.0, 2.5, 1.0, 2.0],
+        ],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
         "boundary": bf.constant,
         "n_params": 6,
@@ -799,15 +800,24 @@ model_config = {
             "d_trans": 0.2,
             "t": 0.01,
             "t_std": 0.15,
-        }
-
+        },
     },
     "tradeoff_angle_no_bias": {
         "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t", "theta"],
         "params_trans": [0, 0, 0, 0, 0, 0, 0],
-        "param_bounds": [[-4.0, -4.0, -4.0, 0.3, 0.0, 0.0, -0.1,], 
-                         [4.0, 4.0, 4.0, 2.5, 1.0, 2.0, 1.0]],
+        "param_bounds": [
+            [
+                -4.0,
+                -4.0,
+                -4.0,
+                0.3,
+                0.0,
+                0.0,
+                -0.1,
+            ],
+            [4.0, 4.0, 4.0, 2.5, 1.0, 2.0, 1.0],
+        ],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0],
         "boundary": bf.angle,
         "boundary_multiplicative": False,
@@ -830,14 +840,16 @@ model_config = {
             "t_std": 0.15,
             "theta": 0.1,
             "theta_std": 0.2,
-        }
+        },
     },
     "tradeoff_weibull_no_bias": {
         "doc": "Currently undocumented, in testing phase.",
         "params": ["vh", "vl1", "vl2", "a", "d", "t", "alpha", "beta"],
         "params_trans": [0, 0, 0, 0, 0, 0, 0, 0],
-        "param_bounds": [[-4.0, -4.0, -4.0, 0.3, 0.0, 0.0, 0.31, 0.31], 
-                         [4.0, 4.0, 4.0, 2.5, 1.0, 2.0, 4.99, 6.99]],
+        "param_bounds": [
+            [-4.0, -4.0, -4.0, 0.3, 0.0, 0.0, 0.31, 0.31],
+            [4.0, 4.0, 4.0, 2.5, 1.0, 2.0, 4.99, 6.99],
+        ],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0, 1.0],
         "boundary": bf.weibull_cdf,
         "boundary_multiplicative": True,
@@ -862,20 +874,44 @@ model_config = {
             "alpha_std": 0.5,
             "beta": 1.0,
             "beta_std": 0.5,
-        }
+        },
     },
-    "tradeoff_gamma_conflict_no_bias": {
+    "tradeoff_conflict_gamma_no_bias": {
         "doc": "Currently undocumented, in testing phase.",
-        "params": ["vh", "vl1", "vl2", "d", "t", "a", "theta", "scale", "alphagamma", "scalegamma"],
+        "params": [
+            "vh",
+            "vl1",
+            "vl2",
+            "d",
+            "t",
+            "a",
+            "theta",
+            "scale",
+            "alphagamma",
+            "scalegamma",
+        ],
         "params_trans": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        "param_bounds": [[-4.0, -4.0, -4.0, 0.0, 0.0, 0.3, 0.0, 0.0, 1.1, 0.5], 
-                         [4.0, 4.0, 4.0, 1.0, 2.0, 2.5, 0.5, 5.0, 5.0, 5.0]],
+        "param_bounds": [
+            [-4.0, -4.0, -4.0, 0.0, 0.0, 0.3, 0.0, 0.0, 1.1, 0.5],
+            [4.0, 4.0, 4.0, 1.0, 2.0, 2.5, 0.5, 5.0, 5.0, 5.0],
+        ],
         "params_std_upper": [1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
         "boundary": bf.conflict_gamma_bound,
         "boundary_multiplicative": False,
         "n_params": 10,
-        "default_params": [0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 2., 2.],
-        "hddm_include": ["vh", "vl1", "vl2", "a", "d", "t", "theta", "scale", "alphagamma", "scalegamma"],
+        "default_params": [0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0],
+        "hddm_include": [
+            "vh",
+            "vl1",
+            "vl2",
+            "a",
+            "d",
+            "t",
+            "theta",
+            "scale",
+            "alphagamma",
+            "scalegamma",
+        ],
         "choices": [0, 1, 2, 3],
         "slice_widths": {
             "vh": 1.5,
@@ -898,7 +934,7 @@ model_config = {
             "alphagamma_std": 0.2,
             "scalegamma": 0.1,
             "scalegamma_std": 0.2,
-        }
+        },
     },
     "race_no_bias_3": {
         "doc": "To be used with the LAN extension. Note, we suggest to fix z instead here, since it is essentially \n"
@@ -1167,6 +1203,6 @@ model_config = {
 }
 
 # Models for which configs can be reused
-model_config["weibull_cdf"] = model_config["weibull"].copy()
+# model_config["weibull_cdf"] = model_config["weibull"].copy()
 
 model_config["full_ddm2"] = model_config["full_ddm"].copy()

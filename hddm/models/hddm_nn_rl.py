@@ -69,7 +69,7 @@ class HDDMnnRL(HDDMnn):
 
 
     :Example:
-        >>> m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', include=['z', 'theta', 'rl_alpha'], p_outlier = 0.0)
+        >>> m = hddm.HDDMnnRL(data, model='angle', rl_rule='RWupdate', include=['v', 'a', 't', 'z', 'theta', 'rl_alpha'], p_outlier = 0.0)
         >>> m.sample(2000, burn=1000, dbname='traces.db', db='pickle')
 
     """

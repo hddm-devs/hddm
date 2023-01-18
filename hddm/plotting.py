@@ -32,6 +32,7 @@ def prettier_tag(tag):
     else:
         return "(" + ", ".join([str(t) for t in tag]) + ")"
 
+
 # Plot Composer Functions
 def plot_posterior_pair(
     model,
@@ -42,7 +43,7 @@ def plot_posterior_pair(
     format="png",
     samples=100,
     parameter_recovery_mode=False,
-    **kwargs
+    **kwargs,
 ):
     """Generate posterior pair plots for each observed node.
 
@@ -90,13 +91,13 @@ def plot_posterior_pair(
         This function changes the current value and logp of the nodes.
 
     """
-    if hasattr(model, 'reg_outcomes'):
+    if hasattr(model, "reg_outcomes"):
         return "Note: The posterior pair plot does not support regression models at this point! Aborting..."
 
     if hasattr(model, "model"):
         kwargs["model_"] = model.model
     else:
-        kwargs["model_"] = "ddm_vanilla"
+        kwargs["model_"] = "ddm_hddm_base"
 
     if plot_func is None:
         plot_func = _plot_func_pair
@@ -142,17 +143,20 @@ def plot_posterior_pair(
 
 def plot_from_data(
     df,
-    generative_model="ddm_vanilla",
+    generative_model="ddm_hddm_base",
     plot_func=None,
     columns=None,
     save=False,
+    save_name=None,
+    make_transparent=False,
+    show=True,
     path=None,
     groupby="subj_idx",
     figsize=(8, 6),
     format="png",
     keep_frame=True,
     keep_title=True,
-    **kwargs
+    **kwargs,
 ):
     """Plot data from a hddm ready DataFrame.
 
@@ -222,6 +226,11 @@ def plot_from_data(
 
     # Plot different conditions (new figure for each)
     fig = plt.figure(figsize=figsize)
+
+    if make_transparent:
+        fig.patch.set_facecolor("None")
+        fig.patch.set_alpha(0.0)
+
     fig.suptitle(title_, fontsize=12)
     fig.subplots_adjust(top=0.9, hspace=0.4, wspace=0.3)
 
@@ -245,33 +254,41 @@ def plot_from_data(
             tag += groupby[j] + "(" + str(group_id[j]) + ")"
             if j < (len(groupby) - 1):
                 tag += "_"
-        #print(tag)
+        # print(tag)
         if keep_title:
             ax.set_title(tag, fontsize=ax_title_size)
-        #ax.set(frame_on=False)
+        # ax.set(frame_on=False)
         if not keep_frame:
             ax.set_axis_off()
-        #ax.spines['top'].set_visible(False)
-        #ax.spines['right'].set_visible(False)
-        #ax.spines['bottom'].set_visible(False)
-        #ax.spines['left'].set_visible(False)
 
         # Call plot function on ax
         # This function should manipulate the ax object, and is expected to not return anything.
         plot_func(df_tmp, ax, **kwargs)
         i += 1
 
-        # Save figure if necessary
+        # Save figure if desired
         if save:
-            fname = "ppq_" + tag
+            if save_name is None:
+                fname = "ppq_" + tag
+            else:
+                fname = save_name
+
             if path is None:
                 path = "."
             if isinstance(format, str):
                 format = [format]
             [
-                fig.savefig("%s.%s" % (os.path.join(path, fname), x), format=x)
+                fig.savefig(
+                    "%s.%s" % (os.path.join(path, fname), x),
+                    facecolor=fig.get_facecolor(),
+                    format=x,
+                )
                 for x in format
             ]
+
+        # Todo take care of plot closing etc.
+        if show:
+            pass
 
 
 def plot_posterior_predictive(
@@ -286,7 +303,7 @@ def plot_posterior_predictive(
     num_subjs=None,
     parameter_recovery_mode=False,
     subplots_adjust={"top": 0.85, "hspace": 0.4, "wspace": 0.3},
-    **kwargs
+    **kwargs,
 ):
     """Plot the posterior predictive distribution of a kabuki hierarchical model.
 
@@ -344,7 +361,7 @@ def plot_posterior_predictive(
     if hasattr(model, "model"):
         kwargs["model_"] = model.model
     else:
-        kwargs["model_"] = "ddm_vanilla"
+        kwargs["model_"] = "ddm_hddm_base"
 
     if plot_func is None:
         plot_func = _plot_func_posterior_pdf_node_nn
@@ -432,7 +449,7 @@ def _plot_func_posterior_pdf_node_nn(
     posterior_color="red",
     add_legend=True,
     alpha=0.05,
-    **kwargs
+    **kwargs,
 ):
     """Calculate posterior predictives from raw likelihood values and plot it on top of a histogram of the real data.
        The function does not define a figure, but manipulates an axis object.
@@ -449,7 +466,7 @@ def _plot_func_posterior_pdf_node_nn(
             Range over which to evaluate the likelihood.
 
     Optional:
-        model : str <default='ddm_vanilla'>
+        model : str <default='ddm_hddm_base'>
             str that defines the generative model underlying the kabuki model from which the bottom_node
             argument derives.
 
@@ -488,12 +505,9 @@ def _plot_func_posterior_pdf_node_nn(
         6: "brown",
     }
 
-    model_ = kwargs.pop("model_", "ddm_vanilla")
+    model_ = kwargs.pop("model_", "ddm_hddm_base")
     choices = model_config[model_]["choices"]
     n_choices = len(model_config[model_]["choices"])
-
-    # data_color = kwargs.pop("data_color", "blue")
-    # posterior_color = kwargs.pop("posterior_color", "red")
 
     bins = np.arange(value_range[0], value_range[-1], bin_size)
 
@@ -668,7 +682,7 @@ def _plot_func_posterior_node_from_sim(
     data_color="blue",
     posterior_mean_color="red",
     posterior_uncertainty_color="black",
-    **kwargs
+    **kwargs,
 ):
     """Calculate posterior predictive for a certain bottom node and plot a histogram using the supplied axis element.
 
@@ -928,11 +942,22 @@ def _plot_func_model(
     bin_size=0.05,
     add_data_rts=True,
     add_data_model=True,
+    add_data_model_keep_slope=True,
+    add_data_model_keep_boundary=True,
+    add_data_model_keep_ndt=True,
+    add_data_model_keep_starting_point=True,
+    add_data_model_markersize_starting_point=50,
+    add_data_model_markertype_starting_point=0,
+    add_data_model_markershift_starting_point=0,
     add_posterior_uncertainty_model=False,
     add_posterior_uncertainty_rts=False,
     add_posterior_mean_model=True,
     add_posterior_mean_rts=True,
     add_trajectories=False,
+    data_label="Data",
+    secondary_data=None,
+    secondary_data_label=None,
+    secondary_data_color="blue",
     linewidth_histogram=0.5,
     linewidth_model=0.5,
     legend_fontsize=12,
@@ -943,8 +968,8 @@ def _plot_func_model(
     posterior_uncertainty_color="black",
     alpha=0.05,
     delta_t_model=0.01,
-    add_legend=True, #keep_frame=False,
-    **kwargs
+    add_legend=True,  # keep_frame=False,
+    **kwargs,
 ):
     """Calculate posterior predictive for a certain bottom node.
 
@@ -1011,7 +1036,7 @@ def _plot_func_model(
             specifies plotting intervals for model cartoon elements of the graphs.
     """
 
-    # AF-TODO: Add a mean version of this !
+    # AF-TODO: Add a mean version of this!
     if value_range is None:
         # Infer from data by finding the min and max from the nodes
         raise NotImplementedError("value_range keyword argument must be supplied.")
@@ -1044,25 +1069,38 @@ def _plot_func_model(
         raise ValueError("The model plot works only for 2 choice models at the moment")
 
     # ---------------------------
+
     ylim = kwargs.pop("ylim", 3)
     hist_bottom = kwargs.pop("hist_bottom", 2)
     hist_histtype = kwargs.pop("hist_histtype", "step")
 
+    if ("ylim_high" in kwargs) and ("ylim_low" in kwargs):
+        ylim_high = kwargs["ylim_high"]
+        ylim_low = kwargs["ylim_low"]
+    else:
+        ylim_high = ylim
+        ylim_low = -ylim
+
+    if ("hist_bottom_high" in kwargs) and ("hist_bottom_low" in kwargs):
+        hist_bottom_high = kwargs["hist_bottom_high"]
+        hist_bottom_low = kwargs["hist_bottom_low"]
+    else:
+        hist_bottom_high = hist_bottom
+        hist_bottom_low = hist_bottom
 
     axis.set_xlim(value_range[0], value_range[-1])
-    axis.set_ylim(-ylim, ylim)
+    axis.set_ylim(ylim_low, ylim_high)
     axis_twin_up = axis.twinx()
     axis_twin_down = axis.twinx()
-    axis_twin_up.set_ylim(-ylim, ylim)
+    axis_twin_up.set_ylim(ylim_low, ylim_high)
     axis_twin_up.set_yticks([])
-    axis_twin_down.set_ylim(ylim, -ylim)
+    axis_twin_down.set_ylim(ylim_high, ylim_low)
     axis_twin_down.set_yticks([])
     axis_twin_down.set_axis_off()
     axis_twin_up.set_axis_off()
-    
+
     # ADD HISTOGRAMS
     # -------------------------------
-
     # POSTERIOR BASED HISTOGRAM
     if add_posterior_uncertainty_rts:  # add_uc_rts:
         j = 0
@@ -1086,7 +1124,7 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_up,
                 histtype=hist_histtype,
-                bottom=hist_bottom,
+                bottom=hist_bottom_high,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
                 edgecolor=posterior_uncertainty_color,
@@ -1100,7 +1138,7 @@ def _plot_func_model(
                 bins=bins,
                 weights=weights_down,
                 histtype=hist_histtype,
-                bottom=hist_bottom,
+                bottom=hist_bottom_low,
                 alpha=alpha,
                 color=posterior_uncertainty_color,
                 edgecolor=posterior_uncertainty_color,
@@ -1130,7 +1168,7 @@ def _plot_func_model(
             bins=bins,
             weights=weights_up,
             histtype=hist_histtype,
-            bottom=hist_bottom,
+            bottom=hist_bottom_high,
             alpha=1.0,
             color=posterior_mean_color,
             edgecolor=posterior_mean_color,
@@ -1144,7 +1182,7 @@ def _plot_func_model(
             bins=bins,
             weights=weights_down,
             histtype=hist_histtype,
-            bottom=hist_bottom,
+            bottom=hist_bottom_low,
             alpha=1.0,
             color=posterior_mean_color,
             edgecolor=posterior_mean_color,
@@ -1156,7 +1194,7 @@ def _plot_func_model(
     if (data_tmp is not None) and add_data_rts:
         tmp_label = None
         if add_legend:
-            tmp_label = "Data"
+            tmp_label = data_label
 
         weights_up = np.tile(
             (1 / bin_size) / data_tmp.shape[0],
@@ -1172,7 +1210,7 @@ def _plot_func_model(
             bins=bins,
             weights=weights_up,
             histtype=hist_histtype,
-            bottom=hist_bottom,
+            bottom=hist_bottom_high,
             alpha=1,
             color=data_color,
             edgecolor=data_color,
@@ -1186,12 +1224,55 @@ def _plot_func_model(
             bins=bins,
             weights=weights_down,
             histtype=hist_histtype,
-            bottom=hist_bottom,
+            bottom=hist_bottom_low,
             alpha=1,
             color=data_color,
             edgecolor=data_color,
             linewidth=linewidth_histogram,
             zorder=-1,
+        )
+
+    # SECONDARY DATA HISTOGRAM
+    if secondary_data is not None:
+        tmp_label = None
+        if add_legend:
+            if secondary_data_label is not None:
+                tmp_label = secondary_data_label
+
+        weights_up = np.tile(
+            (1 / bin_size) / secondary_data.shape[0],
+            reps=secondary_data[secondary_data.response == 1].shape[0],
+        )
+        weights_down = np.tile(
+            (1 / bin_size) / secondary_data.shape[0],
+            reps=secondary_data[(secondary_data.response != 1)].shape[0],
+        )
+
+        axis_twin_up.hist(
+            np.abs(secondary_data[secondary_data.response == 1].rt),
+            bins=bins,
+            weights=weights_up,
+            histtype=hist_histtype,
+            bottom=hist_bottom_high,
+            alpha=1,
+            color=secondary_data_color,
+            edgecolor=secondary_data_color,
+            label=tmp_label,
+            zorder=-100,
+            linewidth=linewidth_histogram,
+        )
+
+        axis_twin_down.hist(
+            np.abs(secondary_data[(secondary_data.response != 1)].rt),
+            bins=bins,
+            weights=weights_down,
+            histtype=hist_histtype,
+            bottom=hist_bottom_low,
+            alpha=1,
+            color=secondary_data_color,
+            edgecolor=secondary_data_color,
+            linewidth=linewidth_histogram,
+            zorder=-100,
         )
     # -------------------------------
 
@@ -1212,11 +1293,19 @@ def _plot_func_model(
                 sample=sample,
                 axis=axis,
                 tmp_model=tmp_model,
+                keep_slope=add_data_model_keep_slope,
+                keep_boundary=add_data_model_keep_boundary,
+                keep_ndt=add_data_model_keep_ndt,
+                keep_starting_point=add_data_model_keep_starting_point,
+                markersize_starting_point=add_data_model_markersize_starting_point,
+                markertype_starting_point=add_data_model_markertype_starting_point,
+                markershift_starting_point=add_data_model_markershift_starting_point,
                 delta_t_graph=delta_t_model,
                 sample_hist_alpha=alpha,
                 lw_m=linewidth_model,
                 tmp_label=tmp_label,
-                ylim=ylim,
+                ylim_low=ylim_low,
+                ylim_high=ylim_high,
                 t_s=t_s,
                 color=posterior_uncertainty_color,
                 zorder_cnt=j,
@@ -1227,11 +1316,19 @@ def _plot_func_model(
             sample=node_data_full,
             axis=axis,
             tmp_model=tmp_model,
+            keep_slope=add_data_model_keep_slope,
+            keep_boundary=add_data_model_keep_boundary,
+            keep_ndt=add_data_model_keep_ndt,
+            keep_starting_point=add_data_model_keep_starting_point,
+            markersize_starting_point=add_data_model_markersize_starting_point,
+            markertype_starting_point=add_data_model_markertype_starting_point,
+            markershift_starting_point=add_data_model_markershift_starting_point,
             delta_t_graph=delta_t_model,
             sample_hist_alpha=1.0,
             lw_m=linewidth_model + 0.5,
             tmp_label=None,
-            ylim=ylim,
+            ylim_low=ylim_low,
+            ylim_high=ylim_high,
             t_s=t_s,
             color=data_color,
             zorder_cnt=j + 1,
@@ -1246,99 +1343,307 @@ def _plot_func_model(
             sample=pd.DataFrame(pd.concat(samples_tmp).mean().astype(np.float32)).T,
             axis=axis,
             tmp_model=tmp_model,
+            keep_slope=add_data_model_keep_slope,
+            keep_boundary=add_data_model_keep_boundary,
+            keep_ndt=add_data_model_keep_ndt,
+            keep_starting_point=add_data_model_keep_starting_point,
+            markersize_starting_point=add_data_model_markersize_starting_point,
+            markertype_starting_point=add_data_model_markertype_starting_point,
+            markershift_starting_point=add_data_model_markershift_starting_point,
             delta_t_graph=delta_t_model,
             sample_hist_alpha=1.0,
             lw_m=linewidth_model + 0.5,
             tmp_label=None,
-            ylim=ylim,
+            ylim_low=ylim_low,
+            ylim_high=ylim_high,
             t_s=t_s,
             color=posterior_mean_color,
             zorder_cnt=j + 2,
         )
 
     if add_trajectories:
-        _add_trajectories(axis = axis,
-                          sample = samples_tmp[0],
-                          tmp_model = tmp_model,
-                          t_s = t_s,
-                          delta_t_graph = delta_t_model,
-                          **kwargs)
+        _add_trajectories(
+            axis=axis,
+            sample=samples_tmp[0],
+            tmp_model=tmp_model,
+            t_s=t_s,
+            delta_t_graph=delta_t_model,
+            **kwargs,
+        )
 
 
-    # # Frame ---
-    # if not keep_frame:
-    #     axis.axis("off")
-
+# AF-TODO: Add documentation for this function
 def _add_trajectories(
-        axis = None,
-        sample = None,
-        t_s = None,
-        delta_t_graph = 0.01,
-        tmp_model = None,
-        n_trajectories = 10,
-        supplied_trajectory = None,
-        maxid_supplied_trajectory = 1, #useful for gifs
-        lw_trajectories = 1,
-        alpha_trajectories = 0.5,
-        color_trajectories = "black",
-        **kwargs,
-    ):
+    axis=None,
+    sample=None,
+    t_s=None,
+    delta_t_graph=0.01,
+    tmp_model=None,
+    n_trajectories=10,
+    supplied_trajectory=None,
+    maxid_supplied_trajectory=1,  # useful for gifs
+    highlight_trajectory_rt_choice=True,
+    markersize_trajectory_rt_choice=50,
+    markertype_trajectory_rt_choice="*",
+    markercolor_trajectory_rt_choice="red",
+    linewidth_trajectories=1,
+    alpha_trajectories=0.5,
+    color_trajectories="black",
+    **kwargs,
+):
+
+    # Check markercolor type
+    if type(markercolor_trajectory_rt_choice) == str:
+        markercolor_trajectory_rt_choice_dict = {}
+        for value_ in model_config[tmp_model]["choices"]:
+            markercolor_trajectory_rt_choice_dict[
+                value_
+            ] = markercolor_trajectory_rt_choice
+    elif type(markercolor_trajectory_rt_choice) == list:
+        cnt = 0
+        for value_ in model_config[tmp_model]["choices"]:
+            markercolor_trajectory_rt_choice_dict[
+                value_
+            ] = markercolor_trajectory_rt_choice[cnt]
+            cnt += 1
+    elif type(markercolor_trajectory_rt_choice) == dict:
+        markercolor_trajectory_rt_choice_dict = markercolor_trajectory_rt_choice
+    else:
+        pass
+
+    # Check trajectory color type
+    if type(color_trajectories) == str:
+        color_trajectories_dict = {}
+        for value_ in model_config[tmp_model]["choices"]:
+            color_trajectories_dict[value_] = color_trajectories
+    elif type(color_trajectories) == list:
+        cnt = 0
+        for value_ in model_config[tmp_model]["choices"]:
+            color_trajectories_dict[value_] = color_trajectories[cnt]
+            cnt += 1
+    elif type(color_trajectories) == dict:
+        color_trajectories_dict = color_trajectories
+    else:
+        pass
+
+    # Make bounds
+    (b_low, b_high) = _make_bounds(
+        tmp_model=tmp_model,
+        sample=sample,
+        delta_t_graph=delta_t_graph,
+        t_s=t_s,
+        return_shifted_by_ndt=False,
+    )
 
     # Trajectories
     if supplied_trajectory is None:
         for i in range(n_trajectories):
+            rand_int = np.random.choice(400000000)
             out_traj = simulator(
-                                theta=sample[model_config[tmp_model]["params"]].values[0],
-                                model=tmp_model,
-                                n_samples=1,
-                                no_noise=False,
-                                delta_t=delta_t_graph,
-                                bin_dim=None,
-                                )
-            
+                theta=sample[model_config[tmp_model]["params"]].values[0],
+                model=tmp_model,
+                n_samples=1,
+                no_noise=False,
+                delta_t=delta_t_graph,
+                bin_dim=None,
+                random_state=rand_int,
+            )
+
             tmp_traj = out_traj[2]["trajectory"]
+            tmp_traj_choice = float(out_traj[1].flatten())
             maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
 
+            # Identify boundary value at timepoint of crossing
+            b_tmp = b_high[maxid] if tmp_traj_choice > 0 else b_low[maxid]
+
             axis.plot(
-                      t_s[:maxid] + sample.t.values[0],
-                      tmp_traj[:maxid],
-                      color = color_trajectories,
-                      alpha = alpha_trajectories,
-                      linewidth = lw_trajectories,
-                      )
+                t_s[:maxid] + sample.t.values[0],
+                tmp_traj[:maxid],
+                color=color_trajectories_dict[tmp_traj_choice],
+                alpha=alpha_trajectories,
+                linewidth=linewidth_trajectories,
+                zorder=2000 + i,
+            )
+
+            if highlight_trajectory_rt_choice:
+                axis.scatter(
+                    t_s[maxid] + sample.t.values[0],
+                    b_tmp,
+                    # tmp_traj[maxid],
+                    markersize_trajectory_rt_choice,
+                    color=markercolor_trajectory_rt_choice_dict[tmp_traj_choice],
+                    alpha=1,
+                    marker=markertype_trajectory_rt_choice,
+                    zorder=2000 + i,
+                )
+
     else:
-        maxid = np.minimum(np.argmax(np.where(supplied_trajectory > -999)), t_s.shape[0])
-        maxid_traj = min(maxid, maxid_supplied_trajectory)
+        if len(supplied_trajectory["trajectories"].shape) == 1:
+            supplied_trajectory["trajectories"] = np.expand_dims(
+                supplied_trajectory["trajectories"], axis=0
+            )
 
-        axis.plot(
-                  t_s[:maxid_traj] + sample.t.values[0],
-                  supplied_trajectory[:maxid_traj],
-                  color = color_trajectories,
-                  alpha = alpha_trajectories,
-                  linewidth = lw_trajectories,
-                 )
+        for j in range(supplied_trajectory["trajectories"].shape[0]):
+            maxid = np.minimum(
+                np.argmax(np.where(supplied_trajectory["trajectories"][j, :] > -999)),
+                t_s.shape[0],
+            )
+            if j == (supplied_trajectory["trajectories"].shape[0] - 1):
+                maxid_traj = min(maxid, maxid_supplied_trajectory)
+            else:
+                maxid_traj = maxid
 
+            axis.plot(
+                t_s[:maxid_traj] + sample.t.values[0],
+                supplied_trajectory["trajectories"][j, :maxid_traj],
+                color=color_trajectories_dict[
+                    supplied_trajectory["trajectory_choices"][j]
+                ],  # color_trajectories,
+                alpha=alpha_trajectories,
+                linewidth=linewidth_trajectories,
+                zorder=2000 + j,
+            )
+
+            # Identify boundary value at timepoint of crossing
+            b_tmp = (
+                b_high[maxid_traj]
+                if supplied_trajectory["trajectory_choices"][j] > 0
+                else b_low[maxid_traj]
+            )
+
+            if maxid_traj == maxid:
+                if highlight_trajectory_rt_choice:
+                    axis.scatter(
+                        t_s[maxid_traj] + sample.t.values[0],
+                        b_tmp,
+                        # supplied_trajectory['trajectories'][j, maxid_traj],
+                        markersize_trajectory_rt_choice,
+                        color=markercolor_trajectory_rt_choice_dict[
+                            supplied_trajectory["trajectory_choices"][j]
+                        ],  # markercolor_trajectory_rt_choice,
+                        alpha=1,
+                        marker=markertype_trajectory_rt_choice,
+                        zorder=2000 + j,
+                    )
+
+
+# AF-TODO: Add documentation to this function
 def _add_model_cartoon_to_ax(
-        sample=None,
-        axis=None,
-        tmp_model=None,
-        delta_t_graph=None,
-        sample_hist_alpha=None,
-        lw_m=None,
-        tmp_label=None,
-        ylim=None,
-        t_s=None,
-        zorder_cnt=1,
-        color="black",
-    ):
+    sample=None,
+    axis=None,
+    tmp_model=None,
+    keep_slope=True,
+    keep_boundary=True,
+    keep_ndt=True,
+    keep_starting_point=True,
+    markersize_starting_point=80,
+    markertype_starting_point=1,
+    markershift_starting_point=-0.05,
+    delta_t_graph=None,
+    sample_hist_alpha=None,
+    lw_m=None,
+    tmp_label=None,
+    ylim_low=None,
+    ylim_high=None,
+    t_s=None,
+    zorder_cnt=1,
+    color="black",
+):
 
-    if (
-        tmp_model == "weibull_cdf"
-        or tmp_model == "weibull_cdf2"
-        or tmp_model == "weibull_cdf_concave"
-        or tmp_model == "weibull"
-    ):
+    # Make bounds
+    b_low, b_high = _make_bounds(
+        tmp_model=tmp_model,
+        sample=sample,
+        delta_t_graph=delta_t_graph,
+        t_s=t_s,
+        return_shifted_by_ndt=True,
+    )
 
+    # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
+    out = simulator(
+        theta=sample[model_config[tmp_model]["params"]].values[0],
+        model=tmp_model,
+        n_samples=1,
+        no_noise=True,
+        delta_t=delta_t_graph,
+        bin_dim=None,
+    )
+
+    tmp_traj = out[2]["trajectory"]
+    maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+
+    if "hddm_base" in tmp_model:
+        a_tmp = sample.a.values[0] / 2
+        tmp_traj = tmp_traj - a_tmp
+
+    if keep_boundary:
+        # Upper bound
+        axis.plot(
+            t_s,  # + sample.t.values[0],
+            b_high,
+            color=color,
+            alpha=sample_hist_alpha,
+            zorder=1000 + zorder_cnt,
+            linewidth=lw_m,
+            label=tmp_label,
+        )
+
+        # Lower bound
+        axis.plot(
+            t_s,  # + sample.t.values[0],
+            b_low,
+            color=color,
+            alpha=sample_hist_alpha,
+            zorder=1000 + zorder_cnt,
+            linewidth=lw_m,
+        )
+
+    # Slope
+    if keep_slope:
+        axis.plot(
+            t_s[:maxid] + sample.t.values[0],
+            tmp_traj[:maxid],
+            color=color,
+            alpha=sample_hist_alpha,
+            zorder=1000 + zorder_cnt,
+            linewidth=lw_m,
+        )  # TOOK AWAY LABEL
+
+    # Non-decision time
+    if keep_ndt:
+        axis.axvline(
+            x=sample.t.values[0],
+            ymin=ylim_low,
+            ymax=ylim_high,
+            color=color,
+            linestyle="--",
+            linewidth=lw_m,
+            zorder=1000 + zorder_cnt,
+            alpha=sample_hist_alpha,
+        )
+    # Starting point
+    if keep_starting_point:
+        axis.scatter(
+            sample.t.values[0] + markershift_starting_point,
+            b_low[0] + (sample.z.values[0] * (b_high[0] - b_low[0])),
+            markersize_starting_point,
+            marker=markertype_starting_point,
+            color=color,
+            alpha=sample_hist_alpha,
+            zorder=1000 + zorder_cnt,
+        )
+
+
+def _make_bounds(
+    tmp_model=None,
+    sample=None,
+    delta_t_graph=None,
+    t_s=None,
+    return_shifted_by_ndt=True,
+):
+
+    # MULTIPLICATIVE BOUND
+    if tmp_model == "weibull":
         b = np.maximum(
             sample.a.values[0]
             * model_config[tmp_model]["boundary"](
@@ -1347,85 +1652,56 @@ def _add_model_cartoon_to_ax(
             0,
         )
 
-    if tmp_model == "angle" or tmp_model == "angle2":
+        # Move boundary forward by the non-decision time
+        b_raw_high = deepcopy(b)
+        b_raw_low = deepcopy(-b)
+        b_init_val = b[0]
+        t_shift = np.arange(0, sample.t.values[0], delta_t_graph).shape[0]
+        b = np.roll(b, t_shift)
+        b[:t_shift] = b_init_val
+
+    # ADDITIVE BOUND
+    elif tmp_model == "angle":
         b = np.maximum(
             sample.a.values[0]
             + model_config[tmp_model]["boundary"](t=t_s, theta=sample.theta.values[0]),
             0,
         )
 
-    if (
+        b_raw_high = deepcopy(b)
+        b_raw_low = deepcopy(-b)
+        # Move boundary forward by the non-decision time
+        b_init_val = b[0]
+        t_shift = np.arange(0, sample.t.values[0], delta_t_graph).shape[0]
+        b = np.roll(b, t_shift)
+        b[:t_shift] = b_init_val
+
+    # CONSTANT BOUND
+    elif (
         tmp_model == "ddm"
         or tmp_model == "ornstein"
         or tmp_model == "levy"
         or tmp_model == "full_ddm"
-        or tmp_model == "ddm_vanilla"
-        or tmp_model == "full_ddm_vanilla"
+        or tmp_model == "ddm_hddm_base"
+        or tmp_model == "full_ddm_hddm_base"
     ):
 
         b = sample.a.values[0] * np.ones(t_s.shape[0])
-        if "vanilla" in tmp_model:
+
+        if "hddm_base" in tmp_model:
             b = (sample.a.values[0] / 2) * np.ones(t_s.shape[0])
 
-    # MAKE SLOPES (VIA TRAJECTORIES HERE --> RUN NOISE FREE SIMULATIONS)!
-    out = simulator(
-                    theta=sample[model_config[tmp_model]["params"]].values[0],
-                    model=tmp_model,
-                    n_samples=1,
-                    no_noise=True,
-                    delta_t=delta_t_graph,
-                    bin_dim=None,
-                    )
+        b_raw_high = b
+        b_raw_low = -b
 
-    # AF-TODO: Add trajectories
-    tmp_traj = out[2]["trajectory"]
-    maxid = np.minimum(np.argmax(np.where(tmp_traj > -999)), t_s.shape[0])
+    # Separate out upper and lower bound:
+    b_high = b
+    b_low = -b
 
-    if "vanilla" in tmp_model:
-        a_tmp = sample.a.values[0] / 2
-        tmp_traj = tmp_traj - a_tmp  # + (a_tmp * sample.z.values[0])
-
-    # Upper bound
-    axis.plot(
-        t_s, # + sample.t.values[0],
-        b,
-        color=color,
-        alpha=sample_hist_alpha,
-        zorder=1000 + zorder_cnt,
-        linewidth=lw_m,
-        label=tmp_label,
-    )
-
-    # Lower bound
-    axis.plot(
-        t_s, # + sample.t.values[0],
-        -b,
-        color=color,
-        alpha=sample_hist_alpha,
-        zorder=1000 + zorder_cnt,
-        linewidth=lw_m,
-    )
-
-    # Slope
-    axis.plot(
-        t_s[:maxid] + sample.t.values[0],
-        tmp_traj[:maxid],
-        color=color,
-        alpha=sample_hist_alpha,
-        zorder=1000 + zorder_cnt,
-        linewidth=lw_m,
-    )  # TOOK AWAY LABEL
-
-    # Starting point
-    axis.axvline(
-        x=sample.t.values[0],
-        ymin=-ylim,
-        ymax=ylim,
-        color=color,
-        linestyle="--",
-        linewidth=lw_m,
-        alpha=sample_hist_alpha,
-    )
+    if return_shifted_by_ndt:
+        return (b_low, b_high)
+    else:
+        return (b_raw_low, b_raw_high)
 
 
 def _plot_func_model_n(
@@ -1447,7 +1723,7 @@ def _plot_func_model_n(
     add_legend=True,
     alpha=0.01,
     keep_frame=False,
-    **kwargs
+    **kwargs,
 ):
     """Calculate posterior predictive for a certain bottom node.
 
@@ -1823,7 +2099,12 @@ def _add_model_n_cartoon_to_ax(
 
 
 def _plot_func_pair(
-    bottom_node, model_="ddm_vanilla", n_samples=200, figsize=(8, 6), title="", **kwargs
+    bottom_node,
+    model_="ddm_hddm_base",
+    n_samples=200,
+    figsize=(8, 6),
+    title="",
+    **kwargs,
 ):
     """Generates a posterior pair plot for a given kabuki node.
 
@@ -1841,7 +2122,7 @@ def _plot_func_pair(
         title: str <default=''>
             Plot title.
 
-        model: str <default='ddm_vanilla'>
+        model: str <default='ddm_hddm_base'>
 
     """
 
@@ -1862,9 +2143,7 @@ def _plot_func_pair(
         style="ticks", color_codes=True
     )  # , rc = {'figure.figsize': figsize})
 
-    g = sns.PairGrid(
-        data=df, corner=True
-    )  # height = figsize[0], aspect = figsize[1] / figsize[0])
+    g = sns.PairGrid(data=df, corner=True)
     g.fig.set_size_inches(figsize[0], figsize[1])
     g = g.map_diag(plt.hist, histtype="step", color="black", alpha=0.8)
     g = g.map_lower(sns.kdeplot, cmap="Reds")
@@ -1909,22 +2188,22 @@ def _plot_func_pair(
 # ONE OFF PLOTS
 def _group_node_names_by_param(model):
     tmp_params_allowed = model_config[model.model]["params"].copy()
-    if hasattr(model, 'rlssm_model'):
-        if model.rlssm_model: # TODO: Turns out basic hddm classes have rlssm_model attribute but set to false ....
-            tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"]) 
+    if hasattr(model, "rlssm_model"):
+        if (
+            model.rlssm_model
+        ):  # TODO: Turns out basic hddm classes have rlssm_model attribute but set to false ....
+            tmp_params_allowed.extend(model_config_rl[model.rl_rule]["params"])
     tmp_params_allowed.append("dc")  # to accomodate HDDMStimcoding class
     keys_by_param = {}
 
     # Cycle through all nodes
-    #m.nodes_db[m.nodes_db['stochastic'] == True]
-    #tmp_nodes_db = model.nodes_db[model.nodes_db['stochastic'] == True]
     for key_ in model.nodes_db.index:
 
-        if 'offset' in key_ :
+        if "offset" in key_:
             continue
 
         # Cycle through model relevant parameters
-        for param_tmp in tmp_params_allowed: #model_config[model.model]["params"]:
+        for param_tmp in tmp_params_allowed:  # model_config[model.model]["params"]:
 
             # Initialize param_tmp key if not yet done
             if param_tmp not in keys_by_param.keys():
@@ -1938,7 +2217,7 @@ def _group_node_names_by_param(model):
             # Take out 'trans' and 'tau' and observed nodes
             if (
                 not ("trans" in key_)
-                and not ("tau"  in key_)
+                and not ("tau" in key_)
                 and not ((param_tmp + "_reg") in key_)
                 and not ("_rate" in key_)
                 and not ("_shape" in key_)
@@ -2043,7 +2322,7 @@ def plot_caterpillar(
         for k in traces_tmp.keys():
             # If we want to keep only a specific parameter we skip all traces which don't include it in
             # their names !
-            if (keep_key is not None and k not in keep_key):
+            if keep_key is not None and k not in keep_key:
                 continue
 
             # Deal with
@@ -2058,13 +2337,13 @@ def plot_caterpillar(
                         ok_ = 0
                 if ok_:
                     # Make empirical CDFs and extract the 10th, 1th / 99th, 90th percentiles
-                    print('tracename: ')
+                    print("tracename: ")
                     print(k)
 
-                    if hasattr(hddm_model, 'rlssm_model'):
-                        if 'rl_alpha' in k and not 'std' in k:
-                            vals = traces_tmp[k].values 
-                            transformed_trace = np.exp(vals)/(1+np.exp(vals))
+                    if hasattr(hddm_model, "rlssm_model"):
+                        if "rl_alpha" in k and not "std" in k:
+                            vals = traces_tmp[k].values
+                            transformed_trace = np.exp(vals) / (1 + np.exp(vals))
                             ecdfs[k] = ECDF(transformed_trace)
                             tmp_sorted = sorted(transformed_trace)
                         else:
@@ -2073,7 +2352,7 @@ def plot_caterpillar(
                     else:
                         ecdfs[k] = ECDF(traces_tmp[k].values)
                         tmp_sorted = sorted(traces_tmp[k].values)
-                    
+
                     _p01 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.01) - 1]
                     _p99 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.99) - 1]
                     _p1 = tmp_sorted[np.sum(ecdfs[k](tmp_sorted) <= 0.1) - 1]
@@ -2374,30 +2653,28 @@ def plot_ppc_choice_rlssm(
             res_obs[cond],
             yerr=[low_err_obs[cond], up_err_obs[cond]],
             label="observed",
-            color='royalblue',
+            color="royalblue",
         )
         ax[ay].errorbar(
             1 + np.arange(len(res_sim[cond])),
             res_sim[cond],
             yerr=[low_err_sim[cond], up_err_sim[cond]],
             label="simulated",
-            color='tomato',
+            color="tomato",
         )
 
         ax[ay].set_ylim((0, 1))
 
-        #ax[ay].legend()
+        # ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
         cond_index += 1
 
-    
-
     fig = plt.gcf()
     lines, labels = fig.axes[-1].get_legend_handles_labels()
-    fig.legend(lines, labels, loc = 'lower right')
-    
+    fig.legend(lines, labels, loc="lower right")
+
     fig.supxlabel("Trial bins", fontsize=12)
     fig.supylabel("Proportion of Correct Responses", fontsize=12)
     fig.set_size_inches(4 * len(cond_list), 4)
@@ -2469,14 +2746,14 @@ def plot_ppc_rt_rlssm(
             0 - obs_data_ppc[obs_data_ppc.split_by == cond].rt,
         )
 
-        sns.kdeplot(rt_ppc_sim, label="simulated", color='tomato', ax=ax[ay], bw_method=bw).set(
-            ylabel=None
-        )
-        sns.kdeplot(rt_ppc_obs, label="observed", color='royalblue', ax=ax[ay], bw_method=bw).set(
-            ylabel=None
-        )
+        sns.kdeplot(
+            rt_ppc_sim, label="simulated", color="tomato", ax=ax[ay], bw_method=bw
+        ).set(ylabel=None)
+        sns.kdeplot(
+            rt_ppc_obs, label="observed", color="royalblue", ax=ax[ay], bw_method=bw
+        ).set(ylabel=None)
 
-        #ax[ay].legend()
+        # ax[ay].legend()
         ax[ay].set_title("split_by=" + str(cond), fontsize=12)
         ax[ay].grid()
 
@@ -2484,7 +2761,7 @@ def plot_ppc_rt_rlssm(
 
     fig = plt.gcf()
     lines, labels = fig.axes[-1].get_legend_handles_labels()
-    fig.legend(lines, labels, loc = 'lower right')
+    fig.legend(lines, labels, loc="lower right")
 
     fig.supxlabel("Reaction Time", fontsize=12)
     fig.supylabel("Density", fontsize=12)
@@ -2540,7 +2817,7 @@ def plot_posterior_pairs_rlssm(
         marginals=True,
         point_estimate="mean",
         textsize=20,
-        **kwargs
+        **kwargs,
     )
 
     fig = axes.ravel()[0].figure
