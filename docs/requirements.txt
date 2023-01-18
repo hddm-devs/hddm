@@ -8,9 +8,8 @@ traitlets
 traitsui
 PyQt5
 cython>=0.20
-numpy>=1.20.1
 patsy>=0.5.1
 git+https://github.com/AlexanderFengler/ssm_simulators@main
 git+https://github.com/hddm-devs/kabuki
-#pymc==2.3.8
+pymc==2.3.8
 #wxpython
