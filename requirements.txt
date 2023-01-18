@@ -1,4 +1,4 @@
-Cython>=0.16
+cython>=0.20
 numpy>=1.20.1
 scipy>=1.6.1
 pandas>=1.0.0
@@ -9,4 +9,5 @@ tqdm>=4.1.0
 patsy>=0.5.1
 matplotlib>=1.1.0
 pymc>=2.3.8,<3
+git+https://github.com/AlexanderFengler/ssm_simulators
 git+https://github.com/hddm-devs/kabuki
