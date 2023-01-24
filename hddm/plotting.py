@@ -424,7 +424,7 @@ def plot_posterior_predictive(
 
         # Save figure if necessary
         if save:
-            fname = "ppq_" + ".".join(tag)
+            fname = "ppq_" + prettier_tag(tag) # ".".join(tag)
             if path is None:
                 path = "."
             if isinstance(format, str):

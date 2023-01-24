@@ -435,7 +435,7 @@ can compare the DIC_ scores (lower is better) emitted when calling:
 
 ::
 
-    model.print_stats()
+    model.dic
 
 DIC, however, is far from being a perfect measure. So it shouldn't be your
 only weapon in deciding which model is best.
