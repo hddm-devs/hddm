@@ -1,5 +1,6 @@
 import ssms
 from hddm.model_config import model_config
+from ssms.basic_simulators import boundary_functions
 
 
 def simulator(**kwargs):

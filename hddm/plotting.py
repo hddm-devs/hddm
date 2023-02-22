@@ -128,7 +128,7 @@ def plot_posterior_pair(
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
-                    fname = "ppq_" + ".".join(tag) + "_subject_" + str(subj_i)
+                    fname = "ppq_" + ".".join([str(t) for t in tag]) + "_subject_" + str(subj_i)
 
                 if path is None:
                     path = "."
@@ -269,7 +269,7 @@ def plot_from_data(
         # Save figure if desired
         if save:
             if save_name is None:
-                fname = "ppq_" + tag
+                fname = "ppq_" + prettier_tag(tag)
             else:
                 fname = save_name
 
