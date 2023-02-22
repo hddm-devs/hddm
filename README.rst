@@ -177,6 +177,7 @@ install via **github**. In a fresh environment (we recommend to use **python 3.7
     pip install git+https://github.com/AlexanderFengler/ssms@main  # package for data simulation
     pip install git+https://github.com/hddm-devs/kabuki # backbone package for hddm to connect to pymc
     pip install git+https://github.com/hddm-devs/hddm 
+    
     # Optional
     pip install torch torchvision torchaudio # The LAN extension makes use of these
 
@@ -286,4 +287,4 @@ Join our low-traffic `mailing list`_.
 .. _original HDDM RL tutorial paper: https://link.springer.com/article/10.1007/s42113-020-00084-w
 .. _published papers: https://scholar.google.com/scholar?oi=bibs&hl=en&cites=17737314623978403194
 .. _thread: https://groups.google.com/forum/#!topic/hddm-users/bdQXewfUzLs
-.. _ssms: https://github.com/AlexanderFengler/ssm_simulators
+.. _ssms: https://github.com/AlexanderFengler/ssms

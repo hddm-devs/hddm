@@ -62,9 +62,9 @@ INSTALLATION COLAB: INSTALL HDDM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
-
-    !pip install -U --no-deps git+https://github.com/hddm-devs/hddm
+    !pip install -U --no-deps git+https://github.com/alexanderfengler/ssms
     !pip install -U --no-deps git+https://github.com/hddm-devs/kabuki
+    !pip install -U --no-deps git+https://github.com/hddm-devs/hddm
 
 
 .. parsed-literal::
