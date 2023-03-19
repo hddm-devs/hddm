@@ -61,7 +61,7 @@ class HDDMStimCoding(HDDM):
             # Add drift-criterion parameter
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "dc", value=0, g_mu=0, g_tau=3 ** -2, std_std=2
+                    "dc", value=0, g_mu=0, g_tau=3**-2, std_std=2
                 )
             )
 
@@ -112,7 +112,6 @@ class KnodeWfptStimCoding(Knode):
         if all(
             data[self.stim_col] == self.stims[0]
         ):  # AF-COMMENT: Should this be reversed? -> self.stims[1]
-
             if self.split_param == "z":
                 kwargs["z"] = 1 - kwargs["z"]
             elif self.split_param == "v" and dc is None:

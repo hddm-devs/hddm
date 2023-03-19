@@ -545,7 +545,6 @@ def flip_errors_nn(data):
 
 
 def bin_rts_pointwise(data, max_rt=10.0, nbins=512):
-
     data = pd.DataFrame(data.copy())
     data["response_binned"] = data["response"].values.astype(np.int_)
 
@@ -720,12 +719,12 @@ def EZ(pc, vrt, mrt, s=1):
     if pc == 0 or pc == 0.5 or pc == 1:
         raise ValueError("Probability correct is either 0%, 50% or 100%")
 
-    s2 = s ** 2
+    s2 = s**2
     logit_p = np.log(pc / (1 - pc))
 
     # Eq. 7
-    x = (logit_p * (pc ** 2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
-    v = np.sign(pc - 0.5) * s * x ** 0.25
+    x = (logit_p * (pc**2 * logit_p - pc * logit_p + pc - 0.5)) / vrt
+    v = np.sign(pc - 0.5) * s * x**0.25
     # Eq 5
     a = (s2 * logit_p) / v
 
@@ -746,7 +745,7 @@ def hddm_parents_trace(model, obs_node, idx):
     list(model.params_include.keys())
     params = {"a": 0, "v": 0, "t": 0, "z": 0.5, "sz": 0, "st": 0, "sv": 0}
     if not np.isscalar(idx):
-        for (key, value) in params.items():
+        for key, value in params.items():
             params[key] = np.ones(len(idx)) * value
     # example for local_name:  a,v,t,z....
     # example for parent_full_name: v(['cond1'])3
@@ -868,7 +867,7 @@ def data_plot(model, bins=50, nrows=3):
     if not isinstance(axs, np.ndarray):
         axs = np.array([axs])
     axs = axs.flatten()
-    for (i_plt, (name, node_row)) in enumerate(model.iter_observeds()):
+    for i_plt, (name, node_row) in enumerate(model.iter_observeds()):
         node = node_row["node"]
         ax = axs[i_plt]
         for i in range(2):
@@ -1200,7 +1199,6 @@ def _qp_plot_of_nodes_db(nodes_db, quantiles, ax):
 
     # loop over nodes
     for name, node_row in nodes_db.iterrows():
-
         # get quantiles
         q_lower, q_upper, p_upper = node_row["node"].empirical_quantiles(quantiles)
 

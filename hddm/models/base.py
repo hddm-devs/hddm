@@ -92,7 +92,6 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         # run optimization for group model
         if self.is_group_model:
-
             # create an average model
             average_model = self.get_average_model(quantiles)
 
@@ -112,7 +111,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         return results
 
     def get_average_model(self, quantiles=(0.1, 0.3, 0.5, 0.7, 0.9)):
-
         # create an average model (avergae of all subjects)
         try:
             average_model = self._create_an_average_model()
@@ -127,8 +125,7 @@ class AccumulatorModel(kabuki.Hierarchical):
 
         # group obs nodes according to their tag and (condittion)
         # and for each group average the quantiles
-        for (tag, tag_obs_db) in obs_db.groupby(obs_db.tag):
-
+        for tag, tag_obs_db in obs_db.groupby(obs_db.tag):
             # set quantiles for each observed_node
             obs_nodes = tag_obs_db.node
 
@@ -222,7 +219,6 @@ class AccumulatorModel(kabuki.Hierarchical):
             quantiles=quantiles,
             n_runs=n_runs,
         ):
-
             # resample data
             new_data = data.iloc[np.random.randint(0, len(data), len(data))]
             new_data = new_data.set_index(pd.Index(list(range(len(data)))))
@@ -301,7 +297,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         if method == "ML":
 
             def objective(values):
-                for (i, value) in enumerate(values):
+                for i, value in enumerate(values):
                     parents[i].value = value
                 try:
                     return -sum([obs.logp for obs in obs_nodes])
@@ -312,7 +308,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         elif method == "chisquare":
 
             def objective(values):
-                for (i, value) in enumerate(values):
+                for i, value in enumerate(values):
                     parents[i].value = value
                 score = sum([obs.chisquare() for obs in obs_nodes])
                 if score < 0:
@@ -323,7 +319,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         elif method == "gsquare":
 
             def objective(values):
-                for (i, value) in enumerate(values):
+                for i, value in enumerate(values):
                     parents[i].value = value
                 return -sum([obs.gsquare() for obs in obs_nodes])
 
@@ -341,7 +337,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             while inf_objective:
                 values_iter += 1
                 values = original_values + np.random.randn(len(values)) * (
-                    2 ** -values_iter
+                    2**-values_iter
                 )
                 self.set_values(dict(list(zip(names, values))))
                 inf_objective = np.isinf(objective(values))
@@ -386,7 +382,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -445,7 +441,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -498,7 +494,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         knodes = OrderedDict()
 
         if self.is_group_model and name not in self.group_only_nodes:
-
             g = Knode(
                 pm.Uniform,
                 "%s" % name,
@@ -521,7 +516,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -571,7 +566,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         g_std=10,
         std_value=0.1,
     ):
-
         """Similar to _create_family_normal() but creates a Uniform
         group distribution and a truncated subject distribution.
 
@@ -581,12 +575,11 @@ class AccumulatorModel(kabuki.Hierarchical):
         knodes = OrderedDict()
 
         if self.is_group_model and name not in self.group_only_nodes:
-
             g = Knode(
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -606,7 +599,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -636,7 +629,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -657,7 +650,6 @@ class AccumulatorModel(kabuki.Hierarchical):
         g_std=10,
         std_value=0.1,
     ):
-
         """Similar to _create_family_normal() but creates a Uniform
         group distribution and a truncated subject distribution.
 
@@ -667,12 +659,11 @@ class AccumulatorModel(kabuki.Hierarchical):
         knodes = OrderedDict()
 
         if self.is_group_model and name not in self.group_only_nodes:
-
             g = Knode(
                 pm.TruncatedNormal,
                 "%s" % name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -683,7 +674,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -691,7 +682,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -721,7 +712,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.TruncatedNormal,
                 name,
                 mu=g_mu,
-                tau=1 / (g_std ** 2),
+                tau=1 / (g_std**2),
                 lower=lower,
                 upper=upper,
                 value=value,
@@ -736,7 +727,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -774,7 +765,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Normal,
                 "%s_offset_subj" % name,
                 mu=0,
-                tau=5 ** -2,
+                tau=5**-2,
                 value=0,
                 depends=("subj_idx",),
                 subj=True,
@@ -818,7 +809,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_std=0.2,
         std_value=0.1,
         lower=0.0,  # previously the lower and upper arguments were not there !
@@ -881,7 +872,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -890,7 +881,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -977,7 +968,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         name,
         value=0,
         g_mu=None,
-        g_tau=15 ** -2,
+        g_tau=15**-2,
         std_lower=1e-10,
         std_upper=100,
         std_value=0.1,
@@ -1029,7 +1020,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             tau = Knode(
                 pm.Deterministic,
                 "%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1092,7 +1083,7 @@ class AccumulatorModel(kabuki.Hierarchical):
         return knodes
 
     def _create_family_normal_normal_hnormal(
-        self, name, value=0, g_mu=None, g_tau=15 ** -2, std_std=2, std_value=0.1
+        self, name, value=0, g_mu=None, g_tau=15**-2, std_std=2, std_value=0.1
     ):
         """Create a family of knodes. A family is a group of knodes
         that belong together.
@@ -1139,7 +1130,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1147,7 +1138,7 @@ class AccumulatorModel(kabuki.Hierarchical):
                 pm.Deterministic,
                 "%s_tau" % name,
                 doc="%s_tau" % name,
-                eval=lambda x: x ** -2,
+                eval=lambda x: x**-2,
                 x=std,
                 plot=False,
                 trace=False,
@@ -1196,8 +1187,8 @@ class AccumulatorModel(kabuki.Hierarchical):
         # AF-Comment: previously std_std = 2, std_value = 0.1 --> inconsistent with paper ?
 
         knodes = OrderedDict()
-        g_shape = (g_mean ** 2) / (g_std ** 2)
-        g_rate = g_mean / (g_std ** 2)
+        g_shape = (g_mean**2) / (g_std**2)
+        g_rate = g_mean / (g_std**2)
         if self.is_group_model and name not in self.group_only_nodes:
             g = Knode(
                 pm.Gamma,
@@ -1212,7 +1203,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             std = Knode(
                 pm.HalfNormal,
                 "%s_std" % name,
-                tau=std_std ** -2,
+                tau=std_std**-2,
                 value=std_value,
                 depends=depends_std,
             )
@@ -1220,7 +1211,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             shape = Knode(
                 pm.Deterministic,
                 "%s_shape" % name,
-                eval=lambda x, y: (x ** 2) / (y ** 2),
+                eval=lambda x, y: (x**2) / (y**2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1231,7 +1222,7 @@ class AccumulatorModel(kabuki.Hierarchical):
             rate = Knode(
                 pm.Deterministic,
                 "%s_rate" % name,
-                eval=lambda x, y: x / (y ** 2),
+                eval=lambda x, y: x / (y**2),
                 x=g,
                 y=std,
                 plot=False,
@@ -1277,7 +1268,6 @@ class HDDMBase(AccumulatorModel):
     def __init__(
         self, data, bias=False, include=(), wiener_params=None, p_outlier=0.05, **kwargs
     ):
-
         self.default_intervars = kwargs.pop(
             "default_intervars", {"sz": 0, "st": 0, "sv": 0}
         )

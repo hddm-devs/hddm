@@ -28,7 +28,6 @@ from hddm.model_config import model_config
 def generate_wfpt_reg_stochastic_class(
     wiener_params=None, sampling_method="cdf", cdf_range=(-5, 5), sampling_dt=1e-4
 ):
-
     # set wiener_params
     if wiener_params is None:
         wiener_params = {
@@ -67,7 +66,6 @@ def generate_wfpt_reg_stochastic_class(
         add_model_parameters=False,
         keep_subj_idx=False,
     ):
-
         assert sampling_method in ["drift", "cssm"], "Sampling method is invalid!"
         # AF add: exchange this with new simulator
         param_dict = deepcopy(self.parents.value)
@@ -424,7 +422,6 @@ class HDDMRegressor(HDDM):
                     is_indirect_regressor = 0
                     is_indirect_regressor_target = 0
                     if self.nn:
-
                         # If our current parameter is a indirect regressor we apply appropriate settings
                         if ("indirect_regressors" in self.model_config) and (
                             param_lookup in self.model_config["indirect_regressors"]
@@ -547,7 +544,7 @@ class HDDMRegressor(HDDM):
                             std_lower=1e-10,
                             std_upper=param_std_upper,
                             g_mu=0,
-                            g_tau=15 ** -2,
+                            g_tau=15**-2,
                         )
 
                     # Rename nodes to avoid collissions

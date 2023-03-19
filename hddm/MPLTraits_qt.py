@@ -14,7 +14,6 @@ from traitsui.qt4.basic_editor_factory import BasicEditorFactory
 
 
 class _MPLFigureEditor(Editor):
-
     scrollable = True
 
     def init(self, parent):
@@ -32,7 +31,6 @@ class _MPLFigureEditor(Editor):
 
 
 class MPLFigureEditor(BasicEditorFactory):
-
     klass = _MPLFigureEditor
 
 
@@ -43,7 +41,6 @@ if __name__ == "__main__":
     from numpy import sin, cos, linspace, pi
 
     class Test(HasTraits):
-
         figure = Instance(Figure, ())
 
         view = View(

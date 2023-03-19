@@ -719,7 +719,6 @@ def gen_rand_rlssm_reg_data_MAB_RWupdate(
     binary_outcome=True,
     uncertainty=False,
 ):
-
     """Generate RLSSM regression datasets on 2-armed bandit task.
 
     :Arguments:
@@ -1366,7 +1365,6 @@ def gen_rand_rlddm_onestep_data(
 
 
 def add_outliers(data, n_fast, n_slow, seed=None):
-
     """Add outliers to data, outliers are distrbuted randomly across conditions.
 
     :Arguments:

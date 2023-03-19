@@ -24,6 +24,7 @@ from statsmodels.distributions.empirical_distribution import ECDF
 from hddm.model_config import model_config
 from hddm.model_config_rl import model_config_rl
 
+
 # Basic utility
 def prettier_tag(tag):
     len_tag = len(tag)
@@ -128,7 +129,12 @@ def plot_posterior_pair(
                 if len(tag) == 0:
                     fname = "ppq_subject_" + str(subj_i)
                 else:
-                    fname = "ppq_" + ".".join([str(t) for t in tag]) + "_subject_" + str(subj_i)
+                    fname = (
+                        "ppq_"
+                        + ".".join([str(t) for t in tag])
+                        + "_subject_"
+                        + str(subj_i)
+                    )
 
                 if path is None:
                     path = "."
@@ -424,7 +430,7 @@ def plot_posterior_predictive(
 
         # Save figure if necessary
         if save:
-            fname = "ppq_" + prettier_tag(tag) # ".".join(tag)
+            fname = "ppq_" + prettier_tag(tag)  # ".".join(tag)
             if path is None:
                 path = "."
             if isinstance(format, str):
@@ -1391,7 +1397,6 @@ def _add_trajectories(
     color_trajectories="black",
     **kwargs,
 ):
-
     # Check markercolor type
     if type(markercolor_trajectory_rt_choice) == str:
         markercolor_trajectory_rt_choice_dict = {}
@@ -1549,7 +1554,6 @@ def _add_model_cartoon_to_ax(
     zorder_cnt=1,
     color="black",
 ):
-
     # Make bounds
     b_low, b_high = _make_bounds(
         tmp_model=tmp_model,
@@ -1641,7 +1645,6 @@ def _make_bounds(
     t_s=None,
     return_shifted_by_ndt=True,
 ):
-
     # MULTIPLICATIVE BOUND
     if tmp_model == "weibull":
         b = np.maximum(
@@ -1685,7 +1688,6 @@ def _make_bounds(
         or tmp_model == "ddm_hddm_base"
         or tmp_model == "full_ddm_hddm_base"
     ):
-
         b = sample.a.values[0] * np.ones(t_s.shape[0])
 
         if "hddm_base" in tmp_model:
@@ -2025,7 +2027,6 @@ def _add_model_n_cartoon_to_ax(
     zorder_cnt=1,
     color_dict=None,
 ):
-
     if "weibull" in tmp_model:
         b = np.maximum(
             sample.a.values[0]
@@ -2150,7 +2151,6 @@ def _plot_func_pair(
 
     # Adding ground truth if calling function was in parameter recovery mode
     if node_data_full is not None:
-
         for i in range(1, g.axes.shape[0], 1):
             for j in range(0, i, 1):
                 tmp_y_label = g.axes[g.axes.shape[0] - 1, i].get_xlabel()
@@ -2166,7 +2166,6 @@ def _plot_func_pair(
 
         # Adding ground truth to axes !
         for i in range(g.axes.shape[0]):
-
             if i == 0:
                 y_lims_tmp = g.axes[i, i].get_ylim()
                 g.axes[i, i].set_ylim(0, y_lims_tmp[1])
@@ -2198,13 +2197,11 @@ def _group_node_names_by_param(model):
 
     # Cycle through all nodes
     for key_ in model.nodes_db.index:
-
         if "offset" in key_:
             continue
 
         # Cycle through model relevant parameters
         for param_tmp in tmp_params_allowed:  # model_config[model.model]["params"]:
-
             # Initialize param_tmp key if not yet done
             if param_tmp not in keys_by_param.keys():
                 keys_by_param[param_tmp] = []
@@ -2223,7 +2220,6 @@ def _group_node_names_by_param(model):
                 and not ("_shape" in key_)
                 and not (model.nodes_db.loc[key_].observed)
             ):
-
                 if param_id == 0:
                     if (bracket_id == 0) or (underscore_id == 0):
                         keys_by_param[param_tmp].append(key_)
@@ -2270,7 +2266,6 @@ def plot_caterpillar(
     y_tick_size=10,
     x_tick_size=10,
 ):
-
     """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
 
     Arguments:
@@ -2541,7 +2536,6 @@ def gen_ppc_rlssm(
             sub_data = pd.DataFrame()
 
             for cond in np.unique(data.split_by):
-
                 sampled_param_ssm = list()
                 for p in config_ssm["params"]:
                     p_val = traces.loc[sample, p + "_subj." + str(subj)]

@@ -60,7 +60,6 @@ def optimization_recovery_single_subject(
     np.random.seed(seed)
     for include in include_sets:
         for i in range(repeats):
-
             # generate params for experiment with n_conds conditions
             cond_params, merged_params = hddm.generate.gen_rand_params(
                 include=include, cond_dict={"v": v}
@@ -109,7 +108,7 @@ def set_hddm_nodes_values(model, params_dict):
     """
     set hddm nodes values according to the params_dict
     """
-    for (param_name, row) in model.iter_stochastics():
+    for param_name, row in model.iter_stochastics():
         if param_name in ("sv_trans", "st_trans", "t_trans", "a_trans"):
             transform = np.log
             org_name = "%s" % list(row["node"].children)[0].__name__

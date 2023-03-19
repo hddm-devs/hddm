@@ -21,6 +21,7 @@ from copy import deepcopy
 
 from hddm.model_config import model_config
 
+
 # PREPROCESSING FUNCTIONS ------------------------------------------------------------------------------------------------------------------
 def untransform_traces(traces=None, model=None, is_nn=False):
     """
@@ -29,7 +30,6 @@ def untransform_traces(traces=None, model=None, is_nn=False):
     """
     # Check if any traces have the 'trans' label and apply inverse logit transform to get the trace back in original parameterization
     for key in traces.keys():
-
         if "_trans" in key:
             param_idx = key.find("_")
             param_id = key[:param_idx]
@@ -161,7 +161,6 @@ def make_trace_plotready_h_c(
                 if ("subj" in trace_key) and (not (str(subj_id) in trace_key)):
                     continue
                 else:
-
                     trace_names_tmp.append(trace_key)
                     key_param_only = trace_key
 
@@ -372,7 +371,6 @@ def filter_subject_condition_traces(
     # Scenario 1: We have multiple conditions and / or a group model
     # Use Hierarchical DataFrame
     if (depends is not None) or (depends is None and is_group_model):
-
         # Get parameters that have condition dependence (finally condition + subj)
         if depends is not None:
             params_depends = list(depends.keys())
@@ -608,6 +606,7 @@ def _convert_params(data=None):
 
 # --------------------------------------------------------------------------------------------
 
+
 # PLOTS --------------------------------------------------------------------------------------
 # Plot bound
 # Mean posterior predictives
@@ -638,7 +637,6 @@ def model_plot(
     legend_fontsize="medium",  # styling
     legend_shadow=False,  # styling
 ):
-
     """The model plot is useful to illustrate model behavior graphically. It is quite a flexible
        plot allowing you to show path trajectories and embedded reaction time histograms etc..
        The main feature is the graphical illustration of a given model
@@ -1083,7 +1081,6 @@ def model_plot(
                         or tmp_model == "levy"
                         or tmp_model == "full_ddm"
                     ):
-
                         b = tmp_samples[1] * np.ones(t_s.shape[0])
 
                     # MAKE SLOPES (VIA TRAJECTORIES) !
@@ -1285,7 +1282,6 @@ def plot_posterior_pair(
     save_path=None,
     show=True,
 ):
-
     """Basic pair plot useful for inspecting posterior parameters.
        At this point can be used only for single subject data.
        Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
@@ -1542,7 +1538,6 @@ def caterpillar_plot(
     tick_label_size_x=22,
     tick_label_size_y=14,
 ):
-
     """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
 
     Arguments:
@@ -1692,7 +1687,6 @@ def posterior_predictive_plot(
     save_path=None,
     show=True,
 ):
-
     """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
 
     Arguments:
@@ -1858,7 +1852,6 @@ def posterior_predictive_plot(
         subplot_cnt = 0
         gt_color = "blue"
         for i in sub_data.keys():
-
             # If data is grouped the inner loop has to be passed just once
             # to set the styling.
             if grouped and (subplot_cnt > 0):

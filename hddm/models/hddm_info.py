@@ -239,7 +239,7 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
-                            g_tau=10 ** -2,
+                            g_tau=10**-2,
                             std_std=0.5,
                             lower=self.model_config_rl["param_bounds"][0][param_id],
                             upper=self.model_config_rl["param_bounds"][1][param_id],
@@ -254,7 +254,7 @@ class HDDM(HDDMBase):
                                 tmp_param,
                                 value=0,
                                 g_mu=0.2,
-                                g_tau=3 ** -2,
+                                g_tau=3**-2,
                                 std_lower=1e-10,
                                 std_upper=param_std_upper,
                                 std_value=0.1,
@@ -266,7 +266,7 @@ class HDDM(HDDMBase):
                                 tmp_param,
                                 value=0,
                                 g_mu=0.2,
-                                g_tau=3 ** -2,
+                                g_tau=3**-2,
                                 std_lower=1e-10,
                                 std_upper=10,
                                 std_value=0.1,
@@ -331,7 +331,7 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
-                            g_tau=10 ** -2,
+                            g_tau=10**-2,
                             std_std=0.5,
                             lower=self.model_config["param_bounds"][0][param_id],
                             upper=self.model_config["param_bounds"][1][param_id],
@@ -408,7 +408,7 @@ class HDDM(HDDMBase):
                     knodes.update(
                         self._create_family_invlogit(
                             tmp_param,
-                            g_tau=10 ** -2,
+                            g_tau=10**-2,
                             std_std=0.5,
                             lower=self.model_config["param_bounds"][0][param_id],
                             upper=self.model_config["param_bounds"][1][param_id],
@@ -438,7 +438,7 @@ class HDDM(HDDMBase):
         if "v" in include:
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "v", value=2, g_mu=2, g_tau=3 ** -2, std_std=2
+                    "v", value=2, g_mu=2, g_tau=3**-2, std_std=2
                 )
             )
         if "t" in include:
@@ -449,7 +449,7 @@ class HDDM(HDDMBase):
             )
         if "sv" in include:
             knodes["sv_bottom"] = Knode(
-                pm.HalfNormal, "sv", tau=2 ** -2, value=1, depends=self.depends["sv"]
+                pm.HalfNormal, "sv", tau=2**-2, value=1, depends=self.depends["sv"]
             )
         if "sz" in include:
             knodes["sz_bottom"] = Knode(
@@ -459,14 +459,14 @@ class HDDM(HDDMBase):
             knodes["st_bottom"] = Knode(
                 pm.HalfNormal,
                 "st",
-                tau=0.3 ** -2,
+                tau=0.3**-2,
                 value=0.001,
                 depends=self.depends["st"],
             )
         if "z" in include:
             knodes.update(
                 self._create_family_invlogit(
-                    "z", value=0.5, g_tau=0.5 ** -2, std_std=0.05
+                    "z", value=0.5, g_tau=0.5**-2, std_std=0.05
                 )
             )
         if "p_outlier" in include:
@@ -490,7 +490,7 @@ class HDDM(HDDMBase):
         if "v" in include:
             knodes.update(
                 self._create_family_normal_normal_hnormal(
-                    "v", value=0, g_tau=50 ** -2, std_std=10
+                    "v", value=0, g_tau=50**-2, std_std=10
                 )
             )
         if "t" in include:
@@ -522,7 +522,7 @@ class HDDM(HDDMBase):
         if "z" in include:
             knodes.update(
                 self._create_family_invlogit(
-                    "z", value=0.5, g_tau=10 ** -2, std_std=0.5
+                    "z", value=0.5, g_tau=10**-2, std_std=0.5
                 )
             )
         if "p_outlier" in include:

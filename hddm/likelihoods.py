@@ -278,7 +278,6 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         data = self.value
 
         if np.all(~np.isnan(data["rt"])):
-
             # get proportion of data fall between the quantiles
             quantiles = np.array(quantiles)
             pos_proportion = np.diff(
@@ -301,7 +300,6 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
             self._freq_obs = freq_obs
 
         else:
-
             # get proportion of data fall between the quantiles
             quantiles = np.array(quantiles)
             pos_proportion = np.diff(
@@ -351,7 +349,6 @@ def add_quantiles_functions_to_pymc_class(pymc_class):
         return stats
 
     def _get_theoretical_proportion(self):
-
         # get cdf
         cdf = self.cdf(self._emp_rt)
 

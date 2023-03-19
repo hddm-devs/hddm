@@ -37,7 +37,6 @@ except:
 
 
 class _MPLFigureEditor(Editor):
-
     scrollable = True
 
     def init(self, parent):
@@ -63,7 +62,6 @@ class _MPLFigureEditor(Editor):
 
 
 class MPLFigureEditor(BasicEditorFactory):
-
     klass = _MPLFigureEditor
 
 
@@ -74,7 +72,6 @@ def main():
     from numpy import sin, cos, linspace, pi
 
     class Test(HasTraits):
-
         figure = Instance(Figure, ())
         test = Range(0, 5, 1)
         view = View(

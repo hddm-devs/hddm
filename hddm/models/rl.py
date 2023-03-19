@@ -42,7 +42,7 @@ class Hrl(HDDM):
                         "alpha",
                         value=0,
                         g_mu=0.2,
-                        g_tau=3 ** -2,
+                        g_tau=3**-2,
                         std_lower=1e-10,
                         std_upper=10,
                         std_value=0.1,
@@ -54,7 +54,7 @@ class Hrl(HDDM):
                         "pos_alpha",
                         value=0,
                         g_mu=0.2,
-                        g_tau=3 ** -2,
+                        g_tau=3**-2,
                         std_lower=1e-10,
                         std_upper=10,
                         std_value=0.1,
@@ -67,7 +67,7 @@ class Hrl(HDDM):
                         "alpha",
                         value=0,
                         g_mu=0.2,
-                        g_tau=3 ** -2,
+                        g_tau=3**-2,
                         std_lower=1e-10,
                         std_upper=10,
                         std_value=0.1,
@@ -79,7 +79,7 @@ class Hrl(HDDM):
                         "pos_alpha",
                         value=0,
                         g_mu=0.2,
-                        g_tau=3 ** -2,
+                        g_tau=3**-2,
                         std_lower=1e-10,
                         std_upper=10,
                         std_value=0.1,
@@ -109,7 +109,6 @@ class Hrl(HDDM):
 
 
 def RL_like(x, v, alpha, pos_alpha, z=0.5, p_outlier=0):
-
     wiener_params = {
         "err": 1e-4,
         "n_st": 2,

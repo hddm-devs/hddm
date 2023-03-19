@@ -56,6 +56,7 @@ def get_torch_mlp(model="angle", nbin=512):
 
 # KDE CLASS --------------------------------------------------------------------------------
 
+
 # Support functions (accessible from outside the main class (logkde class) defined in script)
 def _bandwidth_silverman(
     sample=[0, 0, 0],
@@ -115,7 +116,6 @@ class logkde:
         bandwidth_type="silverman",
         auto_bandwidth=True,
     ):
-
         self.attach_data_from_simulator(simulator_data)
         self.generate_base_kdes(
             auto_bandwidth=auto_bandwidth, bandwidth_type=bandwidth_type
@@ -125,7 +125,6 @@ class logkde:
     # Function to compute bandwidth parameters given data-set
     # (At this point using Silverman rule)
     def compute_bandwidths(self, type="silverman"):
-
         self.bandwidths = []
         if type == "silverman":
             for i in range(0, len(self.data["choices"]), 1):
@@ -144,7 +143,6 @@ class logkde:
     # I call the function generate_base_kdes because in the final evaluation computations
     # we adjust the input and output of the kdes appropriately (we do not use them directly)
     def generate_base_kdes(self, auto_bandwidth=True, bandwidth_type="silverman"):
-
         # Compute bandwidth parameters
         if auto_bandwidth:
             self.compute_bandwidths(type=bandwidth_type)
@@ -163,7 +161,6 @@ class logkde:
 
     # Function to evaluate the kde log likelihood at chosen points
     def kde_eval(self, data=([], []), log_eval=True):  # kde
-
         # Initializations
         log_rts = np.log(data[0])
         log_kde_eval = np.log(data[0])
@@ -171,7 +168,6 @@ class logkde:
 
         # Main loop
         for c in choices:
-
             # Get data indices where choice == c
             choice_idx_tmp = np.where(data[1] == c)
 
@@ -201,7 +197,6 @@ class logkde:
     def kde_sample(
         self, n_samples=2000, use_empirical_choice_p=True, alternate_choice_p=0
     ):
-
         # sorting the which list in ascending order
         # this implies that we return the kde_samples array so that the
         # indices reflect 'choice-labels' as provided in 'which' in ascending order
@@ -250,7 +245,6 @@ class logkde:
     # Helper function to transform ddm simulator output to dataset suitable for
     # the kde function class
     def attach_data_from_simulator(self, simulator_data=([0, 2, 4], [-1, 1, -1])):
-
         choices = np.unique(simulator_data[2]["possible_choices"])
 
         n = len(simulator_data[0])
@@ -557,7 +551,6 @@ def lan_manifold(
     vary_param_name = list(vary_dict.keys())[0]
 
     for par_tmp in vary_dict[vary_param_name]:
-
         tmp_begin = (n_rt_steps * 2) * cnt
         tmp_end = (n_rt_steps * 2) * (cnt + 1)
         parameters[model_config[model]["params"].index(vary_param_name)] = par_tmp

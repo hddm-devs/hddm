@@ -6,7 +6,6 @@ try:
 
     class LoadTorchMLPInfer:
         def __init__(self, model_file_path=None, network_config=None, input_dim=None):
-
             torch.backends.cudnn.benchmark = True
             self.dev = (
                 torch.device("cuda")
@@ -43,7 +42,6 @@ try:
         )
 
         return infer_model
-
 
 except:
     print("HDDM: pytorch module seems missing. No LAN functionality can be loaded.")

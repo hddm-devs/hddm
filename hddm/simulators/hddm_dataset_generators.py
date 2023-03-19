@@ -7,6 +7,7 @@ from hddm.simulators.basic_simulator import *
 from hddm.model_config import model_config
 from functools import partial
 
+
 # Helper
 def hddm_preprocess(
     simulator_data=None,
@@ -15,7 +16,6 @@ def hddm_preprocess(
     add_model_parameters=False,
     keep_subj_idx=True,
 ):
-
     """Takes simulator data and turns it into HDDM ready format.
 
     :Arguments:
@@ -127,9 +127,7 @@ def make_parameter_vectors_nn(model="angle", param_dict=None, n_parameter_vector
     if param_dict is not None:
         cnt = 0
         for param in model_config[model]["params"]:
-
             if param in param_dict.keys():
-
                 if (len(param_dict[param]) == n_parameter_vectors) or (
                     len(param_dict[param]) == 1
                 ):
@@ -146,7 +144,6 @@ def make_parameter_vectors_nn(model="angle", param_dict=None, n_parameter_vector
                         )
                         > 0
                     ):
-
                         print(
                             "The parameter: ",
                             param,
@@ -351,7 +348,6 @@ def simulator_stimcoding(
     bin_dim=None,
     max_t=20.0,
 ):
-
     """Generate a dataset as expected by Hddmstimcoding. Essentially it is a specific way to parameterize two condition data.
 
     :Arguments:
@@ -443,7 +439,6 @@ def simulator_stimcoding(
 
     dataframes = []
     for i in range(2):
-
         sim_out = simulator(
             param_base[i, :],
             model=model,
@@ -489,7 +484,6 @@ def simulator_h_c(
     outlier_max_t=10.0,
     **kwargs,
 ):
-
     """Flexible simulator that allows specification of models very similar to the hddm model classes. Has two major modes. When data \n
     is supplied the function generates synthetic versions of the provided data. If no data is provided, you can supply
     a varied of options to create complicated synthetic datasets from scratch.
@@ -583,7 +577,6 @@ def simulator_h_c(
     def get_parameter_remainder(
         regression_models=None, group_only=None, depends_on=None, fixed_at_default=None
     ):
-
         """
         The arguments supplied to the simulator implicitly specify how we should handle a bunch of model parameters.
         If there remain model parameters that did not receive implicit instructions, we call these 'remainder' parameters
@@ -636,14 +629,11 @@ def simulator_h_c(
         for covariate in regression_covariates.keys():
             tmp = regression_covariates[covariate]
             if tmp["type"] == "categorical":
-                cov_df[covariate] = (
-                    np.random.choice(
-                        np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
-                        replace=True,
-                        size=n_trials_per_subject,
-                    )
-                    / (tmp["range"][1])
-                )
+                cov_df[covariate] = np.random.choice(
+                    np.arange(tmp["range"][0], tmp["range"][1] + 1, 1),
+                    replace=True,
+                    size=n_trials_per_subject,
+                ) / (tmp["range"][1])
             else:
                 cov_df[covariate] = np.random.uniform(
                     low=tmp["range"][0], high=tmp["range"][1], size=n_trials_per_subject
@@ -676,7 +666,6 @@ def simulator_h_c(
         n_subjects,
         n_trials_per_subject,
     ):
-
         # Construct subject data
         full_parameter_dict = group_level_parameter_dict.copy()
 
@@ -800,7 +789,6 @@ def simulator_h_c(
 
                 if regression_models is not None:
                     for reg_model in regression_models:
-
                         # Make Design Matrix
                         separator = reg_model.find("~")
                         outcome = reg_model[:separator].strip(" ")
@@ -971,7 +959,6 @@ def simulator_h_c(
             data[param] = 0
 
         for subj_idx in data["subj_idx"].unique():
-
             # Fixed part
             if fixed_at_default is not None:
                 for fixed_tmp in fixed_at_default:
@@ -1011,7 +998,6 @@ def simulator_h_c(
                     ].drop_duplicates()
 
                     for condition_id in range(conditions_df_tmp.shape[0]):
-
                         condition_elem = ".".join(conditions_df_tmp.iloc[condition_id])
                         bool_ = data["subj_idx"] == int(subj_idx)
 
@@ -1058,7 +1044,6 @@ def simulator_h_c(
             # Regressor part
             if regression_models is not None:
                 for reg_model in regression_models:
-
                     # Make Design Matrix
                     separator = reg_model.find("~")
                     outcome = reg_model[:separator].strip(" ")
@@ -1336,7 +1321,6 @@ def simulator_h_c(
 
                 for covariate in covariate_names:
                     if ("Intercept" in covariate) or (covariate == "1"):
-
                         # AF-COMMENT: Here instead of covariate_rv --> just use
                         # print(reg_trace_dict)
                         reg_trace_dict[outcome + "_" + covariate] = param_gen_info[

@@ -52,7 +52,6 @@ def __prepare_indirect_betas(model_config={}):
             for links_to_tmp in model_config["indirect_betas"][indirect_beta_tmp][
                 "links_to"
             ].keys():
-
                 # If param links has respective key already
                 # just add the indirect beta to it
                 if links_to_tmp in param_links_betas.keys():
@@ -292,7 +291,6 @@ def make_mlp_likelihood_reg(
         cnt = 0
         for tmp_str in model_config["params"]:
             if tmp_str in self.parents["reg_outcomes"]:
-
                 # param_data[:, cnt] = param_dict[tmp_str].values
                 param_data[:, cnt] = param_dict[tmp_str].loc[self.value.index].values
 
