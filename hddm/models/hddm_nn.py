@@ -173,6 +173,7 @@ class HDDMnn(HDDM):
 
     def _create_wfpt_knode(self, knodes):
         wfpt_parents = self._create_wfpt_parents_dict(knodes)
+        
         return Knode(
             self.wfpt_nn,
             "wfpt",

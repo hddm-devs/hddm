@@ -12,6 +12,8 @@ from data_simulators import ddm_flex
 
 # from data_simulators import ddm_flexbound_pre
 from data_simulators import race_model
+from data_simulators import lba_vanilla_wo_ndt
+from data_simulators import lba_angle_wo_ndt
 from data_simulators import lca
 from data_simulators import ddm_flexbound_seq2
 from data_simulators import ddm_flexbound_par2
@@ -484,7 +486,32 @@ def simulator(
     if no_noise:
         s = np.tile(np.array([0.0, 0.0, 0.0], dtype=np.float32), (n_trials, 1))
     else:
-        s = np.tile(np.array([1.0, 1.0, 1.0], dtype=np.float32), (n_trials, 1))
+        s = np.tile(np.array([0.1, 0.1, 0.1], dtype=np.float32), (n_trials, 1))
+
+
+    lba_sd = 0.1
+
+    if model == 'lba_3_v1':
+        x = lba_vanilla_wo_ndt(v = theta[:, :3],
+                            a = theta[:, [3]],
+                            z = theta[:, [4]],
+                            sd = lba_sd,
+                            n_samples = n_samples,
+                            n_trials = n_trials,
+                            max_t = 3
+                            )
+
+    if model == 'lba_angle_3_v1':
+        x = lba_angle_wo_ndt(v = theta[:, :3],
+                            a = theta[:, [3]],
+                            z = theta[:, [4]],
+                            theta = theta[:, [5]],
+                            sd = lba_sd,
+                            n_samples = n_samples,
+                            n_trials = n_trials,
+                            max_t = 3
+                            )
+
 
     if model == "race_3":
         x = race_model(

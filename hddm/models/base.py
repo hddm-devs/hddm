@@ -1397,14 +1397,13 @@ class HDDMBase(AccumulatorModel):
 
             # Basic model parameters
             for tmp_param in self.model_config["params"]:
-                if tmp_param in self.include:
-                    wfpt_parents[tmp_param] = (
-                        knodes[tmp_param + "_bottom"]
-                        if tmp_param in self.include
-                        else self.model_config["params_default"][
-                            self.model_config["params"].index(tmp_param)
-                        ]
-                    )
+                wfpt_parents[tmp_param] = (
+                    knodes[tmp_param + "_bottom"]
+                    if tmp_param in self.include
+                    else self.model_config["params_default"][
+                        self.model_config["params"].index(tmp_param)
+                    ]
+                )
 
             if self.rlssm_model:
                 # RL model parameters

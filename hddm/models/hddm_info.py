@@ -192,7 +192,7 @@ class HDDM(HDDMBase):
         """
 
         knodes = self._create_stochastic_knodes_nn_noninfo(include)
-
+        
         for tmp_param in self.model_config_rl["params"]:
             if tmp_param in include:
                 param_id = self.model_config_rl["params"].index(tmp_param)
@@ -206,7 +206,7 @@ class HDDM(HDDMBase):
 
                 if not "params_std_upper" in self.model_config_rl.keys():
                     print(
-                        "Supplied model_config does not have a params_std_upper argument."
+                        "Supplied model_config does not have a params_std_upper argument. "
                     )
                     print("Set to a default of 10")
                     param_std_upper = 10
@@ -247,7 +247,7 @@ class HDDM(HDDMBase):
                         knodes.update(
                             self._create_family_normal_non_centered(
                                 tmp_param,
-                                value=0,
+                                value=param_default,
                                 g_mu=0.2,
                                 g_tau=3**-2,
                                 std_lower=1e-10,
@@ -259,7 +259,7 @@ class HDDM(HDDMBase):
                         knodes.update(
                             self._create_family_normal(
                                 tmp_param,
-                                value=0,
+                                value=param_default,
                                 g_mu=0.2,
                                 g_tau=3**-2,
                                 std_lower=1e-10,
@@ -285,6 +285,7 @@ class HDDM(HDDMBase):
             )
 
         for tmp_param in self.model_config["params"]:
+
             if tmp_param in include:
                 param_id = self.model_config["params"].index(tmp_param)
 
@@ -297,7 +298,7 @@ class HDDM(HDDMBase):
 
                 if not "params_std_upper" in self.model_config.keys():
                     print(
-                        "Supplied model_config does not have a params_std_upper argument."
+                        "Supplied model_config does not have a params_std_upper argument. "
                     )
                     print("Set to a default of 10")
                     param_std_upper = 10

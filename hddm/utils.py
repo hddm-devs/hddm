@@ -92,14 +92,16 @@ def make_likelihood_str_mlp_rlssm(
             + "network=network, "
             + "p_outlier=p_outlier, w_outlier=w_outlier)"
         )
-    elif rl_rule == 'RLWM':
-        n_actions = 4
-        params_str_ssm = ", ".join(["v", "a", "t"]) # can introduce a check here: do this only for no_bias race models
-        params_str_rl = ", ".join(config_rl["params"][1:]) # v is part of config_rl (but here we put it under params_str_ssm)
+    elif rl_rule == 'RLWM_v1':
+        n_actions = 3
+        params_str_ssm = ", ".join(["a", "z", "theta"]) 
+        params_str_rl = ", ".join(config_rl["params"]) 
 
-        t_params = ["v", "a", "t"] # can introduce a check here: do this only for no_bias race models
-        t_params.extend(config_rl["params"][1:])
+        t_params = ["a", "z", "theta"] 
+        t_params.extend(config_rl["params"])
         all_params_str = ", ".join(t_params)
+
+        #print("utils -- ", all_params_str, ' | ', params_str_ssm, ' | ', params_str_rl)
 
         fun_str = (
             "def "
