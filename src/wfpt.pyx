@@ -216,9 +216,9 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double weight
     cdef double[:,:] q_RL
     cdef double[:,:] q_WM
-    cdef double[:] pol_RL
-    cdef double[:] pol_WM
-    cdef double[:] pol
+    cdef float[:] pol_RL = np.ones(num_actions, dtype = np.float32)
+    cdef float[:] pol_WM = np.ones(num_actions, dtype = np.float32)
+    cdef float[:] pol = np.ones(num_actions, dtype = np.float32)
 
     cdef int cumm_s_size = 0
     cdef int bl_size
@@ -234,6 +234,9 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double [:, :] mv_q_RL
     cdef double [:, :] mv_q_WM
     
+    cdef int i_loop
+    cdef double sum_exp_RL = 0
+    cdef double sum_exp_WM = 0
 
 
     if not p_outlier_in_range(p_outlier):
@@ -299,10 +302,25 @@ def wiener_like_rlssm_nn_rlwm(str model,
             action = responses[tr]
             reward = feedbacks[tr]
 
-            pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
-            pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
+            # pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
+            # pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
 
-            pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
+            # pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
+
+            sum_exp_RL = 0
+            sum_exp_WM = 0
+
+            for i_loop in range(num_actions):
+                sum_exp_RL += 2.71828**(q_RL[state, i_loop]*rl_beta)
+                sum_exp_WM += 2.71828**(q_WM[state, i_loop]*rl_beta)
+            
+            for i_loop in range(num_actions):
+                pol_RL[i_loop] = 2.71828**(q_RL[state, i_loop]*rl_beta) / sum_exp_RL
+                pol_WM[i_loop] = 2.71828**(q_WM[state, i_loop]*rl_beta) / sum_exp_WM
+
+            for i_loop in range(num_actions):
+                pol[i_loop] = weight * pol_WM[i_loop] + (1-weight) * pol_RL[i_loop]
+
 
             for a_idx in range(num_actions):
                 mv_data[cumm_s_size + tr, a_idx] = pol[a_idx]
