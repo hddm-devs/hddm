@@ -182,17 +182,15 @@ class HDDM(HDDMBase):
 
     def _create_stochastic_knodes_nn_rl_noninfo(self, include):
         """Creates knodes for HDDMnnRL class.
-
         :Arguments:
             include: list
                 List of all parameters to be included in the parameter recovery.
-
         :Returns:
             kabuki node object
         """
 
         knodes = self._create_stochastic_knodes_nn_noninfo(include)
-        
+
         for tmp_param in self.model_config_rl["params"]:
             if tmp_param in include:
                 param_id = self.model_config_rl["params"].index(tmp_param)
@@ -206,7 +204,7 @@ class HDDM(HDDMBase):
 
                 if not "params_std_upper" in self.model_config_rl.keys():
                     print(
-                        "Supplied model_config does not have a params_std_upper argument. "
+                        "Supplied model_config does not have a params_std_upper argument."
                     )
                     print("Set to a default of 10")
                     param_std_upper = 10
@@ -244,14 +242,15 @@ class HDDM(HDDMBase):
                     )
                 else:
                     if self.non_centered:
+                        print("Using non-centered distributions.")
                         knodes.update(
                             self._create_family_normal_non_centered(
                                 tmp_param,
-                                value=param_default,
+                                value=0,
                                 g_mu=0.2,
                                 g_tau=3**-2,
                                 std_lower=1e-10,
-                                std_upper=10,
+                                std_upper=param_std_upper,
                                 std_value=0.1,
                             )
                         )
@@ -259,7 +258,7 @@ class HDDM(HDDMBase):
                         knodes.update(
                             self._create_family_normal(
                                 tmp_param,
-                                value=param_default,
+                                value=0,
                                 g_mu=0.2,
                                 g_tau=3**-2,
                                 std_lower=1e-10,
@@ -335,11 +334,30 @@ class HDDM(HDDMBase):
                         )
                     )
                 else:
+                    # if tmp_param == 'a':
+                    #     lower = 0.55
+                    #     upper = 0.75
+                    #     print('> a prior = ', lower, upper)
+                    # elif tmp_param == 'z':
+                    #     lower = 0.2
+                    #     upper = 0.3
+                    #     print('> z prior = ', lower, upper)
+                    # elif tmp_param == 'theta':
+                    #     lower = 0.30
+                    #     upper = 0.45
+                    #     print('> theta prior = ', lower, upper)
+                    # else:
+                    #     lower=self.model_config["param_bounds"][0][param_id]
+                    #     upper=self.model_config["param_bounds"][1][param_id]
+                    
+                    lower=self.model_config["param_bounds"][0][param_id]
+                    upper=self.model_config["param_bounds"][1][param_id]
+
                     knodes.update(
                         self._create_family_trunc_normal(
                             tmp_param,
-                            lower=self.model_config["param_bounds"][0][param_id],
-                            upper=self.model_config["param_bounds"][1][param_id],
+                            lower=lower,
+                            upper=upper,
                             value=param_default,
                             std_upper=param_std_upper,  # added AF
                         )

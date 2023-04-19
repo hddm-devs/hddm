@@ -162,7 +162,7 @@ class HDDMnnRL(HDDMnn):
         if self.rl_rule == 'RWupdate':
             col_name = ["split_by", "feedback", "response", "rt", "q_init"]
         elif self.rl_rule == 'RLWM_v1':
-            col_name = ["block_num", "stim", "feedback", "response", "rt"]
+            col_name = ["block_num", "stim", "feedback", "response", "rt", "set_size"]
             del wfpt_parents["v0"]
             del wfpt_parents["v1"]
             del wfpt_parents["v2"]

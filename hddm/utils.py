@@ -101,7 +101,7 @@ def make_likelihood_str_mlp_rlssm(
         t_params.extend(config_rl["params"])
         all_params_str = ", ".join(t_params)
 
-        #print("utils -- ", all_params_str, ' | ', params_str_ssm, ' | ', params_str_rl)
+        print("utils -- ", all_params_str, ' | ', params_str_ssm, ' | ', params_str_rl)
 
         fun_str = (
             "def "
@@ -111,11 +111,12 @@ def make_likelihood_str_mlp_rlssm(
             + ", p_outlier=0.0, w_outlier="
             + w_outlier_str
             + ", network = None):\n    "
-            #+ "print(type(x['block_num'][0]))\n    "
+            #+ "print(type(x['block_num'].values.astype(int)[0]))\n    "
             + "return hddm.wfpt.wiener_like_rlssm_nn_rlwm('"
             + model
             + "', "
             + 'x["block_num"].values.astype(int), '
+            + 'x["set_size"].values.astype(int), '
             + 'x["stim"].values.astype(float), '
             + 'x["rt"].values.astype(float), '
             + 'x["response"].values.astype(int), '
