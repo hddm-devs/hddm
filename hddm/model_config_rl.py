@@ -20,7 +20,7 @@ model_config_rl = {
     "RLWM_v1": {
         "doc": "RLWM model v1.",
         "params": ["rl_alpha", "rl_phi", "rl_rho"],
-        "params_trans": [1, 1, 1],
+        "params_trans": [0, 0, 0],
         "params_std_upper": [10, 10, 10],
         "param_bounds": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
         "params_default": [0.005, 0.2, 0.7],

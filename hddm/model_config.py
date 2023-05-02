@@ -931,10 +931,12 @@ model_config = {
     },
     "lba_3_v1":{'name': 'lba_3_v1', # LBA_3 without ndt; sum of all v = 1
                           'params': ["v0", "v1", "v2", "a", "z"],
-                          'param_bounds': [[0.0, 0.0, 0.0, 0.1, 0.1], [1.0, 1.0, 1.0, 1.1, 0.50]],
+                          "params_trans": [0, 0, 0, 0, 1],
+                          "params_std_upper": [1.0, 1.0, 1.0, 1.0, 1.0],
+                          'param_bounds': [[0.0, 0.0, 0.0, 0.1, 0], [1.0, 1.0, 1.0, 1.1, 0.50]],
                           'n_params': 5,
-                          'params_default': [0.0, 0.0, 0.0, 0.5, 0.2],
-                          'hddm_include': ["v0", "v1", "v2", "a", "z"],
+                          'params_default': [0.33, 0.33, 0.33, 0.5, 0.2],
+                          'hddm_include': ["a", "z"],
                           'choices': [0, 1, 2],
                           'nchoices': 3
                           },

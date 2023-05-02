@@ -214,8 +214,8 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef long[:] bl_unique = np.unique(mv_block_num)
 
     cdef double weight
-    cdef double[:,:] q_RL
-    cdef double[:,:] q_WM
+    cdef np.ndarray[double, ndim=2] q_RL
+    cdef np.ndarray[double, ndim=2] q_WM
     cdef float[:] pol_RL = np.ones(num_actions, dtype = np.float32)
     cdef float[:] pol_WM = np.ones(num_actions, dtype = np.float32)
     cdef float[:] pol = np.ones(num_actions, dtype = np.float32)
@@ -234,18 +234,23 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double [:, :] mv_q_RL
     cdef double [:, :] mv_q_WM
     
-    cdef int i_loop
+    cdef int i_loop, j_loop
     cdef double sum_exp_RL = 0
     cdef double sum_exp_WM = 0
 
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
+    
+    # if params_ssm[1] < params_bnds[0][num_actions] or params_ssm[1] > params_bnds[1][num_actions]:
+    #         return -np.inf
+    # if params_ssm[2] < params_bnds[0][num_actions+2] or params_ssm[2] > params_bnds[1][num_actions+2]:
+    #         return -np.inf 
 
-    # rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
-    # rl_gamma = 1 
-    # rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
-    # rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
+    rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+    rl_gamma = 1 #(2.718281828459**rl_gamma) / (1 + 2.718281828459**rl_gamma)
+    rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
+    rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
     
 
     if a < mv_params_bnds[0][num_actions] or a > mv_params_bnds[1][num_actions]:
@@ -260,7 +265,6 @@ def wiener_like_rlssm_nn_rlwm(str model,
         return -np.inf
     if rl_rho < mv_params_bnds[0][8] or rl_rho > mv_params_bnds[1][8]:
         return -np.inf
-
     
     #print("incoming- ", params_ssm, " | ", params_rl)
     curr_block_index = 0
@@ -283,7 +287,7 @@ def wiener_like_rlssm_nn_rlwm(str model,
         #print(">>> ", tp_stims[0:10], np.asarray(stims[0:10]), tp_stims[-5:], np.asarray(stims[-5:]))
 
         bl_size = rts.shape[0]
-        #print(">>> ", block_ns, bl_size)
+        
         q_RL = np.ones((block_ns, num_actions)) * 1/num_actions
         q_WM = np.ones((block_ns, num_actions)) * 1/num_actions
         weight = rl_rho * min(1, C/block_ns)
@@ -300,18 +304,19 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
             # pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
             # pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
+
             # pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
 
             sum_exp_RL = 0
             sum_exp_WM = 0
 
             for i_loop in range(num_actions):
-                sum_exp_RL += 2.71828**(q_RL[state, i_loop]*rl_beta)
-                sum_exp_WM += 2.71828**(q_WM[state, i_loop]*rl_beta)
+                sum_exp_RL += 2.71828**(mv_q_RL[state, i_loop]*rl_beta)
+                sum_exp_WM += 2.71828**(mv_q_WM[state, i_loop]*rl_beta)
             
             for i_loop in range(num_actions):
-                pol_RL[i_loop] = 2.71828**(q_RL[state, i_loop]*rl_beta) / sum_exp_RL
-                pol_WM[i_loop] = 2.71828**(q_WM[state, i_loop]*rl_beta) / sum_exp_WM
+                pol_RL[i_loop] = 2.71828**(mv_q_RL[state, i_loop]*rl_beta) / sum_exp_RL
+                pol_WM[i_loop] = 2.71828**(mv_q_WM[state, i_loop]*rl_beta) / sum_exp_WM
 
             for i_loop in range(num_actions):
                 pol[i_loop] = weight * pol_WM[i_loop] + (1-weight) * pol_RL[i_loop]
@@ -322,6 +327,10 @@ def wiener_like_rlssm_nn_rlwm(str model,
                 if pol[a_idx] < 0 or pol[a_idx] > 1:
                     print("ERROR")
 
+            # Check for boundary violations -- if true, return -np.inf
+            # for a_idx in range(num_actions):
+            #     if mv_data[cumm_s_size + tr, a_idx] < mv_params_bnds[0,0] or mv_data[cumm_s_size + tr, a_idx] > mv_params_bnds[1,0]:
+            #         return -np.inf
             
             #print("\tbefore- ", mv_q_RL[state, action], mv_q_WM[state, action])
             if reward == 1:
@@ -332,7 +341,14 @@ def wiener_like_rlssm_nn_rlwm(str model,
                 mv_q_WM[state, action] = mv_q_WM[state, action] + rl_gamma * 1 * (reward - mv_q_WM[state, action])
             #print("\tafter- ", mv_q_RL[state, action], mv_q_WM[state, action])
 
-            q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
+            #q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
+            for i_loop in range(block_ns):
+                for j_loop in range(num_actions):
+                    mv_q_WM[i_loop, j_loop] = mv_q_WM[i_loop, j_loop] + rl_phi * ((1/num_actions) - mv_q_WM[i_loop, j_loop])
+            
+            # print(">>> ", np.asarray(mv_q_WM[0:5, :]), q_WM[0:5, :])
+            # print("@@@ ", np.asarray(mv_q_RL[0:5, :]), q_RL[0:5, :])
+            # print(" --- ", np.asarray(pol_RL), np.asarray(pol_WM), np.asarray(pol))
 
         cumm_s_size += bl_size
         curr_block_index += const
