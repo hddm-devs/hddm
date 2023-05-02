@@ -214,11 +214,11 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef long[:] bl_unique = np.unique(mv_block_num)
 
     cdef double weight
-    cdef np.ndarray[double, ndim=2] q_RL
-    cdef np.ndarray[double, ndim=2] q_WM
-    cdef float[:] pol_RL = np.ones(num_actions, dtype = np.float32)
-    cdef float[:] pol_WM = np.ones(num_actions, dtype = np.float32)
-    cdef float[:] pol = np.ones(num_actions, dtype = np.float32)
+    cdef double[:,:] q_RL
+    cdef double[:,:] q_WM
+    cdef double[:] pol_RL
+    cdef double[:] pol_WM
+    cdef double[:] pol
 
     cdef int cumm_s_size = 0
     cdef int bl_size
@@ -234,9 +234,6 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double [:, :] mv_q_RL
     cdef double [:, :] mv_q_WM
     
-    cdef int i_loop, j_loop
-    cdef double sum_exp_RL = 0
-    cdef double sum_exp_WM = 0
 
 
     if not p_outlier_in_range(p_outlier):
@@ -288,9 +285,9 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
         bl_size = rts.shape[0]
         
-        q_RL = np.ones((block_ns, num_actions)) * 1/num_actions
-        q_WM = np.ones((block_ns, num_actions)) * 1/num_actions
-        weight = rl_rho * min(1, C/block_ns)
+        q_RL = np.ones((bl_size, num_actions)) * 1/num_actions
+        q_WM = np.ones((bl_size, num_actions)) * 1/num_actions
+        weight = rl_rho * min(1, C/bl_size)
         
         mv_q_RL = q_RL
         mv_q_WM = q_WM
@@ -302,25 +299,10 @@ def wiener_like_rlssm_nn_rlwm(str model,
             action = responses[tr]
             reward = feedbacks[tr]
 
-            # pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
-            # pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
+            pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
+            pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
 
-            # pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
-
-            sum_exp_RL = 0
-            sum_exp_WM = 0
-
-            for i_loop in range(num_actions):
-                sum_exp_RL += 2.71828**(mv_q_RL[state, i_loop]*rl_beta)
-                sum_exp_WM += 2.71828**(mv_q_WM[state, i_loop]*rl_beta)
-            
-            for i_loop in range(num_actions):
-                pol_RL[i_loop] = 2.71828**(mv_q_RL[state, i_loop]*rl_beta) / sum_exp_RL
-                pol_WM[i_loop] = 2.71828**(mv_q_WM[state, i_loop]*rl_beta) / sum_exp_WM
-
-            for i_loop in range(num_actions):
-                pol[i_loop] = weight * pol_WM[i_loop] + (1-weight) * pol_RL[i_loop]
-
+            pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
 
             for a_idx in range(num_actions):
                 mv_data[cumm_s_size + tr, a_idx] = pol[a_idx]
@@ -341,14 +323,7 @@ def wiener_like_rlssm_nn_rlwm(str model,
                 mv_q_WM[state, action] = mv_q_WM[state, action] + rl_gamma * 1 * (reward - mv_q_WM[state, action])
             #print("\tafter- ", mv_q_RL[state, action], mv_q_WM[state, action])
 
-            #q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
-            for i_loop in range(block_ns):
-                for j_loop in range(num_actions):
-                    mv_q_WM[i_loop, j_loop] = mv_q_WM[i_loop, j_loop] + rl_phi * ((1/num_actions) - mv_q_WM[i_loop, j_loop])
-            
-            # print(">>> ", np.asarray(mv_q_WM[0:5, :]), q_WM[0:5, :])
-            # print("@@@ ", np.asarray(mv_q_RL[0:5, :]), q_RL[0:5, :])
-            # print(" --- ", np.asarray(pol_RL), np.asarray(pol_WM), np.asarray(pol))
+            q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
 
         cumm_s_size += bl_size
         curr_block_index += const
