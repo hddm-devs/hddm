@@ -93,13 +93,24 @@ def make_likelihood_str_mlp_rlssm(
             + "p_outlier=p_outlier, w_outlier=w_outlier)"
         )
     elif rl_rule == 'RLWM_v1':
-        n_actions = 3
-        params_str_ssm = ", ".join(["a", "z", "theta"]) 
-        params_str_rl = ", ".join(config_rl["params"]) 
 
-        t_params = ["a", "z", "theta"] 
-        t_params.extend(config_rl["params"])
-        all_params_str = ", ".join(t_params)
+        if model == 'lba_angle_3_v1':
+            n_actions = 3
+            params_str_ssm = ", ".join(["a", "z", "theta"]) 
+            params_str_rl = ", ".join(config_rl["params"]) 
+
+            t_params = ["a", "z", "theta"] 
+            t_params.extend(config_rl["params"])
+            all_params_str = ", ".join(t_params)
+        elif model == 'lba_3_v1':
+            print("HERE")
+            n_actions = 3
+            params_str_ssm = ", ".join(["a", "z"]) 
+            params_str_rl = ", ".join(config_rl["params"]) 
+
+            t_params = ["a", "z"] 
+            t_params.extend(config_rl["params"])
+            all_params_str = ", ".join(t_params)
 
         print("utils -- ", all_params_str, ' | ', params_str_ssm, ' | ', params_str_rl)
 

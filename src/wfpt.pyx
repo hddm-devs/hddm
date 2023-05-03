@@ -179,14 +179,12 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double[:] mv_rt = rt
     cdef long[:] mv_response = response
     cdef double[:] mv_feedback = feedback
-    cdef double[:] mv_params_ssm = params_ssm
-    cdef double[:] mv_params_rl = params_rl
     cdef double[:, :] mv_params_bnds = params_bnds
 
     #cdef double v = params_ssm[0]
     cdef double a = params_ssm[0]
     cdef double z = params_ssm[1]
-    cdef double theta = params_ssm[2]
+    # cdef double theta = params_ssm[2] # CHECK
 
     cdef double rl_alpha = params_rl[0]
     cdef double rl_gamma = 1
@@ -209,16 +207,16 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef double[:] feedbacks
     cdef double[:] rts
 
-    cdef Py_ssize_t n_params = num_actions + 3 # this should be num of params in ssm 
+    cdef Py_ssize_t n_params = num_actions + 2 # this should be num of params in ssm # CHECK
     cdef np.ndarray[float, ndim=2] data = np.zeros((size, n_params + 2), dtype = np.float32)
     cdef long[:] bl_unique = np.unique(mv_block_num)
 
     cdef double weight
-    cdef double[:,:] q_RL
-    cdef double[:,:] q_WM
-    cdef double[:] pol_RL
-    cdef double[:] pol_WM
-    cdef double[:] pol
+    cdef np.ndarray[float, ndim=2] q_RL
+    cdef np.ndarray[float, ndim=2] q_WM
+    cdef np.ndarray[float, ndim=1] pol_RL = np.zeros(num_actions, dtype = np.float32)
+    cdef np.ndarray[float, ndim=1] pol_WM = np.zeros(num_actions, dtype = np.float32)
+    cdef np.ndarray[float, ndim=1] pol = np.zeros(num_actions, dtype = np.float32)
 
     cdef int cumm_s_size = 0
     cdef int bl_size
@@ -229,12 +227,12 @@ def wiener_like_rlssm_nn_rlwm(str model,
     cdef int action
     cdef float reward
     cdef float ll_min = -16.11809
+    cdef int i_loop, j_loop
+    cdef float sum_exp_RL, sum_exp_WM
     
-    cdef float [:, :] mv_data = data
-    cdef double [:, :] mv_q_RL
-    cdef double [:, :] mv_q_WM
-    
-
+    # cdef float [:, :] mv_data = data
+    # cdef double [:, :] mv_q_RL
+    # cdef double [:, :] mv_q_WM
 
     if not p_outlier_in_range(p_outlier):
         return -np.inf
@@ -244,35 +242,35 @@ def wiener_like_rlssm_nn_rlwm(str model,
     # if params_ssm[2] < params_bnds[0][num_actions+2] or params_ssm[2] > params_bnds[1][num_actions+2]:
     #         return -np.inf 
 
-    rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
-    rl_gamma = 1 #(2.718281828459**rl_gamma) / (1 + 2.718281828459**rl_gamma)
-    rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
-    rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
+    # rl_alpha = (2.718281828459**rl_alpha) / (1 + 2.718281828459**rl_alpha)
+    # rl_gamma = 1 #(2.718281828459**rl_gamma) / (1 + 2.718281828459**rl_gamma)
+    # rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
+    # rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
     
 
-    if a < mv_params_bnds[0][num_actions] or a > mv_params_bnds[1][num_actions]:
-        return -np.inf
-    if z < mv_params_bnds[0][num_actions+1] or z > mv_params_bnds[1][num_actions+1]:
-        return -np.inf
-    if theta < mv_params_bnds[0][num_actions+2] or theta > mv_params_bnds[1][num_actions+2]:
-        return -np.inf
-    if rl_alpha < mv_params_bnds[0][6] or rl_alpha > mv_params_bnds[1][6]:
-        return -np.inf
-    if rl_phi < mv_params_bnds[0][7] or rl_phi > mv_params_bnds[1][7]:
-        return -np.inf
-    if rl_rho < mv_params_bnds[0][8] or rl_rho > mv_params_bnds[1][8]:
-        return -np.inf
+    # if a < mv_params_bnds[0][num_actions] or a > mv_params_bnds[1][num_actions]:
+    #     return -np.inf
+    # if z < mv_params_bnds[0][num_actions+1] or z > mv_params_bnds[1][num_actions+1]:
+    #     return -np.inf
+    # if theta < mv_params_bnds[0][num_actions+2] or theta > mv_params_bnds[1][num_actions+2]:
+    #     return -np.inf
+    # if rl_alpha < mv_params_bnds[0][6] or rl_alpha > mv_params_bnds[1][6]:
+    #     return -np.inf
+    # if rl_phi < mv_params_bnds[0][7] or rl_phi > mv_params_bnds[1][7]:
+    #     return -np.inf
+    # if rl_rho < mv_params_bnds[0][8] or rl_rho > mv_params_bnds[1][8]:
+    #     return -np.inf
     
     #print("incoming- ", params_ssm, " | ", params_rl)
     curr_block_index = 0
 
     for j in range(bl_unique.shape[0]):
         bl = bl_unique[j]
-        #block_ns = len(np.unique(np.asarray(stim)[block_num == bl])) # THIS IS INEFFICIENT
+        #tp_block_ns = len(np.unique(np.asarray(stim)[block_num == bl])) # THIS IS INEFFICIENT
         block_ns = mv_set_size[curr_block_index]
         #tp_stims = np.asarray(stim)[block_num == bl]
 
-        # responses = np.asarray(response)[block_num == bl]
+        #tp_responses = np.asarray(response)[block_num == bl]
         # feedbacks = np.asarray(feedback)[block_num == bl]
         # rts = np.asarray(rt)[block_num == bl]
         const = block_ns*15
@@ -281,33 +279,56 @@ def wiener_like_rlssm_nn_rlwm(str model,
         feedbacks = mv_feedback[curr_block_index:curr_block_index+const]
         rts = mv_rt[curr_block_index:curr_block_index+const]
         
-        #print(">>> ", tp_stims[0:10], np.asarray(stims[0:10]), tp_stims[-5:], np.asarray(stims[-5:]))
+        #print(">>> ", tp_stims[0:10], np.asarray(stims[0:10]), tp_stims[-5:], np.asarray(stims[-5:]), block_ns, tp_block_ns)
 
         bl_size = rts.shape[0]
+
+        #print(">>> ", bl_size, len(tp_responses))
         
-        q_RL = np.ones((bl_size, num_actions)) * 1/num_actions
-        q_WM = np.ones((bl_size, num_actions)) * 1/num_actions
-        weight = rl_rho * min(1, C/bl_size)
+        q_RL = np.ones((block_ns, num_actions), dtype = np.float32) * 1/num_actions
+        q_WM = np.ones((block_ns, num_actions), dtype = np.float32) * 1/num_actions
+        weight = rl_rho * min(1, C/block_ns)
         
-        mv_q_RL = q_RL
-        mv_q_WM = q_WM
+        #print("===> ", a, z, theta, rl_alpha, rl_phi, rl_rho, ' | ', bl_size, block_ns)
+        #print(" \n\n new block == ", bl_size, block_ns, q_RL.shape[0], q_RL.shape[1], ' | ', q_WM.shape[0], q_WM.shape[1], weight, " \n\n")
+
+        # mv_q_RL = q_RL
+        # mv_q_WM = q_WM
 
         # loop through all trials in current condition
         for tr in range(0, bl_size):
 
             state = int(stims[tr])
             action = responses[tr]
-            reward = feedbacks[tr]
+            reward = feedbacks[tr]           
 
-            pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
-            pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
+            # pol_RL = softmax(np.asarray(q_RL[state]), rl_beta)
+            # pol_WM = softmax(np.asarray(q_WM[state]), rl_beta)
 
-            pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
+            # pol = weight * np.asarray(pol_WM) + (1-weight) * np.asarray(pol_RL)
+
+            sum_exp_RL = 0
+            sum_exp_WM = 0
+
+            for i_loop in range(num_actions):
+                sum_exp_RL += 2.71828**(q_RL[state, i_loop]*rl_beta)
+                sum_exp_WM += 2.71828**(q_WM[state, i_loop]*rl_beta)
+            
+            for i_loop in range(num_actions):
+                pol_RL[i_loop] = 2.71828**(q_RL[state, i_loop]*rl_beta) / sum_exp_RL
+                pol_WM[i_loop] = 2.71828**(q_WM[state, i_loop]*rl_beta) / sum_exp_WM
+
+            for i_loop in range(num_actions):
+                pol[i_loop] = weight * pol_WM[i_loop] + (1-weight) * pol_RL[i_loop]
+
+            # print(">> ", state, action, reward)
+            # print(" ## ", q_RL[state], q_WM[state])
+            # print(" -- ", pol_RL, pol_WM, pol)
 
             for a_idx in range(num_actions):
-                mv_data[cumm_s_size + tr, a_idx] = pol[a_idx]
-                if pol[a_idx] < 0 or pol[a_idx] > 1:
-                    print("ERROR")
+                data[cumm_s_size + tr, a_idx] = pol[a_idx]
+                # if pol[a_idx] < 0 or pol[a_idx] > 1:
+                #     print("ERROR")
 
             # Check for boundary violations -- if true, return -np.inf
             # for a_idx in range(num_actions):
@@ -316,21 +337,26 @@ def wiener_like_rlssm_nn_rlwm(str model,
             
             #print("\tbefore- ", mv_q_RL[state, action], mv_q_WM[state, action])
             if reward == 1:
-                mv_q_RL[state, action] = mv_q_RL[state, action] + rl_alpha * (reward - mv_q_RL[state, action])
-                mv_q_WM[state, action] = mv_q_WM[state, action] + 1 * (reward - mv_q_WM[state, action])
+                q_RL[state, action] = q_RL[state, action] + rl_alpha * (reward - q_RL[state, action])
+                q_WM[state, action] = q_WM[state, action] + 1 * (reward - q_WM[state, action])
             elif reward == 0:
-                mv_q_RL[state, action] = mv_q_RL[state, action] + rl_gamma * rl_alpha * (reward - mv_q_RL[state, action])
-                mv_q_WM[state, action] = mv_q_WM[state, action] + rl_gamma * 1 * (reward - mv_q_WM[state, action])
+                q_RL[state, action] = q_RL[state, action] + rl_gamma * rl_alpha * (reward - q_RL[state, action])
+                q_WM[state, action] = q_WM[state, action] + rl_gamma * 1 * (reward - q_WM[state, action])
             #print("\tafter- ", mv_q_RL[state, action], mv_q_WM[state, action])
 
-            q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
+            #q_WM = q_WM + rl_phi * ((1/num_actions) - np.asarray(q_WM))
+
+            for i_loop in range(block_ns):
+                for j_loop in range(num_actions):
+                    q_WM[i_loop, j_loop] = q_WM[i_loop, j_loop] + rl_phi * ((1/num_actions) - q_WM[i_loop, j_loop])
 
         cumm_s_size += bl_size
         curr_block_index += const
 
-    mv_data[:, num_actions] = a #np.tile(params_ssm[0], (size,)).astype(np.float32) # a
-    mv_data[:, num_actions+1] = z #np.tile(params_ssm[1], (size,)).astype(np.float32) # z
-    mv_data[:, num_actions+2] = theta #np.tile(params_ssm[2], (size,)).astype(np.float32) # theta
+    data[:, num_actions] = a 
+    data[:, num_actions+1] = z 
+    # data[:, num_actions+2] = theta #np.tile(params_ssm[2], (size,)).astype(np.float32) # theta # CHECK
+
     data[:, n_params:] = np.stack([rt, response], axis = 1)
 
     #print("\n\ndata = ", data[0:3, :])
