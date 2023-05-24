@@ -24,7 +24,7 @@ model_config_rl = {
         "params_std_upper": [10, 10, 10],
         "param_bounds": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
         "params_default": [0.002, 0.2, 0.5], # for param_trans = 1
-        #"params_default": [-5, -1.5, 0], # for param_trans = 0
+        #"params_default": [-8, -1, 0], # for param_trans = 0
         "hddm_include": ['rl_alpha', 'rl_phi', 'rl_rho'],
         # "slice_widths": {
         #     "rl_alpha": 0.2,
