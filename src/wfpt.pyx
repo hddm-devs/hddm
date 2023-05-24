@@ -338,7 +338,6 @@ def wiener_like_rlssm_nn_rlwm(str model,
 
             for a_idx in range(num_actions):
                 data[cumm_s_size + tr, a_idx] = pol[a_idx]
-                tp_sum = tp_sum + pol[a_idx]
             
             #print("\tbefore- ", mv_q_RL[state, action], mv_q_WM[state, action])
             if reward == 1:
