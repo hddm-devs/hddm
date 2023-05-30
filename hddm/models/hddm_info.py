@@ -180,6 +180,8 @@ class HDDM(HDDMBase):
             else:
                 return self._create_stochastic_knodes_noninfo(include)
 
+
+
     def _create_stochastic_knodes_nn_rl_noninfo(self, include):
         """Creates knodes for HDDMnnRL class.
         :Arguments:
@@ -242,13 +244,13 @@ class HDDM(HDDMBase):
                     )
                 else:
                     if self.non_centered:
-                        print("Using non-centered distributions.")
+                        print("@@@ Using non-centered distributions.")
                         knodes.update(
                             self._create_family_normal_non_centered(
                                 tmp_param,
-                                value=0,
-                                g_mu=0.2,
-                                g_tau=3**-2,
+                                value=self.model_config_rl["params_default"][param_id], # 0
+                                g_mu=self.model_config_rl["params_default"][param_id], # 0.2
+                                g_tau=10**-2,
                                 std_lower=1e-10,
                                 std_upper=param_std_upper,
                                 std_value=0.1,

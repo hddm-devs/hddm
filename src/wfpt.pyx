@@ -24,7 +24,11 @@ cimport numpy as np
 cimport cython
 
 from cython.parallel import *
-# cimport openmp
+#from libc.math cimport pow
+
+cdef extern from "math.h" nogil:
+    double pow(double, double)
+
 
 # include "pdf.pxi"
 include 'integrate.pxi'
@@ -247,6 +251,11 @@ def wiener_like_rlssm_nn_rlwm(str model,
     # rl_gamma = 1 #(2.718281828459**rl_gamma) / (1 + 2.718281828459**rl_gamma)
     # rl_phi = (2.718281828459**rl_phi) / (1 + 2.718281828459**rl_phi)
     # rl_rho = (2.718281828459**rl_rho) / (1 + 2.718281828459**rl_rho)
+
+    rl_alpha = pow(2.718281828459, rl_alpha) / (1 + pow(2.718281828459, rl_alpha))
+    rl_gamma = 1 #pow(2.718281828459, rl_gamma) / (1 + pow(2.718281828459, rl_gamma))
+    rl_phi = pow(2.718281828459, rl_phi) / (1 + pow(2.718281828459, rl_phi))
+    rl_rho = pow(2.718281828459, rl_rho) / (1 + pow(2.718281828459, rl_rho))
     
 
     # if a < mv_params_bnds[0][num_actions] or a > mv_params_bnds[1][num_actions]:
