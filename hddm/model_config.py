@@ -933,7 +933,7 @@ model_config = {
                           'params': ["v0", "v1", "v2", "a", "z"],
                           "params_trans": [0, 0, 0, 0, 1],
                           'param_bounds': [[0.0, 0.0, 0.0, 0.1, 0.0], [1.0, 1.0, 1.0, 1.1, 0.50]],
-                          "params_std_upper": [0.05, 0.05, 0.05, 0.1, 0.01],
+                          "params_std_upper": [0.05, 0.05, 0.05, 0.1, 0.05],
                           'n_params': 5,
                           'params_default': [0.0, 1.0, 0.0, 0.5, 0.2],
                           'hddm_include': ["a", "z"],

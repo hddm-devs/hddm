@@ -18,7 +18,7 @@ import numpy as np
 
 setup(
     name='HDDM',
-    version='0.9.7',
+    version='0.9.9',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank, Mads Lund Pedersen, Alexander Fengler, Lakshmi Govindarajan, Krishn Bera',
     author_email='thomas.wiecki@gmail.com',
     url='http://github.com/hddm-devs/hddm',
