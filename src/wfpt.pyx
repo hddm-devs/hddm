@@ -256,6 +256,8 @@ def wiener_like_rlssm_nn_rlwm(str model,
     rl_gamma = 1 #pow(2.718281828459, rl_gamma) / (1 + pow(2.718281828459, rl_gamma))
     rl_phi = pow(2.718281828459, rl_phi) / (1 + pow(2.718281828459, rl_phi))
     rl_rho = pow(2.718281828459, rl_rho) / (1 + pow(2.718281828459, rl_rho))
+
+    #print("@@@ ", rl_alpha, rl_phi, rl_rho)
     
 
     # if a < mv_params_bnds[0][num_actions] or a > mv_params_bnds[1][num_actions]:

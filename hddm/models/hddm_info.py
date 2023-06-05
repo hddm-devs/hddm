@@ -245,15 +245,19 @@ class HDDM(HDDMBase):
                 else:
                     if self.non_centered:
                         print("@@@ Using non-centered distributions.")
+                        if tmp_param == "rl_alpha":
+                            std_value = 0.003
+                        else:
+                            std_value = 0.01
                         knodes.update(
                             self._create_family_normal_non_centered(
                                 tmp_param,
                                 value=self.model_config_rl["params_default"][param_id], # 0
                                 g_mu=self.model_config_rl["params_default"][param_id], # 0.2
-                                g_tau=10**-2,
+                                g_tau=1**-2, # 10**-2
                                 std_lower=1e-10,
                                 std_upper=param_std_upper,
-                                std_value=0.1,
+                                std_value=std_value,
                             )
                         )
                     else:

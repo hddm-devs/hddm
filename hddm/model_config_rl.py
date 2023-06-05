@@ -21,11 +21,11 @@ model_config_rl = {
         "doc": "RLWM model v1.",
         "params": ["rl_alpha", "rl_phi", "rl_rho"],
         "params_trans": [0, 0, 0],
-        "params_std_upper": [0.3, 0.5, 0.5],
+        "params_std_upper": [0.015, 0.015, 0.015],
         "param_bounds": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
         #"params_std_upper": [0.01, 0.02, 0.02],
         #"params_default": [0.002, 0.2, 0.5], # for param_trans = 1
-        "params_default": [-8, -1, 0.5], # for param_trans = 0
+        "params_default": [-8.5, -0.5, 1.1], # for param_trans = 0
         "hddm_include": ['rl_alpha', 'rl_phi', 'rl_rho'],
         # "slice_widths": {
         #     "rl_alpha": 0.2,
