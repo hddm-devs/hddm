@@ -101,7 +101,7 @@ def generate_wfpt_reg_stochastic_class(
                     # to account for eventual grouping
                     param_data[:, cnt] = (
                         param_dict[tmp_str].loc[self.value.index].values
-                    )
+                    ).squeeze()
                 else:
                     param_data[:, cnt] = param_dict[tmp_str]
                 cnt += 1
