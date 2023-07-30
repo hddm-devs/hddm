@@ -100,7 +100,7 @@ model_config = {
             "theta_std": 0.2,
         },
     },
-    "weibull": {
+    "weibull_cdf": {
         "doc": "Model formulation is described in the documentation under LAN Extension.\n"
         + "Meant for use with the extension.",
         "params": ["v", "a", "z", "t", "alpha", "beta"],
