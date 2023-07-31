@@ -440,7 +440,7 @@ def simulator_stimcoding(
     dataframes = []
     for i in range(2):
         sim_out = simulator(
-            param_base[i, :],
+            theta=param_base[i, :],
             model=model,
             n_samples=n_trials_per_condition,
             bin_dim=bin_dim,
