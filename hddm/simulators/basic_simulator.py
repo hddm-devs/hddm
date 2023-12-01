@@ -28,5 +28,5 @@ def simulator(**kwargs):
 
     """
 
-    data_tmp = ssms.basic_simulators.simulators.simulator(**kwargs)
+    data_tmp = ssms.basic_simulators.simulator(**kwargs)
     return (data_tmp["rts"], data_tmp["choices"], data_tmp["metadata"])
