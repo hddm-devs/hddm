@@ -188,10 +188,11 @@ Then install **hddm** via **github**.
 
 :: 
 
-    pip install cython
+    pip install "numpy < 1.23.0"
+    pip install "cython <1.0.0"
     pip install pymc==2.3.8 # backend probabilistic programming framework (DO NOT USE CONDA HERE)
-    pip install git+https://github.com/hddm-devs/kabuki # backbone package for hddm to connect to pymc
-    pip install git+https://github.com/hddm-devs/hddm 
+    # pip install git+https://github.com/hddm-devs/kabuki # (Optional, the pip version as dependency of HDDM should work)
+    pip install hddm # main package
     
     # Optional
     pip install torch torchvision torchaudio # The LAN extension makes use of these
