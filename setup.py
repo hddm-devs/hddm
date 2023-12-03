@@ -20,7 +20,7 @@ except ImportError:
 
 setup(
     name='HDDM',
-    version='1.0.0',
+    version='1.0.1',
     author='Thomas V. Wiecki, Imri Sofer, Michael J. Frank, Mads Lund Pedersen, Alexander Fengler, Lakshmi Govindarajan, Krishn Bera',
     author_email='thomas.wiecki@gmail.com',
     url='http://github.com/hddm-devs/hddm',
