@@ -1646,7 +1646,7 @@ def _make_bounds(
     return_shifted_by_ndt=True,
 ):
     # MULTIPLICATIVE BOUND
-    if tmp_model == "weibull":
+    if tmp_model == "weibull" or tmp_model == "weibull_cdf":
         b = np.maximum(
             sample.a.values[0]
             * model_config[tmp_model]["boundary"](
@@ -2266,7 +2266,7 @@ def plot_caterpillar(
     y_tick_size=10,
     x_tick_size=10,
 ):
-    """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull', 'levy', 'ornstein')
+    """An alternative posterior predictive plot. Works for all models listed in hddm (e.g. 'ddm', 'angle', 'weibull_cdf', 'levy', 'ornstein')
 
     Arguments:
         hddm_model: hddm model object <default=None>

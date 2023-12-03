@@ -27,6 +27,10 @@ def simulator(**kwargs):
         or     (rts binned pointwise, responses, metadata)
 
     """
+    # Fix weibull issue with ssms
+    if "model" in kwargs:
+        if kwargs["model"] == "weibull":
+            kwargs["model"] = "weibull_cdf"
 
     data_tmp = ssms.basic_simulators.simulator(**kwargs)
     return (data_tmp["rts"], data_tmp["choices"], data_tmp["metadata"])
