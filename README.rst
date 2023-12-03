@@ -9,7 +9,7 @@ Introduction
 :Mailing list: https://groups.google.com/group/hddm-users/
 :Copyright: This document has been placed in the public domain.
 :License: HDDM is released under the BSD 2 license.
-:Version: 0.9.9
+:Version: 1.0.0
 
 .. image:: https://secure.travis-ci.org/hddm-devs/hddm.png?branch=master
 
@@ -170,22 +170,40 @@ Installation
 For **HDDM >= 0.9.0**, currently in beta release, the most convenient way to install HDDM, is to directly 
 install via **github**. In a fresh environment (we recommend to use **python 3.7**) type.
 
+We recommend you to open a **conda** environment first. 
+
+::
+
+    conda create -n hddm python=3.7
+    conda activate hddm
+
+If you do not have **hdf5** or **netcdf4** installed, you can use conda to install them.
+
+::
+
+    conda install -c conda-forge hdf5
+    conda install -c conda-forge netcdf4
+
+Then install **hddm** via **github**.
+
 :: 
 
     pip install cython
     pip install pymc==2.3.8 # backend probabilistic programming framework (DO NOT USE CONDA HERE)
-    pip install git+https://github.com/AlexanderFengler/ssms@main  # package for data simulation
     pip install git+https://github.com/hddm-devs/kabuki # backbone package for hddm to connect to pymc
     pip install git+https://github.com/hddm-devs/hddm 
     
     # Optional
     pip install torch torchvision torchaudio # The LAN extension makes use of these
 
-To make use of the LAN fuctionalities, you need to install `pytorch`_ .
+To make use of the LAN fuctionalities, you need to install `pytorch`_.
+
+::
+    pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1
 
 A common issue on new machines is that the installation of the **pymc** package (a necessary dependency),
 is hampered by problems with compiling its fortran code. Try downgrading the version of your
-**gcc** compiler. This can be done on a MAC (not the new M1 versions tragically), via 
+**gcc** compiler. This can be done on a MAC (not the new M1/M2 versions tragically), via 
 
 ::
 
@@ -193,8 +211,7 @@ is hampered by problems with compiling its fortran code. Try downgrading the ver
 
 In case you do not have the **brew** command, install `Homebrew <https://brew.sh/>`_ first.
 
-You usually do not run into problems with **linux** machines.
-
+You usually do not run into problems with **linux** machines, however downgrading **gcc** can still be necessary.
 
 (Previous instructions for **HDDM <= 0.8.0**, DISCOURAGED)
 As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
