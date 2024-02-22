@@ -181,26 +181,23 @@ If you do not have **hdf5** or **netcdf4** installed, you can use conda to insta
 
 ::
 
-    conda install -c conda-forge hdf5
-    conda install -c conda-forge netcdf4
+    conda install hdf5 netcdf4
 
 Then install **hddm** via **github**.
 
 :: 
 
-    pip install "numpy < 1.23.0"
-    pip install "cython <1.0.0"
-    pip install pymc==2.3.8 # backend probabilistic programming framework (DO NOT USE CONDA HERE)
-    # pip install git+https://github.com/hddm-devs/kabuki # (Optional, the pip version as dependency of HDDM should work)
-    pip install hddm # main package
+    pip install numpy==1.21
+    pip install --no-cache-dir pymc==2.3.8
+    pip install kabuki
+    pip install hddm==1.0.1
     
-    # Optional
-    pip install torch torchvision torchaudio # The LAN extension makes use of these
+    # Optional (but necessary for LAN extension)
+    pip install torch torchvision torchaudio
 
 To make use of the LAN fuctionalities, you need to install `pytorch`_.
 
 ::
-    pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1
 
 A common issue on new machines is that the installation of the **pymc** package (a necessary dependency),
 is hampered by problems with compiling its fortran code. Try downgrading the version of your
