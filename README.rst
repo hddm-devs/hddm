@@ -200,7 +200,9 @@ Then install **hddm** via **github**.
 To make use of the LAN fuctionalities, you need to install `pytorch`_.
 
 ::
+
     pip install torch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1
+
 
 A common issue on new machines is that the installation of the **pymc** package (a necessary dependency),
 is hampered by problems with compiling its fortran code. Try downgrading the version of your
@@ -214,7 +216,23 @@ In case you do not have the **brew** command, install `Homebrew <https://brew.sh
 
 You usually do not run into problems with **linux** machines, however downgrading **gcc** can still be necessary.
 
-(Previous instructions for **HDDM <= 0.8.0**, DISCOURAGED)
+**Recipe for Installing HDDM 1.0.1 on Brown's OSCAR cluster**
+
+:: 
+
+  module load gcc/6.5.0-lwshmxc
+  conda create -n hddm python=3.7
+  conda activate hddm
+  pip install numpy==1.21
+  pip install --no-cache-dir pymc==2.3.8
+  conda install hdf5 netcdf4
+  pip install kabuki
+  pip install hddm==1.0.1
+  pip install torch torchvision torchaudio
+
+
+**Previous instructions for HDDM <= 0.8.0, DISCOURAGED**
+
 As of release 0.6.0, HDDM is compatible with Python 3 which we encourage.
 
 The easiest way to install HDDM is through Anaconda (available for
