@@ -29,7 +29,7 @@ setup(
     scripts=['scripts/hddm_demo.py'],
     description='HDDM is a python module that implements Hierarchical Bayesian estimation of Drift Diffusion Models.',
     install_requires=['numpy >=1.20.0, < 1.23.0', 'scipy >= 1.6.3, < 1.7.0', 'cython >= 0.29.0, < 1.0.0', 'pandas >= 1.0.0, < 1.5.0', 'patsy', 'seaborn == 0.11.0', 'statsmodels >= 0.12.0, < 0.13.0', 'tqdm >= 4.1.0', 'scikit-learn == 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz == 0.12', 'ssm-simulators == 0.3.2'],
-    setup_requires=['numpy >=1.20.0, < 1.23.0', 'scipy >= 1.6.3, < 1.7.0', 'cython >= 0.29.0, < 1.0.0', 'pandas >= 1.0.0, < 1.5.0' 'patsy', 'seaborn == 0.11.0', 'statsmodels >= 0.12.0, < 0.13.0', 'tqdm >= 4.1.0', 'scikit-learn == 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz == 0.12', 'ssm-simulators == 0.3.2'],
+    setup_requires=['numpy >=1.20.0, < 1.23.0', 'scipy >= 1.6.3, < 1.7.0', 'cython >= 0.29.0, < 1.0.0', 'pandas >= 1.0.0, < 1.5.0', 'patsy', 'seaborn == 0.11.0', 'statsmodels >= 0.12.0, < 0.13.0', 'tqdm >= 4.1.0', 'scikit-learn == 0.24', 'cloudpickle >= 2.0.0', 'kabuki >= 0.6.0', 'PyMC >= 2.3.3, < 3.0.0', 'arviz == 0.12', 'ssm-simulators == 0.3.2'],
     include_dirs = [np.get_include()],
     classifiers=[
                 'Development Status :: 5 - Production/Stable',
